@@ -1,0 +1,49 @@
+---
+default_install_hook_types: [pre-commit, commit-msg]
+repos:
+  - repo: https://github.com/lyz-code/yamlfix
+    rev: 1.17.0
+    hooks:
+      - id: yamlfix
+        args: [-c, .yamlfix.toml]
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: check-added-large-files
+      - id: check-case-conflict
+      - id: check-merge-conflict
+      - id: trailing-whitespace
+      - id: check-xml
+      - id: check-json
+      - id: check-yaml
+      - id: no-commit-to-branch
+      - id: mixed-line-ending
+      - id: end-of-file-fixer
+      - id: pretty-format-json
+        args: [--autofix, --no-ensure-ascii, '--top-keys=openapi,info,servers,paths,components']
+        files: docs/openapi.json
+  - repo: local
+    hooks:
+      - id: sensitive-data-leak-urls
+        name: Sensitive data leak - URLs
+        entry: (?<!polarion-opensource@)(?<!www\.)sbb\.ch
+        language: pygrep
+        types: [text]
+      - id: sensitive-data-leak-ue-numbers
+        name: Sensitive data leak - UE numbers
+        entry: \b([uUeE]{1,2})\d{5,6}\b
+        language: pygrep
+        types: [text]
+  - repo: https://github.com/zricethezav/gitleaks
+    rev: v8.23.3
+    hooks:
+      - id: gitleaks
+  - repo: https://github.com/grigoriev/pre-commit-check-git-user
+    rev: v0.9.0
+    hooks:
+      - id: check-git-config-user-email
+        args: [--templates, ^\S+\.\S+@sbb\.ch$]
+  - repo: https://github.com/commitizen-tools/commitizen
+    rev: v4.1.1
+    hooks:
+      - id: commitizen
