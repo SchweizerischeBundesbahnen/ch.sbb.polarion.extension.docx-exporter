@@ -1,0 +1,12 @@
+{
+  "name": "maven-js-project",
+  "scripts": {
+    "test": "mocha src/test/js/**/*.js"
+  },
+  "type": "module",
+  "version": "1.0.0",
+  "devDependencies": {
+    "chai": "5.1.2",
+    "mocha": "11.1.0"
+  }
+}

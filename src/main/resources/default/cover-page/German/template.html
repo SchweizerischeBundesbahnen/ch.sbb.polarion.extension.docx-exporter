@@ -1,0 +1,20 @@
+<article id="cover">
+    <div id="top"></div>
+    <div id="center">
+        <p>{{ PROJECT_NAME }}</p>
+        <p>{{ DOCUMENT_TITLE }}</p>
+        <table>
+            <tr><th>Autor</th><td>{{ author }}</td></tr>
+            <tr><th>Status</th><td>{{ status }}</td></tr>
+            <tr><th>Vertraulichkeit</th><td>{{ docConfidentiality }}</td></tr>
+            <tr><th>Urheberrecht</th><td>Dieses Dokument ist urheberrechtlich geschützt. Jegliche weitere Nutzung bedarf einer vorgängigen, ausdrücklichen Genehmigung des Freigebers.</td></tr>
+        </table>
+    </div>
+    <div id="bottom">
+        <table>
+            <tr><th scope="col"></th><th scope="col">Erstellt</th><th scope="col">Geprüft</th><th scope="col">Freigegeben</th></tr>
+            <tr><th scope="row">Name</th><td>{{ docCreatedBy }}</td><td>{{ docCheckedBy }}</td><td>{{ docReleasedBy }}</td></tr>
+            <tr><th scope="row">Datum</th><td>{{ docCreationDate }}</td><td>{{ docCheckDate }}</td><td>{{ docReleaseDate }}</td></tr>
+        </table>
+    </div>
+</article>
