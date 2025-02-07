@@ -111,7 +111,7 @@ public class ConfigurationInternalController {
 
     @GET
     @Produces(MediaType.APPLICATION_JSON)
-    @Path("/configuration/weasyprint")
+    @Path("/configuration/pandoc")
     @Operation(
             summary = "Checks WeasyPrint configuration",
             description = "Retrieves the status of the WeasyPrint configuration.",
@@ -122,8 +122,7 @@ public class ConfigurationInternalController {
                     )
             }
     )
-
-    public @NotNull List<ConfigurationStatus> checkWeasyPrint() {
+    public @NotNull List<ConfigurationStatus> checkPandoc() {
         return new PandocStatusProvider().getStatuses(ConfigurationStatusProvider.Context.builder().build());
     }
 }
