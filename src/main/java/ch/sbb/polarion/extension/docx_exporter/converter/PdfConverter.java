@@ -3,7 +3,7 @@ package ch.sbb.polarion.extension.docx_exporter.converter;
 import ch.sbb.polarion.extension.generic.settings.NamedSettings;
 import ch.sbb.polarion.extension.generic.settings.SettingId;
 import ch.sbb.polarion.extension.generic.util.ScopeUtils;
-import ch.sbb.polarion.extension.docx_exporter.pandoc.PandocServiceConnector;
+import ch.sbb.polarion.extension.docx_exporter.pandoc.service.PandocServiceConnector;
 import ch.sbb.polarion.extension.docx_exporter.properties.DocxExporterExtensionConfiguration;
 import ch.sbb.polarion.extension.docx_exporter.rest.model.ExportMetaInfoCallback;
 import ch.sbb.polarion.extension.docx_exporter.rest.model.WorkItemRefData;

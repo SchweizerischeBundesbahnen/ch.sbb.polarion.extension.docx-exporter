@@ -148,10 +148,10 @@
         "summary": "Checks Live Report configuration"
       }
     },
-    "/api/configuration/weasyprint": {
+    "/api/configuration/pandoc": {
       "get": {
         "description": "Retrieves the status of the WeasyPrint configuration.",
-        "operationId": "checkWeasyPrint",
+        "operationId": "checkPandoc",
         "responses": {
           "200": {
             "content": {

@@ -40,8 +40,8 @@ public class ConfigurationApiController extends ConfigurationInternalController 
     }
 
     @Override
-    public @NotNull List<ConfigurationStatus> checkWeasyPrint() {
-        return polarionService.callPrivileged(super::checkWeasyPrint);
+    public @NotNull List<ConfigurationStatus> checkPandoc() {
+        return polarionService.callPrivileged(super::checkPandoc);
     }
 
 }

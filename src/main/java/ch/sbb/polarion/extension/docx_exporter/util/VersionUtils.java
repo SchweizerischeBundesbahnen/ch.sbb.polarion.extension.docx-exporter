@@ -1,6 +1,6 @@
 package ch.sbb.polarion.extension.docx_exporter.util;
 
-import ch.sbb.polarion.extension.docx_exporter.util.configuration.WeasyPrintStatusProvider;
+import ch.sbb.polarion.extension.docx_exporter.util.configuration.PandocStatusProvider;
 import lombok.experimental.UtilityClass;
 import org.jetbrains.annotations.Nullable;
 
@@ -11,15 +11,15 @@ import java.util.Properties;
 @UtilityClass
 public class VersionUtils {
 
-    public static @Nullable String getLatestCompatibleVersionWeasyPrintService() {
-        try (InputStream input = WeasyPrintStatusProvider.class.getClassLoader().getResourceAsStream("versions.properties")) {
+    public static @Nullable String getLatestCompatibleVersionPandocService() {
+        try (InputStream input = PandocStatusProvider.class.getClassLoader().getResourceAsStream("versions.properties")) {
             if (input == null) {
                 return null;
             }
 
             Properties properties = new Properties();
             properties.load(input);
-            return properties.getProperty("weasyprint-service.version");
+            return properties.getProperty("pandoc-service.version");
         } catch (IOException e) {
             return null;
         }
