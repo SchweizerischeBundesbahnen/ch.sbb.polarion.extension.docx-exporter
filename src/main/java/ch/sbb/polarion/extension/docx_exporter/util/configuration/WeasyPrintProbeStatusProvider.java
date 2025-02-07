@@ -10,7 +10,7 @@ import ch.sbb.polarion.extension.docx_exporter.rest.model.conversion.PaperSize;
 import org.jetbrains.annotations.NotNull;
 
 @Discoverable
-public class WeasyPrintProbeStatusProvider extends ConfigurationStatusProvider {
+public class WeasyPrintProbeStatusProvider {
 
     private static final String WEASY_PRINT_SERVICE_TEST_CONVERSION = "WeasyPrint Service: WeasyPrint probe";
 
@@ -24,8 +24,7 @@ public class WeasyPrintProbeStatusProvider extends ConfigurationStatusProvider {
         this.htmlToPdfConverter = htmlToPdfConverter;
     }
 
-    @Override
-    public @NotNull ConfigurationStatus getStatus(@NotNull Context context) {
+    public @NotNull ConfigurationStatus getStatus(@NotNull ConfigurationStatusProvider.Context context) {
         try {
             htmlToPdfConverter.convert("<html><body>test html</body></html>", Orientation.PORTRAIT, PaperSize.A4);
 

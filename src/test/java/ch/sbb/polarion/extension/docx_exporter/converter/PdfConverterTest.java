@@ -3,7 +3,7 @@ package ch.sbb.polarion.extension.docx_exporter.converter;
 import ch.sbb.polarion.extension.generic.settings.SettingId;
 import ch.sbb.polarion.extension.docx_exporter.TestStringUtils;
 import ch.sbb.polarion.extension.docx_exporter.configuration.PdfExporterExtensionConfigurationExtension;
-import ch.sbb.polarion.extension.docx_exporter.pandoc.PandocServiceConnector;
+import ch.sbb.polarion.extension.docx_exporter.pandoc.service.PandocServiceConnector;
 import ch.sbb.polarion.extension.docx_exporter.rest.model.ExportMetaInfoCallback;
 import ch.sbb.polarion.extension.docx_exporter.rest.model.conversion.DocumentType;
 import ch.sbb.polarion.extension.docx_exporter.rest.model.conversion.ExportParams;
