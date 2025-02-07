@@ -1,5 +1,5 @@
 Support-Email: polarion-opensource@sbb.ch
-Bundle-Name: Extension for Polarion ALM
+Bundle-Name: DOCX Exporter Extension for Polarion ALM
 Require-Bundle: com.polarion.portal.tomcat,
  com.polarion.alm.ui,
  com.polarion.platform.guice,
@@ -11,4 +11,12 @@ Require-Bundle: com.polarion.portal.tomcat,
  org.apache.commons.logging,
  slf4j.api,
  org.springframework.spring-core,
- org.springframework.spring-web
+ org.springframework.spring-web,
+ com.polarion.alm.wiki,
+ org.apache.tika.patched;resolution:=optional,
+ org.apache.tika;resolution:=optional
+Guice-Modules: ch.sbb.polarion.extension.docx_exporter.PdfExporterModule
+Export-Package: ch.sbb.polarion.extension.docx_exporter,
+ ch.sbb.polarion.extension.docx_exporter.converter,
+ ch.sbb.polarion.extension.docx_exporter.rest.model,
+ ch.sbb.polarion.extension.docx_exporter.rest.model.conversion

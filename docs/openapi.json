@@ -1,10 +1,175 @@
 {
   "openapi": "3.0.1",
   "info": {
-    "title": "extension-name REST API",
+    "title": "PDF Exporter REST API",
     "version": "v1"
   },
   "paths": {
+    "/api/checknestedlists": {
+      "post": {
+        "operationId": "checkNestedLists",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ExportParams"
+              }
+            }
+          },
+          "description": "Export parameters used to locate and check the document for nested lists",
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NestedListsCheck"
+                }
+              }
+            },
+            "description": "Check completed successfully, returning whether nested lists are present"
+          }
+        },
+        "summary": "Checks whether document contains nested lists",
+        "tags": [
+          "PDF Processing"
+        ]
+      }
+    },
+    "/api/configuration/cors-config": {
+      "get": {
+        "description": "Retrieves the status of the CORS configuration.",
+        "operationId": "checkCORSConfig",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConfigurationStatus"
+                }
+              }
+            },
+            "description": "Successfully retrieved CORS configuration"
+          }
+        },
+        "summary": "Checks CORS configuration"
+      }
+    },
+    "/api/configuration/default-settings": {
+      "get": {
+        "operationId": "checkDefaultSettings",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "scope",
+            "schema": {
+              "default": "",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConfigurationStatus"
+                }
+              }
+            },
+            "description": "Successfully retrieved default settings configuration"
+          }
+        },
+        "summary": "Checks default settings configuration"
+      }
+    },
+    "/api/configuration/dle-toolbar-config": {
+      "get": {
+        "operationId": "checkDleToolbarConfig",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConfigurationStatus"
+                }
+              }
+            },
+            "description": "Successfully retrieved DLE Toolbar configuration"
+          }
+        },
+        "summary": "Checks DLE Toolbar configuration"
+      }
+    },
+    "/api/configuration/document-properties-pane-config": {
+      "get": {
+        "operationId": "checkDocumentPropertiesPaneConfig",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "scope",
+            "schema": {
+              "default": "",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConfigurationStatus"
+                }
+              }
+            },
+            "description": "Successfully retrieved document properties pane configuration"
+          }
+        },
+        "summary": "Checks document properties pane configuration"
+      }
+    },
+    "/api/configuration/live-report-config": {
+      "get": {
+        "operationId": "checkLiveReportConfig",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConfigurationStatus"
+                }
+              }
+            },
+            "description": "Successfully retrieved Live Report configuration"
+          }
+        },
+        "summary": "Checks Live Report configuration"
+      }
+    },
+    "/api/configuration/weasyprint": {
+      "get": {
+        "description": "Retrieves the status of the WeasyPrint configuration.",
+        "operationId": "checkWeasyPrint",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/ConfigurationStatus"
+                  },
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successfully retrieved WeasyPrint configuration"
+          }
+        },
+        "summary": "Checks WeasyPrint configuration"
+      }
+    },
     "/api/context": {
       "get": {
         "operationId": "getContext",
@@ -23,6 +188,1248 @@
         "summary": "Returns basic context information of Polarion's extension",
         "tags": [
           "Extension Information"
+        ]
+      }
+    },
+    "/api/convert": {
+      "post": {
+        "operationId": "convertToPdf",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ExportParams"
+              }
+            }
+          },
+          "description": "Export parameters to generate the PDF",
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/pdf": {}
+            },
+            "description": "Content of PDF document as a byte array",
+            "headers": {
+              "Content-Disposition": {
+                "description": "To inform a browser that the response is a downloadable attachment",
+                "schema": {
+                  "type": "string"
+                },
+                "style": "simple"
+              },
+              "Export-Filename": {
+                "description": "File name for converted PDF document",
+                "schema": {
+                  "type": "string"
+                },
+                "style": "simple"
+              },
+              "Missing-WorkItem-Attachments-Count": {
+                "description": "Unavailable work item attachments count",
+                "schema": {
+                  "type": "string"
+                },
+                "style": "simple"
+              },
+              "WorkItem-IDs-With-Missing-Attachment": {
+                "description": "Work items contained unavailable attachments",
+                "schema": {
+                  "type": "string"
+                },
+                "style": "simple"
+              }
+            }
+          }
+        },
+        "summary": "Returns requested Polarion's document converted to PDF",
+        "tags": [
+          "PDF Processing"
+        ]
+      }
+    },
+    "/api/convert/html": {
+      "post": {
+        "operationId": "convertHtmlToPdf",
+        "parameters": [
+          {
+            "description": "default value: portrait",
+            "in": "query",
+            "name": "orientation",
+            "schema": {
+              "description": "Orientation of the output document",
+              "enum": [
+                "PORTRAIT",
+                "LANDSCAPE"
+              ],
+              "type": "string"
+            }
+          },
+          {
+            "description": "default value: A4",
+            "in": "query",
+            "name": "paperSize",
+            "schema": {
+              "description": "Standard paper sizes",
+              "enum": [
+                "A5",
+                "A4",
+                "A3",
+                "B5",
+                "B4",
+                "JIS_B5",
+                "JIS_B4",
+                "LETTER",
+                "LEGAL",
+                "LEDGER"
+              ],
+              "type": "string"
+            }
+          },
+          {
+            "description": "default value: document.docx",
+            "in": "query",
+            "name": "fileName",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "text/html": {
+              "schema": {
+                "type": "string"
+              }
+            }
+          },
+          "description": "input html (must include html and body elements)"
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/pdf": {}
+            },
+            "description": "Content of PDF document as a byte array",
+            "headers": {
+              "Content-Disposition": {
+                "description": "To inform a browser that the response is a downloadable attachment",
+                "schema": {
+                  "type": "string"
+                },
+                "style": "simple"
+              },
+              "Export-Filename": {
+                "description": "File name for converted PDF document",
+                "schema": {
+                  "type": "string"
+                },
+                "style": "simple"
+              }
+            }
+          }
+        },
+        "summary": "Converts input HTML to PDF",
+        "tags": [
+          "PDF Processing"
+        ]
+      }
+    },
+    "/api/convert/jobs": {
+      "get": {
+        "operationId": "getAllPdfConverterJobs",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "description": "Conversion jobs statuses"
+          }
+        },
+        "summary": "Returns all active PDF conversion jobs statuses",
+        "tags": [
+          "PDF Processing"
+        ]
+      },
+      "post": {
+        "operationId": "startPdfConverterJob",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ExportParams"
+              }
+            }
+          },
+          "description": "Export parameters to generate the PDF",
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "description": "Conversion process is started, job URI is returned in Location header"
+          }
+        },
+        "summary": "Starts asynchronous conversion job of Polarion's document to PDF",
+        "tags": [
+          "PDF Processing"
+        ]
+      }
+    },
+    "/api/convert/jobs/{id}": {
+      "get": {
+        "operationId": "getPdfConverterJobStatus",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "202": {
+            "content": {
+              "application/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConverterJobDetails"
+                }
+              }
+            },
+            "description": "Conversion job is still in progress"
+          },
+          "303": {
+            "content": {
+              "application/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConverterJobDetails"
+                }
+              }
+            },
+            "description": "Conversion job is finished successfully, Location header contains result URL"
+          },
+          "404": {
+            "description": "Conversion job id is unknown"
+          },
+          "409": {
+            "description": "Conversion job is failed or cancelled"
+          }
+        },
+        "summary": "Returns PDF conversion job status",
+        "tags": [
+          "PDF Processing"
+        ]
+      }
+    },
+    "/api/convert/jobs/{id}/result": {
+      "get": {
+        "operationId": "getPdfConverterJobResult",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/pdf": {}
+            },
+            "description": "Conversion job result is ready",
+            "headers": {
+              "Content-Disposition": {
+                "description": "To inform a browser that the response is a downloadable attachment",
+                "schema": {
+                  "type": "string"
+                },
+                "style": "simple"
+              },
+              "Export-Filename": {
+                "description": "File name for converted PDF document",
+                "schema": {
+                  "type": "string"
+                },
+                "style": "simple"
+              },
+              "Missing-WorkItem-Attachments-Count": {
+                "description": "Unavailable work item attachments count",
+                "schema": {
+                  "type": "string"
+                },
+                "style": "simple"
+              },
+              "WorkItem-IDs-With-Missing-Attachment": {
+                "description": "Work items contained unavailable attachments",
+                "schema": {
+                  "type": "string"
+                },
+                "style": "simple"
+              }
+            }
+          },
+          "204": {
+            "description": "Conversion job is still in progress"
+          },
+          "404": {
+            "description": "Conversion job id is unknown"
+          },
+          "409": {
+            "description": "Conversion job is failed, cancelled or result is unreachable"
+          }
+        },
+        "summary": "Returns PDF conversion job result",
+        "tags": [
+          "PDF Processing"
+        ]
+      }
+    },
+    "/api/document-language": {
+      "get": {
+        "operationId": "getDocumentLanguage",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "projectId",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "spaceId",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "documentName",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "revision",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successfully retrieved document language"
+          }
+        },
+        "summary": "Gets language of specified Polarion's document, defined in its custom field 'docLanguage'",
+        "tags": [
+          "Utility resources"
+        ]
+      }
+    },
+    "/api/export-filename": {
+      "post": {
+        "operationId": "getFileName",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ExportParams"
+              }
+            }
+          },
+          "description": "Export parameters similar as for generation of PDF",
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successfully generated filename"
+          }
+        },
+        "summary": "Gets a filename, prepared with velocity and placeholders",
+        "tags": [
+          "Utility resources"
+        ]
+      }
+    },
+    "/api/link-role-names": {
+      "get": {
+        "operationId": "readLinkRoleNames",
+        "parameters": [
+          {
+            "description": "Project scope in form project/<PROJECT_ID>/",
+            "in": "query",
+            "name": "scope",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "type": "string"
+                  },
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successfully retrieved list of link role names"
+          }
+        },
+        "summary": "Gets list of possible WorkItem link role names in specified project scope",
+        "tags": [
+          "Utility resources"
+        ]
+      }
+    },
+    "/api/prepared-html-content": {
+      "post": {
+        "operationId": "prepareHtmlContent",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ExportParams"
+              }
+            }
+          },
+          "description": "Export parameters to generate the PDF",
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "text/html": {}
+            },
+            "description": "Prepared HTML content"
+          }
+        },
+        "summary": "Returns prepared HTML which will be used for PDF conversion using WeasyPrint",
+        "tags": [
+          "PDF Processing"
+        ]
+      }
+    },
+    "/api/projects/{projectId}/collections/{collectionId}/documents": {
+      "get": {
+        "operationId": "getDocumentsFromCollection",
+        "parameters": [
+          {
+            "description": "Project ID",
+            "in": "path",
+            "name": "projectId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Collection ID",
+            "in": "path",
+            "name": "collectionId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "The specific revision of the provided collection",
+            "in": "query",
+            "name": "revision",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DocumentCollectionEntry"
+                }
+              }
+            },
+            "description": "Successfully retrieved the list of documents in the collection"
+          }
+        },
+        "summary": "Get documents from collection",
+        "tags": [
+          "Collections"
+        ]
+      }
+    },
+    "/api/projects/{projectId}/name": {
+      "get": {
+        "operationId": "getProjectName",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "projectId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successfully retrieved project name"
+          }
+        },
+        "summary": "Gets name of specified Polarion's project",
+        "tags": [
+          "Utility resources"
+        ]
+      }
+    },
+    "/api/projects/{projectId}/testruns/{testRunId}/attachments": {
+      "get": {
+        "operationId": "getTestRunAttachments",
+        "parameters": [
+          {
+            "description": "Project ID",
+            "in": "path",
+            "name": "projectId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "TestRun ID",
+            "in": "path",
+            "name": "testRunId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "TestRun revision",
+            "in": "query",
+            "name": "revision",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Filename filter for attachment",
+            "in": "query",
+            "name": "filter",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/TestRunAttachment"
+                  },
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successfully retrieved list of attachments"
+          }
+        },
+        "summary": "Gets list of attachments of specified workitem using optional filter",
+        "tags": [
+          "TestRuns"
+        ]
+      }
+    },
+    "/api/projects/{projectId}/testruns/{testRunId}/attachments/{attachmentId}": {
+      "get": {
+        "operationId": "getTesRunAttachment",
+        "parameters": [
+          {
+            "description": "Project ID",
+            "in": "path",
+            "name": "projectId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "TestRun ID",
+            "in": "path",
+            "name": "testRunId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Attachment ID",
+            "in": "path",
+            "name": "attachmentId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Attachment revision",
+            "in": "query",
+            "name": "revision",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TestRunAttachment"
+                }
+              }
+            },
+            "description": "Successfully retrieved attachment"
+          }
+        },
+        "summary": "Gets attachment of specified workitem",
+        "tags": [
+          "TestRuns"
+        ]
+      }
+    },
+    "/api/projects/{projectId}/testruns/{testRunId}/attachments/{attachmentId}/content": {
+      "get": {
+        "operationId": "getTestRunAttachmentContent",
+        "parameters": [
+          {
+            "description": "Project ID",
+            "in": "path",
+            "name": "projectId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "TestRun ID",
+            "in": "path",
+            "name": "testRunId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Attachment ID",
+            "in": "path",
+            "name": "attachmentId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Attachment revision",
+            "in": "query",
+            "name": "revision",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successfully retrieved attachment content"
+          }
+        },
+        "summary": "Gets content of attachment of specified workitem",
+        "tags": [
+          "TestRuns"
+        ]
+      }
+    },
+    "/api/settings": {
+      "get": {
+        "operationId": "readFeaturesList_1",
+        "responses": {
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "description": "List of supported features"
+          }
+        },
+        "summary": "Returns the complete list of all supported features",
+        "tags": [
+          "Settings"
+        ]
+      }
+    },
+    "/api/settings/cover-page/names/{name}/images": {
+      "delete": {
+        "operationId": "deleteImages",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "scope",
+            "schema": {
+              "default": "",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Images deleted successfully"
+          }
+        },
+        "summary": "Deletes images in SVN linked to specified cover page within specified scope (global or certain project)",
+        "tags": [
+          "Settings"
+        ]
+      }
+    },
+    "/api/settings/cover-page/templates": {
+      "get": {
+        "operationId": "getCoverPageTemplateNames",
+        "responses": {
+          "200": {
+            "description": "Template names retrieved successfully"
+          }
+        },
+        "summary": "Get list of cover page predefined template names",
+        "tags": [
+          "Settings"
+        ]
+      }
+    },
+    "/api/settings/cover-page/templates/{template}": {
+      "post": {
+        "operationId": "persistCoverPageTemplate",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "template",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "scope",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Template persisted successfully"
+          }
+        },
+        "summary": "Persist content of cover page predefined template",
+        "tags": [
+          "Settings"
+        ]
+      }
+    },
+    "/api/settings/localization/names/{name}/download": {
+      "get": {
+        "operationId": "downloadTranslations",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "language",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "revision",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "scope",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Localization file downloaded successfully"
+          }
+        },
+        "summary": "Downloads localization values by name of localization settings",
+        "tags": [
+          "Settings"
+        ]
+      }
+    },
+    "/api/settings/localization/upload": {
+      "post": {
+        "operationId": "uploadTranslations",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "language",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "scope",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "properties": {
+                  "file": {
+                    "$ref": "#/components/schemas/FormDataBodyPart"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Localization file uploaded successfully"
+          }
+        },
+        "summary": "Uploads localization values",
+        "tags": [
+          "Settings"
+        ]
+      }
+    },
+    "/api/settings/style-package/suitable-names": {
+      "post": {
+        "operationId": "getSuitableStylePackageNames",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "items": {
+                  "$ref": "#/components/schemas/DocIdentifier"
+                },
+                "type": "array"
+              }
+            }
+          },
+          "description": "List of document identifiers",
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successfully retrieved the list of style package names"
+          }
+        },
+        "summary": "Get list of style packages suitable for the specified list of documents (sorted by weight)",
+        "tags": [
+          "Settings"
+        ]
+      }
+    },
+    "/api/settings/style-package/weights": {
+      "get": {
+        "operationId": "getStylePackageWeights",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "scope",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successfully retrieved the list of style package names with the weight information"
+          }
+        },
+        "summary": "Get full list of available style packages for the specific scope with the weight information",
+        "tags": [
+          "Settings"
+        ]
+      },
+      "post": {
+        "operationId": "updateStylePackageWeights",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "items": {
+                  "$ref": "#/components/schemas/StylePackageWeightInfo"
+                },
+                "type": "array"
+              }
+            }
+          },
+          "description": "Style packages list with the weight information",
+          "required": true
+        },
+        "responses": {
+          "default": {
+            "content": {
+              "*/*": {}
+            },
+            "description": "default response"
+          }
+        },
+        "summary": "Update weight information for the provided style packages",
+        "tags": [
+          "Settings"
+        ]
+      }
+    },
+    "/api/settings/{feature}/default-content": {
+      "get": {
+        "operationId": "getDefaultValues_1",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "feature",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SettingsModel"
+                }
+              }
+            },
+            "description": "Default values"
+          }
+        },
+        "summary": "Returns default values of specified setting",
+        "tags": [
+          "Settings"
+        ]
+      }
+    },
+    "/api/settings/{feature}/names": {
+      "get": {
+        "operationId": "readSettingNames_1",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "feature",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SettingName"
+                }
+              }
+            },
+            "description": "List of setting names"
+          }
+        },
+        "summary": "Returns names of specified setting",
+        "tags": [
+          "Settings"
+        ]
+      }
+    },
+    "/api/settings/{feature}/names/{name}": {
+      "delete": {
+        "operationId": "deleteSetting_1",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "feature",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Setting deleted successfully"
+          }
+        },
+        "summary": "Deletes specified setting by id",
+        "tags": [
+          "Settings"
+        ]
+      },
+      "post": {
+        "operationId": "renameSetting_1",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "feature",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "Setting name updated successfully"
+          }
+        },
+        "summary": "Updates name of specified named setting",
+        "tags": [
+          "Settings"
+        ]
+      }
+    },
+    "/api/settings/{feature}/names/{name}/content": {
+      "get": {
+        "operationId": "readSetting_1",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "feature",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "revision",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SettingsModel"
+                }
+              }
+            },
+            "description": "Setting content"
+          }
+        },
+        "summary": "Returns values (content) of specified setting by its id and revision",
+        "tags": [
+          "Settings"
+        ]
+      },
+      "put": {
+        "operationId": "saveSetting_1",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "feature",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "Setting created/updated successfully"
+          }
+        },
+        "summary": "Creates or updates named setting. Creation scenario will use default setting value if no body specified in the request.",
+        "tags": [
+          "Settings"
+        ]
+      }
+    },
+    "/api/settings/{feature}/names/{name}/revisions": {
+      "get": {
+        "operationId": "readRevisionsList_1",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "feature",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Revision"
+                }
+              }
+            },
+            "description": "List of revisions"
+          }
+        },
+        "summary": "Returns revisions history of specified setting with specified id",
+        "tags": [
+          "Settings"
+        ]
+      }
+    },
+    "/api/validate": {
+      "post": {
+        "operationId": "validatePdfWidth",
+        "parameters": [
+          {
+            "description": "Limit of 'invalid' pages in response",
+            "in": "query",
+            "name": "max-results",
+            "required": true,
+            "schema": {
+              "format": "int32",
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ExportParams"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WidthValidationResult"
+                }
+              }
+            },
+            "description": "Validation result"
+          }
+        },
+        "summary": "Validates if requested Polarion's document been converted to PDF doesn't contain pages which content exceeds page's width",
+        "tags": [
+          "PDF Processing"
         ]
       }
     },
@@ -46,10 +1453,137 @@
           "Extension Information"
         ]
       }
+    },
+    "/api/webhooks/status": {
+      "get": {
+        "operationId": "getWebhooksStatus",
+        "responses": {
+          "200": {
+            "description": "Webhooks status"
+          }
+        },
+        "summary": "Gets webhooks status - if they are enabled or not",
+        "tags": [
+          "Utility resources"
+        ]
+      }
     }
   },
   "components": {
     "schemas": {
+      "BodyPart": {
+        "properties": {
+          "contentDisposition": {
+            "$ref": "#/components/schemas/ContentDisposition"
+          },
+          "entity": {
+            "type": "object"
+          },
+          "headers": {
+            "additionalProperties": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "type": "object"
+          },
+          "mediaType": {
+            "properties": {
+              "parameters": {
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "type": "object"
+              },
+              "subtype": {
+                "type": "string"
+              },
+              "type": {
+                "type": "string"
+              },
+              "wildcardSubtype": {
+                "type": "boolean"
+              },
+              "wildcardType": {
+                "type": "boolean"
+              }
+            },
+            "type": "object"
+          },
+          "messageBodyWorkers": {
+            "$ref": "#/components/schemas/MessageBodyWorkers"
+          },
+          "parameterizedHeaders": {
+            "additionalProperties": {
+              "items": {
+                "$ref": "#/components/schemas/ParameterizedHeader"
+              },
+              "type": "array"
+            },
+            "type": "object"
+          },
+          "parent": {
+            "$ref": "#/components/schemas/MultiPart"
+          },
+          "providers": {
+            "type": "object"
+          }
+        },
+        "type": "object"
+      },
+      "ConfigurationStatus": {
+        "properties": {
+          "details": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "OK",
+              "WARNING",
+              "ERROR"
+            ],
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "ContentDisposition": {
+        "properties": {
+          "creationDate": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "fileName": {
+            "type": "string"
+          },
+          "modificationDate": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "parameters": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "type": "object"
+          },
+          "readDate": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "size": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "type": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
       "Context": {
         "description": "Represents the context for building URLs related to Polarion services",
         "properties": {
@@ -70,6 +1604,546 @@
           },
           "swaggerUiUrl": {
             "description": "Returns the Swagger UI URL for the REST API",
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "ConverterJobDetails": {
+        "description": "Details of the converter job including status and error message if any",
+        "properties": {
+          "errorMessage": {
+            "description": "Error message if the conversion failed",
+            "type": "string"
+          },
+          "status": {
+            "description": "Status of the converter job",
+            "enum": [
+              "IN_PROGRESS",
+              "SUCCESSFULLY_FINISHED",
+              "FAILED",
+              "CANCELLED"
+            ],
+            "example": "IN_PROGRESS",
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "DocIdentifier": {
+        "description": "Unique document identifier data",
+        "properties": {
+          "documentName": {
+            "description": "Document name",
+            "type": "string"
+          },
+          "projectId": {
+            "description": "Project ID",
+            "type": "string"
+          },
+          "spaceId": {
+            "description": "Space ID",
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "DocumentCollectionEntry": {
+        "description": "Details about document from collection",
+        "properties": {
+          "documentName": {
+            "description": "The name of the document",
+            "type": "string"
+          },
+          "projectId": {
+            "description": "The unique identifier for the project",
+            "example": "elibrary",
+            "type": "string"
+          },
+          "revision": {
+            "description": "The revision of the document",
+            "type": "string"
+          },
+          "spaceId": {
+            "description": "The unique identifier of the space within the project",
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "ExportParams": {
+        "properties": {
+          "attachmentsFilter": {
+            "description": "Filter for attachments to be downloaded, example: '*.pdf'",
+            "type": "string"
+          },
+          "baselineRevision": {
+            "description": "The specific revision of the provided baseline",
+            "type": "string"
+          },
+          "chapters": {
+            "description": "Specific higher level chapters",
+            "items": {
+              "description": "Specific higher level chapters",
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "coverPage": {
+            "description": "Cover page settings name",
+            "type": "string"
+          },
+          "css": {
+            "description": "CSS settings name",
+            "type": "string"
+          },
+          "cutEmptyChapters": {
+            "description": "Empty chapters should be removed from the document",
+            "type": "boolean"
+          },
+          "cutEmptyWIAttributes": {
+            "default": true,
+            "description": "Empty work item attributes should be removed from the document",
+            "type": "boolean"
+          },
+          "cutLocalUrls": {
+            "description": "Local Polarion URLs should be removed from the document",
+            "type": "boolean"
+          },
+          "documentType": {
+            "description": "Type of the document",
+            "enum": [
+              "BASELINE_COLLECTION",
+              "LIVE_DOC",
+              "LIVE_REPORT",
+              "TEST_RUN",
+              "WIKI_PAGE"
+            ],
+            "example": "LIVE_DOC",
+            "type": "string"
+          },
+          "enableCommentsRendering": {
+            "default": true,
+            "description": "Comments should be rendered in the exported document",
+            "type": "boolean"
+          },
+          "fileName": {
+            "description": "Target file name of exported document",
+            "type": "string"
+          },
+          "fitToPage": {
+            "default": true,
+            "description": "Content should be scaled to fit the page",
+            "type": "boolean"
+          },
+          "followHTMLPresentationalHints": {
+            "default": true,
+            "description": "HTML presentational hints should be followed",
+            "type": "boolean"
+          },
+          "headerFooter": {
+            "description": "Header/Footer settings name",
+            "type": "string"
+          },
+          "headersColor": {
+            "description": "Color to be used for headers in the document. By default dark blue color (Polarion's default)",
+            "type": "string"
+          },
+          "internalContent": {
+            "description": "Internal content",
+            "type": "string"
+          },
+          "language": {
+            "description": "Language in the exported document",
+            "type": "string"
+          },
+          "linkedWorkitemRoles": {
+            "description": "Specific Workitem roles",
+            "example": [
+              "has parent",
+              "depends on"
+            ],
+            "items": {
+              "description": "Specific Workitem roles",
+              "example": "[\"has parent\",\"depends on\"]",
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "localization": {
+            "description": "Localization settings name",
+            "type": "string"
+          },
+          "locationPath": {
+            "description": "Document path for export",
+            "example": "Specification/Product Specification",
+            "type": "string"
+          },
+          "markReferencedWorkitems": {
+            "description": "Referenced work items should be marked in the document",
+            "type": "boolean"
+          },
+          "numberedListStyles": {
+            "description": "SCC styles to be applied to numbered lists in the document",
+            "type": "string"
+          },
+          "orientation": {
+            "default": "PORTRAIT",
+            "description": "Orientation of the output document",
+            "enum": [
+              "PORTRAIT",
+              "LANDSCAPE"
+            ],
+            "type": "string"
+          },
+          "paperSize": {
+            "default": "A4",
+            "description": "Standard paper sizes",
+            "enum": [
+              "A5",
+              "A4",
+              "A3",
+              "B5",
+              "B4",
+              "JIS_B5",
+              "JIS_B4",
+              "LETTER",
+              "LEGAL",
+              "LEDGER"
+            ],
+            "type": "string"
+          },
+          "projectId": {
+            "description": "The unique identifier for the project",
+            "example": "elibrary",
+            "type": "string"
+          },
+          "revision": {
+            "description": "The specific revision of the document",
+            "type": "string"
+          },
+          "targetFormat": {
+            "default": "PDF",
+            "description": "Target format of the exported document",
+            "enum": [
+              "PDF",
+              "DOCX"
+            ],
+            "type": "string"
+          },
+          "urlQueryParameters": {
+            "additionalProperties": {
+              "description": "Map of attributes extracted from the URL",
+              "type": "string"
+            },
+            "description": "Map of attributes extracted from the URL",
+            "type": "object"
+          },
+          "watermark": {
+            "description": "Watermark content to be applied to the document",
+            "type": "boolean"
+          },
+          "webhooks": {
+            "description": "Webhooks settings name",
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "FormDataBodyPart": {
+        "properties": {
+          "contentDisposition": {
+            "$ref": "#/components/schemas/ContentDisposition"
+          },
+          "entity": {
+            "type": "object"
+          },
+          "formDataContentDisposition": {
+            "$ref": "#/components/schemas/FormDataContentDisposition"
+          },
+          "headers": {
+            "additionalProperties": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "type": "object"
+          },
+          "mediaType": {
+            "properties": {
+              "parameters": {
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "type": "object"
+              },
+              "subtype": {
+                "type": "string"
+              },
+              "type": {
+                "type": "string"
+              },
+              "wildcardSubtype": {
+                "type": "boolean"
+              },
+              "wildcardType": {
+                "type": "boolean"
+              }
+            },
+            "type": "object"
+          },
+          "messageBodyWorkers": {
+            "$ref": "#/components/schemas/MessageBodyWorkers"
+          },
+          "name": {
+            "type": "string"
+          },
+          "parameterizedHeaders": {
+            "additionalProperties": {
+              "items": {
+                "$ref": "#/components/schemas/ParameterizedHeader"
+              },
+              "type": "array"
+            },
+            "type": "object"
+          },
+          "parent": {
+            "$ref": "#/components/schemas/MultiPart"
+          },
+          "providers": {
+            "type": "object"
+          },
+          "simple": {
+            "type": "boolean"
+          },
+          "value": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "FormDataContentDisposition": {
+        "properties": {
+          "creationDate": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "fileName": {
+            "type": "string"
+          },
+          "modificationDate": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "parameters": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "type": "object"
+          },
+          "readDate": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "size": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "type": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "MessageBodyWorkers": {
+        "type": "object"
+      },
+      "MultiPart": {
+        "properties": {
+          "bodyParts": {
+            "items": {
+              "$ref": "#/components/schemas/BodyPart"
+            },
+            "type": "array"
+          },
+          "contentDisposition": {
+            "$ref": "#/components/schemas/ContentDisposition"
+          },
+          "entity": {
+            "type": "object"
+          },
+          "headers": {
+            "additionalProperties": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "type": "object"
+          },
+          "mediaType": {
+            "properties": {
+              "parameters": {
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "type": "object"
+              },
+              "subtype": {
+                "type": "string"
+              },
+              "type": {
+                "type": "string"
+              },
+              "wildcardSubtype": {
+                "type": "boolean"
+              },
+              "wildcardType": {
+                "type": "boolean"
+              }
+            },
+            "type": "object"
+          },
+          "messageBodyWorkers": {
+            "$ref": "#/components/schemas/MessageBodyWorkers"
+          },
+          "parameterizedHeaders": {
+            "additionalProperties": {
+              "items": {
+                "$ref": "#/components/schemas/ParameterizedHeader"
+              },
+              "type": "array"
+            },
+            "type": "object"
+          },
+          "parent": {
+            "$ref": "#/components/schemas/MultiPart"
+          },
+          "providers": {
+            "type": "object"
+          }
+        },
+        "type": "object"
+      },
+      "NestedListsCheck": {
+        "description": "Check result indicating whether nested lists are present",
+        "properties": {
+          "containsNestedLists": {
+            "description": "Indicates whether the content contains nested lists",
+            "type": "boolean"
+          }
+        },
+        "type": "object"
+      },
+      "PageInfo": {
+        "description": "Information about a specific page that failed validation, including its number and content.",
+        "properties": {
+          "content": {
+            "description": "The encoded content of the page that failed validation",
+            "type": "string"
+          },
+          "number": {
+            "description": "The number of the page that failed validation",
+            "format": "int32",
+            "type": "integer"
+          }
+        },
+        "type": "object"
+      },
+      "ParameterizedHeader": {
+        "properties": {
+          "parameters": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "type": "object"
+          },
+          "value": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "Revision": {
+        "description": "Revision details",
+        "properties": {
+          "author": {
+            "description": "The author of the revision",
+            "type": "string"
+          },
+          "baseline": {
+            "description": "The baseline of the revision",
+            "type": "string"
+          },
+          "date": {
+            "description": "The date of the revision",
+            "type": "string"
+          },
+          "description": {
+            "description": "The description of the revision",
+            "type": "string"
+          },
+          "name": {
+            "description": "The name of the revision",
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "SettingName": {
+        "properties": {
+          "name": {
+            "description": "The name of the setting",
+            "type": "string"
+          },
+          "scope": {
+            "description": "The scope of the setting",
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "SettingsModel": {
+        "description": "Settings model",
+        "properties": {
+          "bundleTimestamp": {
+            "description": "The bundle timestamp of the setting",
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "StylePackageWeightInfo": {
+        "properties": {
+          "name": {
+            "description": "The name of the setting",
+            "type": "string"
+          },
+          "scope": {
+            "description": "The scope of the setting",
+            "type": "string"
+          },
+          "weight": {
+            "description": "The weight of the setting",
+            "format": "float",
+            "type": "number"
+          }
+        },
+        "type": "object"
+      },
+      "TestRunAttachment": {
+        "properties": {
+          "fileName": {
+            "type": "string"
+          },
+          "id": {
+            "type": "string"
+          },
+          "revision": {
             "type": "string"
           }
         },
@@ -108,7 +2182,58 @@
           }
         },
         "type": "object"
+      },
+      "WebhooksStatus": {
+        "properties": {
+          "enabled": {
+            "type": "boolean"
+          }
+        },
+        "type": "object"
+      },
+      "WidthValidationResult": {
+        "description": "Result of the width validation process",
+        "properties": {
+          "invalidPages": {
+            "$ref": "#/components/schemas/PageInfo"
+          },
+          "suspiciousWorkItems": {
+            "$ref": "#/components/schemas/WorkItemRefData"
+          }
+        },
+        "type": "object"
+      },
+      "WorkItemRefData": {
+        "description": "Data class representing a reference to a work item, including ID, project, layout, and revision",
+        "properties": {
+          "id": {
+            "description": "The unique identifier of the Work item",
+            "type": "string"
+          },
+          "layout": {
+            "description": "Work item layout",
+            "type": "string"
+          },
+          "link": {
+            "type": "string"
+          },
+          "project": {
+            "description": "The unique identifier of the project to which the Work item belongs",
+            "type": "string"
+          },
+          "revision": {
+            "description": "The revision number of the Work item",
+            "type": "string"
+          }
+        },
+        "type": "object"
       }
     }
-  }
+  },
+  "tags": [
+    {
+      "description": "Operations related to PDF-exporter settings management",
+      "name": "Settings"
+    }
+  ]
 }

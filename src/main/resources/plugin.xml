@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.0"?>
+<plugin>
+    <extension
+            point="com.polarion.portal.tomcat.webapps">
+        <webapp
+                name="polarion/docx-exporter"
+                contextRoot="webapp/docx-exporter">
+        </webapp>
+    </extension>
+
+    <extension
+            point="com.polarion.portal.tomcat.webapps">
+        <webapp
+                name="polarion/docx-exporter-admin"
+                contextRoot="webapp/docx-exporter-admin">
+        </webapp>
+    </extension>
+</plugin>

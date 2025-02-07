@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<module id="ch.sbb.polarion.extension.docx_exporter" version="1.0.0">
+
+    <contribution configuration-id="com.polarion.alm.tracker.workflow.functions">
+        <function name="DOCX Export" prototype="Module"
+                  clazz="ch.sbb.polarion.extension.docx_exporter.PdfExportFunction">
+            <parameter name="Workitem ID to reuse" id="existing_wi_id" />
+            <parameter name="Workitem type ID to create" id="create_wi_type_id" />
+            <parameter name="Title to set into created workitem" id="create_wi_title" />
+            <parameter name="Description to set into created workitem" id="create_wi_description" />
+            <parameter name="Project ID where to create or find the target work item" id="project_id" />
+            <parameter name="The title of the attached file" id="attachment_title" />
+            <parameter name="Prefer last baseline" id="prefer_last_baseline" />
+            <parameter name="Style package" id="style_package" />
+        </function>
+    </contribution>
+
+    <contribution configuration-id="com.polarion.xray.webui.administrationPageExtenders">
+        <extender id="about"
+                  name="About"
+                  parentNodeId="docx-export"
+                  parentNodeName="DOCX Export"
+                  parentNodeIconUrl="/polarion/docx-exporter-admin/ui/images/menu/30x30/_parent.svg"
+                  iconUrl="/polarion/docx-exporter-admin/ui/images/menu/16x16/about.svg"
+                  pageUrl="/polarion/docx-exporter-admin/pages/about.jsp?scope=$scope$"
+                  projectScope="true"
+                  projectGroupScope="false"
+                  repositoryScope="true"/>
+
+        <extender id="user-guide"
+                  name="User Guide"
+                  parentNodeId="docx-export"
+                  iconUrl="/polarion/docx-exporter-admin/ui/images/menu/16x16/user_guide.svg"
+                  pageUrl="/polarion/docx-exporter-admin/pages/user-guide.jsp?scope=$scope$"
+                  projectScope="true"
+                  projectGroupScope="false"
+                  repositoryScope="true"/>
+
+        <extender id="rest-api"
+                  name="REST API"
+                  parentNodeId="docx-export"
+                  iconUrl="/polarion/docx-exporter-admin/ui/images/menu/16x16/rest_api.svg"
+                  pageUrl="/polarion/docx-exporter/rest/swagger"
+                  projectScope="true"
+                  projectGroupScope="false"
+                  repositoryScope="true"/>
+
+        <extender id="style-package"
+                  name="Style Package"
+                  parentNodeId="docx-export"
+                  iconUrl="/polarion/docx-exporter-admin/ui/images/menu/16x16/style_package.svg"
+                  pageUrl="/polarion/docx-exporter-admin/pages/style-packages.jsp?scope=$scope$"
+                  projectScope="true"
+                  projectGroupScope="false"
+                  repositoryScope="true"/>
+
+        <extender id="style-package-weights"
+                  name="Style Package Weights"
+                  parentNodeId="docx-export"
+                  iconUrl="/polarion/docx-exporter-admin/ui/images/menu/16x16/style_package_weights.svg"
+                  pageUrl="/polarion/docx-exporter-admin/pages/style-package-weights.jsp?scope=$scope$"
+                  projectScope="true"
+                  projectGroupScope="false"
+                  repositoryScope="true"/>
+
+        <extender id="cover-page"
+                  name="Cover Page"
+                  parentNodeId="docx-export"
+                  iconUrl="/polarion/docx-exporter-admin/ui/images/menu/16x16/cover_page.svg"
+                  pageUrl="/polarion/docx-exporter-admin/pages/cover-page.jsp?scope=$scope$"
+                  projectScope="true"
+                  projectGroupScope="false"
+                  repositoryScope="true"/>
+
+        <extender id="header-footer"
+                  name="Header/Footer"
+                  parentNodeId="docx-export"
+                  iconUrl="/polarion/docx-exporter-admin/ui/images/menu/16x16/header_footer.svg"
+                  pageUrl="/polarion/docx-exporter-admin/pages/header-footer.jsp?scope=$scope$"
+                  projectScope="true"
+                  projectGroupScope="false"
+                  repositoryScope="true"/>
+
+        <extender id="localization"
+                  name="Localization"
+                  parentNodeId="docx-export"
+                  iconUrl="/polarion/docx-exporter-admin/ui/images/menu/16x16/localization.svg"
+                  pageUrl="/polarion/docx-exporter-admin/pages/localization.jsp?scope=$scope$"
+                  projectScope="true"
+                  projectGroupScope="false"
+                  repositoryScope="true"/>
+
+        <extender id="css"
+                  name="CSS"
+                  parentNodeId="docx-export"
+                  iconUrl="/polarion/docx-exporter-admin/ui/images/menu/16x16/css.svg"
+                  pageUrl="/polarion/docx-exporter-admin/pages/css.jsp?scope=$scope$"
+                  projectScope="true"
+                  projectGroupScope="false"
+                  repositoryScope="true"/>
+
+        <extender id="webhooks"
+                  name="Webhooks"
+                  parentNodeId="docx-export"
+                  iconUrl="/polarion/docx-exporter-admin/ui/images/menu/16x16/webhooks.svg"
+                  pageUrl="/polarion/docx-exporter-admin/pages/webhooks.jsp?scope=$scope$"
+                  projectScope="true"
+                  projectGroupScope="false"
+                  repositoryScope="true"/>
+
+        <extender id="filename"
+                  name="Filename"
+                  parentNodeId="docx-export"
+                  iconUrl="/polarion/docx-exporter-admin/ui/images/menu/16x16/filename.svg"
+                  pageUrl="/polarion/docx-exporter-admin/pages/filename-template.jsp?scope=$scope$"
+                  projectScope="true"
+                  projectGroupScope="false"
+                  repositoryScope="true"/>
+    </contribution>
+
+</module>
