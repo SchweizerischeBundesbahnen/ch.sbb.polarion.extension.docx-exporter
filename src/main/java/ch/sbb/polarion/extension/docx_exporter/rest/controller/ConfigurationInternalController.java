@@ -7,7 +7,7 @@ import ch.sbb.polarion.extension.docx_exporter.util.configuration.DefaultSetting
 import ch.sbb.polarion.extension.docx_exporter.util.configuration.DleToolbarStatusProvider;
 import ch.sbb.polarion.extension.docx_exporter.util.configuration.DocumentPropertiesPaneStatusProvider;
 import ch.sbb.polarion.extension.docx_exporter.util.configuration.LiveReportMainHeadStatusProvider;
-import ch.sbb.polarion.extension.docx_exporter.util.configuration.WeasyPrintStatusProvider;
+import ch.sbb.polarion.extension.docx_exporter.util.configuration.PandocStatusProvider;
 import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
@@ -124,6 +124,6 @@ public class ConfigurationInternalController {
     )
 
     public @NotNull List<ConfigurationStatus> checkWeasyPrint() {
-        return new WeasyPrintStatusProvider().getStatuses(ConfigurationStatusProvider.Context.builder().build());
+        return new PandocStatusProvider().getStatuses(ConfigurationStatusProvider.Context.builder().build());
     }
 }

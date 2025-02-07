@@ -1,7 +1,11 @@
-package ch.sbb.polarion.extension.docx_exporter.pandoc;
+package ch.sbb.polarion.extension.docx_exporter.pandoc.service;
 
+import ch.sbb.polarion.extension.docx_exporter.pandoc.service.model.PandocInfo;
 import ch.sbb.polarion.extension.docx_exporter.properties.DocxExporterExtensionConfiguration;
 import ch.sbb.polarion.extension.docx_exporter.weasyprint.service.WeasyPrintServiceConnector;
+import ch.sbb.polarion.extension.docx_exporter.weasyprint.service.model.WeasyPrintInfo;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.polarion.core.util.logging.Logger;
 import lombok.Getter;
 import org.jetbrains.annotations.NotNull;
@@ -59,6 +63,32 @@ public class PandocServiceConnector {
                 } else {
                     String errorMessage = response.readEntity(String.class);
                     throw new IllegalStateException(String.format("Not expected response from Pandoc Service. Status: %s, Message: [%s]", response.getStatus(), errorMessage));
+                }
+            }
+        } finally {
+            if (client != null) {
+                client.close();
+            }
+        }
+    }
+
+    public PandocInfo getPandocInfo() {
+        Client client = null;
+        try {
+            client = ClientBuilder.newClient();
+            WebTarget webTarget = client.target(getPandocServiceBaseUrl() + "/version");
+
+            try (Response response = webTarget.request(MediaType.TEXT_PLAIN).get()) {
+                if (response.getStatus() == Response.Status.OK.getStatusCode()) {
+                    String responseContent = response.readEntity(String.class);
+
+                    try {
+                        return new ObjectMapper().readValue(responseContent, PandocInfo.class);
+                    } catch (JsonProcessingException e) {
+                        throw new IllegalStateException("Could not parse response", e);
+                    }
+                } else {
+                    throw new IllegalStateException("Could not get proper response from Pandoc Service");
                 }
             }
         } finally {
