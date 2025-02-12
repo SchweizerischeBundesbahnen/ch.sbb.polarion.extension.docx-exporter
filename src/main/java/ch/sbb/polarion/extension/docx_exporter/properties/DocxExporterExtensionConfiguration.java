@@ -24,7 +24,7 @@ public class DocxExporterExtensionConfiguration extends ExtensionConfiguration {
 
     public static final String PANDOC_SERVICE = "pandoc.service";
     public static final String PANDOC_SERVICE_DESCRIPTION = "The URL of the <a href='#pandoc-configuration'>Pandoc service</a>";
-    public static final String PANDOC_SERVICE_DEFAULT_VALUE = "http://localhost:9090";
+    public static final String PANDOC_SERVICE_DEFAULT_VALUE = "http://localhost:9082";
 
     public static final String WEBHOOKS_ENABLED = "webhooks.enabled";
     public static final String WEBHOOKS_ENABLED_DESCRIPTION = "Enable <a href='#enabling-webhooks'>webhooks</a>";
