@@ -9,14 +9,13 @@
 [![Maintainability Rating](https://sonarcloud.io/api/project_badges/measure?project=SchweizerischeBundesbahnen_ch.sbb.polarion.extension.pdf-exporter&metric=sqale_rating)](https://sonarcloud.io/summary/new_code?id=SchweizerischeBundesbahnen_ch.sbb.polarion.extension.pdf-exporter)
 [![Vulnerabilities](https://sonarcloud.io/api/project_badges/measure?project=SchweizerischeBundesbahnen_ch.sbb.polarion.extension.pdf-exporter&metric=vulnerabilities)](https://sonarcloud.io/summary/new_code?id=SchweizerischeBundesbahnen_ch.sbb.polarion.extension.pdf-exporter)
 
-# Polarion ALM extension to convert Documents to PDF files
+# Polarion ALM extension to convert Documents to DOCX files
 
-This Polarion extension provides possibility to convert Polarion Documents to PDF files.
-This is an alternative to native Polarion's solution.
-The extension uses [WeasyPrint](https://weasyprint.org/) as a PDF engine and requires it to run in [Docker as Service](#weasyprint-configuration).
+This Polarion extension provides possibility to convert Polarion Documents to DOCX files.
+The extension uses [Pandoc](https://pandoc.org/) as a converter engine and requires it to run in [Docker as Service](#pandoc-configuration).
 
 > [!IMPORTANT]
-> Starting from version 8.0.0 only latest version of Polarion is supported.
+> Only latest version of Polarion is supported.
 > Right now it is Polarion 2410.
 
 ## Quick start
@@ -46,13 +45,13 @@ Changes only take effect after restart of Polarion.
 
 ## Polarion configuration
 
-### WeasyPrint configuration
+### Pandoc configuration
 
-This extension supports the use of WeasyPrint as a REST service within a Docker container, as implemented [here](https://github.com/SchweizerischeBundesbahnen/weasyprint-service).
-To change WeasyPrint Service URL, adjust the following property in the `polarion.properties` file:
+This extension supports the use of Pandoc as a REST service within a Docker container, as implemented [here](https://github.com/SchweizerischeBundesbahnen/pandoc-service).
+To change Pandoc Service URL, adjust the following property in the `polarion.properties` file:
 
 ```properties
-ch.sbb.polarion.extension.pdf-exporter.weasyprint.service=http://localhost:9080
+ch.sbb.polarion.extension.docx-exporter.pandoc.service=http://localhost:9082
 ```
 
 ### PDF exporter extension to appear on a Document's properties pane
@@ -171,29 +170,6 @@ If HTML logging is switched on, then in standard polarion log file there will be
 
 Here you can find out in which files HTML was stored.
 
-### PDF Variants configuration
-
-This configuration property allows selecting a PDF variant to be used for PDF generation. The following variants are supported:
-
-| Variant      | Description                                                      |
-|--------------|------------------------------------------------------------------|
-| **pdf/a-1b** | Basic visual preservation (older PDF standard)                   |
-| **pdf/a-2b** | Basic visual preservation with modern features like transparency |
-| **pdf/a-3b** | Visual preservation with file attachments                        |
-| **pdf/a-4b** | Visual preservation using PDF 2.0 standard                       |
-| **pdf/a-2u** | Visual preservation + searchable text (Unicode)                  |
-| **pdf/a-3u** | Visual preservation + searchable text with file attachments      |
-| **pdf/a-4u** | Searchable text + PDF 2.0 features                               |
-| **pdf/ua-1** | Accessible PDF for assistive technologies                        |
-
-To configure the PDF variant, adjust the following property in the `polarion.properties` file:
-
-```properties
-ch.sbb.polarion.extension.pdf-exporter.weasyprint.pdf.variant=pdf/a-2b
-```
-
-The default value is `pdf/a-2b`.
-
 ### Workflow function configuration
 It is possible to configure the workflow function which exports a PDF file and attaches it to a newly created or already existing work item.
 
@@ -300,45 +276,3 @@ jobs.timeout.in-progress.minutes=60
 ## Known issues
 
 All good so far.
-
-## Upgrade
-
-### Upgrade from version 7.x.x to 8.0.0
-
-In version 8.0.0 support for Polarion 2404 and older has been dropped. This extension supports only Polarion 2410.
-Recommended version of WeasyPrint Service is 63.1.0.
-
-### Upgrade from version 6.x.x to 7.0.0
-
-In version 7.0.0 `/export-filename` REST API endpoint changed. As a result, if the endpoint has been used, it's required to adjust the calls accordingly.
-
-`DocumentType` enum in `ExportParams` has been changed. As a result, if enum values have been used, it's required to adjust the calls accordingly.
-
-Main package has been renamed from `ch.sbb.polarion.extension.pdf.exporter` to `ch.sbb.polarion.extension.docx_exporter`. As a result, if the extension has been used in another OSGi bundles, it's required to adjust the package imports accordingly.
-
-There was also added a CSS fragment for better display of Test Run pages in PDF, please add this fragment to your CSS definitions if they differ from default one, or update your CSS definitions via UI clicking button "Default" and later saving it. Here is this fragment:
-```css
-#polarion-rp-widget-content > .polarion-TestRunOverviewWidget-table > tbody > tr > td:first-child {
-   width: 46% !important;
-}
-.polarion-TestRunOverviewWidget-buttonName {
-   padding-top: 20px;
-}
-```
-
-In version 7.1.0 the property `ch.sbb.polarion.extension.pdf-exporter.internalizeExternalCss` has been removed. `polarion.properties` should be updated accordingly.
-
-
-### Upgrade from version 5.x.x to 6.0.0
-
-In version 6.0.0 WeasyPrint CLI support was removed. As a result, if WeasyPrint CLI has been using to generate PDFs, it's required to switch to [WeasyPrint Service](#weasyprint-configuration).
-
-The configuration properties `ch.sbb.polarion.extension.pdf-exporter.weasyprint.connector` and `ch.sbb.polarion.extension.pdf-exporter.weasyprint.executable` have been removed due to the removal of WeasyPrint CLI support. `polarion.properties` should be updated accordingly.
-
-### Upgrade from version 4.x.x to 5.0.0
-In version 5.0.0 not only label of configuration parameter "Fit images and tables to page width" was modified to be "Fit images and tables to page",
-but also underlying parameter was renamed to reflect this change. As a result if you had "Fit images and tables to page width" ticked in your configuration prior to version 5.0.0,
-after installation of this version you will have to go to configuration again and re-tick property "Fit images and tables to page", both on global repository level and on level of projects.
-
-Another change is default CSS which was modified to reflect different possible paper sizes as well as additional styling for images to jump into next page if they can't be fully displayed on current one.
-Thus please either reset your saved CSS into last version if you didn't have your own CSS definitions or merge your saved version with new default version.
