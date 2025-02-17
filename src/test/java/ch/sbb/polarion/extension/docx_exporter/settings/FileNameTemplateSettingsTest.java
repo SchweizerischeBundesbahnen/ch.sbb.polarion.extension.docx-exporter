@@ -23,7 +23,7 @@ import static org.mockito.Mockito.contains;
 import static org.mockito.Mockito.*;
 
 @ExtendWith({MockitoExtension.class, CurrentContextExtension.class})
-@CurrentContextConfig("pdf-exporter")
+@CurrentContextConfig("docx-exporter")
 class FileNameTemplateSettingsTest {
 
     @Test

@@ -312,12 +312,6 @@ public class PdfExporterFormExtension implements IFormExtension {
         String params = fillParams(project.getId(), moduleLocationPath, baselineRevision, module.getRevision());
         form = form.replace("{LOAD_PDF_PARAMS}", params);
 
-        form = form.replace("{VALIDATE_PDF_PARAMS}", params);
-
-        if (!stylePackage.isExposePageWidthValidation()) {
-            form = form.replace("id='page-width-validation'", "id='page-width-validation' style='display: none;'");
-        }
-
         return form;
     }
 

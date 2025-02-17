@@ -1,35 +1,53 @@
 
 const DocxExportCommon = {
 
-    DOC_PDF_CONVERSION_PULL_INTERVAL: 1000,
+    TOP_SELECTOR: ".docx-exporter",
+    PULL_INTERVAL: 1000,
     DEFAULT_SETTING_NAME: "Default",
 
+    getElementById: function (elementId) {
+        return document.querySelector(`${this.TOP_SELECTOR} #${elementId}`);
+    },
+
+    getJQueryElement: function (selector) {
+        return $(`${this.TOP_SELECTOR} ${selector}`);
+    },
+
+
+    querySelector: function (selector) {
+        return document.querySelector(`${this.TOP_SELECTOR} ${selector}`);
+    },
+
+    querySelectorAll: function (selector) {
+        return document.querySelectorAll(`${this.TOP_SELECTOR} ${selector}`);
+    },
+
     setCheckbox: function (elementId, value) {
-        document.getElementById(elementId).checked = !!value;
+        this.getElementById(elementId).checked = !!value;
     },
 
     setValue: function (elementId, value) {
-        document.getElementById(elementId).value = value;
+        this.getElementById(elementId).value = value;
     },
 
     setSelector: function (elementId, value) {
-        const selector = document.getElementById(elementId);
+        const selector = this.getElementById(elementId);
         selector.value = this.containsOption(selector, value) ? value : this.DEFAULT_SETTING_NAME;
     },
 
     displayIf: function (elementId, condition, displayStyle = "block") {
-        document.getElementById(elementId).style.display = condition ? displayStyle : "none";
+        this.getElementById(elementId).style.display = condition ? displayStyle : "none";
     },
 
     visibleIf: function (elementId, condition) {
-        document.getElementById(elementId).style.visibility = condition ? "visible" : "hidden";
+        this.getElementById(elementId).style.visibility = condition ? "visible" : "hidden";
     },
 
     containsOption: function (selectElement, option) {
         return [...selectElement.options].map(o => o.value).includes(option);
     },
 
-    asyncConvertPdf: async function (request, successCallback, errorCallback) {
+    asyncConvertDoc: async function (request, successCallback, errorCallback) {
         SbbCommon.callAsync({
             method: "POST",
             url: "/polarion/docx-exporter/rest/internal/convert/jobs",
@@ -37,7 +55,7 @@ const DocxExportCommon = {
             responseType: "blob",
             body: request,
             onOk: (responseText, request) => {
-                this.pullAndGetResultPdf(request.getResponseHeader("Location"), successCallback, errorCallback);
+                this.pullAndGetResultDoc(request.getResponseHeader("Location"), successCallback, errorCallback);
             },
             onError: (status, errorMessage, request) => {
                 errorCallback(request.response);
@@ -45,16 +63,16 @@ const DocxExportCommon = {
         });
     },
 
-    pullAndGetResultPdf: async function (url, successCallback, errorCallback) {
-        await new Promise(resolve => setTimeout(resolve, this.DOC_PDF_CONVERSION_PULL_INTERVAL));
+    pullAndGetResultDoc: async function (url, successCallback, errorCallback) {
+        await new Promise(resolve => setTimeout(resolve, this.PULL_INTERVAL));
         SbbCommon.callAsync({
             method: "GET",
             url: url,
             responseType: "blob",
             onOk: (responseText, request) => {
                 if (request.status === 202) {
-                    console.log('Async PDF conversion: still in progress, retrying...');
-                    this.pullAndGetResultPdf(url, successCallback, errorCallback);
+                    console.log('Async DOCX conversion: still in progress, retrying...');
+                    this.pullAndGetResultDoc(url, successCallback, errorCallback);
                 } else if (request.status === 200) {
                     let warningMessage;
                     let count = request.getResponseHeader("Missing-WorkItem-Attachments-Count");
@@ -146,10 +164,10 @@ const DocxExportCommon = {
                     exportParams["revision"] = collectionDocument.revision;
                     exportParams["documentType"] = DocxExportParams.DocumentType.LIVE_DOC;
 
-                    this.asyncConvertPdf(
+                    this.asyncConvertDoc(
                         exportParams.toJSON(),
                         (result, fileName) => {
-                            const downloadFileName = fileName || `${collectionDocument.projectId}_${collectionDocument.spaceId}_${collectionDocument.documentName}.pdf`;
+                            const downloadFileName = fileName || `${collectionDocument.projectId}_${collectionDocument.spaceId}_${collectionDocument.documentName}.docx`;
                             this.downloadBlob(result.response, downloadFileName);
 
                             completedCount++;

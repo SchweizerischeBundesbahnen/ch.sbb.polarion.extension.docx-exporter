@@ -1,5 +1,5 @@
 SbbCommon.init({
-    extension: 'pdf-exporter',
+    extension: 'docx-exporter',
     setting: 'cover-page',
     scope: SbbCommon.getValueById('scope'),
     initCodeInput: true

@@ -4,7 +4,7 @@ const MAX_PAGE_PREVIEWS = 4;
 const POPUP_ID = "pdf-export-modal-popup";
 const POPUP_HTML = `
     <div class="modal__overlay" tabindex="-1" data-micromodal-close>
-        <div  id="pdf-export-popup" class="modal__container pdf-exporter" role="dialog" aria-modal="true" aria-labelledby="pdf-export-modal-popup-title">
+        <div  id="pdf-export-popup" class="modal__container docx-exporter" role="dialog" aria-modal="true" aria-labelledby="pdf-export-modal-popup-title">
             <header class="modal__header">
                 <h2 class="modal__title" id="pdf-export-modal-popup-title" style="display: flex; justify-content: space-between; width: 100%">
                     <span>Export to PDF</span>
@@ -12,18 +12,18 @@ const POPUP_HTML = `
                 </h2>
             </header>
             <main class="modal__content">
-                <span style="color: red; font-style: italic;">PDF exporter extension wasn't fully initialized. Please, contact system administrator</span>
+                <span style="color: red; font-style: italic;">DOCX exporter extension wasn't fully initialized. Please, contact system administrator</span>
             </main>
             <footer class="modal__footer">
                 <button class="polarion-JSWizardButton" data-micromodal-close aria-label="Close this dialog window">Close</button>
-                <button class="polarion-JSWizardButton-Primary action-button" onclick="PdfExporter.exportToPdf()" style="display: none;">Export</button>
+                <button class="polarion-JSWizardButton-Primary action-button" onclick="DocxExporter.exportToDocx()" style="display: none;">Export</button>
             </footer>
         </div>
     </div>
 `;
 
 
-const PdfExporter = {
+const DocxExporter = {
     exportContext: null,
     documentLanguage: null,
 
@@ -36,7 +36,7 @@ const PdfExporter = {
         popup.innerHTML = POPUP_HTML;
         document.body.appendChild(popup);
 
-        fetch('/polarion/pdf-exporter/html/popupForm.html')
+        fetch('/polarion/docx-exporter/html/popupForm.html')
             .then(response => response.text())
             .then(content => {
                 document.querySelector("#pdf-export-popup .modal__content").innerHTML = content;
@@ -71,9 +71,9 @@ const PdfExporter = {
             });
         }
         function toggleOptionalPropertyBlocks(documentType, action) {
-            document.querySelectorAll(`.modal__container.pdf-exporter .property-wrapper.visible-for-${documentType}`)
+            document.querySelectorAll(`.modal__container.docx-exporter .property-wrapper.visible-for-${documentType}`)
                 .forEach(propertyBlock => propertyBlock.style.display = action);
-            document.querySelectorAll(`.modal__container.pdf-exporter .property-wrapper.not-visible-for-${documentType}`)
+            document.querySelectorAll(`.modal__container.docx-exporter .property-wrapper.not-visible-for-${documentType}`)
                 .forEach(propertyBlock => propertyBlock.style.display = Action.getOpposite(action));
         }
 
@@ -87,7 +87,7 @@ const PdfExporter = {
     openPopupForBulkExport: function (bulkExportWidget) {
         const documentType = bulkExportWidget?.querySelector(".polarion-PdfExporter-BulkExportWidget .header")?.getAttribute("document-type");
 
-        PdfExporter.openPopup({ exportContext: new DocxExportContext(
+        DocxExporter.openPopup({ exportContext: new DocxExportContext(
             {
                 documentType: documentType,
                 exportType: DocxExportParams.ExportType.BULK,
@@ -145,7 +145,7 @@ const PdfExporter = {
         return new Promise((resolve, reject) => {
             this.callAsync({
                 method: customMethod ? customMethod : "GET",
-                url: customUrl ? customUrl : `/polarion/pdf-exporter/rest/internal/settings/${setting}/names?scope=${scope}`,
+                url: customUrl ? customUrl : `/polarion/docx-exporter/rest/internal/settings/${setting}/names?scope=${scope}`,
                 body: customBody ? customBody : undefined,
                 contentType: customContentType ? customContentType : undefined,
                 responseType: "json",
@@ -178,7 +178,7 @@ const PdfExporter = {
         return new Promise((resolve, reject) => {
             this.callAsync({
                 method: "GET",
-                url: `/polarion/pdf-exporter/rest/internal/link-role-names?scope=${exportContext.getScope()}`,
+                url: `/polarion/docx-exporter/rest/internal/link-role-names?scope=${exportContext.getScope()}`,
                 responseType: "json",
             }).then(({response}) => {
                 const selectElement = document.getElementById("popup-roles-selector");
@@ -204,7 +204,7 @@ const PdfExporter = {
         return new Promise((resolve, reject) => {
             this.callAsync({
                 method: "POST",
-                url: `/polarion/pdf-exporter/rest/internal/export-filename`,
+                url: `/polarion/docx-exporter/rest/internal/export-filename`,
                 body: requestBody,
             }).then(({responseText}) => {
                 document.getElementById("popup-filename").value = responseText;
@@ -218,7 +218,7 @@ const PdfExporter = {
         return new Promise((resolve, reject) => {
             this.callAsync({
                 method: "GET",
-                url: `/polarion/pdf-exporter/rest/internal/webhooks/status`,
+                url: `/polarion/docx-exporter/rest/internal/webhooks/status`,
                 responseType: "json",
             }).then(({response}) => {
                 document.getElementById("webhooks-container").style.display = response.enabled ? "flex" : "none";
@@ -234,7 +234,7 @@ const PdfExporter = {
             return Promise.resolve(); // Skip loading language for reports, test runs and bulk export
         }
 
-        let url = `/polarion/pdf-exporter/rest/internal/document-language?projectId=${exportContext.getProjectId()}&spaceId=${exportContext.getSpaceId()}&documentName=${exportContext.getDocumentName()}`;
+        let url = `/polarion/docx-exporter/rest/internal/document-language?projectId=${exportContext.getProjectId()}&spaceId=${exportContext.getSpaceId()}&documentName=${exportContext.getDocumentName()}`;
         if (exportContext.revision) {
             url += `&revision=${exportContext.revision}`;
         }
@@ -243,14 +243,14 @@ const PdfExporter = {
                 method: "GET",
                 url: url,
             }).then(({responseText}) => {
-                PdfExporter.documentLanguage = responseText;
+                DocxExporter.documentLanguage = responseText;
                 resolve();
             }).catch((error) => reject(error));
         });
     },
 
     loadStylePackages: function (exportContext) {
-        let stylePackagesUrl = `/polarion/pdf-exporter/rest/internal/settings/style-package/suitable-names`;
+        let stylePackagesUrl = `/polarion/docx-exporter/rest/internal/settings/style-package/suitable-names`;
         const docIdentifiers = [];
         if (exportContext.getExportType() === DocxExportParams.ExportType.BULK) {
             this.exportContext.bulkExportWidget.querySelectorAll('input[type="checkbox"]:not(.export-all):checked').forEach((selectedCheckbox) => {
@@ -291,7 +291,7 @@ const PdfExporter = {
 
             this.callAsync({
                 method: "GET",
-                url: `/polarion/pdf-exporter/rest/internal/settings/style-package/names/${selectedStylePackageName}/content?scope=${this.exportContext.getScope()}`,
+                url: `/polarion/docx-exporter/rest/internal/settings/style-package/names/${selectedStylePackageName}/content?scope=${this.exportContext.getScope()}`,
                 responseType: "json",
             }).then(({response}) => {
                 this.stylePackageSelected(response);
@@ -369,95 +369,21 @@ const PdfExporter = {
         DocxExportCommon.displayIf("popup-roles-selector", this.exportContext.getExportType() !== DocxExportParams.ExportType.BULK && stylePackage.linkedWorkitemRoles, "inline-block");
 
         DocxExportCommon.displayIf("popup-style-package-content", stylePackage.exposeSettings);
-        DocxExportCommon.displayIf("popup-page-width-validation", this.exportContext.getExportType() !== DocxExportParams.ExportType.BULK && stylePackage.exposePageWidthValidation);
 
         DocxExportCommon.setCheckbox("popup-download-attachments", stylePackage.attachmentsFilter);
         DocxExportCommon.setValue("popup-attachments-filter", stylePackage.attachmentsFilter || "");
         DocxExportCommon.visibleIf("popup-attachments-filter", stylePackage.attachmentsFilter);
     },
 
-    validatePdf: function () {
-        this.hideAlerts();
-
-        const exportParams = this.getExportParams();
-        if (exportParams === undefined) {
-            return;
-        }
-        this.actionInProgress({inProgress: true, message: "Performing PDF validation"})
-
-        this.callAsync({
-            method: "POST",
-            url: "/polarion/pdf-exporter/rest/internal/validate?max-results=5",
-            body: exportParams.toJSON(),
-            responseType: "json"
-        }).then(({response}) => {
-            this.actionInProgress({inProgress: false});
-
-            const pages = response.invalidPages?.length;
-            if (pages && pages > 0) {
-                const pagesWord = 'page' + (pages === 1 ? '' : 's');
-                this.showValidationResult({
-                    alertType: "error",
-                    message: pages > MAX_PAGE_PREVIEWS
-                        ? `Invalid pages found. First ${MAX_PAGE_PREVIEWS} of them:`
-                        : `${pages} invalid ${pagesWord} found:`
-                });
-                this.createPreviews(response);
-            } else {
-                this.showValidationResult({alertType: "success", message: "All pages are valid"});
-            }
-        }).catch((error) => {
-            this.showNotification({alertType: "error", message: "Error occurred validating pages width" + (error?.response.message ? ": " + error.response.message : "")});
-            this.actionInProgress({inProgress: false});
-        })
-    },
-
-    createPreviews: function (result) {
-        const pagePreviews = document.getElementById('page-previews');
-        const pagesQuantity = Math.min(MAX_PAGE_PREVIEWS, result.invalidPages.length);
-        for (let i = 0; i < pagesQuantity; i++) {
-            const page = result.invalidPages[i];
-            const img = document.createElement("img");
-            img.className = 'popup-validate-result-img';
-            img.src = 'data:image/png;base64,' + page.content;
-            img.onclick = function () {
-                this.classList.toggle("popup-img-zoomed");
-            };
-            pagePreviews.appendChild(img);
-        }
-
-        const suspects = result.suspiciousWorkItems.length;
-        if (suspects > 0) {
-            this.addSuspiciousWiLinks(result.suspiciousWorkItems);
-        }
-    },
-
-    addSuspiciousWiLinks: function (suspiciousWorkItems) {
-        const suspiciousWiContainer = document.getElementById("suspicious-wi");
-        suspiciousWiContainer.appendChild(document.createTextNode("Suspicious work items:"));
-        const ul = document.createElement("ul");
-        ul.classList.add("suspicious-list");
-        for (const suspect of suspiciousWorkItems) {
-            let li = document.createElement("li");
-            let link = document.createElement("a");
-            link.href = suspect.link;
-            link.text = suspect.id;
-            link.target = "_blank";
-            li.appendChild(link);
-            ul.appendChild(li);
-        }
-        suspiciousWiContainer.appendChild(ul);
-    },
-
-    exportToPdf: function () {
+    exportToDocx: function () {
         this.hideAlerts();
 
         let fileName = document.getElementById("popup-filename").value;
         if (!fileName) {
             fileName = document.getElementById("popup-filename").dataset.default;
         }
-        if (fileName && !fileName.endsWith(".pdf")) {
-            fileName += ".pdf";
+        if (fileName && !fileName.endsWith(".docx")) {
+            fileName += ".docx";
         }
 
         const exportParams = this.getExportParams(fileName);
@@ -467,7 +393,7 @@ const PdfExporter = {
 
         if (this.exportContext.getBulkExportWidget() && this.exportContext.getExportType() === DocxExportParams.ExportType.BULK) {
             this.closePopup();
-            BulkPdfExporter.openPopup(this.exportContext.getBulkExportWidget(), exportParams);
+            BulkDocxExporter.openPopup(this.exportContext.getBulkExportWidget(), exportParams);
             return;
         }
 
@@ -476,20 +402,20 @@ const PdfExporter = {
             DocxExportCommon.downloadTestRunAttachments(exportParams.projectId, testRunId, exportParams.revision, exportParams.attachmentsFilter);
         }
 
-        this.actionInProgress({inProgress: true, message: "Generating PDF"})
+        this.actionInProgress({inProgress: true, message: "Generating DOCX"})
 
         const requestBody = exportParams.toJSON();
-        if (this.exportContext.getDocumentType() !== DocxExportParams.DocumentType.LIVE_REPORT && this.exportContext.getDocumentType() !== ExportParams.DocumentType.TEST_RUN) {
+        if (this.exportContext.getDocumentType() !== DocxExportParams.DocumentType.LIVE_REPORT && this.exportContext.getDocumentType() !== DocxExportParams.DocumentType.TEST_RUN) {
             this.checkNestedListsAsync(requestBody);
         }
 
-        DocxExportCommon.asyncConvertPdf(requestBody, result => {
+        DocxExportCommon.asyncConvertDoc(requestBody, result => {
             if (result.warning) {
                 this.showNotification({alertType: "warning", message: result.warning});
             }
             DocxExportCommon.downloadBlob(result.response, fileName);
 
-            this.showNotification({alertType: "success", message: "PDF was successfully generated"});
+            this.showNotification({alertType: "success", message: "DOCX was successfully generated"});
             this.actionInProgress({inProgress: false});
         }, errorResponse => {
             errorResponse.text().then(errorJson => {
@@ -504,7 +430,7 @@ const PdfExporter = {
     checkNestedListsAsync: function (requestBody) {
         this.callAsync({
             method: "POST",
-            url: "/polarion/pdf-exporter/rest/internal/checknestedlists",
+            url: "/polarion/docx-exporter/rest/internal/checknestedlists",
             body: requestBody,
             responseType: "json"
         }).then(({response}) => {
@@ -622,19 +548,19 @@ const PdfExporter = {
         if (inProgress) {
             this.hideAlerts();
         }
-        document.querySelectorAll(".modal__container.pdf-exporter .action-button").forEach(button => {
+        document.querySelectorAll(".modal__container.docx-exporter .action-button").forEach(button => {
             button.disabled = inProgress;
         });
         document.getElementById("in-progress-message").innerHTML = message;
         if (inProgress) {
-            document.querySelector(".modal__container.pdf-exporter .in-progress-overlay").classList.add("show");
+            document.querySelector(".modal__container.docx-exporter .in-progress-overlay").classList.add("show");
         } else {
-            document.querySelector(".modal__container.pdf-exporter .in-progress-overlay").classList.remove("show");
+            document.querySelector(".modal__container.docx-exporter .in-progress-overlay").classList.remove("show");
         }
     },
 
     showNotification: function ({alertType, message}) {
-        const alert = document.querySelector(`.modal__container.pdf-exporter .notifications .alert.alert-${alertType}`);
+        const alert = document.querySelector(`.modal__container.docx-exporter .notifications .alert.alert-${alertType}`);
         if (alert) {
             alert.textContent = message; // to avoid XSS do not use innerHTML here because message may contain arbitrary error response data
             alert.style.display = "block";
@@ -642,7 +568,7 @@ const PdfExporter = {
     },
 
     showValidationResult: function ({alertType, message}) {
-        const alert = document.querySelector(`.modal__container.pdf-exporter .validation-alerts .alert.alert-${alertType}`);
+        const alert = document.querySelector(`.modal__container.docx-exporter .validation-alerts .alert.alert-${alertType}`);
         if (alert) {
             alert.innerHTML = message;
             alert.style.display = "block";
@@ -650,10 +576,10 @@ const PdfExporter = {
     },
 
     hideAlerts: function () {
-        document.querySelectorAll(".modal__container.pdf-exporter .alert").forEach(alert => {
+        document.querySelectorAll(".modal__container.docx-exporter .alert").forEach(alert => {
             alert.style.display = "none";
         });
-        document.querySelectorAll(".modal__container.pdf-exporter input.error").forEach(input => {
+        document.querySelectorAll(".modal__container.docx-exporter input.error").forEach(input => {
             input.classList.remove("error");
         });
         if (document.getElementById('page-previews')) {
@@ -683,4 +609,4 @@ const PdfExporter = {
     },
 }
 
-PdfExporter.init();
+DocxExporter.init();

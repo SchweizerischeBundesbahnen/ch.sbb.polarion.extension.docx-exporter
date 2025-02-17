@@ -49,10 +49,10 @@ class ConverterInternalControllerTest {
                 .locationPath("testLocationPath")
                 .build();
         when(pdfConverterJobService.startJob(params, 60)).thenReturn("testJobId");
-        when(uriInfo.getRequestUri()).thenReturn(UriBuilder.fromUri("http://testHost:8090/polarion/pdf-exporter/rest/api/convert/jobs").build());
+        when(uriInfo.getRequestUri()).thenReturn(UriBuilder.fromUri("http://testHost:8090/polarion/docx-exporter/rest/api/convert/jobs").build());
         try (Response response = internalController.startPdfConverterJob(params)) {
             assertThat(response.getStatus()).isEqualTo(HttpStatus.ACCEPTED.value());
-            assertThat(response.getHeaderString(HttpHeaders.LOCATION)).isEqualTo("/polarion/pdf-exporter/rest/api/convert/jobs/testJobId");
+            assertThat(response.getHeaderString(HttpHeaders.LOCATION)).isEqualTo("/polarion/docx-exporter/rest/api/convert/jobs/testJobId");
         }
     }
 
@@ -82,7 +82,7 @@ class ConverterInternalControllerTest {
                                           String expectedLocationUrl,
                                           String expectedErrorMessage) {
         if (expectedLocationUrl != null) {
-            when(uriInfo.getRequestUri()).thenReturn(UriBuilder.fromUri("http://testHost:8090/polarion/pdf-exporter/rest/api/convert/jobs/testJobId").build());
+            when(uriInfo.getRequestUri()).thenReturn(UriBuilder.fromUri("http://testHost:8090/polarion/docx-exporter/rest/api/convert/jobs/testJobId").build());
         }
         when(pdfConverterJobService.getJobState("testJobId")).thenReturn(jobState);
         try (Response response = internalController.getPdfConverterJobStatus("testJobId")) {
@@ -101,7 +101,7 @@ class ConverterInternalControllerTest {
     static Stream<Arguments> getStatusParams() {
         return Stream.of(
                 Arguments.of(new JobState(false, false, false, null), HttpStatus.ACCEPTED, ConverterJobStatus.IN_PROGRESS, null, null),
-                Arguments.of(new JobState(true, false, false, null), HttpStatus.SEE_OTHER, ConverterJobStatus.SUCCESSFULLY_FINISHED, "/polarion/pdf-exporter/rest/api/convert/jobs/testJobId/result", null),
+                Arguments.of(new JobState(true, false, false, null), HttpStatus.SEE_OTHER, ConverterJobStatus.SUCCESSFULLY_FINISHED, "/polarion/docx-exporter/rest/api/convert/jobs/testJobId/result", null),
                 Arguments.of(new JobState(true, false, true, null), HttpStatus.CONFLICT, ConverterJobStatus.CANCELLED, null, null),
                 Arguments.of(new JobState(true, true, false, "test error"), HttpStatus.CONFLICT, ConverterJobStatus.FAILED, null, "test error")
         );

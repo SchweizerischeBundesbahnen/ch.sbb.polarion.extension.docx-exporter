@@ -7,7 +7,7 @@ import io.swagger.v3.oas.annotations.info.License;
 
 @OpenAPIDefinition(
         info = @Info(
-                title = "PDF Exporter REST API",
+                title = "DOCX Exporter REST API",
                 version = "v1",
                 description = "",
                 termsOfService = "",

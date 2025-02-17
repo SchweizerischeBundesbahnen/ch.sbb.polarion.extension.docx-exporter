@@ -35,7 +35,7 @@ public class PdfExporterRestApplication extends GenericRestApplication {
     private final Logger logger = Logger.getLogger(PdfExporterRestApplication.class);
 
     public PdfExporterRestApplication() {
-        logger.debug("Creating PDF-Exporter REST Application...");
+        logger.debug("Creating Docx-Exporter REST Application...");
 
         try {
             NamedSettingsRegistry.INSTANCE.register(
@@ -59,7 +59,7 @@ public class PdfExporterRestApplication extends GenericRestApplication {
             logger.error("Error during starting of clearing job", e);
         }
 
-        logger.debug("PDF-Exporter REST Application has been created");
+        logger.debug("Docx-Exporter REST Application has been created");
     }
 
     @Override

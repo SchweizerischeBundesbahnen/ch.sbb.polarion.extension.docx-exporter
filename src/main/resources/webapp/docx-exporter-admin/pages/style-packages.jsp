@@ -6,7 +6,7 @@
 <%! Boolean webhooksEnabled = DocxExporterExtensionConfiguration.getInstance().getWebhooksEnabled(); %>
 
 <head>
-    <title>PDF Exporter: Style Packages</title>
+    <title>DOCX Exporter: Style Packages</title>
     <link rel="stylesheet" href="../ui/generic/css/prism.css?bundle=<%= bundleTimestamp %>">
     <script type="text/javascript" src="../ui/generic/js/prism.js?bundle=<%= bundleTimestamp %>"></script>
     <link rel="stylesheet" href="../ui/generic/css/code-input.min.css?bundle=<%= bundleTimestamp %>">
@@ -75,7 +75,7 @@
 
 <body>
 <div class="standard-admin-page">
-    <h1>PDF Exporter: Style Packages</h1>
+    <h1>DOCX Exporter: Style Packages</h1>
 
     <jsp:include page='/common/jsp/notifications.jsp' />
 
@@ -269,18 +269,6 @@
                         Download attachments
                     </label>
                     <input id='attachments-filter' placeholder='*.*' type='text' style="visibility: hidden; margin-left: 10px; width: 117px"/>
-                </div>
-            </div>
-        </div>
-
-        <h2 class="align-left">PDF Exporter dialog configuration</h2>
-        <div class="flex-container">
-            <div class="flex-column">
-                <div class='checkbox input-group'>
-                    <label for='expose-page-width-validation'>
-                        <input id='expose-page-width-validation' type='checkbox'/>
-                        Expose page width validation controls
-                    </label>
                 </div>
             </div>
         </div>

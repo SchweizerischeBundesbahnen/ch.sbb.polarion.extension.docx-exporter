@@ -1,5 +1,5 @@
 SbbCommon.init({
-    extension: 'pdf-exporter',
+    extension: 'docx-exporter',
     setting: 'header-footer',
     scope: SbbCommon.getValueById('scope'),
     initCodeInput: true

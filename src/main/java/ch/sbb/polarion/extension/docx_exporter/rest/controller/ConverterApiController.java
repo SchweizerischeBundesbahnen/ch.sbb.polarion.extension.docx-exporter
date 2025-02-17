@@ -6,12 +6,10 @@ import ch.sbb.polarion.extension.docx_exporter.converter.HtmlToPdfConverter;
 import ch.sbb.polarion.extension.docx_exporter.converter.PdfConverter;
 import ch.sbb.polarion.extension.docx_exporter.converter.PdfConverterJobsService;
 import ch.sbb.polarion.extension.docx_exporter.rest.model.NestedListsCheck;
-import ch.sbb.polarion.extension.docx_exporter.rest.model.WidthValidationResult;
 import ch.sbb.polarion.extension.docx_exporter.rest.model.conversion.ExportParams;
 import ch.sbb.polarion.extension.docx_exporter.rest.model.conversion.Orientation;
 import ch.sbb.polarion.extension.docx_exporter.rest.model.conversion.PaperSize;
 import ch.sbb.polarion.extension.docx_exporter.service.PdfExporterPolarionService;
-import ch.sbb.polarion.extension.docx_exporter.util.PdfValidationService;
 import org.jetbrains.annotations.VisibleForTesting;
 import org.springframework.web.context.request.RequestAttributes;
 import org.springframework.web.context.request.RequestContextHolder;
@@ -32,8 +30,8 @@ public class ConverterApiController extends ConverterInternalController {
 
     @VisibleForTesting
     @SuppressWarnings("squid:S5803")
-    ConverterApiController(PdfExporterPolarionService pdfExporterPolarionService, PdfConverter pdfConverter, PdfValidationService pdfValidationService, PdfConverterJobsService pdfConverterJobService, UriInfo uriInfo, HtmlToPdfConverter htmlToPdfConverter) {
-        super(pdfConverter, pdfValidationService, pdfConverterJobService, uriInfo, htmlToPdfConverter);
+    ConverterApiController(PdfExporterPolarionService pdfExporterPolarionService, PdfConverter pdfConverter, PdfConverterJobsService pdfConverterJobService, UriInfo uriInfo, HtmlToPdfConverter htmlToPdfConverter) {
+        super(pdfConverter, pdfConverterJobService, uriInfo, htmlToPdfConverter);
         this.polarionService = pdfExporterPolarionService;
     }
 
@@ -68,11 +66,6 @@ public class ConverterApiController extends ConverterInternalController {
     @Override
     public Response convertHtmlToPdf(String html, Orientation orientation, PaperSize paperSize, String fileName) {
         return polarionService.callPrivileged(() -> super.convertHtmlToPdf(html, orientation, paperSize, fileName));
-    }
-
-    @Override
-    public WidthValidationResult validatePdfWidth(ExportParams exportParams, int maxResults) {
-        return polarionService.callPrivileged(() -> super.validatePdfWidth(exportParams, maxResults));
     }
 
     @Override

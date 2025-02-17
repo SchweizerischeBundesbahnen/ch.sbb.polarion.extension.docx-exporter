@@ -20,7 +20,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.*;
 
 @ExtendWith({MockitoExtension.class, CurrentContextExtension.class})
-@CurrentContextConfig("pdf-exporter")
+@CurrentContextConfig("docx-exporter")
 class HeaderFooterSettingsTest {
 
     @Test

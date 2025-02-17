@@ -1,7 +1,7 @@
 const BULK_POPUP_ID = 'bulk-pdf-export-modal-popup';
 const BULK_POPUP_HTML = `
     <div class="modal__overlay" tabindex="-1">
-        <div id="bulk-pdf-export-popup" class="modal__container pdf-exporter" role="dialog" aria-modal="true" aria-labelledby="bulk-pdf-export-modal-popup-title">
+        <div id="bulk-pdf-export-popup" class="modal__container docx-exporter" role="dialog" aria-modal="true" aria-labelledby="bulk-pdf-export-modal-popup-title">
             <header class="modal__header">
                 <h2 class="modal__title" id="bulk-pdf-export-modal-popup-title" style="display: flex; justify-content: space-between; width: 100%">
                     <span>Bulk export to PDF</span>
@@ -15,7 +15,7 @@ const BULK_POPUP_HTML = `
                     <span></span>
                 </div>
                 <span class="result" style="display: none"></span>
-                <button class="polarion-JSWizardButton-Primary action-button" onclick="BulkPdfExporter.stopBulkExport();">Stop</button>
+                <button class="polarion-JSWizardButton-Primary action-button" onclick="BulkDocxExporter.stopBulkExport();">Stop</button>
                 <button class="polarion-JSWizardButton" data-micromodal-close aria-label="Close this dialog window" style="display: none">Close</button>
             </footer>
         </div>
@@ -26,7 +26,7 @@ const BULK_EXPORT_IN_PROGRESS = "IN_PROGRESS";
 const BULK_EXPORT_INTERRUPTED = "INTERRUPTED";
 const BULK_EXPORT_FINISHED = "FINISHED";
 
-const BulkPdfExporter = {
+const BulkDocxExporter = {
     exportParams: null,
     itemsCount: 0,
     finishedCount: 0,
@@ -60,7 +60,7 @@ const BulkPdfExporter = {
             const modalContent = document.querySelector("#bulk-pdf-export-popup .modal__content");
             modalContent.innerHTML = "";
             bulkExportWidget.querySelectorAll('input[type="checkbox"]:not(.export-all):checked').forEach((selectedCheckbox) => {
-                BulkPdfExporter.itemsCount += 1;
+                BulkDocxExporter.itemsCount += 1;
 
                 const div = document.createElement("div");
                 div.className = "export-item paused";
@@ -195,7 +195,7 @@ const BulkPdfExporter = {
     updateProgress: function (progressBar) {
         progressBar.style.display = this.itemsCount > 1 ? "block" : "none";
         const progressBarSpan = progressBar.querySelector("span");
-        const progress = Math.round(BulkPdfExporter.finishedCount / BulkPdfExporter.itemsCount * 100);
+        const progress = Math.round(BulkDocxExporter.finishedCount / BulkDocxExporter.itemsCount * 100);
         if (progress > 25) {
             progressBarSpan.innerText = `${this.finishedCount} out of ${this.itemsCount} finished`;
         } else {
@@ -222,9 +222,9 @@ const BulkPdfExporter = {
                 DocxExportCommon.convertCollectionDocuments(this.exportParams, documentId, () => {
                         currentItem.classList.remove("in-progress");
                         currentItem.classList.add("finished");
-                        BulkPdfExporter.finishedCount += 1;
+                        BulkDocxExporter.finishedCount += 1;
                         if (this.state !== BULK_EXPORT_INTERRUPTED) {
-                            BulkPdfExporter.updateState(BULK_EXPORT_IN_PROGRESS);
+                            BulkDocxExporter.updateState(BULK_EXPORT_IN_PROGRESS);
                         }
                         this.startNextItemExport();
                     },
@@ -247,13 +247,13 @@ const BulkPdfExporter = {
             }
 
             if (documentType !== DocxExportParams.DocumentType.BASELINE_COLLECTION) {
-                DocxExportCommon.asyncConvertPdf(this.exportParams.toJSON(), (result, fileName) => {
+                DocxExportCommon.asyncConvertDoc(this.exportParams.toJSON(), (result, fileName) => {
                     currentItem.classList.remove("in-progress");
                     currentItem.classList.add("finished");
 
-                    BulkPdfExporter.finishedCount += 1;
-                    BulkPdfExporter.updateState(BULK_EXPORT_IN_PROGRESS);
-                    const downloadFileName = fileName || `${currentItem.dataset["space"] ? currentItem.dataset["space"] + "_" : ""}${documentId}.pdf`; // Fallback if file name wasn't received in response
+                    BulkDocxExporter.finishedCount += 1;
+                    BulkDocxExporter.updateState(BULK_EXPORT_IN_PROGRESS);
+                    const downloadFileName = fileName || `${currentItem.dataset["space"] ? currentItem.dataset["space"] + "_" : ""}${documentId}.docx`; // Fallback if file name wasn't received in response
                     DocxExportCommon.downloadBlob(result.response, downloadFileName);
                     this.startNextItemExport();
                 }, errorResponse => {
@@ -289,4 +289,4 @@ const BulkPdfExporter = {
 
 }
 
-BulkPdfExporter.init();
+BulkDocxExporter.init();

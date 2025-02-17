@@ -1,13 +1,13 @@
-[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=SchweizerischeBundesbahnen_ch.sbb.polarion.extension.pdf-exporter&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=SchweizerischeBundesbahnen_ch.sbb.polarion.extension.pdf-exporter)
-[![Bugs](https://sonarcloud.io/api/project_badges/measure?project=SchweizerischeBundesbahnen_ch.sbb.polarion.extension.pdf-exporter&metric=bugs)](https://sonarcloud.io/summary/new_code?id=SchweizerischeBundesbahnen_ch.sbb.polarion.extension.pdf-exporter)
-[![Code Smells](https://sonarcloud.io/api/project_badges/measure?project=SchweizerischeBundesbahnen_ch.sbb.polarion.extension.pdf-exporter&metric=code_smells)](https://sonarcloud.io/summary/new_code?id=SchweizerischeBundesbahnen_ch.sbb.polarion.extension.pdf-exporter)
-[![Coverage](https://sonarcloud.io/api/project_badges/measure?project=SchweizerischeBundesbahnen_ch.sbb.polarion.extension.pdf-exporter&metric=coverage)](https://sonarcloud.io/summary/new_code?id=SchweizerischeBundesbahnen_ch.sbb.polarion.extension.pdf-exporter)
-[![Duplicated Lines (%)](https://sonarcloud.io/api/project_badges/measure?project=SchweizerischeBundesbahnen_ch.sbb.polarion.extension.pdf-exporter&metric=duplicated_lines_density)](https://sonarcloud.io/summary/new_code?id=SchweizerischeBundesbahnen_ch.sbb.polarion.extension.pdf-exporter)
-[![Lines of Code](https://sonarcloud.io/api/project_badges/measure?project=SchweizerischeBundesbahnen_ch.sbb.polarion.extension.pdf-exporter&metric=ncloc)](https://sonarcloud.io/summary/new_code?id=SchweizerischeBundesbahnen_ch.sbb.polarion.extension.pdf-exporter)
-[![Reliability Rating](https://sonarcloud.io/api/project_badges/measure?project=SchweizerischeBundesbahnen_ch.sbb.polarion.extension.pdf-exporter&metric=reliability_rating)](https://sonarcloud.io/summary/new_code?id=SchweizerischeBundesbahnen_ch.sbb.polarion.extension.pdf-exporter)
-[![Security Rating](https://sonarcloud.io/api/project_badges/measure?project=SchweizerischeBundesbahnen_ch.sbb.polarion.extension.pdf-exporter&metric=security_rating)](https://sonarcloud.io/summary/new_code?id=SchweizerischeBundesbahnen_ch.sbb.polarion.extension.pdf-exporter)
-[![Maintainability Rating](https://sonarcloud.io/api/project_badges/measure?project=SchweizerischeBundesbahnen_ch.sbb.polarion.extension.pdf-exporter&metric=sqale_rating)](https://sonarcloud.io/summary/new_code?id=SchweizerischeBundesbahnen_ch.sbb.polarion.extension.pdf-exporter)
-[![Vulnerabilities](https://sonarcloud.io/api/project_badges/measure?project=SchweizerischeBundesbahnen_ch.sbb.polarion.extension.pdf-exporter&metric=vulnerabilities)](https://sonarcloud.io/summary/new_code?id=SchweizerischeBundesbahnen_ch.sbb.polarion.extension.pdf-exporter)
+[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=SchweizerischeBundesbahnen_ch.sbb.polarion.extension.docx-exporter&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=SchweizerischeBundesbahnen_ch.sbb.polarion.extension.docx-exporter)
+[![Bugs](https://sonarcloud.io/api/project_badges/measure?project=SchweizerischeBundesbahnen_ch.sbb.polarion.extension.docx-exporter&metric=bugs)](https://sonarcloud.io/summary/new_code?id=SchweizerischeBundesbahnen_ch.sbb.polarion.extension.docx-exporter)
+[![Code Smells](https://sonarcloud.io/api/project_badges/measure?project=SchweizerischeBundesbahnen_ch.sbb.polarion.extension.docx-exporter&metric=code_smells)](https://sonarcloud.io/summary/new_code?id=SchweizerischeBundesbahnen_ch.sbb.polarion.extension.docx-exporter)
+[![Coverage](https://sonarcloud.io/api/project_badges/measure?project=SchweizerischeBundesbahnen_ch.sbb.polarion.extension.docx-exporter&metric=coverage)](https://sonarcloud.io/summary/new_code?id=SchweizerischeBundesbahnen_ch.sbb.polarion.extension.docx-exporter)
+[![Duplicated Lines (%)](https://sonarcloud.io/api/project_badges/measure?project=SchweizerischeBundesbahnen_ch.sbb.polarion.extension.docx-exporter&metric=duplicated_lines_density)](https://sonarcloud.io/summary/new_code?id=SchweizerischeBundesbahnen_ch.sbb.polarion.extension.docx-exporter)
+[![Lines of Code](https://sonarcloud.io/api/project_badges/measure?project=SchweizerischeBundesbahnen_ch.sbb.polarion.extension.docx-exporter&metric=ncloc)](https://sonarcloud.io/summary/new_code?id=SchweizerischeBundesbahnen_ch.sbb.polarion.extension.docx-exporter)
+[![Reliability Rating](https://sonarcloud.io/api/project_badges/measure?project=SchweizerischeBundesbahnen_ch.sbb.polarion.extension.docx-exporter&metric=reliability_rating)](https://sonarcloud.io/summary/new_code?id=SchweizerischeBundesbahnen_ch.sbb.polarion.extension.docx-exporter)
+[![Security Rating](https://sonarcloud.io/api/project_badges/measure?project=SchweizerischeBundesbahnen_ch.sbb.polarion.extension.docx-exporter&metric=security_rating)](https://sonarcloud.io/summary/new_code?id=SchweizerischeBundesbahnen_ch.sbb.polarion.extension.docx-exporter)
+[![Maintainability Rating](https://sonarcloud.io/api/project_badges/measure?project=SchweizerischeBundesbahnen_ch.sbb.polarion.extension.docx-exporter&metric=sqale_rating)](https://sonarcloud.io/summary/new_code?id=SchweizerischeBundesbahnen_ch.sbb.polarion.extension.docx-exporter)
+[![Vulnerabilities](https://sonarcloud.io/api/project_badges/measure?project=SchweizerischeBundesbahnen_ch.sbb.polarion.extension.docx-exporter&metric=vulnerabilities)](https://sonarcloud.io/summary/new_code?id=SchweizerischeBundesbahnen_ch.sbb.polarion.extension.docx-exporter)
 
 # Polarion ALM extension to convert Documents to DOCX files
 
@@ -33,8 +33,8 @@ mvn clean package
 
 ## Installation to Polarion
 
-To install the extension to Polarion `ch.sbb.polarion.extension.pdf-exporter-<version>.jar`
-should be copied to `<polarion_home>/polarion/extensions/ch.sbb.polarion.extension.pdf-exporter/eclipse/plugins`
+To install the extension to Polarion `ch.sbb.polarion.extension.docx-exporter-<version>.jar`
+should be copied to `<polarion_home>/polarion/extensions/ch.sbb.polarion.extension.docx-exporter/eclipse/plugins`
 It can be done manually or automated using maven build:
 ```bash
 mvn clean install -P install-to-local-polarion
@@ -54,9 +54,9 @@ To change Pandoc Service URL, adjust the following property in the `polarion.pro
 ch.sbb.polarion.extension.docx-exporter.pandoc.service=http://localhost:9082
 ```
 
-### PDF exporter extension to appear on a Document's properties pane
+### DOCX exporter extension to appear on a Document's properties pane
 
-1. Open a project where you wish PDF Exporter to be available
+1. Open a project where you wish DOCX Exporter to be available
 2. On the top of the project's navigation pane click ⚙ (Actions) ➙ 🔧 Administration. Project's administration page will be opened.
 3. On the administration's navigation pane select Documents & Pages ➙ Document Properties Sidebar.
 4. In opened Edit Project Configuration editor find `sections`-element:
@@ -71,26 +71,26 @@ ch.sbb.polarion.extension.docx-exporter.pandoc.service=http://localhost:9082
 5. And insert following new line inside this element:
    ```xml
    …
-   <extension id="pdf-exporter" label="PDF Exporter" />
+   <extension id="docx-exporter" label="DOCX Exporter" />
    …
    ```
 6. Save changes by clicking 💾 Save
 
-### PDF Exporter view to open via button in toolbar
+### DOCX Exporter view to open via button in toolbar
 
-Alternatively you can configure PDF Exporter such a way that additional toolbar will appear in document's editor with a button to open a popup with PDF Exporter view.
+Alternatively you can configure DOCX Exporter such a way that additional toolbar will appear in document's editor with a button to open a popup with DOCX Exporter view.
 
 1. Open "Default Repository".
 2. On the top of its navigation pane click ⚙ (Actions) ➙ 🔧 Administration. Global administration page will be opened.
 3. On the administration's navigation pane select Configuration Properties.
 4. In editor of opened page add following line:
    ```properties
-   scriptInjection.dleEditorHead=<script src="/polarion/pdf-exporter/js/starter.js"></script><script>PdfExporterStarter.injectToolbar();</script>
+   scriptInjection.dleEditorHead=<script src="/polarion/docx-exporter/js/starter.js"></script><script>DocxExporterStarter.injectToolbar();</script>
    ```
-   There's an alternate approach adding PDF Exporter button into native Polarion's toolbar, which has a drawback at the moment -
+   There's an alternate approach adding DOCX Exporter button into native Polarion's toolbar, which has a drawback at the moment -
    button disappears in some cases (for example when document is saved), so using this approach is not advisable:
    ```properties
-   scriptInjection.dleEditorHead=<script src="/polarion/pdf-exporter/js/starter.js"></script><script>PdfExporterStarter.injectToolbar({alternate: true});</script>
+   scriptInjection.dleEditorHead=<script src="/polarion/docx-exporter/js/starter.js"></script><script>DocxExporterStarter.injectToolbar({alternate: true});</script>
    ```
 5. Save changes by clicking 💾 Save
 
@@ -146,9 +146,9 @@ com.siemens.polarion.rest.cors.allowedOrigins=http://localhost:8888,https://anot
 
 ### Enabling webhooks
 
-By default, webhooks functionality is not enabled in PDF Exporter. If you want to make it available the following line should be added in `polarion.properties`:
+By default, webhooks functionality is not enabled in DOCX Exporter. If you want to make it available the following line should be added in `polarion.properties`:
 ```properties
-ch.sbb.polarion.extension.pdf-exporter.webhooks.enabled=true
+ch.sbb.polarion.extension.docx-exporter.webhooks.enabled=true
 ```
 
 ### Debug option
@@ -158,14 +158,14 @@ original and resulting HTML to see potential problems in this processing. This l
 and off (`false` value) with help of following property in file `polarion.properties`:
 
 ```properties
-ch.sbb.polarion.extension.pdf-exporter.debug=true
+ch.sbb.polarion.extension.docx-exporter.debug=true
 ```
 
 If HTML logging is switched on, then in standard polarion log file there will be following lines:
 
 ```text
-2023-09-20 08:42:13,911 [ForkJoinPool.commonPool-worker-2] INFO  util.ch.sbb.polarion.extension.docx_exporter.util.HtmlLogger - Original HTML fragment provided by Polarion was stored in file /tmp/pdf-exporter10000032892830031969/original-4734772539141140796.html
-2023-09-20 08:42:13,914 [ForkJoinPool.commonPool-worker-2] INFO  util.ch.sbb.polarion.extension.docx_exporter.util.HtmlLogger - Final HTML page obtained as a result of PDF exporter processing was stored in file /tmp/pdf-exporter10000032892830031969/processed-5773281490308773124.html
+2023-09-20 08:42:13,911 [ForkJoinPool.commonPool-worker-2] INFO  util.ch.sbb.polarion.extension.docx_exporter.util.HtmlLogger - Original HTML fragment provided by Polarion was stored in file /tmp/docx-exporter10000032892830031969/original-4734772539141140796.html
+2023-09-20 08:42:13,914 [ForkJoinPool.commonPool-worker-2] INFO  util.ch.sbb.polarion.extension.docx_exporter.util.HtmlLogger - Final HTML page obtained as a result of DOCX exporter processing was stored in file /tmp/docx-exporter10000032892830031969/processed-5773281490308773124.html
 ```
 
 Here you can find out in which files HTML was stored.
@@ -201,61 +201,16 @@ In case if both of them specified 'existing_wi_id' has higher priority.
 ## Extension configuration
 
 1. On the top of the project's navigation pane click ⚙ (Actions) ➙ 🔧 Administration. Project's administration page will be opened.
-2. On the administration's navigation pane select `PDF Export`. There are expandable sub-menus with different configuration options for PDF Exporter.
+2. On the administration's navigation pane select `DOCX Export`. There are expandable sub-menus with different configuration options for DOCX Exporter.
 3. For some of these options (Cover page, Header and Footer, Localization, Webhooks and Filename template) `Quick Help` section available with option short description. For the rest
    (Style package, Stylesheets) there's no `Quick Help` section as their content is self-evident.
-4. To change configuration of PDF Exporter extension just edit corresponding section and press `Save` button.
-
-### CSS for booklet layout
-
-If you export PDF to be printed as a booklet, then you may need to alternate blocks in header/footer depending on the fact if it's even or odd page.
-This can be achieved (since version 8.1.0) by CSS modification. Let us give you an example. Find following definition in standard CSS of the extension:
-
-```
-@page :left {
-    @top-left {
-        content: element(top-left);
-    }
-    @top-right {
-        content: element(top-right);
-    }
-    @bottom-left {
-        content: element(bottom-left);
-    }
-    @bottom-right {
-        content: element(bottom-right);
-    }
-}
-```
-
-...and replace it by this code:
-
-```
-@page :left {
-    @top-left {
-        content: element(top-right);
-    }
-    @top-right {
-        content: element(top-left);
-    }
-    @bottom-left {
-        content: element(bottom-right);
-    }
-    @bottom-right {
-        content: element(bottom-left);
-    }
-}
-```
-
-As a result blocks in header and footer which in normal case are displayed at right side of the header/footer will be displayed at left side and vice versa.
-This is only an example to illustrate an idea, if your use case is different feel free to modify this code according to your requirements.
-
+4. To change configuration of DOCX Exporter extension just edit corresponding section and press `Save` button.
 
 ## Usage
 
 1. Open a document in Polarion.
 2. In the toolbar choose Show Sidebar ➙ Document Properties.
-3. Choose desired options in the `PDF Exporter` block and click `Export to PDF`.
+3. Choose desired options in the `DOCX Exporter` block and click `Export to DOCX`.
    For the options details please refer [user guide](USER_GUIDE.md).
 
 ## REST API
@@ -263,9 +218,9 @@ This extension provides REST API. OpenAPI Specification can be obtained [here](d
 
 ## Advanced configuration
 
-### Asynchronous PDF Export: export jobs timeout
-This extension provides REST API to export PDF asynchronously. Using this API, it is possible to start export job, observe their status and get result.
-Finished (succeed or failed) and in-progress export jobs will be preserved in memory until configured timeout. To change this timeout, adjust the following property in the local `pdf-converter-jobs.properties` file:
+### Asynchronous DOCX Export: export jobs timeout
+This extension provides REST API to export DOCX asynchronously. Using this API, it is possible to start export job, observe their status and get result.
+Finished (succeed or failed) and in-progress export jobs will be preserved in memory until configured timeout. To change this timeout, adjust the following property in the local `docx-converter-jobs.properties` file:
 ```properties
 # Timeout in minutes to keep finished async conversion jobs results in memory
 jobs.timeout.finished.minutes=30
@@ -274,5 +229,8 @@ jobs.timeout.in-progress.minutes=60
 ```
 
 ## Known issues
+
+### Pdf-export compatibility
+TODO 8.2.0+
 
 All good so far.
