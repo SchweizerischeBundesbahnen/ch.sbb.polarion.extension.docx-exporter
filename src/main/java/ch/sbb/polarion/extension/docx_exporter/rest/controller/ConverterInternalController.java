@@ -6,7 +6,6 @@ import ch.sbb.polarion.extension.docx_exporter.converter.PdfConverterJobsService
 import ch.sbb.polarion.extension.docx_exporter.converter.PdfConverterJobsService.JobState;
 import ch.sbb.polarion.extension.docx_exporter.converter.PropertiesUtility;
 import ch.sbb.polarion.extension.docx_exporter.rest.model.NestedListsCheck;
-import ch.sbb.polarion.extension.docx_exporter.rest.model.WidthValidationResult;
 import ch.sbb.polarion.extension.docx_exporter.rest.model.conversion.DocumentType;
 import ch.sbb.polarion.extension.docx_exporter.rest.model.conversion.ExportParams;
 import ch.sbb.polarion.extension.docx_exporter.rest.model.conversion.Orientation;
@@ -18,7 +17,6 @@ import ch.sbb.polarion.extension.docx_exporter.util.DocumentDataFactory;
 import ch.sbb.polarion.extension.docx_exporter.util.DocumentFileNameHelper;
 import ch.sbb.polarion.extension.docx_exporter.util.ExportContext;
 import ch.sbb.polarion.extension.docx_exporter.util.NumberedListsSanitizer;
-import ch.sbb.polarion.extension.docx_exporter.util.PdfValidationService;
 import com.polarion.alm.tracker.model.IModule;
 import com.polarion.core.util.StringUtils;
 import com.polarion.platform.core.PlatformContext;
@@ -70,7 +68,6 @@ public class ConverterInternalController {
     private static final String WORKITEM_IDS_WITH_MISSING_ATTACHMENT = "WorkItem-IDs-With-Missing-Attachment";
 
     private final PdfConverter pdfConverter;
-    private final PdfValidationService pdfValidationService;
     private final PdfConverterJobsService pdfConverterJobService;
     private final PropertiesUtility propertiesUtility;
     private final HtmlToPdfConverter htmlToPdfConverter;
@@ -80,7 +77,6 @@ public class ConverterInternalController {
 
     public ConverterInternalController() {
         this.pdfConverter = new PdfConverter();
-        this.pdfValidationService = new PdfValidationService(pdfConverter);
         ISecurityService securityService = PlatformContext.getPlatform().lookupService(ISecurityService.class);
         this.pdfConverterJobService = new PdfConverterJobsService(pdfConverter, securityService);
         this.propertiesUtility = new PropertiesUtility();
@@ -88,9 +84,8 @@ public class ConverterInternalController {
     }
 
     @VisibleForTesting
-    ConverterInternalController(PdfConverter pdfConverter, PdfValidationService pdfValidationService, PdfConverterJobsService pdfConverterJobService, UriInfo uriInfo, HtmlToPdfConverter htmlToPdfConverter) {
+    ConverterInternalController(PdfConverter pdfConverter, PdfConverterJobsService pdfConverterJobService, UriInfo uriInfo, HtmlToPdfConverter htmlToPdfConverter) {
         this.pdfConverter = pdfConverter;
-        this.pdfValidationService = pdfValidationService;
         this.pdfConverterJobService = pdfConverterJobService;
         this.uriInfo = uriInfo;
         this.propertiesUtility = new PropertiesUtility();
@@ -349,26 +344,6 @@ public class ConverterInternalController {
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + headerFileName)
                 .header(EXPORT_FILENAME_HEADER, headerFileName)
                 .build();
-    }
-
-    @POST
-    @Path("/validate")
-    @Consumes(MediaType.APPLICATION_JSON)
-    @Produces(MediaType.APPLICATION_JSON)
-    @Operation(summary = "Validates if requested Polarion's document been converted to PDF doesn't contain pages which content exceeds page's width",
-            responses = {
-                    @ApiResponse(responseCode = "200",
-                            description = "Validation result",
-                            content = {@Content(mediaType = "application/json", schema = @Schema(implementation = WidthValidationResult.class))}
-                    )
-            })
-    public WidthValidationResult validatePdfWidth(
-            ExportParams exportParams,
-            @Parameter(description = "Limit of 'invalid' pages in response", required = true) @QueryParam("max-results") int maxResults) {
-        if (exportParams.getProjectId() == null || exportParams.getLocationPath() == null) {
-            throw new BadRequestException("Both 'projectId' and 'locationPath' parameters should be provided to locate a document for validation");
-        }
-        return pdfValidationService.validateWidth(exportParams, maxResults);
     }
 
     @POST

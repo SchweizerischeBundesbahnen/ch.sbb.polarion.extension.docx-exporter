@@ -1,7 +1,7 @@
 {
   "openapi": "3.0.1",
   "info": {
-    "title": "PDF Exporter REST API",
+    "title": "DOCX Exporter REST API",
     "version": "v1"
   },
   "paths": {
@@ -1391,48 +1391,6 @@
         ]
       }
     },
-    "/api/validate": {
-      "post": {
-        "operationId": "validatePdfWidth",
-        "parameters": [
-          {
-            "description": "Limit of 'invalid' pages in response",
-            "in": "query",
-            "name": "max-results",
-            "required": true,
-            "schema": {
-              "format": "int32",
-              "type": "integer"
-            }
-          }
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/ExportParams"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/WidthValidationResult"
-                }
-              }
-            },
-            "description": "Validation result"
-          }
-        },
-        "summary": "Validates if requested Polarion's document been converted to PDF doesn't contain pages which content exceeds page's width",
-        "tags": [
-          "PDF Processing"
-        ]
-      }
-    },
     "/api/version": {
       "get": {
         "operationId": "getVersion",
@@ -1823,7 +1781,7 @@
             "type": "string"
           },
           "targetFormat": {
-            "default": "PDF",
+            "default": "DOCX",
             "description": "Target format of the exported document",
             "enum": [
               "PDF",
@@ -2039,21 +1997,6 @@
         },
         "type": "object"
       },
-      "PageInfo": {
-        "description": "Information about a specific page that failed validation, including its number and content.",
-        "properties": {
-          "content": {
-            "description": "The encoded content of the page that failed validation",
-            "type": "string"
-          },
-          "number": {
-            "description": "The number of the page that failed validation",
-            "format": "int32",
-            "type": "integer"
-          }
-        },
-        "type": "object"
-      },
       "ParameterizedHeader": {
         "properties": {
           "parameters": {
@@ -2190,49 +2133,12 @@
           }
         },
         "type": "object"
-      },
-      "WidthValidationResult": {
-        "description": "Result of the width validation process",
-        "properties": {
-          "invalidPages": {
-            "$ref": "#/components/schemas/PageInfo"
-          },
-          "suspiciousWorkItems": {
-            "$ref": "#/components/schemas/WorkItemRefData"
-          }
-        },
-        "type": "object"
-      },
-      "WorkItemRefData": {
-        "description": "Data class representing a reference to a work item, including ID, project, layout, and revision",
-        "properties": {
-          "id": {
-            "description": "The unique identifier of the Work item",
-            "type": "string"
-          },
-          "layout": {
-            "description": "Work item layout",
-            "type": "string"
-          },
-          "link": {
-            "type": "string"
-          },
-          "project": {
-            "description": "The unique identifier of the project to which the Work item belongs",
-            "type": "string"
-          },
-          "revision": {
-            "description": "The revision number of the Work item",
-            "type": "string"
-          }
-        },
-        "type": "object"
       }
     }
   },
   "tags": [
     {
-      "description": "Operations related to PDF-exporter settings management",
+      "description": "Operations related to Docx-exporter settings management",
       "name": "Settings"
     }
   ]

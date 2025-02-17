@@ -48,7 +48,6 @@ public class StylePackageModel extends SettingsModel {
     private static final String CUSTOM_NUMBERED_LIST_STYLES_ENTRY_NAME = "CUSTOM NUMBERED LIST STYLES";
     private static final String LANGUAGE_ENTRY_NAME = "LANGUAGE";
     private static final String LINKED_WORKITEM_ROLES_ENTRY_NAME = "LINKED WORKITEM ROLES";
-    private static final String EXPOSE_PAGE_WIDTH_VALIDATION_ENTRY_NAME = "EXPOSE PAGE WIDTH VALIDATION";
     private static final String ATTACHMENTS_FILTER = "ATTACHMENTS_FILTER";
 
     private String matchingQuery;
@@ -74,7 +73,6 @@ public class StylePackageModel extends SettingsModel {
     private String customNumberedListStyles;
     private String language;
     private List<String> linkedWorkitemRoles;
-    private boolean exposePageWidthValidation;
     private String attachmentsFilter;
 
     @Override
@@ -102,7 +100,6 @@ public class StylePackageModel extends SettingsModel {
                 serializeEntry(CUSTOM_NUMBERED_LIST_STYLES_ENTRY_NAME, customNumberedListStyles) +
                 serializeEntry(LANGUAGE_ENTRY_NAME, language) +
                 serializeEntry(LINKED_WORKITEM_ROLES_ENTRY_NAME, linkedWorkitemRoles) +
-                serializeEntry(EXPOSE_PAGE_WIDTH_VALIDATION_ENTRY_NAME, exposePageWidthValidation) +
                 serializeEntry(ATTACHMENTS_FILTER, attachmentsFilter);
     }
 
@@ -132,7 +129,6 @@ public class StylePackageModel extends SettingsModel {
         customNumberedListStyles = deserializeEntry(CUSTOM_NUMBERED_LIST_STYLES_ENTRY_NAME, serializedString);
         language = deserializeEntry(LANGUAGE_ENTRY_NAME, serializedString);
         linkedWorkitemRoles = deserializeListEntry(LINKED_WORKITEM_ROLES_ENTRY_NAME, serializedString, String.class);
-        exposePageWidthValidation = Boolean.parseBoolean(deserializeEntry(EXPOSE_PAGE_WIDTH_VALIDATION_ENTRY_NAME, serializedString));
         attachmentsFilter = deserializeEntry(ATTACHMENTS_FILTER, serializedString);
     }
 }

@@ -266,7 +266,7 @@ export default class DocxExportParams {
     }
 }
 
-// expose ExportParams to the global scope
+// expose DocxExportParams to the global scope
 if (typeof window !== 'undefined') {
     window.DocxExportParams = DocxExportParams;
 }

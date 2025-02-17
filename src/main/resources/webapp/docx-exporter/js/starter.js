@@ -1,10 +1,10 @@
 const TOOLBAR_HTML = `
     <table class="dleToolBarTable">
         <tr class="dleToolBarRow">
-            <td class="dleToolBarTableCell" title="Export to PDF">
-                <div class="dleToolBarSingleButton dleToolBarButton" onclick="PdfExporter.openPopup()">
-                    <img class="polarion-MenuButton-Icon" src="/polarion/ria/images/dle/operations/actionPdfExport16.svg{TIMESTAMP_PARAM}" style="margin: 0">
-                    <span style="margin: 0 5px 0 10px; font-weight: bold;">Export to PDF</span>
+            <td class="dleToolBarTableCell" title="Export to DOCX">
+                <div class="dleToolBarSingleButton dleToolBarButton" onclick="DocxExporter.openPopup()">
+                    <img class="polarion-MenuButton-Icon" src="/polarion/ria/images/dle/operations/actionMsWordRoundtrip16.svg{TIMESTAMP_PARAM}" style="margin: 0">
+                    <span style="margin: 0 5px 0 10px; font-weight: bold;">Export to DOCX</span>
                 </div>
             </td>
         </tr>
@@ -17,32 +17,32 @@ const ALTERNATE_TOOLBAR_HTML = `
             <td ><div class="gwt-Label polarion-dle-toolbar-Padding"></div></td>
             <td><img src="/polarion/ria/images/toolbar_splitter_gray.gif{TIMESTAMP_PARAM}" class="gwt-Image polarion-dle-ToolbarPanel-separator"></td>
             <td ><div class="gwt-Label polarion-dle-toolbar-Padding"></div></td>
-            <td class="dleToolBarTableCell" title="Export to PDF">
-                <div class="dleToolBarSingleButton dleToolBarButton" onclick="PdfExporter.openPopup()">
-                    <img class="polarion-MenuButton-Icon" src="/polarion/ria/images/dle/operations/actionPdfExport16.svg{TIMESTAMP_PARAM}" style="margin: 0">
+            <td class="dleToolBarTableCell" title="Export to DOCX">
+                <div class="dleToolBarSingleButton dleToolBarButton" onclick="DocxExporter.openPopup()">
+                    <img class="polarion-MenuButton-Icon" src="/polarion/ria/images/dle/operations/actionMsWordRoundtrip16.svg{TIMESTAMP_PARAM}" style="margin: 0">
                 </div>
             </td>
         </tr>
     </table>
 `;
 
-const PdfExporterStarter = {
+const DocxExporterStarter = {
     timestampParam: `?timestamp=${Date.now()}`,
 
     injectAll: function () {
-        this.injectStyles("pdf-exporter-styles", `/polarion/docx-exporter/css/pdf-exporter.css${this.timestampParam}`);
-        this.injectStyles("pdf-micromodal-styles", `/polarion/docx-exporter/css/micromodal.css${this.timestampParam}`);
+        this.injectStyles("docx-exporter-styles", `/polarion/docx-exporter/css/docx-exporter.css${this.timestampParam}`);
+        this.injectStyles("docx-micromodal-styles", `/polarion/docx-exporter/css/micromodal.css${this.timestampParam}`);
 
-        this.injectScript("ExportParams-script", `/polarion/docx-exporter/js/modules/ExportParams.js${this.timestampParam}`, "module")
+        this.injectScript("docx-ExportParams-script", `/polarion/docx-exporter/js/modules/ExportParams.js${this.timestampParam}`, "module")
             .then(() => {
                 Promise.all([
-                    this.injectScript("ExportContext-script", `/polarion/docx-exporter/js/modules/ExportContext.js${this.timestampParam}`, "module"),
-                    this.injectScript("common-script", `/polarion/docx-exporter/ui/generic/js/common.js${this.timestampParam}`),
-                    this.injectScript("pdf-micromodal-script", `/polarion/docx-exporter/js/micromodal.min.js${this.timestampParam}`),
-                    this.injectScript("export-common-script", `/polarion/docx-exporter/js/export-common.js${this.timestampParam}`)
+                    this.injectScript("docx-ExportContext-script", `/polarion/docx-exporter/js/modules/ExportContext.js${this.timestampParam}`, "module"),
+                    this.injectScript("docx-common-script", `/polarion/docx-exporter/ui/generic/js/common.js${this.timestampParam}`),
+                    this.injectScript("docx-micromodal-script", `/polarion/docx-exporter/js/micromodal.min.js${this.timestampParam}`),
+                    this.injectScript("docx-export-common-script", `/polarion/docx-exporter/js/export-common.js${this.timestampParam}`)
                 ]).then(() => {
-                    this.injectScript("pdf-exporter-script", `/polarion/docx-exporter/js/pdf-exporter.js${this.timestampParam}`);
-                    this.injectScript("bulk-pdf-exporter-script", `/polarion/docx-exporter/js/bulk-pdf-exporter.js${this.timestampParam}`);
+                    this.injectScript("docx-exporter-script", `/polarion/docx-exporter/js/docx-exporter.js${this.timestampParam}`);
+                    this.injectScript("bulk-docx-exporter-script", `/polarion/docx-exporter/js/bulk-docx-exporter.js${this.timestampParam}`);
                 });
         });
     },
@@ -88,4 +88,4 @@ const PdfExporterStarter = {
     },
 }
 
-PdfExporterStarter.injectAll();
+DocxExporterStarter.injectAll();

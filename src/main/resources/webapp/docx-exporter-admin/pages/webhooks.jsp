@@ -6,7 +6,7 @@
 <%! Boolean webhooksEnabled = DocxExporterExtensionConfiguration.getInstance().getWebhooksEnabled(); %>
 
 <head>
-    <title>PDF Exporter: Webhooks</title>
+    <title>DOCX Exporter: Webhooks</title>
     <link rel="stylesheet" href="../ui/generic/css/common.css?bundle=<%= bundleTimestamp %>">
     <link rel="stylesheet" href="../ui/generic/css/custom-select.css?bundle=<%= bundleTimestamp %>">
     <link rel="stylesheet" href="../ui/generic/css/configurations.css?bundle=<%= bundleTimestamp %>">
@@ -87,7 +87,7 @@
 <body>
 <div style="display: <%= webhooksEnabled ? "flex" : "none" %>; flex: 1; flex-direction: column">
     <div class="standard-admin-page">
-        <h1>PDF Exporter: Webhooks</h1>
+        <h1>DOCX Exporter: Webhooks</h1>
 
         <jsp:include page='/common/jsp/notifications.jsp'/>
 
@@ -135,7 +135,7 @@
     </div>
 </div>
 <div style="display: <%= webhooksEnabled ? "none" : "block" %>">
-    <h1>PDF Exporter: Webhooks</h1>
+    <h1>DOCX Exporter: Webhooks</h1>
     <p style="font-style: italic; color: palevioletred;">Webhooks are not enabled. Please contact system administrator if this functionality should be available.</p>
 </div>
 

@@ -18,7 +18,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 @ExtendWith({MockitoExtension.class, CurrentContextExtension.class})
-@CurrentContextConfig("pdf-exporter")
+@CurrentContextConfig("docx-exporter")
 class LocalizationSettingsTest {
 
     @Test

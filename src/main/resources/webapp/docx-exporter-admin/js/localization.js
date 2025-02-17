@@ -1,5 +1,5 @@
 SbbCommon.init({
-    extension: 'pdf-exporter',
+    extension: 'docx-exporter',
     setting: 'localization',
     scope: SbbCommon.getValueById('scope')
 });

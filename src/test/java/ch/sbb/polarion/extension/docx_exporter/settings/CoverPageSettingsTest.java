@@ -40,7 +40,7 @@ import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 @ExtendWith({MockitoExtension.class, CurrentContextExtension.class})
-@CurrentContextConfig("pdf-exporter")
+@CurrentContextConfig("docx-exporter")
 class CoverPageSettingsTest {
     @Mock
     PdfExporterPolarionService mockedPdfExporterPolarionService;

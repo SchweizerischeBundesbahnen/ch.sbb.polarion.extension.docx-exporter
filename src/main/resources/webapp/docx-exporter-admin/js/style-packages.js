@@ -1,7 +1,7 @@
 const DEFAULT_SETTING_NAME = "Default";
 
 SbbCommon.init({
-    extension: 'pdf-exporter',
+    extension: 'docx-exporter',
     setting: 'style-package',
     scope: SbbCommon.getValueById('scope')
 });
@@ -182,7 +182,6 @@ function saveStylePackage() {
             'customNumberedListStyles': SbbCommon.getCheckboxValueById('custom-list-styles') ? SbbCommon.getValueById('numbered-list-styles') : null,
             'language': SbbCommon.getCheckboxValueById('localization') ? Languages.languageSelect.getSelectedValue() : null,
             'linkedWorkitemRoles': SbbCommon.getCheckboxValueById('selected-roles') ? LinkRoles.rolesSelect.getSelectedValue() : null,
-            'exposePageWidthValidation': SbbCommon.getCheckboxValueById('expose-page-width-validation'),
             'attachmentsFilter': SbbCommon.getCheckboxValueById('download-attachments') ? SbbCommon.getValueById('attachments-filter') : null,
         }),
         onOk: () => {
@@ -263,8 +262,6 @@ function setStylePackage(content) {
     SbbCommon.setCheckboxValueById('download-attachments', !!stylePackage.attachmentsFilter);
     document.getElementById('download-attachments').dispatchEvent(new Event('change'));
     SbbCommon.setValueById('attachments-filter', stylePackage.attachmentsFilter || "");
-
-    SbbCommon.setCheckboxValueById('expose-page-width-validation', stylePackage.exposePageWidthValidation);
 
     if (stylePackage.bundleTimestamp !== SbbCommon.getValueById('bundle-timestamp')) {
         SbbCommon.setNewerVersionNotificationVisible(true);

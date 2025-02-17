@@ -4,7 +4,7 @@
 <%! String bundleTimestamp = ch.sbb.polarion.extension.generic.util.VersionUtils.getVersion().getBundleBuildTimestampDigitsOnly(); %>
 
 <head>
-    <title>PDF Exporter: Localization</title>
+    <title>DOCX Exporter: Localization</title>
     <link rel="stylesheet" href="../ui/generic/css/common.css?bundle=<%= bundleTimestamp %>">
     <link rel="stylesheet" href="../ui/generic/css/custom-select.css?bundle=<%= bundleTimestamp %>">
     <link rel="stylesheet" href="../ui/generic/css/configurations.css?bundle=<%= bundleTimestamp %>">
@@ -73,7 +73,7 @@
 
 <body>
 <div class="standard-admin-page">
-    <h1>PDF Exporter: Localization</h1>
+    <h1>DOCX Exporter: Localization</h1>
 
     <jsp:include page='/common/jsp/notifications.jsp' />
 

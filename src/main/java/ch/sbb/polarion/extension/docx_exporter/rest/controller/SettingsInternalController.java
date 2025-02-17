@@ -45,7 +45,7 @@ import java.util.UUID;
 
 @Hidden
 @Path("/internal")
-@Tag(name = "Settings", description = "Operations related to PDF-exporter settings management")
+@Tag(name = "Settings", description = "Operations related to Docx-exporter settings management")
 public class SettingsInternalController {
 
     private final PdfExporterPolarionService pdfExporterPolarionService = new PdfExporterPolarionService();

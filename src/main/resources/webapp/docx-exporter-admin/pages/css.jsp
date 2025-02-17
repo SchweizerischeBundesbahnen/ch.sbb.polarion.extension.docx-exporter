@@ -4,7 +4,7 @@
 <%! String bundleTimestamp = ch.sbb.polarion.extension.generic.util.VersionUtils.getVersion().getBundleBuildTimestampDigitsOnly(); %>
 
 <head>
-    <title>PDF Exporter: CSS</title>
+    <title>DOCX Exporter: CSS</title>
     <link rel="stylesheet" href="../ui/generic/css/prism.css?bundle=<%= bundleTimestamp %>">
     <script type="text/javascript" src="../ui/generic/js/prism.js?bundle=<%= bundleTimestamp %>"></script>
     <link rel="stylesheet" href="../ui/generic/css/code-input.min.css?bundle=<%= bundleTimestamp %>">
@@ -46,7 +46,7 @@
 
 <body>
 <div class="standard-admin-page">
-    <h1>PDF Exporter: CSS</h1>
+    <h1>DOCX Exporter: CSS</h1>
 
     <jsp:include page='/common/jsp/notifications.jsp' />
 

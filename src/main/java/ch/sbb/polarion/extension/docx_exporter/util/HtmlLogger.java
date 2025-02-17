@@ -28,7 +28,7 @@ public class HtmlLogger {
 
                 Path processedHtmlFile = createTempFile(tempDir, "processed-", ".html");
                 Files.writeString(processedHtmlFile, processedHtml);
-                logger.info(String.format("Final HTML page obtained as a result of PDF exporter processing was stored in file %s", processedHtmlFile));
+                logger.info(String.format("Final HTML page obtained as a result of DOCX exporter processing was stored in file %s", processedHtmlFile));
 
                 if (!StringUtils.isEmpty(generationLog)) {
                     Path generationLogFile = createTempFile(tempDir, "gen-log-", ".log");

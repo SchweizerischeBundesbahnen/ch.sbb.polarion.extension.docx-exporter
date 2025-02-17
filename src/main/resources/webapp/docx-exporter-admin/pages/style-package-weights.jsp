@@ -4,7 +4,7 @@
 <%! String bundleTimestamp = ch.sbb.polarion.extension.generic.util.VersionUtils.getVersion().getBundleBuildTimestampDigitsOnly(); %>
 
 <head>
-    <title>PDF Exporter: CSS</title>
+    <title>DOCX Exporter: CSS</title>
     <link rel="stylesheet" href="../ui/generic/css/common.css?bundle=<%= bundleTimestamp %>">
     <style type="text/css">
         html {
@@ -77,7 +77,7 @@
 
 <body>
 <div class="standard-admin-page">
-    <h1>PDF Exporter: Style Package Weights</h1>
+    <h1>DOCX Exporter: Style Package Weights</h1>
     <span>The higher the number, the higher resulting item's position will be. The highest item will be pre-selected in the dropdown on the export panel.</span>
     <div class="input-container">
         <div class="input-block wide">
