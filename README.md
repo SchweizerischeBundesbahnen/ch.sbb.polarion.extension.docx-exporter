@@ -94,24 +94,6 @@ Alternatively you can configure DOCX Exporter such a way that additional toolbar
    ```
 5. Save changes by clicking 💾 Save
 
-### PDF Exporter view to open in Live Reports
-
-Live Reports also can be converted to PDF with help of this extension.
-
-First of all you need to inject appropriate JavaScript code into Polarion:
-
-1. Open "Default Repository".
-2. On the top of its navigation pane click ⚙ (Actions) ➙ 🔧 Administration. Global administration page will be opened.
-3. On the administration's navigation pane select Configuration Properties.
-4. In editor of opened page add following line:
-   ```properties
-   scriptInjection.mainHead=<script src="/polarion/pdf-exporter/js/starter.js"></script>
-   ```
-5. Save changes by clicking 💾 Save
-
-Then open a project, its Live Report you wish to export, and click "Expand Tools" on top of the page.
-As a result report's toolbar will appear. Click "Edit" button in a toolbar, as a result the report will be switched into an edit mode. Add an empty region on top of the report, place cursor there, choose "PDF Export" tag on "Widgets" sidebar on right hand side of the page, find "Export to PDF Button" widget there and click it to add to the report. Then save a report clicking 💾 in a toolbar and then return to a view mode clicking "Back" button. When you click "Export to PDF" button just added to the report, PDF Exporter view will be opened in a popup and you will be able to proceed with exporting the report to PDF. Be aware that in report's context limited set of properties are available for configuration in PDF popup, the rest of them are relevant only in Live Document context.
-
 ### Configuring logs
 
 For better problem analyses extended logging can be configured in Polarion. By default, Polarion log level is set to INFO. It can be changed to debug in `log4j2.xml` file.
@@ -231,6 +213,4 @@ jobs.timeout.in-progress.minutes=60
 ## Known issues
 
 ### Pdf-export compatibility
-TODO 8.2.0+
-
-All good so far.
+Docx-exporter may conflict/work unstable when used altogether with Pdf-exporter extension v.8.1.2 or lower. In this case Pdf-exporter update required.

@@ -1,9 +1,9 @@
-const BULK_POPUP_ID = 'bulk-pdf-export-modal-popup';
+const BULK_POPUP_ID = 'bulk-docx-export-modal-popup';
 const BULK_POPUP_HTML = `
     <div class="modal__overlay" tabindex="-1">
-        <div id="bulk-pdf-export-popup" class="modal__container docx-exporter" role="dialog" aria-modal="true" aria-labelledby="bulk-pdf-export-modal-popup-title">
+        <div id="bulk-docx-export-popup" class="modal__container docx-exporter" role="dialog" aria-modal="true" aria-labelledby="bulk-docx-export-modal-popup-title">
             <header class="modal__header">
-                <h2 class="modal__title" id="bulk-pdf-export-modal-popup-title" style="display: flex; justify-content: space-between; width: 100%">
+                <h2 class="modal__title" id="bulk-docx-export-modal-popup-title" style="display: flex; justify-content: space-between; width: 100%">
                     <span>Bulk export to PDF</span>
                 </h2>
             </header>
@@ -57,7 +57,7 @@ const BulkDocxExporter = {
 
     renderBulkExportItems: function (bulkExportWidget) {
         if (bulkExportWidget) {
-            const modalContent = document.querySelector("#bulk-pdf-export-popup .modal__content");
+            const modalContent = document.querySelector("#bulk-docx-export-popup .modal__content");
             modalContent.innerHTML = "";
             bulkExportWidget.querySelectorAll('input[type="checkbox"]:not(.export-all):checked').forEach((selectedCheckbox) => {
                 BulkDocxExporter.itemsCount += 1;
@@ -157,7 +157,7 @@ const BulkDocxExporter = {
     updateState: function (state) {
         this.state = state;
 
-        const popup = document.getElementById("bulk-pdf-export-popup");
+        const popup = document.getElementById("bulk-docx-export-popup");
         const resultSpan = popup.querySelector(".modal__footer .result");
         const progressBar = popup.querySelector(".modal__footer .progress-bar");
         if (this.state === BULK_EXPORT_IN_PROGRESS) {
@@ -173,7 +173,7 @@ const BulkDocxExporter = {
             progressBar.style.display = "none";
             resultSpan.style.display = "block";
             if (this.state === BULK_EXPORT_INTERRUPTED) {
-                document.querySelectorAll("#bulk-pdf-export-popup .export-item.paused").forEach(item => {
+                document.querySelectorAll("#bulk-docx-export-popup .export-item.paused").forEach(item => {
                     item.classList.remove("paused");
                     item.classList.add("interrupted");
                 });
@@ -205,7 +205,7 @@ const BulkDocxExporter = {
     },
 
     startNextItemExport: function () {
-        const pausedItems = document.querySelectorAll("#bulk-pdf-export-popup .export-item.paused");
+        const pausedItems = document.querySelectorAll("#bulk-docx-export-popup .export-item.paused");
         if (this.exportParams && pausedItems && pausedItems.length > 0) {
             const currentItem = pausedItems[0];
             currentItem.classList.remove("paused");
