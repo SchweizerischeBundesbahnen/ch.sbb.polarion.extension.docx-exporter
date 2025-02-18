@@ -1,13 +1,13 @@
 const SELECTED_STYLE_PACKAGE_COOKIE = 'selected-style-package';
 const MAX_PAGE_PREVIEWS = 4;
 
-const POPUP_ID = "pdf-export-modal-popup";
+const POPUP_ID = "docx-export-modal-popup";
 const POPUP_HTML = `
     <div class="modal__overlay" tabindex="-1" data-micromodal-close>
-        <div  id="pdf-export-popup" class="modal__container docx-exporter" role="dialog" aria-modal="true" aria-labelledby="pdf-export-modal-popup-title">
+        <div  id="docx-export-popup" class="modal__container docx-exporter" role="dialog" aria-modal="true" aria-labelledby="docx-export-modal-popup-title">
             <header class="modal__header">
-                <h2 class="modal__title" id="pdf-export-modal-popup-title" style="display: flex; justify-content: space-between; width: 100%">
-                    <span>Export to PDF</span>
+                <h2 class="modal__title" id="docx-export-modal-popup-title" style="display: flex; justify-content: space-between; width: 100%">
+                    <span>Export to DOCX</span>
                     <i class="fa fa-times" aria-hidden="true" data-micromodal-close style="cursor: pointer"></i>
                 </h2>
             </header>
@@ -39,8 +39,8 @@ const DocxExporter = {
         fetch('/polarion/docx-exporter/html/popupForm.html')
             .then(response => response.text())
             .then(content => {
-                document.querySelector("#pdf-export-popup .modal__content").innerHTML = content;
-                document.querySelector("#pdf-export-popup .modal__footer .action-button").style.display = "inline-block";
+                document.querySelector("#docx-export-popup .modal__content").innerHTML = content;
+                document.querySelector("#docx-export-popup .modal__footer .action-button").style.display = "inline-block";
             });
     },
 
