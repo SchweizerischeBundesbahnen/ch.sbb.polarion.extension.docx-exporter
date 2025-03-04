@@ -104,7 +104,7 @@
     position: relative;
 }
 
-.modal__container.docx-exporter .in-progress-overlay {
+.modal__container.docx-exporter .docx-in-progress-overlay {
     position: absolute;
     width: 100%;
     height: 100%;
@@ -116,31 +116,31 @@
     align-items: center;
 }
 
-.modal__container.docx-exporter .in-progress-overlay.show {
+.modal__container.docx-exporter .docx-in-progress-overlay.show {
     display: flex;
 }
 
-.modal__container.docx-exporter .notifications {
+.modal__container.docx-exporter .docx-notifications {
     padding: 0 0 10px;
 }
 
-.modal__container.docx-exporter .notifications .alert {
+.modal__container.docx-exporter .docx-notifications .alert {
     margin-bottom: 10px;
     padding: 6px 12px;
     border-radius: 3px;
 }
 
-.modal__container.docx-exporter .notifications .alert-error {
+.modal__container.docx-exporter .docx-notifications .alert-error {
     background-color: #f8d7da;
     border: 1px solid #b3626a;
 }
 
-.modal__container.docx-exporter .notifications .alert-warning {
+.modal__container.docx-exporter .docx-notifications .alert-warning {
     background-color: #fff7cd;
     border: 1px solid #ffc328;
 }
 
-.modal__container.docx-exporter .notifications .alert-success {
+.modal__container.docx-exporter .docx-notifications .alert-success {
     background-color: #d1e7dd;
     border: 1px solid #75b598;
 }
@@ -373,13 +373,13 @@
     vertical-align: middle;
 }
 
-#export-error, #validate-error, #style-package-error {
+#export-docx-error, #validate-error, #docx-style-package-error {
     display: inline-block;
     color: red;
     font-weight: bold;
 }
 
-#export-warning {
+#export-docx-warning {
     display: inline-block;
     color: orange;
     font-weight: bold;

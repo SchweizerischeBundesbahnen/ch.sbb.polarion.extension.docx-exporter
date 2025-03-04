@@ -6,10 +6,7 @@ import ch.sbb.polarion.extension.docx_exporter.converter.PdfConverterJobsService
 import ch.sbb.polarion.extension.docx_exporter.converter.PdfConverterJobsService.JobState;
 import ch.sbb.polarion.extension.docx_exporter.converter.PropertiesUtility;
 import ch.sbb.polarion.extension.docx_exporter.rest.model.NestedListsCheck;
-import ch.sbb.polarion.extension.docx_exporter.rest.model.conversion.DocumentType;
 import ch.sbb.polarion.extension.docx_exporter.rest.model.conversion.ExportParams;
-import ch.sbb.polarion.extension.docx_exporter.rest.model.conversion.Orientation;
-import ch.sbb.polarion.extension.docx_exporter.rest.model.conversion.PaperSize;
 import ch.sbb.polarion.extension.docx_exporter.rest.model.documents.DocumentData;
 import ch.sbb.polarion.extension.docx_exporter.rest.model.jobs.ConverterJobDetails;
 import ch.sbb.polarion.extension.docx_exporter.rest.model.jobs.ConverterJobStatus;
@@ -58,7 +55,7 @@ import java.util.stream.Collectors;
 
 @Hidden
 @Path("/internal")
-@Tag(name = "PDF Processing")
+@Tag(name = "DOCX Processing")
 @SuppressWarnings("java:S1200")
 public class ConverterInternalController {
 
@@ -95,9 +92,9 @@ public class ConverterInternalController {
     @POST
     @Path("/convert")
     @Consumes(MediaType.APPLICATION_JSON)
-    @Produces("application/pdf")
-    @Operation(summary = "Returns requested Polarion's document converted to PDF",
-            requestBody = @RequestBody(description = "Export parameters to generate the PDF",
+    @Produces("application/vnd.openxmlformats-officedocument.wordprocessingml.document")
+    @Operation(summary = "Returns requested Polarion's document converted to DOCX",
+            requestBody = @RequestBody(description = "Export parameters to generate the DOCX",
                     required = true,
                     content = @Content(schema = @Schema(implementation = ExportParams.class),
                             mediaType = MediaType.APPLICATION_JSON
@@ -105,15 +102,15 @@ public class ConverterInternalController {
             ),
             responses = {
                     @ApiResponse(responseCode = "200",
-                            description = "Content of PDF document as a byte array",
-                            content = {@Content(mediaType = "application/pdf")},
+                            description = "Content of DOCX document as a byte array",
+                            content = {@Content(mediaType = "application/vnd.openxmlformats-officedocument.wordprocessingml.document")},
                             headers = {
                                     @Header(name = HttpHeaders.CONTENT_DISPOSITION,
                                             description = "To inform a browser that the response is a downloadable attachment",
                                             schema = @Schema(implementation = String.class)
                                     ),
                                     @Header(name = EXPORT_FILENAME_HEADER,
-                                            description = "File name for converted PDF document",
+                                            description = "File name for converted DOCX document",
                                             schema = @Schema(implementation = String.class)
                                     ),
                                     @Header(name = MISSING_WORKITEM_ATTACHMENTS_COUNT,
@@ -130,7 +127,7 @@ public class ConverterInternalController {
     public Response convertToPdf(ExportParams exportParams) {
         validateExportParameters(exportParams);
         String fileName = getFileName(exportParams);
-        byte[] pdfBytes = pdfConverter.convertToPdf(exportParams, null);
+        byte[] pdfBytes = pdfConverter.convertToPdf(exportParams);
         return Response.ok(pdfBytes)
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + fileName + "\"")
                 .header(EXPORT_FILENAME_HEADER, fileName)
@@ -143,8 +140,8 @@ public class ConverterInternalController {
     @Path("/prepared-html-content")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.TEXT_HTML)
-    @Operation(summary = "Returns prepared HTML which will be used for PDF conversion using WeasyPrint",
-            requestBody = @RequestBody(description = "Export parameters to generate the PDF",
+    @Operation(summary = "Returns prepared HTML which will be used for DOCX conversion using Pandoc",
+            requestBody = @RequestBody(description = "Export parameters to generate the DOCX",
                     required = true,
                     content = @Content(
                             schema = @Schema(implementation = ExportParams.class),
@@ -159,14 +156,14 @@ public class ConverterInternalController {
             })
     public String prepareHtmlContent(ExportParams exportParams) {
         validateExportParameters(exportParams);
-        return pdfConverter.prepareHtmlContent(exportParams, null);
+        return pdfConverter.prepareHtmlContent(exportParams);
     }
 
     @POST
     @Path("/convert/jobs")
     @Consumes(MediaType.APPLICATION_JSON)
-    @Operation(summary = "Starts asynchronous conversion job of Polarion's document to PDF",
-            requestBody = @RequestBody(description = "Export parameters to generate the PDF",
+    @Operation(summary = "Starts asynchronous conversion job of Polarion's document to DOCX",
+            requestBody = @RequestBody(description = "Export parameters to generate the DOCX",
                     required = true,
                     content = @Content(schema = @Schema(implementation = ExportParams.class),
                             mediaType = MediaType.APPLICATION_JSON
@@ -189,7 +186,7 @@ public class ConverterInternalController {
     @GET
     @Path("/convert/jobs/{id}")
     @Produces(MediaType.APPLICATION_JSON)
-    @Operation(summary = "Returns PDF conversion job status",
+    @Operation(summary = "Returns DOCX conversion job status",
             responses = {
                     // OpenAPI response MediaTypes for 303 and 202 response codes are generic to satisfy automatic redirect in SwaggerUI
                     @ApiResponse(responseCode = "303",
@@ -229,19 +226,19 @@ public class ConverterInternalController {
 
     @GET
     @Path("/convert/jobs/{id}/result")
-    @Produces("application/pdf")
-    @Operation(summary = "Returns PDF conversion job result",
+    @Produces("application/vnd.openxmlformats-officedocument.wordprocessingml.document")
+    @Operation(summary = "Returns DOCX conversion job result",
             responses = {
                     @ApiResponse(responseCode = "200",
                             description = "Conversion job result is ready",
-                            content = {@Content(mediaType = "application/pdf")},
+                            content = {@Content(mediaType = "application/vnd.openxmlformats-officedocument.wordprocessingml.document")},
                             headers = {
                                     @Header(name = HttpHeaders.CONTENT_DISPOSITION,
                                             description = "To inform a browser that the response is a downloadable attachment",
                                             schema = @Schema(implementation = String.class)
                                     ),
                                     @Header(name = EXPORT_FILENAME_HEADER,
-                                            description = "File name for converted PDF document",
+                                            description = "File name for converted DOCX document",
                                             schema = @Schema(implementation = String.class)
                                     ),
                                     @Header(name = MISSING_WORKITEM_ATTACHMENTS_COUNT,
@@ -294,7 +291,7 @@ public class ConverterInternalController {
     @GET
     @Path("/convert/jobs")
     @Produces("application/json")
-    @Operation(summary = "Returns all active PDF conversion jobs statuses",
+    @Operation(summary = "Returns all active DOCX conversion jobs statuses",
             responses = {
                     @ApiResponse(responseCode = "200",
                             description = "Conversion jobs statuses",
@@ -315,19 +312,19 @@ public class ConverterInternalController {
     @POST
     @Path("/convert/html")
     @Consumes(MediaType.TEXT_HTML)
-    @Produces("application/pdf")
-    @Operation(summary = "Converts input HTML to PDF",
+    @Produces("application/vnd.openxmlformats-officedocument.wordprocessingml.document")
+    @Operation(summary = "Converts input HTML to DOCX",
             responses = {
                     @ApiResponse(responseCode = "200",
-                            description = "Content of PDF document as a byte array",
-                            content = {@Content(mediaType = "application/pdf")},
+                            description = "Content of DOCX document as a byte array",
+                            content = {@Content(mediaType = "application/vnd.openxmlformats-officedocument.wordprocessingml.document")},
                             headers = {
                                     @Header(name = HttpHeaders.CONTENT_DISPOSITION,
                                             description = "To inform a browser that the response is a downloadable attachment",
                                             schema = @Schema(implementation = String.class)
                                     ),
                                     @Header(name = EXPORT_FILENAME_HEADER,
-                                            description = "File name for converted PDF document",
+                                            description = "File name for converted DOCX document",
                                             schema = @Schema(implementation = String.class)
                                     )
                             }
@@ -335,10 +332,8 @@ public class ConverterInternalController {
             })
     public Response convertHtmlToPdf(
             @Parameter(description = "input html (must include html and body elements)") String html,
-            @Parameter(description = "default value: portrait") @QueryParam("orientation") Orientation orientation,
-            @Parameter(description = "default value: A4") @QueryParam("paperSize") PaperSize paperSize,
             @Parameter(description = "default value: document.docx") @QueryParam("fileName") String fileName) {
-        byte[] pdfBytes = htmlToPdfConverter.convert(html, orientation, paperSize);
+        byte[] pdfBytes = htmlToPdfConverter.convert(html);
         String headerFileName = (fileName != null) ? fileName : "document.docx";
         return Response.ok(pdfBytes)
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + headerFileName)
@@ -379,14 +374,11 @@ public class ConverterInternalController {
         if (exportParams == null) {
             throw new BadRequestException("Missing export parameters");
         }
-        if (exportParams.getDocumentType() == DocumentType.LIVE_DOC && exportParams.getProjectId() == null) {
+        if (exportParams.getProjectId() == null) {
             throw new BadRequestException("Parameter 'projectId' should be provided");
         }
-        if (exportParams.getLocationPath() == null && exportParams.getDocumentType() != DocumentType.TEST_RUN) {
+        if (exportParams.getLocationPath() == null) {
             throw new BadRequestException("Parameter 'locationPath' should be provided");
-        }
-        if (exportParams.getDocumentType() == DocumentType.BASELINE_COLLECTION) {
-            throw new BadRequestException("Parameter 'documentType' should not be 'BASELINE_COLLECTION'");
         }
     }
 
@@ -396,7 +388,7 @@ public class ConverterInternalController {
                     ? new DocumentFileNameHelper().getDocumentFileName(exportParams)
                     : exportParams.getFileName();
         } else {
-            return "document.pdf";
+            return "document.docx";
         }
     }
 

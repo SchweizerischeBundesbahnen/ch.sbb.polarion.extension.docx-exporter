@@ -4,7 +4,6 @@ import ch.sbb.polarion.extension.generic.settings.NamedSettings;
 import ch.sbb.polarion.extension.generic.settings.NamedSettingsRegistry;
 import ch.sbb.polarion.extension.generic.settings.SettingId;
 import ch.sbb.polarion.extension.generic.util.ScopeUtils;
-import ch.sbb.polarion.extension.docx_exporter.rest.model.conversion.DocumentType;
 import ch.sbb.polarion.extension.docx_exporter.rest.model.conversion.ExportParams;
 import ch.sbb.polarion.extension.docx_exporter.rest.model.documents.DocumentData;
 import ch.sbb.polarion.extension.docx_exporter.rest.model.settings.filename.FileNameTemplateModel;
@@ -14,9 +13,6 @@ import ch.sbb.polarion.extension.docx_exporter.util.velocity.VelocityEvaluator;
 import com.polarion.alm.projects.model.IUniqueObject;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.VisibleForTesting;
-
-import java.util.EnumSet;
-
 
 public class DocumentFileNameHelper {
 
@@ -31,14 +27,14 @@ public class DocumentFileNameHelper {
     }
 
     public String getDocumentFileName(@NotNull ExportParams exportParams) {
-        if (exportParams.getProjectId() == null && EnumSet.of(DocumentType.LIVE_DOC, DocumentType.TEST_RUN).contains(exportParams.getDocumentType())) {
+        if (exportParams.getProjectId() == null) {
             throw new IllegalArgumentException("Project ID must be provided for LiveDoc or TestRun export");
         }
 
         final DocumentData<? extends IUniqueObject> documentData = DocumentDataFactory.getDocumentData(exportParams, false);
 
         FileNameTemplateModel fileNameTemplateModel = getFileNameTemplateModel(ScopeUtils.getScopeFromProject(exportParams.getProjectId()));
-        @NotNull String fileNameTemplate = getFileNameTemplate(exportParams.getDocumentType(), fileNameTemplateModel);
+        @NotNull String fileNameTemplate = getFileNameTemplate(fileNameTemplateModel);
         fileNameTemplate = new PlaceholderProcessor().replacePlaceholders(documentData, exportParams, fileNameTemplate);
         String evaluatedFileName = evaluateVelocity(documentData, fileNameTemplate);
         return replaceIllegalFileNameSymbols(evaluatedFileName).trim();
@@ -56,14 +52,8 @@ public class DocumentFileNameHelper {
     }
 
     @VisibleForTesting
-    @NotNull String getFileNameTemplate(@NotNull DocumentType documentType, @NotNull FileNameTemplateModel fileNameTemplateModel) {
-        return switch (documentType) {
-            case LIVE_DOC -> fileNameTemplateModel.getDocumentNameTemplate();
-            case LIVE_REPORT -> fileNameTemplateModel.getReportNameTemplate();
-            case TEST_RUN -> fileNameTemplateModel.getTestRunNameTemplate();
-            case WIKI_PAGE -> fileNameTemplateModel.getWikiNameTemplate();
-            case BASELINE_COLLECTION -> throw new IllegalArgumentException("Unsupported document type: %s".formatted(documentType));
-        };
+    @NotNull String getFileNameTemplate(@NotNull FileNameTemplateModel fileNameTemplateModel) {
+        return fileNameTemplateModel.getDocumentNameTemplate();
     }
 
     private FileNameTemplateModel getFileNameTemplateModel(String scope) {

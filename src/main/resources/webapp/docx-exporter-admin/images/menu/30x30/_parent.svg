@@ -1,24 +1,114 @@
-<svg width="30" height="30" viewBox="0 0 81 80" fill="none" xmlns="http://www.w3.org/2000/svg">
-<g filter="url(#filter0_d_1080_2778)">
-<mask id="mask0_1080_2778" style="mask-type:luminance" maskUnits="userSpaceOnUse" x="4" y="1" width="73" height="73">
-<rect x="4.67993" y="1.99402" width="72" height="72" fill="white"/>
-</mask>
-<g mask="url(#mask0_1080_2778)">
-<rect width="108" height="108" transform="translate(-13.3201 -16.006)" fill="white"/>
-<path fill-rule="evenodd" clip-rule="evenodd" d="M26.5299 30.994H25.697L25.6966 31.8269L25.6799 61.8269L25.6794 62.6607H26.5132H44.0132V60.994H27.347L27.3628 32.6607H37.3466V41.8274V42.6607H38.1799H47.3466V44.3274H49.0132V41.8274V41.4822L48.7692 41.2381L38.7692 31.2381L38.5251 30.994H38.1799H26.5299ZM46.1681 40.994L39.0132 33.8392V40.994H46.1681ZM30.6799 52.6607H32.6966C33.0299 52.6607 33.2966 52.6774 33.4966 52.7274C33.6966 52.7774 33.8632 52.844 34.0299 52.944C34.4632 53.244 34.6799 53.6774 34.6799 54.2607C34.6799 54.7774 34.4966 55.194 34.1466 55.494C33.9966 55.6274 33.8132 55.7107 33.6299 55.7774C33.4466 55.844 33.1966 55.8607 32.8966 55.8607H31.7799V57.6607H30.6799V52.6607ZM31.7799 53.5774V54.994H32.7632C33.0466 54.994 33.2632 54.944 33.3966 54.844C33.5466 54.7107 33.6299 54.5274 33.6299 54.2774C33.6299 54.0274 33.5466 53.844 33.3632 53.7107C33.2299 53.6107 33.0132 53.5774 32.7132 53.5774H31.7966H31.7799ZM37.2966 52.6607H35.2799L35.2632 52.6774V57.6774H37.3132C37.7299 57.6774 38.0632 57.644 38.3132 57.544C38.5632 57.444 38.8132 57.294 39.0132 57.094C39.4966 56.6274 39.7299 55.9607 39.7299 55.1107C39.7299 54.294 39.4799 53.6607 38.9799 53.2107C38.7632 53.0107 38.5299 52.8774 38.2632 52.794C37.9966 52.7107 37.6799 52.6607 37.2966 52.6607ZM36.3799 56.7274V53.5774L36.3966 53.544H37.1966C37.6799 53.544 38.0299 53.6774 38.2799 53.944C38.5299 54.2107 38.6466 54.594 38.6466 55.1107C38.6466 55.6607 38.5132 56.094 38.2466 56.3774C38.1299 56.5107 37.9966 56.594 37.8466 56.644C37.6966 56.694 37.4799 56.7274 37.2299 56.7274H36.3799ZM44.0132 52.6607V53.5774H41.5799V54.744H43.6966V55.6107H41.5799V57.6774H40.4799V52.6774H43.9966L44.0132 52.6607ZM45.924 54.0833L50.924 59.0833L51.5132 59.6725L52.1025 59.0833L57.1025 54.0833L55.924 52.9048L52.3466 56.4822V45.994H50.6799V56.4822L47.1025 52.9048L45.924 54.0833ZM47.3466 60.994V62.6607H55.6799V60.994H47.3466Z" fill="black"/>
-<rect x="-13.3201" y="-16.006" width="108" height="40" fill="#EB0000"/>
-<path fill-rule="evenodd" clip-rule="evenodd" d="M34.67 19.4556H38.1662L33.4615 14.6671H39.3007V19.4556H42.0601V14.6671H47.8996L43.1937 19.4556H46.6902L52.6799 13.2345L46.6902 6.99402H43.1937L47.8996 11.8019H42.0601V6.99402H39.3007V11.8019H33.4615L38.1662 6.99402H34.67L28.6799 13.2345L34.67 19.4556" fill="white"/>
-</g>
-</g>
-<defs>
-<filter id="filter0_d_1080_2778" x="0.679932" y="-0.00598145" width="80" height="80" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
-<feFlood flood-opacity="0" result="BackgroundImageFix"/>
-<feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha"/>
-<feOffset dy="2"/>
-<feGaussianBlur stdDeviation="2"/>
-<feColorMatrix type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.2 0"/>
-<feBlend mode="normal" in2="BackgroundImageFix" result="effect1_dropShadow_1080_2778"/>
-<feBlend mode="normal" in="SourceGraphic" in2="effect1_dropShadow_1080_2778" result="shape"/>
-</filter>
-</defs>
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+        width="30"
+        height="30"
+        viewBox="0 0 81 80"
+        fill="none"
+        version="1.1"
+        id="svg6"
+        xmlns="http://www.w3.org/2000/svg"
+        xmlns:svg="http://www.w3.org/2000/svg">
+    <defs
+            id="defs6">
+        <filter
+                id="filter0_d_1080_2778"
+                x="0.679932"
+                y="-0.00598145"
+                width="80"
+                height="80"
+                filterUnits="userSpaceOnUse"
+                color-interpolation-filters="sRGB">
+            <feFlood
+                    flood-opacity="0"
+                    result="BackgroundImageFix"
+                    id="feFlood4" />
+            <feColorMatrix
+                    in="SourceAlpha"
+                    type="matrix"
+                    values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0"
+                    result="hardAlpha"
+                    id="feColorMatrix4" />
+            <feOffset
+                    dy="2"
+                    id="feOffset4" />
+            <feGaussianBlur
+                    stdDeviation="2"
+                    id="feGaussianBlur4" />
+            <feColorMatrix
+                    type="matrix"
+                    values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.2 0"
+                    id="feColorMatrix5" />
+            <feBlend
+                    mode="normal"
+                    in2="BackgroundImageFix"
+                    result="effect1_dropShadow_1080_2778"
+                    id="feBlend5" />
+            <feBlend
+                    mode="normal"
+                    in="SourceGraphic"
+                    in2="effect1_dropShadow_1080_2778"
+                    result="shape"
+                    id="feBlend6" />
+        </filter>
+        <mask
+                id="mask0_1080_2778"
+                style="mask-type:luminance"
+                maskUnits="userSpaceOnUse"
+                x="4"
+                y="1"
+                width="73"
+                height="73">
+            <rect
+                    x="4.67993"
+                    y="1.99402"
+                    width="72"
+                    height="72"
+                    fill="white"
+                    id="rect1" />
+        </mask>
+    </defs>
+    <g
+            id="g6">
+        <g
+                mask="url(#mask0_1080_2778)"
+                id="g3"
+                style="filter:url(#filter0_d_1080_2778)">
+            <rect
+                    width="108"
+                    height="108"
+                    transform="translate(-13.3201,-16.006)"
+                    fill="#ffffff"
+                    id="rect2"
+                    x="0"
+                    y="0" />
+            <path
+                    fill-rule="evenodd"
+                    clip-rule="evenodd"
+                    d="M 26.5299,30.994 H 25.697 l -4e-4,0.8329 -0.0167,30 -5e-4,0.8338 h 0.8338 17.5 V 60.994 H 27.347 l 0.0158,-28.3333 h 9.9838 v 9.1667 0.8333 h 0.8333 9.1667 v 1.6667 h 1.6666 v -2.5 -0.3452 l -0.244,-0.2441 -10,-10 -0.2441,-0.2441 h -0.3452 z m 19.6382,10 -7.1549,-7.1548 v 7.1548 z m -0.2441,13.0893 5,5 0.5892,0.5892 0.5893,-0.5892 5,-5 -1.1785,-1.1785 -3.5774,3.5774 V 45.994 h -1.6667 v 10.4882 l -3.5774,-3.5774 z m 1.4226,6.9107 v 1.6667 h 8.3333 V 60.994 Z"
+                    fill="#000000"
+                    id="path2" />
+            <rect
+                    x="-13.3201"
+                    y="-16.006001"
+                    width="108"
+                    height="40"
+                    fill="#eb0000"
+                    id="rect3" />
+            <path
+                    fill-rule="evenodd"
+                    clip-rule="evenodd"
+                    d="m 34.67,19.4556 h 3.4962 l -4.7047,-4.7885 h 5.8392 v 4.7885 h 2.7594 v -4.7885 h 5.8395 l -4.7059,4.7885 h 3.4965 l 5.9897,-6.2211 -5.9897,-6.24048 h -3.4965 l 4.7059,4.80788 H 42.0601 V 6.99402 H 39.3007 V 11.8019 H 33.4615 L 38.1662,6.99402 H 34.67 l -5.9901,6.24048 5.9901,6.2211"
+                    fill="#ffffff"
+                    id="path3" />
+        </g>
+        <text
+                xml:space="preserve"
+                style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:6.66667px;font-family:Arial;-inkscape-font-specification:'Arial, Bold';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;text-align:start;writing-mode:lr-tb;direction:ltr;text-anchor:start;fill:#000000"
+                x="27.558859"
+                y="56.505577"
+                id="text6"><tspan
+         id="tspan6"
+         x="27.558859"
+         y="56.505577">DOCX</tspan></text>
+    </g>
 </svg>

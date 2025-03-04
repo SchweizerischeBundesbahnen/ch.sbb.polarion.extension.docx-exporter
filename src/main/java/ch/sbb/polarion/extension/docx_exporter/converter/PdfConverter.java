@@ -1,23 +1,14 @@
 package ch.sbb.polarion.extension.docx_exporter.converter;
 
-import ch.sbb.polarion.extension.generic.settings.NamedSettings;
 import ch.sbb.polarion.extension.generic.settings.SettingId;
-import ch.sbb.polarion.extension.generic.util.ScopeUtils;
 import ch.sbb.polarion.extension.docx_exporter.pandoc.service.PandocServiceConnector;
 import ch.sbb.polarion.extension.docx_exporter.properties.DocxExporterExtensionConfiguration;
-import ch.sbb.polarion.extension.docx_exporter.rest.model.ExportMetaInfoCallback;
-import ch.sbb.polarion.extension.docx_exporter.rest.model.WorkItemRefData;
-import ch.sbb.polarion.extension.docx_exporter.rest.model.conversion.DocumentType;
 import ch.sbb.polarion.extension.docx_exporter.rest.model.conversion.ExportParams;
-import ch.sbb.polarion.extension.docx_exporter.rest.model.conversion.TargetFormat;
 import ch.sbb.polarion.extension.docx_exporter.rest.model.documents.DocumentData;
-import ch.sbb.polarion.extension.docx_exporter.rest.model.settings.headerfooter.HeaderFooterModel;
 import ch.sbb.polarion.extension.docx_exporter.rest.model.settings.webhooks.AuthType;
 import ch.sbb.polarion.extension.docx_exporter.rest.model.settings.webhooks.WebhookConfig;
 import ch.sbb.polarion.extension.docx_exporter.rest.model.settings.webhooks.WebhooksModel;
 import ch.sbb.polarion.extension.docx_exporter.service.PdfExporterPolarionService;
-import ch.sbb.polarion.extension.docx_exporter.settings.CssSettings;
-import ch.sbb.polarion.extension.docx_exporter.settings.HeaderFooterSettings;
 import ch.sbb.polarion.extension.docx_exporter.settings.LocalizationSettings;
 import ch.sbb.polarion.extension.docx_exporter.settings.WebhooksSettings;
 import ch.sbb.polarion.extension.docx_exporter.util.DocumentDataFactory;
@@ -25,14 +16,9 @@ import ch.sbb.polarion.extension.docx_exporter.util.EnumValuesProvider;
 import ch.sbb.polarion.extension.docx_exporter.util.HtmlLogger;
 import ch.sbb.polarion.extension.docx_exporter.util.HtmlProcessor;
 import ch.sbb.polarion.extension.docx_exporter.util.PdfExporterFileResourceProvider;
-import ch.sbb.polarion.extension.docx_exporter.util.PdfExporterListStyleProvider;
 import ch.sbb.polarion.extension.docx_exporter.util.PdfGenerationLog;
 import ch.sbb.polarion.extension.docx_exporter.util.PdfTemplateProcessor;
 import ch.sbb.polarion.extension.docx_exporter.util.html.HtmlLinksHelper;
-import ch.sbb.polarion.extension.docx_exporter.util.placeholder.PlaceholderProcessor;
-import ch.sbb.polarion.extension.docx_exporter.util.velocity.VelocityEvaluator;
-import ch.sbb.polarion.extension.docx_exporter.weasyprint.WeasyPrintOptions;
-import ch.sbb.polarion.extension.docx_exporter.weasyprint.service.WeasyPrintServiceConnector;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.polarion.alm.projects.model.IUniqueObject;
 import com.polarion.alm.tracker.model.ITrackerProject;
@@ -57,7 +43,6 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
-import java.util.Arrays;
 import java.util.Base64;
 import java.util.Collections;
 import java.util.List;
@@ -68,32 +53,19 @@ public class PdfConverter {
     private final Logger logger = Logger.getLogger(PdfConverter.class);
     private final PdfExporterPolarionService pdfExporterPolarionService;
 
-    private final HeaderFooterSettings headerFooterSettings;
-    private final CssSettings cssSettings;
-
-    private final PlaceholderProcessor placeholderProcessor;
-    private final VelocityEvaluator velocityEvaluator;
-    private final CoverPageProcessor coverPageProcessor;
-    private final WeasyPrintServiceConnector weasyPrintServiceConnector;
     private final PandocServiceConnector pandocServiceConnector;
     private final HtmlProcessor htmlProcessor;
     private final PdfTemplateProcessor pdfTemplateProcessor;
 
     public PdfConverter() {
         pdfExporterPolarionService = new PdfExporterPolarionService();
-        headerFooterSettings = new HeaderFooterSettings();
-        cssSettings = new CssSettings();
-        placeholderProcessor = new PlaceholderProcessor();
-        velocityEvaluator = new VelocityEvaluator();
-        weasyPrintServiceConnector = new WeasyPrintServiceConnector();
         pandocServiceConnector = new PandocServiceConnector();
         PdfExporterFileResourceProvider fileResourceProvider = new PdfExporterFileResourceProvider();
         htmlProcessor = new HtmlProcessor(fileResourceProvider, new LocalizationSettings(), new HtmlLinksHelper(fileResourceProvider), pdfExporterPolarionService);
-        coverPageProcessor = new CoverPageProcessor(htmlProcessor);
         pdfTemplateProcessor = new PdfTemplateProcessor();
     }
 
-    public byte[] convertToPdf(@NotNull ExportParams exportParams, @Nullable ExportMetaInfoCallback metaInfoCallback) {
+    public byte[] convertToPdf(@NotNull ExportParams exportParams) {
         long startTime = System.currentTimeMillis();
 
         PdfGenerationLog generationLog = new PdfGenerationLog();
@@ -101,13 +73,13 @@ public class PdfConverter {
 
         @Nullable ITrackerProject project = getTrackerProject(exportParams);
         @NotNull final DocumentData<? extends IUniqueObject> documentData = DocumentDataFactory.getDocumentData(exportParams, true);
-        @NotNull String htmlContent = prepareHtmlContent(exportParams, project, documentData, metaInfoCallback);
+        @NotNull String htmlContent = prepareHtmlContent(exportParams, project, documentData);
 
         generationLog.log("Html is ready, starting pdf generation");
         if (DocxExporterExtensionConfiguration.getInstance().isDebug()) {
             new HtmlLogger().log(documentData.getContent(), htmlContent, generationLog.getLog());
         }
-        byte[] bytes = generatePdf(documentData, exportParams, metaInfoCallback, htmlContent, generationLog);
+        byte[] bytes = generateDocx(exportParams, htmlContent);
 
         if (exportParams.getInternalContent() == null) { //do not log time for internal parts processing
             String finalMessage = "PDF document '" + documentData.getTitle() + "' has been generated within " + (System.currentTimeMillis() - startTime) + " milliseconds";
@@ -117,10 +89,10 @@ public class PdfConverter {
         return bytes;
     }
 
-    public @NotNull String prepareHtmlContent(@NotNull ExportParams exportParams, @Nullable ExportMetaInfoCallback metaInfoCallback) {
+    public @NotNull String prepareHtmlContent(@NotNull ExportParams exportParams) {
         @Nullable ITrackerProject project = getTrackerProject(exportParams);
         @NotNull final DocumentData<? extends IUniqueObject> documentData = DocumentDataFactory.getDocumentData(exportParams, true);
-        return prepareHtmlContent(exportParams, project, documentData, metaInfoCallback);
+        return prepareHtmlContent(exportParams, project, documentData);
     }
 
     private @Nullable ITrackerProject getTrackerProject(@NotNull ExportParams exportParams) {
@@ -131,20 +103,12 @@ public class PdfConverter {
         return project;
     }
 
-    private @NotNull String prepareHtmlContent(@NotNull ExportParams exportParams, @Nullable ITrackerProject project, @NotNull DocumentData<? extends IUniqueObject> documentData, @Nullable ExportMetaInfoCallback metaInfoCallback) {
-        String cssContent = getCssContent(documentData, exportParams);
+    private @NotNull String prepareHtmlContent(@NotNull ExportParams exportParams, @Nullable ITrackerProject project, @NotNull DocumentData<? extends IUniqueObject> documentData) {
         String preparedDocumentContent = postProcessDocumentContent(exportParams, project, documentData.getContent());
-        String headerFooterContent = getHeaderFooterContent(documentData, exportParams);
-        HtmlData htmlData = new HtmlData(cssContent, preparedDocumentContent, headerFooterContent);
-        String htmlContent = composeHtml(documentData.getTitle(), htmlData, exportParams);
-        if (metaInfoCallback != null) {
-            metaInfoCallback.setLinkedWorkItems(WorkItemRefData.extractListFromHtml(htmlContent, exportParams.getProjectId()));
-        }
+        String htmlContent = composeHtml(documentData.getTitle(), preparedDocumentContent);
         htmlContent = htmlProcessor.internalizeLinks(htmlContent);
         htmlContent = applyWebhooks(exportParams, htmlContent);
-
-        // Add a fake page which later will be replaced with cover page. This should be done post-webhooks not to break this approach.
-        return (exportParams.getCoverPage() != null ? "<div style='break-after:page'>page to be removed</div>" : "") + htmlContent;
+        return htmlContent;
     }
 
     private @NotNull String applyWebhooks(@NotNull ExportParams exportParams, @NotNull String htmlContent) {
@@ -224,30 +188,14 @@ public class PdfConverter {
     }
 
     @VisibleForTesting
-    byte[] generatePdf(
-            DocumentData<? extends IUniqueObject> documentData,
-            ExportParams exportParams,
-            ExportMetaInfoCallback metaInfoCallback,
-            String htmlPage,
-            PdfGenerationLog generationLog) {
-        if (metaInfoCallback == null && exportParams.getInternalContent() == null && exportParams.getTargetFormat() != TargetFormat.DOCX && exportParams.getCoverPage() != null) {
-            return coverPageProcessor.generatePdfWithTitle(documentData, exportParams, htmlPage, generationLog);
-        } else {
-            if (exportParams.getTargetFormat() == TargetFormat.PDF) {
-                WeasyPrintOptions weasyPrintOptions = WeasyPrintOptions.builder().followHTMLPresentationalHints(exportParams.isFollowHTMLPresentationalHints()).build();
-                return weasyPrintServiceConnector.convertToPdf(htmlPage, weasyPrintOptions);
-            } else if (exportParams.getTargetFormat() == TargetFormat.DOCX) {
-                int headerIndex = htmlPage.indexOf("<div class='header'>");
-                if (headerIndex > -1) {
-                    int contentIndex = htmlPage.indexOf("<div class='content'>");
-                    htmlPage = htmlPage.substring(0, headerIndex) + htmlPage.substring(contentIndex);
-                }
-                htmlPage = htmlPage.replace("<div style='break-after:page'>page to be removed</div><?xml version='1.0' encoding='UTF-8'?>", "");
-                return pandocServiceConnector.convertToDocx(htmlPage);
-            } else {
-                throw new IllegalStateException("Unknown target format: " + exportParams.getTargetFormat());
-            }
+    byte[] generateDocx(ExportParams exportParams, String htmlPage) {
+        int headerIndex = htmlPage.indexOf("<div class='header'>");
+        if (headerIndex > -1) {
+            int contentIndex = htmlPage.indexOf("<div class='content'>");
+            htmlPage = htmlPage.substring(0, headerIndex) + htmlPage.substring(contentIndex);
         }
+        htmlPage = htmlPage.replace("<div style='break-after:page'>page to be removed</div><?xml version='1.0' encoding='UTF-8'?>", "");
+        return pandocServiceConnector.convertToDocx(htmlPage);
     }
 
     @VisibleForTesting
@@ -262,67 +210,8 @@ public class PdfConverter {
 
     @NotNull
     @VisibleForTesting
-    String composeHtml(@NotNull String documentName,
-                       @NotNull HtmlData htmlData,
-                       @NotNull ExportParams exportParams) {
-        String content = htmlData.headerFooterContent
-                + "<div class='content'>" + htmlData.documentContent + "</div>";
-        return pdfTemplateProcessor.processUsing(exportParams, documentName, htmlData.cssContent, content);
-    }
-
-    @NotNull
-    @VisibleForTesting
-    String getCssContent(
-            @NotNull DocumentData<? extends IUniqueObject> documentData,
-            @NotNull ExportParams exportParams) {
-        String cssSettingsName = exportParams.getCss() != null ? exportParams.getCss() : NamedSettings.DEFAULT_NAME;
-        String pdfStyles = cssSettings.load(exportParams.getProjectId(), SettingId.fromName(cssSettingsName)).getCss();
-        String listStyles = new PdfExporterListStyleProvider(exportParams.getNumberedListStyles()).getStyle();
-        String css = pdfStyles
-                + (exportParams.getHeadersColor() != null ?
-                "      h1, h2, h3, h4, h5, h6, .content .title {" +
-                "        color: " + exportParams.getHeadersColor() + ";" +
-                "      }"
-                : "")
-                + listStyles;
-
-        String content = placeholderProcessor.replacePlaceholders(documentData, exportParams, css);
-        String processed = velocityEvaluator.evaluateVelocityExpressions(documentData, content);
-
-        String cssContent = (exportParams.getDocumentType() != DocumentType.LIVE_DOC) ? appendWikiCss(processed) : processed;
-        return htmlProcessor.replaceResourcesAsBase64Encoded(cssContent);
-    }
-
-    @VisibleForTesting
-    String getHeaderFooterContent(
-            @NotNull DocumentData<? extends IUniqueObject> documentData,
-            @NotNull ExportParams exportParams) {
-        String headerFooterSettingsName = exportParams.getHeaderFooter() != null ? exportParams.getHeaderFooter() : NamedSettings.DEFAULT_NAME;
-        HeaderFooterModel headerFooter = headerFooterSettings.load(exportParams.getProjectId(), SettingId.fromName(headerFooterSettingsName));
-
-        List<String> headersFooters = Arrays.asList(
-                headerFooter.getHeaderLeft(),
-                headerFooter.getHeaderCenter(),
-                headerFooter.getHeaderRight(),
-                headerFooter.getFooterLeft(),
-                headerFooter.getFooterCenter(),
-                headerFooter.getFooterRight());
-
-        List<String> headerFooterContents = placeholderProcessor.replacePlaceholders(documentData, exportParams, headersFooters);
-
-        List<String> nonNullHeaderFooterContents = headerFooterContents.stream()
-                .map(c -> (c == null) ? "" : c)
-                .map(c -> velocityEvaluator.evaluateVelocityExpressions(documentData, c))
-                .toList();
-
-        String headerFooterContent = String.format(ScopeUtils.getFileContent("webapp/docx-exporter/html/headerAndFooter.html"), nonNullHeaderFooterContents.toArray());
-        return htmlProcessor.replaceResourcesAsBase64Encoded(headerFooterContent);
-    }
-
-    private String appendWikiCss(String css) {
-        return css + System.lineSeparator() + ScopeUtils.getFileContent("default/wiki.css");
-    }
-
-    record HtmlData(String cssContent, String documentContent, String headerFooterContent) {
+    String composeHtml(@NotNull String documentName, String documentContent) {
+        String content = "<div class='content'>" + documentContent + "</div>";
+        return pdfTemplateProcessor.processUsing(documentName, content);
     }
 }

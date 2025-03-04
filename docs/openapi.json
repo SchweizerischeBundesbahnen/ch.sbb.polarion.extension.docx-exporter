@@ -33,7 +33,7 @@
         },
         "summary": "Checks whether document contains nested lists",
         "tags": [
-          "PDF Processing"
+          "DOCX Processing"
         ]
       }
     },
@@ -130,24 +130,6 @@
         "summary": "Checks document properties pane configuration"
       }
     },
-    "/api/configuration/live-report-config": {
-      "get": {
-        "operationId": "checkLiveReportConfig",
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ConfigurationStatus"
-                }
-              }
-            },
-            "description": "Successfully retrieved Live Report configuration"
-          }
-        },
-        "summary": "Checks Live Report configuration"
-      }
-    },
     "/api/configuration/pandoc": {
       "get": {
         "description": "Retrieves the status of the WeasyPrint configuration.",
@@ -202,15 +184,15 @@
               }
             }
           },
-          "description": "Export parameters to generate the PDF",
+          "description": "Export parameters to generate the DOCX",
           "required": true
         },
         "responses": {
           "200": {
             "content": {
-              "application/pdf": {}
+              "application/vnd.openxmlformats-officedocument.wordprocessingml.document": {}
             },
-            "description": "Content of PDF document as a byte array",
+            "description": "Content of DOCX document as a byte array",
             "headers": {
               "Content-Disposition": {
                 "description": "To inform a browser that the response is a downloadable attachment",
@@ -220,7 +202,7 @@
                 "style": "simple"
               },
               "Export-Filename": {
-                "description": "File name for converted PDF document",
+                "description": "File name for converted DOCX document",
                 "schema": {
                   "type": "string"
                 },
@@ -243,9 +225,9 @@
             }
           }
         },
-        "summary": "Returns requested Polarion's document converted to PDF",
+        "summary": "Returns requested Polarion's document converted to DOCX",
         "tags": [
-          "PDF Processing"
+          "DOCX Processing"
         ]
       }
     },
@@ -253,40 +235,6 @@
       "post": {
         "operationId": "convertHtmlToPdf",
         "parameters": [
-          {
-            "description": "default value: portrait",
-            "in": "query",
-            "name": "orientation",
-            "schema": {
-              "description": "Orientation of the output document",
-              "enum": [
-                "PORTRAIT",
-                "LANDSCAPE"
-              ],
-              "type": "string"
-            }
-          },
-          {
-            "description": "default value: A4",
-            "in": "query",
-            "name": "paperSize",
-            "schema": {
-              "description": "Standard paper sizes",
-              "enum": [
-                "A5",
-                "A4",
-                "A3",
-                "B5",
-                "B4",
-                "JIS_B5",
-                "JIS_B4",
-                "LETTER",
-                "LEGAL",
-                "LEDGER"
-              ],
-              "type": "string"
-            }
-          },
           {
             "description": "default value: document.docx",
             "in": "query",
@@ -309,9 +257,9 @@
         "responses": {
           "200": {
             "content": {
-              "application/pdf": {}
+              "application/vnd.openxmlformats-officedocument.wordprocessingml.document": {}
             },
-            "description": "Content of PDF document as a byte array",
+            "description": "Content of DOCX document as a byte array",
             "headers": {
               "Content-Disposition": {
                 "description": "To inform a browser that the response is a downloadable attachment",
@@ -321,7 +269,7 @@
                 "style": "simple"
               },
               "Export-Filename": {
-                "description": "File name for converted PDF document",
+                "description": "File name for converted DOCX document",
                 "schema": {
                   "type": "string"
                 },
@@ -330,9 +278,9 @@
             }
           }
         },
-        "summary": "Converts input HTML to PDF",
+        "summary": "Converts input HTML to DOCX",
         "tags": [
-          "PDF Processing"
+          "DOCX Processing"
         ]
       }
     },
@@ -351,9 +299,9 @@
             "description": "Conversion jobs statuses"
           }
         },
-        "summary": "Returns all active PDF conversion jobs statuses",
+        "summary": "Returns all active DOCX conversion jobs statuses",
         "tags": [
-          "PDF Processing"
+          "DOCX Processing"
         ]
       },
       "post": {
@@ -366,7 +314,7 @@
               }
             }
           },
-          "description": "Export parameters to generate the PDF",
+          "description": "Export parameters to generate the DOCX",
           "required": true
         },
         "responses": {
@@ -374,9 +322,9 @@
             "description": "Conversion process is started, job URI is returned in Location header"
           }
         },
-        "summary": "Starts asynchronous conversion job of Polarion's document to PDF",
+        "summary": "Starts asynchronous conversion job of Polarion's document to DOCX",
         "tags": [
-          "PDF Processing"
+          "DOCX Processing"
         ]
       }
     },
@@ -421,9 +369,9 @@
             "description": "Conversion job is failed or cancelled"
           }
         },
-        "summary": "Returns PDF conversion job status",
+        "summary": "Returns DOCX conversion job status",
         "tags": [
-          "PDF Processing"
+          "DOCX Processing"
         ]
       }
     },
@@ -443,7 +391,7 @@
         "responses": {
           "200": {
             "content": {
-              "application/pdf": {}
+              "application/vnd.openxmlformats-officedocument.wordprocessingml.document": {}
             },
             "description": "Conversion job result is ready",
             "headers": {
@@ -455,7 +403,7 @@
                 "style": "simple"
               },
               "Export-Filename": {
-                "description": "File name for converted PDF document",
+                "description": "File name for converted DOCX document",
                 "schema": {
                   "type": "string"
                 },
@@ -487,9 +435,9 @@
             "description": "Conversion job is failed, cancelled or result is unreachable"
           }
         },
-        "summary": "Returns PDF conversion job result",
+        "summary": "Returns DOCX conversion job result",
         "tags": [
-          "PDF Processing"
+          "DOCX Processing"
         ]
       }
     },
@@ -608,7 +556,7 @@
               }
             }
           },
-          "description": "Export parameters to generate the PDF",
+          "description": "Export parameters to generate the DOCX",
           "required": true
         },
         "responses": {
@@ -619,9 +567,9 @@
             "description": "Prepared HTML content"
           }
         },
-        "summary": "Returns prepared HTML which will be used for PDF conversion using WeasyPrint",
+        "summary": "Returns prepared HTML which will be used for DOCX conversion using Pandoc",
         "tags": [
-          "PDF Processing"
+          "DOCX Processing"
         ]
       }
     },
@@ -883,83 +831,6 @@
           }
         },
         "summary": "Returns the complete list of all supported features",
-        "tags": [
-          "Settings"
-        ]
-      }
-    },
-    "/api/settings/cover-page/names/{name}/images": {
-      "delete": {
-        "operationId": "deleteImages",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "name",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "in": "query",
-            "name": "scope",
-            "schema": {
-              "default": "",
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Images deleted successfully"
-          }
-        },
-        "summary": "Deletes images in SVN linked to specified cover page within specified scope (global or certain project)",
-        "tags": [
-          "Settings"
-        ]
-      }
-    },
-    "/api/settings/cover-page/templates": {
-      "get": {
-        "operationId": "getCoverPageTemplateNames",
-        "responses": {
-          "200": {
-            "description": "Template names retrieved successfully"
-          }
-        },
-        "summary": "Get list of cover page predefined template names",
-        "tags": [
-          "Settings"
-        ]
-      }
-    },
-    "/api/settings/cover-page/templates/{template}": {
-      "post": {
-        "operationId": "persistCoverPageTemplate",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "template",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "in": "query",
-            "name": "scope",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Template persisted successfully"
-          }
-        },
-        "summary": "Persist content of cover page predefined template",
         "tags": [
           "Settings"
         ]
@@ -1547,17 +1418,14 @@
         "properties": {
           "baseUrl": {
             "description": "Returns the base URL constructed with the extension context",
-            "example": "/polarion/pdf-exporter",
             "type": "string"
           },
           "extensionContext": {
             "description": "The extension context used as a base for URL construction",
-            "example": "pdf-exporter",
             "type": "string"
           },
           "restUrl": {
             "description": "Returns the REST API URL constructed with the extension context",
-            "example": "/polarion/pdf-exporter/rest",
             "type": "string"
           },
           "swaggerUiUrl": {
@@ -1631,10 +1499,6 @@
       },
       "ExportParams": {
         "properties": {
-          "attachmentsFilter": {
-            "description": "Filter for attachments to be downloaded, example: '*.pdf'",
-            "type": "string"
-          },
           "baselineRevision": {
             "description": "The specific revision of the provided baseline",
             "type": "string"
@@ -1646,14 +1510,6 @@
               "type": "string"
             },
             "type": "array"
-          },
-          "coverPage": {
-            "description": "Cover page settings name",
-            "type": "string"
-          },
-          "css": {
-            "description": "CSS settings name",
-            "type": "string"
           },
           "cutEmptyChapters": {
             "description": "Empty chapters should be removed from the document",
@@ -1668,18 +1524,6 @@
             "description": "Local Polarion URLs should be removed from the document",
             "type": "boolean"
           },
-          "documentType": {
-            "description": "Type of the document",
-            "enum": [
-              "BASELINE_COLLECTION",
-              "LIVE_DOC",
-              "LIVE_REPORT",
-              "TEST_RUN",
-              "WIKI_PAGE"
-            ],
-            "example": "LIVE_DOC",
-            "type": "string"
-          },
           "enableCommentsRendering": {
             "default": true,
             "description": "Comments should be rendered in the exported document",
@@ -1687,24 +1531,6 @@
           },
           "fileName": {
             "description": "Target file name of exported document",
-            "type": "string"
-          },
-          "fitToPage": {
-            "default": true,
-            "description": "Content should be scaled to fit the page",
-            "type": "boolean"
-          },
-          "followHTMLPresentationalHints": {
-            "default": true,
-            "description": "HTML presentational hints should be followed",
-            "type": "boolean"
-          },
-          "headerFooter": {
-            "description": "Header/Footer settings name",
-            "type": "string"
-          },
-          "headersColor": {
-            "description": "Color to be used for headers in the document. By default dark blue color (Polarion's default)",
             "type": "string"
           },
           "internalContent": {
@@ -1737,40 +1563,6 @@
             "example": "Specification/Product Specification",
             "type": "string"
           },
-          "markReferencedWorkitems": {
-            "description": "Referenced work items should be marked in the document",
-            "type": "boolean"
-          },
-          "numberedListStyles": {
-            "description": "SCC styles to be applied to numbered lists in the document",
-            "type": "string"
-          },
-          "orientation": {
-            "default": "PORTRAIT",
-            "description": "Orientation of the output document",
-            "enum": [
-              "PORTRAIT",
-              "LANDSCAPE"
-            ],
-            "type": "string"
-          },
-          "paperSize": {
-            "default": "A4",
-            "description": "Standard paper sizes",
-            "enum": [
-              "A5",
-              "A4",
-              "A3",
-              "B5",
-              "B4",
-              "JIS_B5",
-              "JIS_B4",
-              "LETTER",
-              "LEGAL",
-              "LEDGER"
-            ],
-            "type": "string"
-          },
           "projectId": {
             "description": "The unique identifier for the project",
             "example": "elibrary",
@@ -1780,15 +1572,6 @@
             "description": "The specific revision of the document",
             "type": "string"
           },
-          "targetFormat": {
-            "default": "DOCX",
-            "description": "Target format of the exported document",
-            "enum": [
-              "PDF",
-              "DOCX"
-            ],
-            "type": "string"
-          },
           "urlQueryParameters": {
             "additionalProperties": {
               "description": "Map of attributes extracted from the URL",
@@ -1796,10 +1579,6 @@
             },
             "description": "Map of attributes extracted from the URL",
             "type": "object"
-          },
-          "watermark": {
-            "description": "Watermark content to be applied to the document",
-            "type": "boolean"
           },
           "webhooks": {
             "description": "Webhooks settings name",

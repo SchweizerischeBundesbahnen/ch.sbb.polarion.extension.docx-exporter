@@ -30,21 +30,6 @@ public class SettingsApiController extends SettingsInternalController {
     }
 
     @Override
-    public Collection<String> getCoverPageTemplateNames() {
-        return polarionService.callPrivileged(super::getCoverPageTemplateNames);
-    }
-
-    @Override
-    public void persistCoverPageTemplate(String template, String scope) {
-        polarionService.callPrivileged(() -> super.persistCoverPageTemplate(template, scope));
-    }
-
-    @Override
-    public void deleteImages(String coverPageName, String scope) {
-        polarionService.callPrivileged(() -> super.deleteImages(coverPageName, scope));
-    }
-
-    @Override
     public Collection<SettingName> getSuitableStylePackageNames(List<DocIdentifier> docIdentifiers) {
         return polarionService.callPrivileged(() -> super.getSuitableStylePackageNames(docIdentifiers));
     }

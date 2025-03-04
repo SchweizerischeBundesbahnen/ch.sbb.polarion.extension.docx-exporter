@@ -2,12 +2,10 @@ package ch.sbb.polarion.extension.docx_exporter.rest.controller;
 
 import ch.sbb.polarion.extension.generic.settings.SettingId;
 import ch.sbb.polarion.extension.generic.settings.SettingName;
-import ch.sbb.polarion.extension.docx_exporter.rest.model.settings.coverpage.CoverPageModel;
 import ch.sbb.polarion.extension.docx_exporter.rest.model.settings.localization.LocalizationModel;
 import ch.sbb.polarion.extension.docx_exporter.rest.model.settings.stylepackage.DocIdentifier;
 import ch.sbb.polarion.extension.docx_exporter.rest.model.settings.stylepackage.StylePackageWeightInfo;
 import ch.sbb.polarion.extension.docx_exporter.service.PdfExporterPolarionService;
-import ch.sbb.polarion.extension.docx_exporter.settings.CoverPageSettings;
 import ch.sbb.polarion.extension.docx_exporter.settings.LocalizationSettings;
 import ch.sbb.polarion.extension.docx_exporter.util.LocalizationHelper;
 import io.swagger.v3.oas.annotations.Hidden;
@@ -24,10 +22,7 @@ import org.glassfish.jersey.media.multipart.FormDataParam;
 
 import javax.ws.rs.BadRequestException;
 import javax.ws.rs.Consumes;
-import javax.ws.rs.DELETE;
-import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
-import javax.ws.rs.NotFoundException;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
@@ -40,8 +35,6 @@ import java.nio.charset.StandardCharsets;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
-import java.util.UUID;
 
 @Hidden
 @Path("/internal")
@@ -49,7 +42,6 @@ import java.util.UUID;
 public class SettingsInternalController {
 
     private final PdfExporterPolarionService pdfExporterPolarionService = new PdfExporterPolarionService();
-    private Set<String> predefinedCoverPageTemplates;
 
     @GET
     @Path("/settings/localization/names/{name}/download")
@@ -93,55 +85,6 @@ public class SettingsInternalController {
         String xliff = file.getValueAs(String.class);
         XLIFFReader.validate(xliff, null);
         return LocalizationHelper.getTranslationsMapForLanguage(xliff);
-    }
-
-    @GET
-    @Path("/settings/cover-page/templates")
-    @Produces(MediaType.APPLICATION_JSON)
-    @Operation(summary = "Get list of cover page predefined template names",
-            responses = {
-                    @ApiResponse(responseCode = "200", description = "Template names retrieved successfully")
-            }
-    )
-    public Collection<String> getCoverPageTemplateNames() {
-        if (predefinedCoverPageTemplates == null) {
-            predefinedCoverPageTemplates = new CoverPageSettings().getPredefinedTemplates();
-        }
-        return predefinedCoverPageTemplates;
-    }
-
-    @POST
-    @Path("/settings/cover-page/templates/{template}")
-    @Operation(summary = "Persist content of cover page predefined template",
-            responses = {
-                    @ApiResponse(responseCode = "200", description = "Template persisted successfully")
-            }
-    )
-    public void persistCoverPageTemplate(@PathParam("template") String template, @QueryParam("scope") String scope) {
-        if (!getCoverPageTemplateNames().contains(template)) {
-            throw new NotFoundException(String.format("There's no predefined template with name '%s'", template));
-        }
-
-        CoverPageSettings coverPageSettings = new CoverPageSettings();
-        Collection<SettingName> persistedNames = coverPageSettings.readNames(scope);
-        String nonClashingName = coverPageSettings.getNonClashingName(template, persistedNames);
-        CoverPageModel templateModel = coverPageSettings.defaultValuesFor(template);
-        templateModel.setName(nonClashingName);
-        UUID uuid = UUID.randomUUID();
-        coverPageSettings.processImagePaths(templateModel, template, scope, uuid);
-        coverPageSettings.save(scope, SettingId.fromId(uuid.toString()), templateModel);
-    }
-
-    @DELETE
-    @Path("/settings/cover-page/names/{name}/images")
-    @Produces(MediaType.APPLICATION_JSON)
-    @Operation(summary = "Deletes images in SVN linked to specified cover page within specified scope (global or certain project)",
-            responses = {
-                    @ApiResponse(responseCode = "200", description = "Images deleted successfully")
-            }
-    )
-    public void deleteImages(@PathParam("name") String coverPageName, @QueryParam("scope") @DefaultValue("") String scope) {
-        new CoverPageSettings().deleteCoverPageImages(coverPageName, scope);
     }
 
     @POST

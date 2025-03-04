@@ -6,23 +6,18 @@ import ch.sbb.polarion.extension.generic.settings.SettingId;
 import ch.sbb.polarion.extension.generic.settings.SettingName;
 import ch.sbb.polarion.extension.generic.util.ScopeUtils;
 import ch.sbb.polarion.extension.docx_exporter.properties.DocxExporterExtensionConfiguration;
-import ch.sbb.polarion.extension.docx_exporter.rest.model.conversion.DocumentType;
 import ch.sbb.polarion.extension.docx_exporter.rest.model.conversion.ExportParams;
 import ch.sbb.polarion.extension.docx_exporter.rest.model.settings.localization.Language;
 import ch.sbb.polarion.extension.docx_exporter.rest.model.settings.stylepackage.DocIdentifier;
 import ch.sbb.polarion.extension.docx_exporter.rest.model.settings.stylepackage.StylePackageModel;
 import ch.sbb.polarion.extension.docx_exporter.service.PdfExporterPolarionService;
 import ch.sbb.polarion.extension.docx_exporter.service.PolarionBaselineExecutor;
-import ch.sbb.polarion.extension.docx_exporter.settings.CoverPageSettings;
-import ch.sbb.polarion.extension.docx_exporter.settings.CssSettings;
-import ch.sbb.polarion.extension.docx_exporter.settings.HeaderFooterSettings;
 import ch.sbb.polarion.extension.docx_exporter.settings.LocalizationSettings;
 import ch.sbb.polarion.extension.docx_exporter.settings.StylePackageSettings;
 import ch.sbb.polarion.extension.docx_exporter.settings.WebhooksSettings;
 import ch.sbb.polarion.extension.docx_exporter.util.DocumentFileNameHelper;
 import ch.sbb.polarion.extension.docx_exporter.util.EnumValuesProvider;
 import ch.sbb.polarion.extension.docx_exporter.util.ExceptionHandler;
-import com.polarion.alm.projects.model.IProject;
 import com.polarion.alm.shared.api.SharedContext;
 import com.polarion.alm.shared.api.transaction.TransactionalExecutor;
 import com.polarion.alm.shared.api.utils.html.HtmlFragmentBuilder;
@@ -81,31 +76,19 @@ public class PdfExporterFormExtension implements IFormExtension {
             StylePackageModel selectedStylePackage = getSelectedStylePackage(stylePackageNameToSelect, scope); // Implicitly default one will be returned if no style package persisted (whatever the reason)
 
             if (!selectedStylePackage.isExposeSettings()) {
-                form = form.replace("<div id='style-package-content'", "<div id='style-package-content' class='hidden'"); // Hide settings pane if style package settings not exposed to end users
+                form = form.replace("<div id='docx-style-package-content'", "<div id='docx-style-package-content' class='hidden'"); // Hide settings pane if style package settings not exposed to end users
             }
 
-            form = adjustCoverPage(scope, form, selectedStylePackage);
-            form = adjustCss(scope, form, selectedStylePackage);
-            form = adjustHeaderFooter(scope, form, selectedStylePackage);
             form = adjustLocalization(scope, form, selectedStylePackage);
             form = adjustWebhooks(scope, form, selectedStylePackage);
-            form = form.replace("{HEADERS_COLOR_VALUE}", selectedStylePackage.getHeadersColor());
-            form = adjustPaperSize(form, selectedStylePackage);
-            form = adjustOrientation(form, selectedStylePackage);
-            form = adjustFitToPage(form, selectedStylePackage);
             form = adjustCommentsRendering(form, selectedStylePackage);
-            form = adjustWatermark(form, selectedStylePackage);
-            form = adjustMarkReferencedWorkitems(form, selectedStylePackage);
             form = adjustCutEmptyChapters(form, selectedStylePackage);
             form = adjustCutEmptyWorkitemAttributes(form, selectedStylePackage);
             form = adjustCutLocalURLs(form, selectedStylePackage);
-            form = adjustPresentationalHints(form, selectedStylePackage);
-            form = adjustCustomNumberedListsStyles(form, selectedStylePackage);
             form = adjustChapters(form, selectedStylePackage);
             form = adjustLocalizeEnums(form, selectedStylePackage, module.getCustomField(DOC_LANGUAGE_FIELD));
             form = adjustLinkRoles(form, EnumValuesProvider.getAllLinkRoleNames(module.getProject()), selectedStylePackage);
             form = adjustFilename(form, module);
-            form = adjustButtons(form, module, selectedStylePackage, context.baselineRevision());
 
             builder.html(form);
         }
@@ -125,27 +108,6 @@ public class PdfExporterFormExtension implements IFormExtension {
         return defaultStylePackageName != null
                 ? stylePackageSettings.read(scope, SettingId.fromName(defaultStylePackageName.getName()), null)
                 : stylePackageSettings.defaultValues();
-    }
-
-    private String adjustCoverPage(String scope, String form, StylePackageModel stylePackage) {
-        Collection<SettingName> options = getSettingNames(CoverPageSettings.FEATURE_NAME, scope);
-        boolean noCoverPage = StringUtils.isEmpty(stylePackage.getCoverPage());
-        String coverPageOptions = generateSelectOptions(options, noCoverPage ? NamedSettings.DEFAULT_NAME : stylePackage.getCoverPage());
-        form = form.replace("{COVER_PAGE_OPTIONS}", coverPageOptions);
-        form = form.replace("{COVER_PAGE_DISPLAY}", noCoverPage ? "none" : "inline-block");
-        return form.replace("{COVER_PAGE_SELECTED}", noCoverPage ? "" : "checked");
-    }
-
-    private String adjustHeaderFooter(String scope, String form, StylePackageModel stylePackage) {
-        Collection<SettingName> headerFooterNames = getSettingNames(HeaderFooterSettings.FEATURE_NAME, scope);
-        String headerFooterOptions = generateSelectOptions(headerFooterNames, stylePackage.getHeaderFooter());
-        return form.replace("{HEADER_FOOTER_OPTIONS}", headerFooterOptions);
-    }
-
-    private String adjustCss(String scope, String form, StylePackageModel stylePackage) {
-        Collection<SettingName> cssNames = getSettingNames(CssSettings.FEATURE_NAME, scope);
-        String cssOptions = generateSelectOptions(cssNames, stylePackage.getCss());
-        return form.replace("{CSS_OPTIONS}", cssOptions);
     }
 
     private String adjustLocalization(String scope, String form, StylePackageModel stylePackage) {
@@ -203,58 +165,26 @@ public class PdfExporterFormExtension implements IFormExtension {
         }
     }
 
-    private String adjustPaperSize(String form, StylePackageModel stylePackage) {
-        return form.replace(String.format(OPTION_VALUE, stylePackage.getPaperSize()), String.format(OPTION_SELECTED, stylePackage.getPaperSize()));
-    }
-
-    private String adjustOrientation(String form, StylePackageModel stylePackage) {
-        return form.replace(String.format(OPTION_VALUE, stylePackage.getOrientation()), String.format(OPTION_SELECTED, stylePackage.getOrientation()));
-    }
-
-    private String adjustFitToPage(String form, StylePackageModel stylePackage) {
-        return stylePackage.isFitToPage() ? form.replace("<input id='fit-to-page'", "<input id='fit-to-page' checked") : form;
-    }
-
     private String adjustCommentsRendering(String form, StylePackageModel stylePackage) {
-        return stylePackage.isRenderComments() ? form.replace("<input id='enable-comments-rendering'", "<input id='enable-comments-rendering' checked") : form;
-    }
-
-    private String adjustWatermark(String form, StylePackageModel stylePackage) {
-        return stylePackage.isWatermark() ? form.replace("<input id='watermark'", "<input id='watermark' checked") : form;
-    }
-
-    private String adjustMarkReferencedWorkitems(String form, StylePackageModel stylePackage) {
-        return stylePackage.isMarkReferencedWorkitems() ? form.replace("<input id='mark-referenced-workitems'", "<input id='mark-referenced-workitems' checked") : form;
+        return stylePackage.isRenderComments() ? form.replace("<input id='docx-enable-comments-rendering'", "<input id='docx-enable-comments-rendering' checked") : form;
     }
 
     private String adjustCutEmptyChapters(String form, StylePackageModel stylePackage) {
-        return stylePackage.isCutEmptyChapters() ? form.replace("<input id='cut-empty-chapters'", "<input id='cut-empty-chapters' checked") : form;
+        return stylePackage.isCutEmptyChapters() ? form.replace("<input id='docx-cut-empty-chapters'", "<input id='docx-cut-empty-chapters' checked") : form;
     }
 
     private String adjustCutEmptyWorkitemAttributes(String form, StylePackageModel stylePackage) {
-        return stylePackage.isCutEmptyWorkitemAttributes() ? form.replace("<input id='cut-empty-wi-attributes'", "<input id='cut-empty-wi-attributes' checked") : form;
+        return stylePackage.isCutEmptyWorkitemAttributes() ? form.replace("<input id='docx-cut-empty-wi-attributes'", "<input id='docx-cut-empty-wi-attributes' checked") : form;
     }
 
     private String adjustCutLocalURLs(String form, StylePackageModel stylePackage) {
-        return stylePackage.isCutLocalURLs() ? form.replace("<input id='cut-urls'", "<input id='cut-urls' checked") : form;
-    }
-
-    private String adjustPresentationalHints(String form, StylePackageModel stylePackage) {
-        return stylePackage.isFollowHTMLPresentationalHints() ? form.replace("<input id='presentational-hints'", "<input id='presentational-hints' checked") : form;
-    }
-
-    private String adjustCustomNumberedListsStyles(String form, StylePackageModel stylePackage) {
-        if (!StringUtils.isEmpty(stylePackage.getCustomNumberedListStyles())) {
-            form = form.replace("<input id='custom-list-styles'", "<input id='custom-list-styles' checked");
-            form = form.replace("id='numbered-list-styles' style='display: none;", String.format("<input id='numbered-list-styles' value='%s' style='", stylePackage.getCustomNumberedListStyles()));
-        }
-        return form;
+        return stylePackage.isCutLocalURLs() ? form.replace("<input id='docx-cut-urls'", "<input id='docx-cut-urls' checked") : form;
     }
 
     private String adjustChapters(String form, StylePackageModel stylePackage) {
         if (!StringUtils.isEmpty(stylePackage.getSpecificChapters())) {
-            form = form.replace("<input id='specific-chapters'", "<input id='specific-chapters' checked");
-            form = form.replace("<input id='chapters' style='display: none;", String.format("<input id='chapters' value='%s' style='", stylePackage.getSpecificChapters()));
+            form = form.replace("<input id='docx-specific-chapters'", "<input id='docx-specific-chapters' checked");
+            form = form.replace("<input id='docx-chapters' style='display: none;", String.format("<input id='docx-chapters' value='%s' style='", stylePackage.getSpecificChapters()));
         }
         return form;
     }
@@ -263,8 +193,8 @@ public class PdfExporterFormExtension implements IFormExtension {
         String documentLanguage = (documentLanguageField instanceof IEnumOption enumOption) ? enumOption.getId() : "";
 
         if (!StringUtils.isEmpty(stylePackage.getLanguage())) {
-            form = form.replace("<input id='localization'", "<input id='localization' checked");
-            form = form.replace("id='language' style='display: none'", "id='language'");
+            form = form.replace("<input id='docx-localization'", "<input id='docx-localization' checked");
+            form = form.replace("id='docx-language' style='display: none'", "id='docx-language'");
 
             String languageToPreselect = null;
             for (Language language : Language.values()) {
@@ -285,8 +215,8 @@ public class PdfExporterFormExtension implements IFormExtension {
     private String adjustLinkRoles(@NotNull String form, @NotNull List<String> roleEnumValues, @NotNull StylePackageModel stylePackage) {
         if (!roleEnumValues.isEmpty()) {
             if (!CollectionUtils.isEmpty(stylePackage.getLinkedWorkitemRoles())) {
-                form = form.replace("<input id='selected-roles'", "<input id='selected-roles' checked");
-                form = form.replace("id='roles-wrapper' style='display: none'", "id='roles-wrapper'");
+                form = form.replace("<input id='docx-selected-roles'", "<input id='docx-selected-roles' checked");
+                form = form.replace("id='docx-roles-wrapper' style='display: none'", "id='docx-roles-wrapper'");
             }
 
             String rolesOptions = roleEnumValues.stream()
@@ -297,22 +227,13 @@ public class PdfExporterFormExtension implements IFormExtension {
                     ).collect(Collectors.joining());
             return form.replace("{ROLES_OPTIONS}", rolesOptions);
         } else {
-            return form.replace("class='roles-fields'", "class='roles-fields' style='display: none;'"); // Hide roles fields when no roles obtained
+            return form.replace("class='docx-roles-fields'", "class='docx-roles-fields' style='display: none;'"); // Hide roles fields when no roles obtained
         }
     }
 
     private String adjustFilename(@NotNull String form, @NotNull IModule module) {
         String filename = getFilename(module);
         return form.replace("{FILENAME}", filename).replace("{DATA_FILENAME}", filename);
-    }
-
-    private String adjustButtons(@NotNull String form, @NotNull IModule module, @NotNull StylePackageModel stylePackage, @Nullable String baselineRevision) {
-        IProject project = module.getProject();
-        String moduleLocationPath = module.getModuleLocation().getLocationPath();
-        String params = fillParams(project.getId(), moduleLocationPath, baselineRevision, module.getRevision());
-        form = form.replace("{LOAD_PDF_PARAMS}", params);
-
-        return form;
     }
 
     private String getFilename(@NotNull IModule module) {
@@ -322,7 +243,6 @@ public class PdfExporterFormExtension implements IFormExtension {
                 .projectId(module.getProject().getId())
                 .locationPath(module.getModuleLocation().getLocationPath())
                 .revision(module.getRevision())
-                .documentType(DocumentType.LIVE_DOC)
                 .build();
 
         return documentFileNameHelper.getDocumentFileName(exportParams);

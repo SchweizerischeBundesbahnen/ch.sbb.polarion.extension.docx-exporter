@@ -1,6 +1,5 @@
 package ch.sbb.polarion.extension.docx_exporter.rest.model.documents.adapters;
 
-import ch.sbb.polarion.extension.docx_exporter.rest.model.conversion.DocumentType;
 import ch.sbb.polarion.extension.docx_exporter.rest.model.conversion.ExportParams;
 import ch.sbb.polarion.extension.docx_exporter.rest.model.documents.DocumentBaseline;
 import ch.sbb.polarion.extension.docx_exporter.rest.model.documents.id.DocumentId;
@@ -14,8 +13,6 @@ public interface IUniqueObjectAdapter {
     @NotNull <T extends IUniqueObject> T getUniqueObject();
 
     @NotNull DocumentId getDocumentId();
-
-    @NotNull DocumentType getDocumentType();
 
     @NotNull String getTitle();
 

@@ -2,10 +2,7 @@ package ch.sbb.polarion.extension.docx_exporter.util;
 
 import ch.sbb.polarion.extension.generic.settings.SettingId;
 import ch.sbb.polarion.extension.docx_exporter.TestStringUtils;
-import ch.sbb.polarion.extension.docx_exporter.rest.model.conversion.DocumentType;
 import ch.sbb.polarion.extension.docx_exporter.rest.model.conversion.ExportParams;
-import ch.sbb.polarion.extension.docx_exporter.rest.model.conversion.Orientation;
-import ch.sbb.polarion.extension.docx_exporter.rest.model.conversion.PaperSize;
 import ch.sbb.polarion.extension.docx_exporter.rest.model.settings.localization.Language;
 import ch.sbb.polarion.extension.docx_exporter.rest.model.settings.localization.LocalizationModel;
 import ch.sbb.polarion.extension.docx_exporter.service.PdfExporterPolarionService;
@@ -106,8 +103,6 @@ class HtmlProcessorTest {
              InputStream isValidHtml = this.getClass().getResourceAsStream("/pageBreaksAfterProcessing.html")) {
 
             ExportParams context = new ExportParams();
-            context.setOrientation(Orientation.LANDSCAPE);
-            context.setPaperSize(PaperSize.A4);
 
             String invalidHtml = new String(isInvalidHtml.readAllBytes(), StandardCharsets.UTF_8);
 
@@ -337,11 +332,11 @@ class HtmlProcessorTest {
             String invalidHtml = new String(isInvalidHtml.readAllBytes(), StandardCharsets.UTF_8);
 
             // Spaces and new lines are removed to exclude difference in space characters
-            String fixedHtml = processor.adjustContentToFitPage(invalidHtml, Orientation.PORTRAIT, PaperSize.A4);
+            String fixedHtml = processor.adjustContentToFitPage(invalidHtml);
             String validHtml = new String(isValidPortraitHtml.readAllBytes(), StandardCharsets.UTF_8);
             assertEquals(TestStringUtils.removeNonsensicalSymbols(validHtml), TestStringUtils.removeNonsensicalSymbols(fixedHtml));
 
-            fixedHtml = processor.adjustContentToFitPage(invalidHtml, Orientation.LANDSCAPE, PaperSize.A4);
+            fixedHtml = processor.adjustContentToFitPage(invalidHtml);
             validHtml = new String(isValidLandscapeHtml.readAllBytes(), StandardCharsets.UTF_8);
             assertEquals(TestStringUtils.removeNonsensicalSymbols(validHtml), TestStringUtils.removeNonsensicalSymbols(fixedHtml));
         }
@@ -356,7 +351,7 @@ class HtmlProcessorTest {
             String invalidHtml = new String(isInvalidHtml.readAllBytes(), StandardCharsets.UTF_8);
 
             // Spaces and new lines are removed to exclude difference in space characters
-            String fixedHtml = processor.adjustContentToFitPage(invalidHtml, Orientation.PORTRAIT, PaperSize.A4);
+            String fixedHtml = processor.adjustContentToFitPage(invalidHtml);
             String validHtml = new String(isValidHtml.readAllBytes(), StandardCharsets.UTF_8);
             assertEquals(TestStringUtils.removeNonsensicalSymbols(validHtml), TestStringUtils.removeNonsensicalSymbols(fixedHtml));
         }
@@ -577,10 +572,9 @@ class HtmlProcessorTest {
 
     @Test
     void getImageWidthBasedOnColumnsCountTest() {
-        assertEquals(-1, processor.getImageWidthBasedOnColumnsCount("<tr><img/></tr>", "<img/>", Orientation.PORTRAIT, PaperSize.A4));
-        assertEquals(-1, processor.getImageWidthBasedOnColumnsCount("<tr><td></td><td><img/></td><td></td>", "<img/>", Orientation.PORTRAIT, PaperSize.A4));
-        assertEquals(197, processor.getImageWidthBasedOnColumnsCount("<tr><td></td><td><img/></td><td></td></tr>", "<img/>", Orientation.PORTRAIT, PaperSize.A4));
-        assertEquals(437, processor.getImageWidthBasedOnColumnsCount("<tr><td></td></tr><tr><td></td><td><img/></td><td></td></tr><tr><td></td></tr>", "<img/>", Orientation.LANDSCAPE, PaperSize.A3));
+        assertEquals(-1, processor.getImageWidthBasedOnColumnsCount("<tr><img/></tr>", "<img/>"));
+        assertEquals(-1, processor.getImageWidthBasedOnColumnsCount("<tr><td></td><td><img/></td><td></td>", "<img/>"));
+        assertEquals(197, processor.getImageWidthBasedOnColumnsCount("<tr><td></td><td><img/></td><td></td></tr>", "<img/>"));
     }
 
 
@@ -594,7 +588,6 @@ class HtmlProcessorTest {
     private ExportParams getExportParams() {
         return ExportParams.builder()
                 .projectId("test_project")
-                .documentType(DocumentType.LIVE_DOC)
                 .language(Language.DE.name())
                 .build();
     }

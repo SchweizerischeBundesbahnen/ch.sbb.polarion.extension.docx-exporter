@@ -1,8 +1,6 @@
 package ch.sbb.polarion.extension.docx_exporter.util;
 
 import ch.sbb.polarion.extension.docx_exporter.TestStringUtils;
-import ch.sbb.polarion.extension.docx_exporter.rest.model.conversion.ExportParams;
-import ch.sbb.polarion.extension.docx_exporter.rest.model.conversion.Orientation;
 import com.polarion.core.boot.PolarionProperties;
 import com.polarion.core.config.Configuration;
 import com.polarion.core.config.IClusterConfiguration;
@@ -26,13 +24,7 @@ class PdfTemplateProcessorTest {
 
     @ParameterizedTest
     @MethodSource("paramsForProcessHtmlTemplate")
-    void shouldProcessHtmlTemplate(boolean watermark, Orientation orientation, String baseUrl, String expectedResult) {
-        // Arrange
-        ExportParams exportParams = ExportParams.builder()
-                .watermark(watermark)
-                .orientation(orientation)
-                .build();
-
+    void shouldProcessHtmlTemplate(String baseUrl, String expectedResult) {
         MockedStatic<Configuration> configuration = null;
         try {
             if (baseUrl != null) {
@@ -43,7 +35,7 @@ class PdfTemplateProcessorTest {
             }
 
             // Act
-            String resultHtml = pdfTemplateProcessor.processUsing(exportParams, "testDocumentName", "test css content", "test html content");
+            String resultHtml = pdfTemplateProcessor.processUsing("testDocumentName", "test html content");
 
             // Assert
             assertThat(TestStringUtils.removeNonsensicalSymbols(resultHtml).replaceAll(" ", ""))
@@ -79,7 +71,7 @@ class PdfTemplateProcessorTest {
 
     private static Stream<Arguments> paramsForProcessHtmlTemplate() {
         return Stream.of(
-                Arguments.of(false, Orientation.PORTRAIT, null, """
+                Arguments.of(null, """
                     <?xml version='1.0' encoding='UTF-8'?>
                     <!DOCTYPE html PUBLIC '-//W3C//DTD XHTML 1.0 Strict//EN' 'http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd'>
                     <html lang='en' xml:lang='en' xmlns='http://www.w3.org/1999/xhtml'>
@@ -88,16 +80,13 @@ class PdfTemplateProcessorTest {
                         <meta content='text/html; charset=UTF-8' http-equiv='Content-Type'/>
                         <base href='http://testClusterNodeHostName' />
                         <link crossorigin='anonymous' href='/polarion/ria/font-awesome-4.0.3/css/font-awesome.css' referrerpolicy='no-referrer' rel='stylesheet'/>
-                        <style>
-                            test css content
-                        </style>
                     </head>
                     <body>
                     test html content
                     </body>
                     </html>""".indent(0).trim()),
 
-                Arguments.of(true, Orientation.LANDSCAPE, "custom base url","""
+                Arguments.of("custom base url","""
                     <?xml version='1.0' encoding='UTF-8'?>
                     <!DOCTYPE html PUBLIC '-//W3C//DTD XHTML 1.0 Strict//EN' 'http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd'>
                     <html lang='en' xml:lang='en' xmlns='http://www.w3.org/1999/xhtml'>
@@ -106,22 +95,6 @@ class PdfTemplateProcessorTest {
                         <meta content='text/html; charset=UTF-8' http-equiv='Content-Type'/>
                         <base href='http://custom base url' />
                         <link crossorigin='anonymous' href='/polarion/ria/font-awesome-4.0.3/css/font-awesome.css' referrerpolicy='no-referrer' rel='stylesheet'/>
-                        <style>
-                            test css content
-                            @media print {
-                                body::before {
-                                    content: "Confidential";
-                                    font-size: 8em;
-                                    text-transform: uppercase;
-                                    color: rgba(255, 5, 5, 0.17);
-                                    position: fixed;
-                                    top: 50%;
-                                    left: 50%;
-                                    transform: translate(-50%, -50%) rotate(-45deg);
-                                }
-                            }
-                            @page {size: A4 landscape;}
-                        </style>
                     </head>
                     <body>
                     test html content

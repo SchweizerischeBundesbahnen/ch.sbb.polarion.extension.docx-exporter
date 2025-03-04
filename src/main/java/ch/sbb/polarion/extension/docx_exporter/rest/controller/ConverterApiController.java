@@ -7,8 +7,6 @@ import ch.sbb.polarion.extension.docx_exporter.converter.PdfConverter;
 import ch.sbb.polarion.extension.docx_exporter.converter.PdfConverterJobsService;
 import ch.sbb.polarion.extension.docx_exporter.rest.model.NestedListsCheck;
 import ch.sbb.polarion.extension.docx_exporter.rest.model.conversion.ExportParams;
-import ch.sbb.polarion.extension.docx_exporter.rest.model.conversion.Orientation;
-import ch.sbb.polarion.extension.docx_exporter.rest.model.conversion.PaperSize;
 import ch.sbb.polarion.extension.docx_exporter.service.PdfExporterPolarionService;
 import org.jetbrains.annotations.VisibleForTesting;
 import org.springframework.web.context.request.RequestAttributes;
@@ -64,8 +62,8 @@ public class ConverterApiController extends ConverterInternalController {
     }
 
     @Override
-    public Response convertHtmlToPdf(String html, Orientation orientation, PaperSize paperSize, String fileName) {
-        return polarionService.callPrivileged(() -> super.convertHtmlToPdf(html, orientation, paperSize, fileName));
+    public Response convertHtmlToPdf(String html, String fileName) {
+        return polarionService.callPrivileged(() -> super.convertHtmlToPdf(html, fileName));
     }
 
     @Override

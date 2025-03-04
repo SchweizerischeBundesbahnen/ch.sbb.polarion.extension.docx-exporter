@@ -1,6 +1,5 @@
 package ch.sbb.polarion.extension.docx_exporter.util;
 
-import ch.sbb.polarion.extension.docx_exporter.rest.model.conversion.DocumentType;
 import ch.sbb.polarion.extension.docx_exporter.rest.model.conversion.ExportParams;
 import ch.sbb.polarion.extension.docx_exporter.rest.model.documents.DocumentData;
 import ch.sbb.polarion.extension.docx_exporter.rest.model.documents.ModelObjectProvider;
@@ -87,7 +86,6 @@ class DocumentDataFactoryTest {
         ExportParams exportParamsMock = ExportParams.builder()
                 .projectId("testProjectId")
                 .locationPath("testModuleFolder/testLocationPath")
-                .documentType(DocumentType.LIVE_DOC)
                 .build();
         when(new ModelObjectProvider(exportParamsMock, pdfExporterPolarionServiceMock).getModelObject(internalReadOnlyTransactionMock))
                 .thenReturn(documentMock);
@@ -98,7 +96,6 @@ class DocumentDataFactoryTest {
         assertEquals("testProjectId", actualDocumentData.getId().getDocumentProject().getId());
         assertEquals("testModuleFolder", ((LiveDocId) actualDocumentData.getId()).getSpaceId());
         assertEquals("testModuleId", actualDocumentData.getId().getDocumentId());
-        assertEquals(DocumentType.LIVE_DOC, actualDocumentData.getType());
         assertEquals("testModuleTitle", actualDocumentData.getTitle());
         assertNull(actualDocumentData.getRevision());
         assertEquals("12345", actualDocumentData.getLastRevision());

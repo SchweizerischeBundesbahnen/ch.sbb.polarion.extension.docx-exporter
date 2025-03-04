@@ -52,7 +52,7 @@ public class PdfConverterJobsService {
 
         CompletableFuture<byte[]> asyncConversionJob = CompletableFuture.supplyAsync(() -> {
             try {
-                return securityService.doAsUser(userSubject, (PrivilegedAction<byte[]>) () -> pdfConverter.convertToPdf(exportParams, null));
+                return securityService.doAsUser(userSubject, (PrivilegedAction<byte[]>) () -> pdfConverter.convertToPdf(exportParams));
             } catch (Exception e) {
                 String errorMessage = String.format("PDF conversion job '%s' is failed with error: %s", jobId, e.getMessage());
                 logger.error(errorMessage, e);

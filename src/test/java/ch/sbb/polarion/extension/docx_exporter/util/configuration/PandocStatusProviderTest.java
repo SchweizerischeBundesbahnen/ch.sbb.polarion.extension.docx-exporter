@@ -6,8 +6,6 @@ import ch.sbb.polarion.extension.generic.configuration.ConfigurationStatus;
 import ch.sbb.polarion.extension.generic.configuration.ConfigurationStatusProvider;
 import ch.sbb.polarion.extension.generic.configuration.Status;
 import ch.sbb.polarion.extension.docx_exporter.util.VersionUtils;
-import ch.sbb.polarion.extension.docx_exporter.weasyprint.service.WeasyPrintServiceConnector;
-import ch.sbb.polarion.extension.docx_exporter.weasyprint.service.model.WeasyPrintInfo;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.MockedStatic;

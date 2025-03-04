@@ -3,7 +3,7 @@
 
     <contribution configuration-id="com.polarion.alm.tracker.workflow.functions">
         <function name="DOCX Export" prototype="Module"
-                  clazz="ch.sbb.polarion.extension.docx_exporter.PdfExportFunction">
+                  clazz="ch.sbb.polarion.extension.docx_exporter.DocxExportFunction">
             <parameter name="Workitem ID to reuse" id="existing_wi_id" />
             <parameter name="Workitem type ID to create" id="create_wi_type_id" />
             <parameter name="Title to set into created workitem" id="create_wi_title" />
@@ -63,38 +63,11 @@
                   projectGroupScope="false"
                   repositoryScope="true"/>
 
-        <extender id="cover-page"
-                  name="Cover Page"
-                  parentNodeId="docx-export"
-                  iconUrl="/polarion/docx-exporter-admin/ui/images/menu/16x16/cover_page.svg"
-                  pageUrl="/polarion/docx-exporter-admin/pages/cover-page.jsp?scope=$scope$"
-                  projectScope="true"
-                  projectGroupScope="false"
-                  repositoryScope="true"/>
-
-        <extender id="header-footer"
-                  name="Header/Footer"
-                  parentNodeId="docx-export"
-                  iconUrl="/polarion/docx-exporter-admin/ui/images/menu/16x16/header_footer.svg"
-                  pageUrl="/polarion/docx-exporter-admin/pages/header-footer.jsp?scope=$scope$"
-                  projectScope="true"
-                  projectGroupScope="false"
-                  repositoryScope="true"/>
-
         <extender id="localization"
                   name="Localization"
                   parentNodeId="docx-export"
                   iconUrl="/polarion/docx-exporter-admin/ui/images/menu/16x16/localization.svg"
                   pageUrl="/polarion/docx-exporter-admin/pages/localization.jsp?scope=$scope$"
-                  projectScope="true"
-                  projectGroupScope="false"
-                  repositoryScope="true"/>
-
-        <extender id="css"
-                  name="CSS"
-                  parentNodeId="docx-export"
-                  iconUrl="/polarion/docx-exporter-admin/ui/images/menu/16x16/css.svg"
-                  pageUrl="/polarion/docx-exporter-admin/pages/css.jsp?scope=$scope$"
                   projectScope="true"
                   projectGroupScope="false"
                   repositoryScope="true"/>

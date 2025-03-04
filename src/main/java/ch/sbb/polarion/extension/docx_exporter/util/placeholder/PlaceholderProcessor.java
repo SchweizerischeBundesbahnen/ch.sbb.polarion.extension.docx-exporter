@@ -3,11 +3,11 @@ package ch.sbb.polarion.extension.docx_exporter.util.placeholder;
 import ch.sbb.polarion.extension.generic.regex.RegexMatcher;
 import ch.sbb.polarion.extension.docx_exporter.rest.model.conversion.ExportParams;
 import ch.sbb.polarion.extension.docx_exporter.rest.model.documents.DocumentData;
-import ch.sbb.polarion.extension.docx_exporter.rest.model.settings.headerfooter.Placeholder;
 import ch.sbb.polarion.extension.docx_exporter.service.PdfExporterPolarionService;
 import com.polarion.alm.projects.model.IUniqueObject;
 import com.polarion.alm.tracker.model.IModule;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.HashSet;
 import java.util.List;
@@ -28,8 +28,12 @@ public class PlaceholderProcessor {
     }
 
     public @NotNull String replacePlaceholders(@NotNull DocumentData<? extends IUniqueObject> documentData, @NotNull ExportParams exportParams, @NotNull String template) {
+        return replacePlaceholders(documentData, exportParams, template, null);
+    }
+
+    public @NotNull String replacePlaceholders(@NotNull DocumentData<? extends IUniqueObject> documentData, @NotNull ExportParams exportParams, @NotNull String template, @Nullable PlaceholderValues overridenPlaceholderValues) {
         PlaceholderValues placeholderValues = getPlaceholderValues(documentData, exportParams, template);
-        return processPlaceholders(template, placeholderValues);
+        return processPlaceholders(template, placeholderValues, overridenPlaceholderValues);
     }
 
     public @NotNull List<String> replacePlaceholders(@NotNull DocumentData<? extends IUniqueObject> documentData, @NotNull ExportParams exportParams, @NotNull List<String> templates) {
@@ -89,7 +93,14 @@ public class PlaceholderProcessor {
     }
 
     public @NotNull String processPlaceholders(@NotNull String template, @NotNull PlaceholderValues placeholderValues) {
+        return processPlaceholders(template, placeholderValues, null);
+    }
+
+    public @NotNull String processPlaceholders(@NotNull String template, @NotNull PlaceholderValues placeholderValues, @Nullable PlaceholderValues overridenPlaceholderValues) {
         Map<String, String> variables = placeholderValues.getAllVariables();
+        if (overridenPlaceholderValues != null) {
+            variables.putAll(overridenPlaceholderValues.getDefinedVariables());
+        }
 
         String processedText = template;
         for (Map.Entry<String, String> entry : variables.entrySet()) {

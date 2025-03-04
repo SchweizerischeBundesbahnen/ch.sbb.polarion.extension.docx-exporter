@@ -58,7 +58,7 @@
     </tr>
     <tr>
         <td><span class="monospace">{{ TIMESTAMP }}</span></td>
-        <td>Date and time of PDF generation</td>
+        <td>Date and time of DOCX generation</td>
     </tr>
     </tbody>
 </table>
