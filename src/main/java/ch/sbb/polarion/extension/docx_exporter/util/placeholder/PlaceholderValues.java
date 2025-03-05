@@ -43,10 +43,6 @@ public class PlaceholderValues {
     private String sbbCustomRevision;
 
     @Builder.Default
-    private String pageNumber = "<span class='page-number'><span class='number'></span>";
-    @Builder.Default
-    private String pagesTotalCount = "<span class='pages'></span></span>";
-    @Builder.Default
     private String timestamp = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")
             .withLocale(Locale.getDefault())
             .withZone(ZoneId.systemDefault())
@@ -63,8 +59,6 @@ public class PlaceholderValues {
         variables.put(Placeholder.REVISION.name(), revision);
         variables.put(Placeholder.REVISION_AND_BASELINE_NAME.name(), revisionAndBaseLineName);
         variables.put(Placeholder.BASELINE_NAME.name(), baseLineName);
-        variables.put(Placeholder.PAGE_NUMBER.name(), pageNumber);
-        variables.put(Placeholder.PAGES_TOTAL_COUNT.name(), pagesTotalCount);
         variables.put(Placeholder.PRODUCT_NAME.name(), productName);
         variables.put(Placeholder.PRODUCT_VERSION.name(), productVersion);
         variables.put(Placeholder.TIMESTAMP.name(), timestamp);

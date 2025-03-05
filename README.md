@@ -176,6 +176,7 @@ Supported function parameters:
 | attachment_title      | no       | The title of the attached file                                              | The name of the generated file (without '.docx' at the end)                                                                       |
 | style_package         | no       | The name of the style package to use                                        | Default                                                                                                                           |
 | prefer_last_baseline  | no       | Use the last baseline revision instead of the last document's revision      | false                                                                                                                             |
+
 (*) - either 'existing_wi_id' or 'create_wi_type_id' parameter required.
 Providing the first one means reuse already existing workitem to attach the file whereas the second will create a new workitem with the specified type.
 In case if both of them specified 'existing_wi_id' has higher priority.
@@ -184,8 +185,8 @@ In case if both of them specified 'existing_wi_id' has higher priority.
 
 1. On the top of the project's navigation pane click ⚙ (Actions) ➙ 🔧 Administration. Project's administration page will be opened.
 2. On the administration's navigation pane select `DOCX Export`. There are expandable sub-menus with different configuration options for DOCX Exporter.
-3. For some of these options (Cover page, Header and Footer, Localization, Webhooks and Filename template) `Quick Help` section available with option short description. For the rest
-   (Style package, Stylesheets) there's no `Quick Help` section as their content is self-evident.
+3. For some of these options (Localization, Webhooks and Filename template) `Quick Help` section available with option short description. For the rest
+   (Style Package, Style Package Weights) there's no `Quick Help` section as their content is self-evident.
 4. To change configuration of DOCX Exporter extension just edit corresponding section and press `Save` button.
 
 ## Usage
