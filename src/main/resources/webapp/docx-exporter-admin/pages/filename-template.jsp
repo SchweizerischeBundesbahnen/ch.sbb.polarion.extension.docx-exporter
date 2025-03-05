@@ -10,6 +10,8 @@
     <link rel="stylesheet" href="../ui/generic/css/code-input.min.css?bundle=<%= bundleTimestamp %>">
     <script type="text/javascript" src="../ui/generic/js/code-input.min.js?bundle=<%= bundleTimestamp %>"></script>
     <link rel="stylesheet" href="../ui/generic/css/common.css?bundle=<%= bundleTimestamp %>">
+    <script type="module" src="../js/modules/filename-template.js?bundle=<%= bundleTimestamp %>"></script>
+    <script type="text/javascript" defer src="../js/prism-velocity.min.js?bundle=<%= bundleTimestamp %>"></script>
 
     <style type="text/css">
         table {
@@ -46,8 +48,8 @@
             display: unset;
         }
 
-        .w-32 {
-            width: 32%;
+        .w-98 {
+            width: 98%;
         }
     </style>
 </head>
@@ -58,19 +60,9 @@
     <jsp:include page='/common/jsp/notifications.jsp' />
 
     <div class="input-container">
-        <div class="input-block left w-32">
+        <div class="input-block left w-98">
             <div class="label-block"><span>Document filename template:</span></div>
             <code-input class="html-input" id="document-name-template" lang="velocity" placeholder=""></code-input>
-        </div>
-
-        <div class="input-block w-32">
-            <div class="label-block"><span>Report filename template:</span></div>
-            <code-input class="html-input" id="report-name-template" lang="velocity" placeholder=""></code-input>
-        </div>
-
-        <div class="input-block right w-32">
-            <div class="label-block"><span>Test run filename template:</span></div>
-            <code-input class="html-input" id="testrun-name-template" lang="velocity" placeholder=""></code-input>
         </div>
     </div>
 
@@ -78,11 +70,7 @@
     <input id="bundle-timestamp" type="hidden" value="<%= ch.sbb.polarion.extension.generic.util.VersionUtils.getVersion().getBundleBuildTimestamp() %>"/>
 </div>
 
-<jsp:include page='/common/jsp/buttons.jsp'>
-    <jsp:param name="saveFunction" value="saveSettings()"/>
-    <jsp:param name="cancelFunction" value="SbbCommon.cancelEdit()"/>
-    <jsp:param name="defaultFunction" value="revertToDefault()"/>
-</jsp:include>
+<jsp:include page='/common/jsp/buttons.jsp'/>
 
 <div class="standard-admin-page help">
     <h2 class="align-left">Quick Help</h2>
@@ -98,9 +86,5 @@
         <jsp:include page="../pages/placeholders.jsp"/>
     </div>
 </div>
-
-<script type="text/javascript" src="../ui/generic/js/common.js?bundle=<%= bundleTimestamp %>"></script>
-<script type="text/javascript" src="../js/filename-template.js?bundle=<%= bundleTimestamp %>"></script>
-<script type="text/javascript" src="../js/prism-velocity.min.js?bundle=<%= bundleTimestamp %>"></script>
 </body>
 </html>

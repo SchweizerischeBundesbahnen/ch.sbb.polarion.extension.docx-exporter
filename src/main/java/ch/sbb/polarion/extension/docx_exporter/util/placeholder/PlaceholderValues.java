@@ -1,6 +1,5 @@
 package ch.sbb.polarion.extension.docx_exporter.util.placeholder;
 
-import ch.sbb.polarion.extension.docx_exporter.rest.model.settings.headerfooter.Placeholder;
 import com.polarion.alm.projects.model.IUser;
 import com.polarion.alm.tracker.internal.model.TypeOpt;
 import com.polarion.alm.tracker.model.IModule;
@@ -31,6 +30,7 @@ import java.util.stream.Collectors;
 public class PlaceholderValues {
     public static final String DOC_LANGUAGE_FIELD = "docLanguage";
     public static final String DOC_TIME_ZONE_FIELD = "docTimeZone";
+
     private String productName;
     private String productVersion;
     private String projectName;
@@ -43,10 +43,6 @@ public class PlaceholderValues {
     private String sbbCustomRevision;
 
     @Builder.Default
-    private String pageNumber = "<span class='page-number'><span class='number'></span>";
-    @Builder.Default
-    private String pagesTotalCount = "<span class='pages'></span></span>";
-    @Builder.Default
     private String timestamp = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")
             .withLocale(Locale.getDefault())
             .withZone(ZoneId.systemDefault())
@@ -54,7 +50,7 @@ public class PlaceholderValues {
     @Builder.Default
     private Map<String, String> customVariables = new HashMap<>();
 
-    public Map<String, String> getAllVariables() {
+    public @NotNull Map<String, String> getAllVariables() {
         Map<String, String> variables = new HashMap<>();
         variables.put(Placeholder.PROJECT_NAME.name(), projectName);
         variables.put(Placeholder.DOCUMENT_ID.name(), documentId);
@@ -63,14 +59,21 @@ public class PlaceholderValues {
         variables.put(Placeholder.REVISION.name(), revision);
         variables.put(Placeholder.REVISION_AND_BASELINE_NAME.name(), revisionAndBaseLineName);
         variables.put(Placeholder.BASELINE_NAME.name(), baseLineName);
-        variables.put(Placeholder.PAGE_NUMBER.name(), pageNumber);
-        variables.put(Placeholder.PAGES_TOTAL_COUNT.name(), pagesTotalCount);
         variables.put(Placeholder.PRODUCT_NAME.name(), productName);
         variables.put(Placeholder.PRODUCT_VERSION.name(), productVersion);
         variables.put(Placeholder.TIMESTAMP.name(), timestamp);
 
         variables.putAll(customVariables);
         return variables;
+    }
+
+    public @NotNull Map<String, String> getDefinedVariables() {
+        Map<String, String> allVariables = getAllVariables();
+
+        allVariables.entrySet()
+                .removeIf(entry -> entry.getValue() == null);
+
+        return allVariables;
     }
 
     @SuppressWarnings("java:S1166")

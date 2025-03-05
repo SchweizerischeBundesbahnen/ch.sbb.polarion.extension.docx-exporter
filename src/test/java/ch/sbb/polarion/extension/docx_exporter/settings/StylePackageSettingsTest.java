@@ -7,8 +7,6 @@ import ch.sbb.polarion.extension.generic.settings.GenericNamedSettings;
 import ch.sbb.polarion.extension.generic.settings.SettingId;
 import ch.sbb.polarion.extension.generic.settings.SettingsService;
 import ch.sbb.polarion.extension.generic.util.ScopeUtils;
-import ch.sbb.polarion.extension.docx_exporter.rest.model.conversion.Orientation;
-import ch.sbb.polarion.extension.docx_exporter.rest.model.conversion.PaperSize;
 import ch.sbb.polarion.extension.docx_exporter.rest.model.settings.stylepackage.StylePackageModel;
 import com.polarion.subterra.base.location.ILocation;
 import org.junit.jupiter.api.Test;
@@ -75,9 +73,7 @@ class StylePackageSettingsTest {
             mockScopeUtils.when(() -> ScopeUtils.getContextLocation("project/test_project/")).thenReturn(mockProjectLocation);
 
             StylePackageModel customProjectModel = StylePackageModel.builder()
-                    .css("customCSS")
-                    .coverPage("customCoverPage")
-                    .orientation("customOrientation")
+                    .localization("fr")
                     .build();
             customProjectModel.setBundleTimestamp("custom");
             when(mockedSettingsService.read(eq(mockProjectLocation), any())).thenReturn(customProjectModel.serialize());
@@ -86,9 +82,7 @@ class StylePackageSettingsTest {
             when(mockedSettingsService.getPersistedSettingFileNames(mockProjectLocation)).thenReturn(List.of("Any setting name"));
 
             StylePackageModel loadedModel = stylePackageSettings.load(projectName, SettingId.fromName("Any setting name"));
-            assertEquals("customCSS", loadedModel.getCss());
-            assertEquals("customCoverPage", loadedModel.getCoverPage());
-            assertEquals("customOrientation", loadedModel.getOrientation());
+            assertEquals("fr", loadedModel.getLocalization());
             assertEquals("custom", loadedModel.getBundleTimestamp());
         }
     }
@@ -124,35 +118,23 @@ class StylePackageSettingsTest {
             when(mockedSettingsService.getLastRevision(mockProjectLocation)).thenReturn("some_revision");
 
             StylePackageModel settingOneModel = StylePackageModel.builder()
-                    .css("setting_oneCSS")
-                    .coverPage("setting_oneCoverPage")
-                    .orientation(Orientation.LANDSCAPE.name())
-                    .paperSize(PaperSize.valueOf("A4").name())
+                    .localization("fr")
                     .build();
             settingOneModel.setBundleTimestamp("setting_one");
             when(mockedSettingsService.read(eq(settingOneLocation), any())).thenReturn(settingOneModel.serialize());
 
             StylePackageModel settingTwoModel = StylePackageModel.builder()
-                    .css("setting_twoCSS")
-                    .coverPage("setting_twoCoverPage")
-                    .orientation(Orientation.LANDSCAPE.name())
-                    .paperSize(PaperSize.valueOf("A3").name())
+                    .localization("de")
                     .build();
             settingTwoModel.setBundleTimestamp("setting_two");
             when(mockedSettingsService.read(eq(settingTwoLocation), any())).thenReturn(settingTwoModel.serialize());
 
             StylePackageModel loadedOneModel = settings.load(projectName, SettingId.fromName(settingOne));
-            assertEquals("setting_oneCSS", loadedOneModel.getCss());
-            assertEquals("setting_oneCoverPage", loadedOneModel.getCoverPage());
-            assertEquals(Orientation.LANDSCAPE, Orientation.valueOf(loadedOneModel.getOrientation()));
-            assertEquals(PaperSize.A4, PaperSize.valueOf(loadedOneModel.getPaperSize()));
+            assertEquals("fr", loadedOneModel.getLocalization());
             assertEquals("setting_one", loadedOneModel.getBundleTimestamp());
 
             StylePackageModel loadedTwoModel = settings.load(projectName, SettingId.fromName(settingTwo));
-            assertEquals("setting_twoCSS", loadedTwoModel.getCss());
-            assertEquals("setting_twoCoverPage", loadedTwoModel.getCoverPage());
-            assertEquals(Orientation.LANDSCAPE, Orientation.valueOf(loadedTwoModel.getOrientation()));
-            assertEquals(PaperSize.A3, PaperSize.valueOf(loadedTwoModel.getPaperSize()));
+            assertEquals("de", loadedTwoModel.getLocalization());
             assertEquals("setting_two", loadedTwoModel.getBundleTimestamp());
         }
     }

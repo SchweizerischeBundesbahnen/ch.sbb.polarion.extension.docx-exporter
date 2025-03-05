@@ -64,7 +64,7 @@ class PdfConverterJobsServiceTest {
         when(requestAttributes.getAttribute(LogoutFilter.XSRF_SKIP_LOGOUT, RequestAttributes.SCOPE_REQUEST)).thenReturn(Boolean.FALSE);
         when(requestAttributes.getAttribute(LogoutFilter.ASYNC_SKIP_LOGOUT, RequestAttributes.SCOPE_REQUEST)).thenReturn(Boolean.TRUE);
         ExportParams exportParams = ExportParams.builder().build();
-        when(pdfConverter.convertToPdf(exportParams, null)).thenReturn("test pdf".getBytes());
+        when(pdfConverter.convertToPdf(exportParams)).thenReturn("test pdf".getBytes());
 
         String jobId = pdfConverterJobsService.startJob(exportParams, 60);
 
@@ -94,7 +94,7 @@ class PdfConverterJobsServiceTest {
         when(requestAttributes.getAttribute(LogoutFilter.XSRF_SKIP_LOGOUT, RequestAttributes.SCOPE_REQUEST)).thenReturn(Boolean.FALSE);
         when(requestAttributes.getAttribute(LogoutFilter.ASYNC_SKIP_LOGOUT, RequestAttributes.SCOPE_REQUEST)).thenReturn(Boolean.TRUE);
         ExportParams exportParams = ExportParams.builder().build();
-        when(pdfConverter.convertToPdf(exportParams, null)).thenThrow(new RuntimeException("test error"));
+        when(pdfConverter.convertToPdf(exportParams)).thenThrow(new RuntimeException("test error"));
 
         String jobId = pdfConverterJobsService.startJob(exportParams, 60);
 
@@ -115,7 +115,7 @@ class PdfConverterJobsServiceTest {
     void shouldGetAllJobsStatuses() {
         prepareSecurityServiceSubject(subject);
         ExportParams exportParams = ExportParams.builder().build();
-        lenient().when(pdfConverter.convertToPdf(exportParams, null)).thenReturn("test pdf".getBytes());
+        lenient().when(pdfConverter.convertToPdf(exportParams)).thenReturn("test pdf".getBytes());
 
         String jobId1 = pdfConverterJobsService.startJob(exportParams, 60);
         String jobId2 = pdfConverterJobsService.startJob(exportParams, 60);
@@ -129,7 +129,7 @@ class PdfConverterJobsServiceTest {
         prepareSecurityServiceSubject(null);
 
         ExportParams exportParams = ExportParams.builder().build();
-        lenient().when(pdfConverter.convertToPdf(exportParams, null)).thenReturn("test pdf".getBytes());
+        lenient().when(pdfConverter.convertToPdf(exportParams)).thenReturn("test pdf".getBytes());
 
         String jobId = pdfConverterJobsService.startJob(exportParams, 60);
 
@@ -153,7 +153,7 @@ class PdfConverterJobsServiceTest {
         lenient().when(requestAttributes.getAttribute(LogoutFilter.ASYNC_SKIP_LOGOUT, RequestAttributes.SCOPE_REQUEST)).thenReturn(asyncSkipLogout);
 
         ExportParams exportParams = ExportParams.builder().build();
-        when(pdfConverter.convertToPdf(exportParams, null)).thenReturn("test pdf".getBytes());
+        when(pdfConverter.convertToPdf(exportParams)).thenReturn("test pdf".getBytes());
 
         String jobId = pdfConverterJobsService.startJob(exportParams, 60);
 

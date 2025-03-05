@@ -3,18 +3,12 @@ package ch.sbb.polarion.extension.docx_exporter.rest.model.documents;
 import ch.sbb.polarion.extension.docx_exporter.rest.model.conversion.ExportParams;
 import ch.sbb.polarion.extension.docx_exporter.rest.model.documents.adapters.IUniqueObjectAdapter;
 import ch.sbb.polarion.extension.docx_exporter.rest.model.documents.adapters.LiveDocAdapter;
-import ch.sbb.polarion.extension.docx_exporter.rest.model.documents.adapters.LiveReportAdapter;
-import ch.sbb.polarion.extension.docx_exporter.rest.model.documents.adapters.TestRunAdapter;
-import ch.sbb.polarion.extension.docx_exporter.rest.model.documents.adapters.WikiPageAdapter;
 import ch.sbb.polarion.extension.docx_exporter.service.PolarionBaselineExecutor;
 import com.polarion.alm.projects.model.IUniqueObject;
 import com.polarion.alm.shared.api.model.ModelObject;
 import com.polarion.alm.shared.api.transaction.ReadOnlyTransaction;
 import com.polarion.alm.shared.api.transaction.TransactionalExecutor;
 import com.polarion.alm.tracker.model.IModule;
-import com.polarion.alm.tracker.model.IRichPage;
-import com.polarion.alm.tracker.model.ITestRun;
-import com.polarion.alm.tracker.model.IWikiPage;
 import lombok.Getter;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -31,12 +25,6 @@ public class UniqueObjectConverter {
     public UniqueObjectConverter(@NotNull IUniqueObject uniqueObject) {
         if (uniqueObject instanceof IModule module) {
             uniqueObjectAdapter = new LiveDocAdapter(module);
-        } else if (uniqueObject instanceof IRichPage richPage) {
-            uniqueObjectAdapter = new LiveReportAdapter(richPage);
-        } else if (uniqueObject instanceof IWikiPage wikiPage) {
-            uniqueObjectAdapter = new WikiPageAdapter(wikiPage);
-        } else if (uniqueObject instanceof ITestRun testRun) {
-            uniqueObjectAdapter = new TestRunAdapter(testRun);
         } else {
             throw new IllegalArgumentException("Unsupported unique object type: " + uniqueObject.getClass());
         }
@@ -65,7 +53,6 @@ public class UniqueObjectConverter {
         return PolarionBaselineExecutor.executeInBaseline(baselineRevision, transaction, () -> DocumentData.<T>builder()
                 .documentObject(uniqueObjectAdapter.getUniqueObject())
                 .id(uniqueObjectAdapter.getDocumentId())
-                .type(uniqueObjectAdapter.getDocumentType())
                 .title(uniqueObjectAdapter.getTitle())
                 .revision(uniqueObjectAdapter.getRevision())
                 .lastRevision(uniqueObjectAdapter.getLastRevision())

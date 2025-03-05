@@ -2,7 +2,6 @@ package ch.sbb.polarion.extension.docx_exporter.rest.controller;
 
 import ch.sbb.polarion.extension.docx_exporter.converter.PdfConverterJobsService;
 import ch.sbb.polarion.extension.docx_exporter.converter.PdfConverterJobsService.JobState;
-import ch.sbb.polarion.extension.docx_exporter.rest.model.conversion.DocumentType;
 import ch.sbb.polarion.extension.docx_exporter.rest.model.conversion.ExportParams;
 import ch.sbb.polarion.extension.docx_exporter.rest.model.jobs.ConverterJobDetails;
 import ch.sbb.polarion.extension.docx_exporter.rest.model.jobs.ConverterJobStatus;
@@ -67,10 +66,8 @@ class ConverterInternalControllerTest {
     public static Stream<Arguments> getWrongConverterExportParams() {
         return Stream.of(
                 Arguments.of(null, "Missing export parameters"),
-                Arguments.of(ExportParams.builder().documentType(DocumentType.LIVE_DOC).locationPath("test").build(), "projectId"),
-                Arguments.of(ExportParams.builder().documentType(DocumentType.LIVE_DOC).projectId("test").build(), "locationPath"),
-                Arguments.of(ExportParams.builder().documentType(DocumentType.LIVE_REPORT).build(), "locationPath"),
-                Arguments.of(ExportParams.builder().documentType(DocumentType.WIKI_PAGE).build(), "locationPath")
+                Arguments.of(ExportParams.builder().locationPath("test").build(), "projectId"),
+                Arguments.of(ExportParams.builder().projectId("test").build(), "locationPath")
         );
     }
 

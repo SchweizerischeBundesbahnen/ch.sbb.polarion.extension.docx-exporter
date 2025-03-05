@@ -41,14 +41,6 @@
         <td>Revision and baseline name</td>
     </tr>
     <tr>
-        <td><span class="monospace">{{ PAGE_NUMBER }}</span></td>
-        <td>Page counter</td>
-    </tr>
-    <tr>
-        <td><span class="monospace">{{ PAGES_TOTAL_COUNT }}</span></td>
-        <td>Total count of pages in the document</td>
-    </tr>
-    <tr>
         <td><span class="monospace">{{ PRODUCT_NAME }}</span></td>
         <td>Product name, in common case it will be "Polarion"</td>
     </tr>
@@ -58,7 +50,7 @@
     </tr>
     <tr>
         <td><span class="monospace">{{ TIMESTAMP }}</span></td>
-        <td>Date and time of PDF generation</td>
+        <td>Date and time of DOCX generation</td>
     </tr>
     </tbody>
 </table>

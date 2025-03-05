@@ -5,7 +5,7 @@ import java.io.InputStream;
 import java.util.Properties;
 
 public class PropertiesUtility {
-    private static final String JOBS_PROPERTIES_FILE = "/pdf-converter-jobs.properties";
+    private static final String JOBS_PROPERTIES_FILE = "/docx-converter-jobs.properties";
     private static final String TIMEOUT_FINISHED_JOBS = "jobs.timeout.finished.minutes";
     private static final String TIMEOUT_IN_PROGRESS_JOBS = "jobs.timeout.in-progress.minutes";
 

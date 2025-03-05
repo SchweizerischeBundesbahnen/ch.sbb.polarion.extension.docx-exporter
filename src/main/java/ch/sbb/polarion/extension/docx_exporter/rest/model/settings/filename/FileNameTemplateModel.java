@@ -24,23 +24,14 @@ public class FileNameTemplateModel extends SettingsModel {
     private static final String WIKI_PAGE_NAME_TEMPLATE = "WIKI NAME TEMPLATE";
 
     private String documentNameTemplate;
-    private String reportNameTemplate;
-    private String testRunNameTemplate;
-    private String wikiNameTemplate;
 
     @Override
     protected String serializeModelData() {
-        return serializeEntry(LIVE_DOC_NAME_TEMPLATE, documentNameTemplate) +
-                serializeEntry(LIVE_REPORT_NAME_TEMPLATE, reportNameTemplate) +
-                serializeEntry(TEST_RUN_NAME_TEMPLATE, testRunNameTemplate) +
-                serializeEntry(WIKI_PAGE_NAME_TEMPLATE, wikiNameTemplate);
+        return serializeEntry(LIVE_DOC_NAME_TEMPLATE, documentNameTemplate);
     }
 
     @Override
     protected void deserializeModelData(String serializedString) {
         documentNameTemplate = deserializeEntry(LIVE_DOC_NAME_TEMPLATE, serializedString, FileNameTemplateSettings.DEFAULT_LIVE_DOC_NAME_TEMPLATE);
-        reportNameTemplate = deserializeEntry(LIVE_REPORT_NAME_TEMPLATE, serializedString, FileNameTemplateSettings.DEFAULT_LIVE_REPORT_NAME_TEMPLATE);
-        testRunNameTemplate = deserializeEntry(TEST_RUN_NAME_TEMPLATE, serializedString, FileNameTemplateSettings.DEFAULT_TEST_RUN_NAME_TEMPLATE);
-        wikiNameTemplate = deserializeEntry(WIKI_PAGE_NAME_TEMPLATE, serializedString, FileNameTemplateSettings.DEFAULT_WIKI_PAGE_NAME_TEMPLATE);
     }
 }

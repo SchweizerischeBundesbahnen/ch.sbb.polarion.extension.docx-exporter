@@ -2,8 +2,6 @@ package ch.sbb.polarion.extension.docx_exporter.pandoc.service;
 
 import ch.sbb.polarion.extension.docx_exporter.pandoc.service.model.PandocInfo;
 import ch.sbb.polarion.extension.docx_exporter.properties.DocxExporterExtensionConfiguration;
-import ch.sbb.polarion.extension.docx_exporter.weasyprint.service.WeasyPrintServiceConnector;
-import ch.sbb.polarion.extension.docx_exporter.weasyprint.service.model.WeasyPrintInfo;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.polarion.core.util.logging.Logger;
@@ -24,7 +22,7 @@ import static com.polarion.core.util.StringUtils.isEmpty;
 
 public class PandocServiceConnector {
 
-    private static final Logger logger = Logger.getLogger(WeasyPrintServiceConnector.class);
+    private static final Logger logger = Logger.getLogger(PandocServiceConnector.class);
 
     private static final String PYTHON_VERSION_HEADER = "Python-Version";
     private static final String PANDOC_VERSION_HEADER = "Pandoc-Version";

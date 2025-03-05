@@ -1,62 +1,40 @@
-import DocxExportParams from "./ExportParams.js";
+import ExtensionContext from "/polarion/docx-exporter/ui/generic/js/modules/ExtensionContext.js";
+import ExportParams from "./ExportParams.js";
 
-export default class DocxExportContext {
+export default class ExportContext extends ExtensionContext {
+    static PULL_INTERVAL = 1000;
     projectId = undefined;
     locationPath = undefined;
     baselineRevision = undefined;
     revision = undefined;
-    documentType = undefined;
-    exportType = undefined;
     urlQueryParameters = undefined;
-    bulkExportWidget = undefined;
 
-    constructor({documentType = DocxExportParams.DocumentType.LIVE_DOC, exportType = DocxExportParams.ExportType.SINGLE, polarionLocationHash = window.location.hash, bulkExportWidget}) {
-        this.documentType = documentType;
-        this.exportType = exportType;
-
+    constructor({
+                    polarionLocationHash = window.location.hash,
+                    rootComponentSelector
+                }) {
         const urlPathAndSearchParams = getPathAndQueryParams(polarionLocationHash);
         const normalizedPolarionLocationHash = urlPathAndSearchParams.path;
-        const searchParameters = urlPathAndSearchParams.searchParameters;
+        const scope = getScope(normalizedPolarionLocationHash);
+        super({extension: "docx-exporter", setting: "docx-exporter", rootComponentSelector: rootComponentSelector, scope: scope});
 
         const baseline = getBaseline(normalizedPolarionLocationHash);
         if (baseline) {
             this.baselineRevision = getBaselineRevision(baseline);
         }
 
-        const scope = getScope(normalizedPolarionLocationHash);
         this.projectId = getProjectId(scope);
+        this.locationPath = getPath(normalizedPolarionLocationHash, scope);
 
-        if (this.exportType !== DocxExportParams.ExportType.BULK) {
-            this.locationPath = getPath(normalizedPolarionLocationHash, scope);
-
-            // if "testrun" or "testruns" is present return undefined
-            if (this.locationPath?.startsWith("testrun")) {
-                this.documentType = DocxExportParams.DocumentType.TEST_RUN;
-                this.locationPath = undefined;
-            }
-        }
-
+        const searchParameters = urlPathAndSearchParams.searchParameters;
         this.urlQueryParameters = getQueryParams(searchParameters);
         this.revision = this.urlQueryParameters?.revision;
-
-        this.bulkExportWidget = bulkExportWidget;
-
-        // print the context to console only in browser
-        if (isWindowDefined()) {
-            console.log(this);
-        }
 
         function getPathAndQueryParams(polarionLocationHash) {
             const result = {
                 path: undefined,
                 searchParameters: undefined
             };
-
-            if (isWindowDefined() && polarionLocationHash.endsWith("/testruns")) {
-                // TestRun opened from the list doesn't have proper URL, so we attempt to fetch it from the specific tag
-                // WARNING: the way we get this URL isn't convenient and may stop working in the future, but it seems the only way to do it atm
-                polarionLocationHash = window.document.querySelector('.polarion-TestRunLabelWidget-container a').getAttribute('href');
-            }
 
             if (polarionLocationHash.includes("?")) {
                 const pathAndQueryParams = decodeURI(polarionLocationHash.substring(2));
@@ -119,7 +97,7 @@ export default class DocxExportContext {
             }
             // otherwise, prepend '_default/' to the path
             return `_default/${extractedPath}`;
-        };
+        }
 
         function getQueryParams(searchParams) {
             if (!searchParameters) {
@@ -148,20 +126,8 @@ export default class DocxExportContext {
         return this.revision;
     }
 
-    getDocumentType() {
-        return this.documentType;
-    }
-
-    getExportType() {
-        return this.exportType;
-    }
-
     getUrlQueryParameters() {
         return this.urlQueryParameters;
-    }
-
-    getBulkExportWidget() {
-        return this.bulkExportWidget;
     }
 
     getScope() {
@@ -187,7 +153,7 @@ export default class DocxExportContext {
     }
 
     toExportParams() {
-        return new DocxExportParams.Builder(this.documentType)
+        return new ExportParams.Builder()
             .setProjectId(this.projectId)
             .setLocationPath(this.locationPath)
             .setBaselineRevision(this.baselineRevision)
@@ -195,13 +161,49 @@ export default class DocxExportContext {
             .setUrlQueryParameters(this.urlQueryParameters)
             .build();
     }
-}
 
-// expose ExportContext to the global scope
-if (isWindowDefined()) {
-    window.DocxExportContext = DocxExportContext;
-}
+    async asyncConvertDoc(request, successCallback, errorCallback) {
+        this.callAsync({
+            method: "POST",
+            url: "/polarion/docx-exporter/rest/internal/convert/jobs",
+            contentType: "application/json",
+            responseType: "blob",
+            body: request,
+            onOk: (responseText, request) => {
+                this.pullAndGetResultDoc(request.getResponseHeader("Location"), successCallback, errorCallback);
+            },
+            onError: (status, errorMessage, request) => {
+                errorCallback(request.response);
+            }
+        });
+    }
 
-function isWindowDefined() {
-    return typeof window !== 'undefined';
+    async pullAndGetResultDoc(url, successCallback, errorCallback) {
+        await new Promise(resolve => setTimeout(resolve, ExportContext.PULL_INTERVAL));
+        this.callAsync({
+            method: "GET",
+            url: url,
+            responseType: "blob",
+            onOk: (responseText, request) => {
+                if (request.status === 202) {
+                    console.log('Async DOCX conversion: still in progress, retrying...');
+                    this.pullAndGetResultDoc(url, successCallback, errorCallback);
+                } else if (request.status === 200) {
+                    let warningMessage;
+                    let count = request.getResponseHeader("Missing-WorkItem-Attachments-Count");
+                    if (count > 0) {
+                        let attachment = request.getResponseHeader("WorkItem-IDs-With-Missing-Attachment")
+                        warningMessage = `${count} image(s) in WI(s) ${attachment} were not exported. They were replaced with an image containing 'This image is not accessible'.`;
+                    }
+                    successCallback({
+                        response: request.response,
+                        warning: warningMessage
+                    });
+                }
+            },
+            onError: (status, errorMessage, request) => {
+                errorCallback(request.response);
+            }
+        });
+    }
 }

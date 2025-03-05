@@ -2,7 +2,6 @@ package ch.sbb.polarion.extension.docx_exporter.util;
 
 import ch.sbb.polarion.extension.generic.context.CurrentContextExtension;
 import ch.sbb.polarion.extension.generic.settings.NamedSettingsRegistry;
-import ch.sbb.polarion.extension.docx_exporter.rest.model.conversion.DocumentType;
 import ch.sbb.polarion.extension.docx_exporter.rest.model.conversion.ExportParams;
 import ch.sbb.polarion.extension.docx_exporter.rest.model.documents.DocumentData;
 import ch.sbb.polarion.extension.docx_exporter.rest.model.documents.id.DocumentProject;
@@ -48,7 +47,7 @@ class DocumentFileNameHelperTest {
 
     @Test
     void evaluateVelocity() {
-        DocumentData<IModule> documentData = DocumentData.creator(DocumentType.LIVE_DOC, mock(IModule.class))
+        DocumentData<IModule> documentData = DocumentData.creator(mock(IModule.class))
                 .id(new LiveDocId(new DocumentProject("testProjectId", "Test Project"), "testSpaceId", "testDocumentId"))
                 .title("Test Title")
                 .lastRevision("12345")
@@ -69,25 +68,10 @@ class DocumentFileNameHelperTest {
         // Arrange
         ExportParams exportParams = ExportParams.builder()
                 .projectId(null)
-                .documentType(DocumentType.LIVE_DOC)
                 .build();
         // Act & Assert
         IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> fileNameHelper.getDocumentFileName(exportParams));
         assertEquals("Project ID must be provided for LiveDoc or TestRun export", exception.getMessage());
-    }
-
-    @Test
-    void getDocumentFileNameWithUnsupportedDocumentType() {
-        // Arrange
-        ExportParams exportParams = ExportParams.builder()
-                .documentType(DocumentType.BASELINE_COLLECTION)
-                .build();
-        DocumentData<IBaselineCollection> documentDataMock = mock(DocumentData.class);
-        documentDataFactoryMockExtension.register(exportParams, documentDataMock);
-
-        // Act & Assert
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> fileNameHelper.getDocumentFileName(exportParams));
-        assertEquals("Unsupported document type: BASELINE_COLLECTION", exception.getMessage());
     }
 
     @Test
@@ -96,9 +80,8 @@ class DocumentFileNameHelperTest {
         ExportParams exportParams = ExportParams.builder()
                 .projectId("testProjectId")
                 .locationPath("testSpaceId/testDocumentId")
-                .documentType(DocumentType.LIVE_DOC)
                 .build();
-        DocumentData<IModule> documentData = DocumentData.creator(DocumentType.LIVE_DOC, mock(IModule.class))
+        DocumentData<IModule> documentData = DocumentData.creator(mock(IModule.class))
                 .id(new LiveDocId(new DocumentProject("testProjectId", "Test Project"), "testSpaceId", "testDocumentId"))
                 .title("Test Title")
                 .lastRevision("12345")
@@ -117,27 +100,6 @@ class DocumentFileNameHelperTest {
         // Act & Assert
         String documentFileName = fileNameHelper.getDocumentFileName(exportParams);
         assertThat(documentFileName).endsWith(".docx");
-    }
-
-
-    @Test
-    void getFileNameTemplate() {
-        // Arrange
-        FileNameTemplateModel mockModel = mock(FileNameTemplateModel.class);
-        when(mockModel.getDocumentNameTemplate()).thenReturn("DocumentTemplate");
-        when(mockModel.getReportNameTemplate()).thenReturn("ReportTemplate");
-        when(mockModel.getTestRunNameTemplate()).thenReturn("TestRunTemplate");
-        when(mockModel.getWikiNameTemplate()).thenReturn("WikiTemplate");
-
-        // Act & Assert
-        assertEquals("DocumentTemplate", fileNameHelper.getFileNameTemplate(DocumentType.LIVE_DOC, mockModel));
-        assertEquals("ReportTemplate", fileNameHelper.getFileNameTemplate(DocumentType.LIVE_REPORT, mockModel));
-        assertEquals("TestRunTemplate", fileNameHelper.getFileNameTemplate(DocumentType.TEST_RUN, mockModel));
-        assertEquals("WikiTemplate", fileNameHelper.getFileNameTemplate(DocumentType.WIKI_PAGE, mockModel));
-
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () ->
-                fileNameHelper.getFileNameTemplate(DocumentType.BASELINE_COLLECTION, mockModel));
-        assertEquals("Unsupported document type: BASELINE_COLLECTION", exception.getMessage());
     }
 
     @Test

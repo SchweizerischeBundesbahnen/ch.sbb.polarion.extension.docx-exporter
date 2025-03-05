@@ -41,8 +41,6 @@ class PlaceholderProcessorTest {
                 .documentId("testDocId")
                 .documentTitle("testDocTitle")
                 .revision("testRevision")
-                .pageNumber("testPageNumber")
-                .pagesTotalCount("testPagesTotal")
                 .productName("testProductName")
                 .productVersion("testProductVersion")
                 .timestamp("testTimestamp")
@@ -62,20 +60,17 @@ class PlaceholderProcessorTest {
     }
 
     @Test
-    void testPageNumberAndTimestampReplaced() {
-        final String text = "test text with {{ PAGE_NUMBER }} and {{ TIMESTAMP }}";
+    void testTimestampReplaced() {
+        final String text = "test text with {{ TIMESTAMP }}";
         final String result = placeholderProcessor.processPlaceholders(text, placeholderValues);
-        assertTrue(result.contains("testPageNumber"));
         assertTrue(result.contains("testTimestamp"));
     }
 
     @Test
     void testListReplaced() {
-        final List<String> text = Arrays.asList("test text one with {{ PAGE_NUMBER }} and {{ TIMESTAMP }}", "test text two with {{ PAGE_NUMBER }} and {{ TIMESTAMP }}");
+        final List<String> text = Arrays.asList("test text one with {{ TIMESTAMP }}", "test text two with {{ TIMESTAMP }}");
         final List<String> result = placeholderProcessor.processPlaceholders(text, placeholderValues);
         assertEquals(text.size(), result.size());
-        assertTrue(result.get(0).contains("testPageNumber"));
-        assertTrue(result.get(1).contains("testPageNumber"));
         assertTrue(result.get(0).contains("testTimestamp"));
         assertTrue(result.get(1).contains("testTimestamp"));
     }

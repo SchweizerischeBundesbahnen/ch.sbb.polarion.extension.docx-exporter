@@ -6,7 +6,6 @@ import ch.sbb.polarion.extension.docx_exporter.util.configuration.CORSStatusProv
 import ch.sbb.polarion.extension.docx_exporter.util.configuration.DefaultSettingsStatusProvider;
 import ch.sbb.polarion.extension.docx_exporter.util.configuration.DleToolbarStatusProvider;
 import ch.sbb.polarion.extension.docx_exporter.util.configuration.DocumentPropertiesPaneStatusProvider;
-import ch.sbb.polarion.extension.docx_exporter.util.configuration.LiveReportMainHeadStatusProvider;
 import ch.sbb.polarion.extension.docx_exporter.util.configuration.PandocStatusProvider;
 import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.Operation;
@@ -74,22 +73,6 @@ public class ConfigurationInternalController {
     )
     public @NotNull ConfigurationStatus checkDleToolbarConfig() {
         return new DleToolbarStatusProvider().getStatus(ConfigurationStatusProvider.Context.builder().build());
-    }
-
-    @GET
-    @Produces(MediaType.APPLICATION_JSON)
-    @Path("/configuration/live-report-config")
-    @Operation(
-            summary = "Checks Live Report configuration",
-            responses = {
-                    @ApiResponse(responseCode = "200",
-                            description = "Successfully retrieved Live Report configuration",
-                            content = @Content(schema = @Schema(implementation = ConfigurationStatus.class))
-                    )
-            }
-    )
-    public @NotNull ConfigurationStatus checkLiveReportConfig() {
-        return new LiveReportMainHeadStatusProvider().getStatus(ConfigurationStatusProvider.Context.builder().build());
     }
 
     @GET

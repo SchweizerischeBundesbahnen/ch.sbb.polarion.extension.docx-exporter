@@ -18,10 +18,7 @@ import ch.sbb.polarion.extension.docx_exporter.rest.exception.UnresolvableObject
 import ch.sbb.polarion.extension.docx_exporter.rest.exception.WrapperExceptionMapper;
 import ch.sbb.polarion.extension.docx_exporter.rest.exception.XLIFFExceptionMapper;
 import ch.sbb.polarion.extension.docx_exporter.rest.filter.ExportContextFilter;
-import ch.sbb.polarion.extension.docx_exporter.settings.CoverPageSettings;
-import ch.sbb.polarion.extension.docx_exporter.settings.CssSettings;
 import ch.sbb.polarion.extension.docx_exporter.settings.FileNameTemplateSettings;
-import ch.sbb.polarion.extension.docx_exporter.settings.HeaderFooterSettings;
 import ch.sbb.polarion.extension.docx_exporter.settings.LocalizationSettings;
 import ch.sbb.polarion.extension.docx_exporter.settings.StylePackageSettings;
 import ch.sbb.polarion.extension.docx_exporter.settings.WebhooksSettings;
@@ -41,10 +38,7 @@ public class PdfExporterRestApplication extends GenericRestApplication {
             NamedSettingsRegistry.INSTANCE.register(
                     Arrays.asList(
                             new StylePackageSettings(),
-                            new HeaderFooterSettings(),
-                            new CssSettings(),
                             new LocalizationSettings(),
-                            new CoverPageSettings(),
                             new WebhooksSettings(),
                             new FileNameTemplateSettings()
                     )

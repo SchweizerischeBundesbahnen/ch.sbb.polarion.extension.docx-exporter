@@ -1,6 +1,5 @@
 package ch.sbb.polarion.extension.docx_exporter.rest.model.documents.adapters;
 
-import ch.sbb.polarion.extension.docx_exporter.rest.model.conversion.DocumentType;
 import ch.sbb.polarion.extension.docx_exporter.rest.model.conversion.ExportParams;
 import ch.sbb.polarion.extension.docx_exporter.rest.model.documents.id.DocumentId;
 import ch.sbb.polarion.extension.docx_exporter.rest.model.documents.id.DocumentProject;
@@ -42,11 +41,6 @@ public class LiveDocAdapter extends CommonUniqueObjectAdapter {
 
     private @NotNull DocumentProject getDocumentProject() {
         return new DocumentProject(module.getProject());
-    }
-
-    @Override
-    public @NotNull DocumentType getDocumentType() {
-        return DocumentType.LIVE_DOC;
     }
 
     @Override

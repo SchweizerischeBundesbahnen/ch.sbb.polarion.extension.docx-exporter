@@ -2,47 +2,38 @@ package ch.sbb.polarion.extension.docx_exporter.converter;
 
 import ch.sbb.polarion.extension.generic.regex.RegexMatcher;
 import ch.sbb.polarion.extension.docx_exporter.properties.DocxExporterExtensionConfiguration;
-import ch.sbb.polarion.extension.docx_exporter.rest.model.conversion.Orientation;
-import ch.sbb.polarion.extension.docx_exporter.rest.model.conversion.PaperSize;
 import ch.sbb.polarion.extension.docx_exporter.settings.LocalizationSettings;
 import ch.sbb.polarion.extension.docx_exporter.util.HtmlLogger;
 import ch.sbb.polarion.extension.docx_exporter.util.HtmlProcessor;
 import ch.sbb.polarion.extension.docx_exporter.util.PdfExporterFileResourceProvider;
 import ch.sbb.polarion.extension.docx_exporter.util.PdfTemplateProcessor;
 import ch.sbb.polarion.extension.docx_exporter.util.html.HtmlLinksHelper;
-import ch.sbb.polarion.extension.docx_exporter.weasyprint.WeasyPrintOptions;
-import ch.sbb.polarion.extension.docx_exporter.weasyprint.service.WeasyPrintServiceConnector;
-import lombok.Getter;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.VisibleForTesting;
 
 public class HtmlToPdfConverter {
     private final PdfTemplateProcessor pdfTemplateProcessor;
     private final HtmlProcessor htmlProcessor;
-    @Getter
-    private final WeasyPrintServiceConnector weasyPrintServiceConnector;
 
     public HtmlToPdfConverter() {
         this.pdfTemplateProcessor = new PdfTemplateProcessor();
         PdfExporterFileResourceProvider fileResourceProvider = new PdfExporterFileResourceProvider();
         this.htmlProcessor = new HtmlProcessor(fileResourceProvider, new LocalizationSettings(), new HtmlLinksHelper(fileResourceProvider), null);
-        this.weasyPrintServiceConnector = new WeasyPrintServiceConnector();
     }
 
     @VisibleForTesting
-    public HtmlToPdfConverter(PdfTemplateProcessor pdfTemplateProcessor, HtmlProcessor htmlProcessor, WeasyPrintServiceConnector weasyPrintServiceConnector) {
+    public HtmlToPdfConverter(PdfTemplateProcessor pdfTemplateProcessor, HtmlProcessor htmlProcessor) {
         this.pdfTemplateProcessor = pdfTemplateProcessor;
         this.htmlProcessor = htmlProcessor;
-        this.weasyPrintServiceConnector = weasyPrintServiceConnector;
     }
 
-    public byte[] convert(String origHtml, Orientation orientation, PaperSize paperSize) {
+    public byte[] convert(String origHtml) {
         validateHtml(origHtml);
-        String html = preprocessHtml(origHtml, orientation, paperSize);
+        String html = preprocessHtml(origHtml);
         if (DocxExporterExtensionConfiguration.getInstance().isDebug()) {
             new HtmlLogger().log(origHtml, html, "");
         }
-        return weasyPrintServiceConnector.convertToPdf(html, WeasyPrintOptions.builder().followHTMLPresentationalHints(true).build());
+        return null;
     }
 
     private void validateHtml(String origHtml) {
@@ -57,12 +48,12 @@ public class HtmlToPdfConverter {
 
     @NotNull
     @VisibleForTesting
-    String preprocessHtml(String origHtml, Orientation orientation, PaperSize paperSize) {
+    String preprocessHtml(String origHtml) {
         String origHead = extractTagContent(origHtml, "head");
         String origCss = extractTagContent(origHead, "style");
 
         String head = origHead + pdfTemplateProcessor.buildBaseUrlHeader();
-        String css = origCss + pdfTemplateProcessor.buildSizeCss(orientation, paperSize);
+        String css = origCss + pdfTemplateProcessor.buildSizeCss();
         if (origCss.isBlank()) {
             head = head + String.format("<style>%s</style>", css);
         } else {

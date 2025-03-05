@@ -14,6 +14,7 @@
     <link rel="stylesheet" href="../ui/generic/css/common.css?bundle=<%= bundleTimestamp %>">
     <link rel="stylesheet" href="../ui/generic/css/custom-select.css?bundle=<%= bundleTimestamp %>">
     <link rel="stylesheet" href="../ui/generic/css/configurations.css?bundle=<%= bundleTimestamp %>">
+    <script type="module" src="../js/modules/style-packages.js?bundle=<%= bundleTimestamp %>"></script>
     <style type="text/css">
         html {
             height: 100%;
@@ -95,7 +96,7 @@
                 <div class='input-group flex-centered'>
                     <label for='style-package-weight'>Weight:</label>
                     <div class='more-info' title="A float number from 0.0 to 100, which will determine the position of current style package in the resulting style packages list. The higher the number, the higher its position will be."></div>
-                    <input id="style-package-weight" style="margin-left: 59px" type="number" min="1" max="100" step="0.1" onblur="StylePackageUtils.adjustWeight(this)">
+                    <input id="style-package-weight" style="margin-left: 59px" type="number" min="1" max="100" step="0.1">
                 </div>
             </div>
 
@@ -122,23 +123,6 @@
 
         <div class="flex-container">
             <div class="flex-column">
-                <div class='checkbox input-group'>
-                    <label for='cover-page-checkbox' style="width: 120px;">
-                        <input id="cover-page-checkbox" onchange='document.getElementById("cover-page-select").style.display = this.checked ? "inline-block" : "none"' type='checkbox'/>
-                        Cover page
-                    </label>
-                    <div id="cover-page-select" style="display: none"></div>
-                </div>
-                <div class="input-group">
-                    <label for="css-select" id="css-select-label">CSS:</label>
-                    <div id="css-select"></div>
-                </div>
-            </div>
-            <div class="flex-column">
-                <div class="input-group">
-                    <label for="header-footer-select" id="header-footer-select-label">Header/Footer:</label>
-                    <div id="header-footer-select"></div>
-                </div>
                 <div class="input-group">
                     <label for="localization-select" id="localization-select-label">Localization:</label>
                     <div id="localization-select"></div>
@@ -158,39 +142,8 @@
             </div>
         </div>
 
-        <div class="flex-container" style="border-top: 1px solid #ccc; margin-top: 20px; padding-top: 15px;">
-            <div class="flex-column">
-                <div class='input-group'>
-                    <label for='headers-color'>Headers color:</label>
-                    <input id='headers-color' type='color' value='#004d73' style="width: 30px"/>
-                </div>
-            </div>
-            <div class="flex-column">
-                <div class='input-group'>
-                    <label for="paper-size-select" id='paper-size-label'>Paper Size:</label>
-                    <div id="paper-size-select"></div>
-                </div>
-                <div class='input-group'>
-                    <label for="orientation-select" id='orientation-label'>Orientation:</label>
-                    <div id="orientation-select"></div>
-                </div>
-            </div>
-        </div>
-
         <div class="flex-container">
             <div class="flex-column">
-                <div class='checkbox input-group'>
-                    <label for='fit-to-page'>
-                        <input id="fit-to-page" type='checkbox' />
-                        Fit images and tables to page
-                    </label>
-                </div>
-                <div class='checkbox input-group'>
-                    <label for='presentational-hints'>
-                        <input id='presentational-hints' type='checkbox'/>
-                        Follow HTML presentational hints
-                    </label>
-                </div>
                 <div class='checkbox input-group'>
                     <label for='enable-comments-rendering'>
                         <input id="enable-comments-rendering" type='checkbox' />
@@ -198,9 +151,9 @@
                     </label>
                 </div>
                 <div class='checkbox input-group'>
-                    <label for='watermark'>
-                        <input id='watermark' type='checkbox'/>
-                        Watermark
+                    <label for='cut-empty-wi-attributes'>
+                        <input id="cut-empty-wi-attributes" type='checkbox' />
+                        Cut empty Workitem attributes
                     </label>
                 </div>
             </div>
@@ -212,21 +165,9 @@
                     </label>
                 </div>
                 <div class='checkbox input-group'>
-                    <label for='cut-empty-wi-attributes'>
-                        <input id="cut-empty-wi-attributes" type='checkbox' />
-                        Cut empty Workitem attributes
-                    </label>
-                </div>
-                <div class='checkbox input-group'>
                     <label for='cut-urls'>
                         <input id='cut-urls' type='checkbox'/>
                         Cut local Polarion URLs
-                    </label>
-                </div>
-                <div class='checkbox input-group'>
-                    <label for='mark-referenced-workitems'>
-                        <input id='mark-referenced-workitems' type='checkbox'/>
-                        Mark referenced Workitems
                     </label>
                 </div>
             </div>
@@ -234,18 +175,18 @@
         <div class="flex-container">
             <div class="flex-column">
                 <div class='checkbox input-group'>
-                    <label for='custom-list-styles'>
-                        <input id='custom-list-styles' onchange='document.getElementById("numbered-list-styles").style.visibility = this.checked ? "visible" : "hidden"' type='checkbox'/>
-                        Custom styles of numbered lists
-                    </label>
-                    <input id='numbered-list-styles' placeholder='eg. 1ai' type='text' style="visibility: hidden; margin-left: 10px; width: 100px"/>
-                </div>
-                <div class='checkbox input-group'>
                     <label for='specific-chapters'>
                         <input id='specific-chapters' onchange='document.getElementById("chapters").style.visibility = this.checked ? "visible" : "hidden"' type='checkbox'/>
                         Specific higher level chapters
                     </label>
                     <input id='chapters' placeholder='eg. 1,2,4 etc.' type='text' style="visibility: hidden; margin-left: 10px; width: 117px"/>
+                </div>
+                <div class='checkbox input-group'>
+                    <label for='selected-roles' style="margin-top: 5px">
+                        <input id="selected-roles" onchange='document.getElementById("roles-select").style.display = this.checked ? "inline-block" : "none"' type='checkbox'/>
+                        Specific Workitem roles
+                    </label>
+                    <div id="roles-select" style="display: none; margin-left: 10px; width: 152px"></div>
                 </div>
             </div>
             <div class="flex-column">
@@ -256,20 +197,6 @@
                     </label>
                     <div id="language-select" style="visibility: hidden; margin-left: 10px; width: 200px"></div>
                 </div>
-                <div class='checkbox input-group'>
-                    <label for='selected-roles' style="margin-top: 5px">
-                        <input id="selected-roles" onchange='document.getElementById("roles-select").style.display = this.checked ? "inline-block" : "none"' type='checkbox'/>
-                        Specific Workitem roles
-                    </label>
-                    <div id="roles-select" style="display: none; margin-left: 10px; width: 152px"></div>
-                </div>
-                <div class='checkbox input-group'>
-                    <label for='download-attachments' style="margin-top: 5px">
-                        <input id='download-attachments' onchange='document.getElementById("attachments-filter").style.visibility = this.checked ? "visible" : "hidden"' type='checkbox'/>
-                        Download attachments
-                    </label>
-                    <input id='attachments-filter' placeholder='*.*' type='text' style="visibility: hidden; margin-left: 10px; width: 117px"/>
-                </div>
             </div>
         </div>
     </div>
@@ -278,16 +205,7 @@
     <input id="bundle-timestamp" type="hidden" value="<%= ch.sbb.polarion.extension.generic.util.VersionUtils.getVersion().getBundleBuildTimestamp() %>"/>
 </div>
 
-<jsp:include page='/common/jsp/buttons.jsp'>
-    <jsp:param name="saveFunction" value="saveStylePackage()"/>
-    <jsp:param name="cancelFunction" value="SbbCommon.cancelEdit()"/>
-    <jsp:param name="defaultFunction" value="revertToDefault()"/>
-</jsp:include>
+<jsp:include page='/common/jsp/buttons.jsp'/>
 
-<script type="text/javascript" src="../ui/generic/js/common.js?bundle=<%= bundleTimestamp %>"></script>
-<script type="text/javascript" src="../ui/generic/js/custom-select.js?bundle=<%= bundleTimestamp %>"></script>
-<script type="text/javascript" src="../ui/generic/js/configurations.js?bundle=<%= bundleTimestamp %>"></script>
-<script type="text/javascript" src="../js/style-packages.js?bundle=<%= bundleTimestamp %>"></script>
-<script type="text/javascript" src="../js/style-package-utils.js?bundle=<%= bundleTimestamp %>"></script>
 </body>
 </html>
