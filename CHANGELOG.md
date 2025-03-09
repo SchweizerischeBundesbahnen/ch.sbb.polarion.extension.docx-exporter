@@ -1,5 +1,16 @@
 # Changelog
 
+## [1.0.2](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/compare/v1.0.1...v1.0.2) (2025-03-09)
+
+
+### Bug Fixes
+
+* **deps:** update dependency ch.sbb.polarion.extensions:ch.sbb.polarion.extension.generic to v8.1.0 ([5539922](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/commit/55399220a02a9f12577e055a0e9caf7aceb0bc2d))
+* **deps:** update dependency net.bytebuddy:byte-buddy to v1.17.1 ([db29634](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/commit/db29634d73805337a530d79b7ce8ea21029bce3b))
+* **deps:** update dependency net.bytebuddy:byte-buddy to v1.17.2 ([425a620](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/commit/425a620943201b581efda0b9c28915c36b2cbcd8))
+* generic js modules usage, documentation actualization ([#15](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/issues/15)) ([c9bef6e](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/commit/c9bef6e4a36e23ecefacae6a7804e3dca7003531))
+* picking wrong settings issue fix + refactoring ([#13](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/issues/13)) ([e5807f9](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/commit/e5807f95bcb706821cd0d81c0709eb96d1500a6a))
+
 ## [1.0.1](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/compare/v1.0.0...v1.0.1) (2025-02-12)
 
 
