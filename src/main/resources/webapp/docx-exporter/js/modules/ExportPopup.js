@@ -52,6 +52,11 @@ export default class ExportPopup {
 
         Promise.all([
             this.loadSettingNames({
+                setting: "templates",
+                scope: this.ctx.getScope(),
+                selectElement: this.ctx.getElementById("popup-docx-template-selector")
+            }),
+            this.loadSettingNames({
                 setting: "localization",
                 scope: this.ctx.getScope(),
                 selectElement: this.ctx.getElementById("popup-docx-localization-selector")
@@ -216,6 +221,7 @@ export default class ExportPopup {
         if (!stylePackage) {
             return;
         }
+        this.ctx.setSelector("popup-docx-template-selector", stylePackage.template);
         this.ctx.setSelector("popup-docx-localization-selector", stylePackage.localization);
 
         this.ctx.setCheckbox("popup-docx-webhooks-checkbox", !!stylePackage.webhooks);
@@ -325,6 +331,7 @@ export default class ExportPopup {
             .setLocationPath(this.ctx.getLocationPath())
             .setBaselineRevision(this.ctx.getBaselineRevision())
             .setRevision(this.ctx.getRevision())
+            .setTemplate(this.ctx.getElementById("popup-docx-template-selector").value)
             .setLocalization(this.ctx.getElementById("popup-docx-localization-selector").value)
             .setWebhooks(this.ctx.getElementById("popup-docx-webhooks-checkbox").checked ? this.ctx.getElementById("popup-docx-webhooks-selector").value : null)
             .setEnableCommentsRendering(this.ctx.getElementById('popup-docx-enable-comments-rendering').checked)

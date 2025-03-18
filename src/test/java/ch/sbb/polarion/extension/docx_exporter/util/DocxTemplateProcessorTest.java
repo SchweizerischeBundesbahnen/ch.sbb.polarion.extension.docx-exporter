@@ -19,8 +19,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-class PdfTemplateProcessorTest {
-    private final PdfTemplateProcessor pdfTemplateProcessor = new PdfTemplateProcessor();
+class DocxTemplateProcessorTest {
+    private final DocxTemplateProcessor docxTemplateProcessor = new DocxTemplateProcessor();
 
     @ParameterizedTest
     @MethodSource("paramsForProcessHtmlTemplate")
@@ -35,7 +35,7 @@ class PdfTemplateProcessorTest {
             }
 
             // Act
-            String resultHtml = pdfTemplateProcessor.processUsing("testDocumentName", "test html content");
+            String resultHtml = docxTemplateProcessor.processUsing("testDocumentName", "test html content");
 
             // Assert
             assertThat(TestStringUtils.removeNonsensicalSymbols(resultHtml).replaceAll(" ", ""))
@@ -52,7 +52,7 @@ class PdfTemplateProcessorTest {
     void shouldBuildBaseUrlFromProperties(String baseUrl, String expectedResult) {
         System.setProperty(PolarionProperties.BASE_URL, baseUrl);
         try {
-            String result = pdfTemplateProcessor.buildBaseUrlHeader();
+            String result = docxTemplateProcessor.buildBaseUrlHeader();
             assertThat(result).isEqualTo(expectedResult);
         } finally {
             System.setProperty(PolarionProperties.BASE_URL, "");

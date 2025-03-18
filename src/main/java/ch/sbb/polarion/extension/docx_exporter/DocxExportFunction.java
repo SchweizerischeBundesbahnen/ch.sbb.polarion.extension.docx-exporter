@@ -4,10 +4,10 @@ import ch.sbb.polarion.extension.generic.exception.ObjectNotFoundException;
 import ch.sbb.polarion.extension.generic.settings.NamedSettingsRegistry;
 import ch.sbb.polarion.extension.generic.settings.SettingId;
 import ch.sbb.polarion.extension.generic.util.ScopeUtils;
-import ch.sbb.polarion.extension.docx_exporter.converter.PdfConverter;
+import ch.sbb.polarion.extension.docx_exporter.converter.DocxConverter;
 import ch.sbb.polarion.extension.docx_exporter.rest.model.conversion.ExportParams;
 import ch.sbb.polarion.extension.docx_exporter.rest.model.settings.stylepackage.StylePackageModel;
-import ch.sbb.polarion.extension.docx_exporter.service.PdfExporterPolarionService;
+import ch.sbb.polarion.extension.docx_exporter.service.DocxExporterPolarionService;
 import ch.sbb.polarion.extension.docx_exporter.settings.StylePackageSettings;
 import ch.sbb.polarion.extension.docx_exporter.util.DocumentFileNameHelper;
 import com.polarion.alm.tracker.internal.baseline.BaseObjectBaselinesSearch;
@@ -47,19 +47,19 @@ public class DocxExportFunction implements IFunction<IModule> {
     private static final String PARAM_NAME_PREFER_LAST_BASELINE = "prefer_last_baseline";
 
     private static final String STYLE_PACKAGE_DEFAULT = "Default";
-    private final PdfExporterPolarionService pdfExporterPolarionService;
-    private final PdfConverter pdfConverter;
+    private final DocxExporterPolarionService docxExporterPolarionService;
+    private final DocxConverter docxConverter;
 
     @SuppressWarnings("unused")
     public DocxExportFunction() {
-        this.pdfExporterPolarionService = new PdfExporterPolarionService();
-        this.pdfConverter = new PdfConverter();
+        this.docxExporterPolarionService = new DocxExporterPolarionService();
+        this.docxConverter = new DocxConverter();
     }
 
     @VisibleForTesting
-    DocxExportFunction(PdfExporterPolarionService pdfExporterPolarionService, PdfConverter pdfConverter) {
-        this.pdfExporterPolarionService = pdfExporterPolarionService;
-        this.pdfConverter = pdfConverter;
+    DocxExportFunction(DocxExporterPolarionService docxExporterPolarionService, DocxConverter docxConverter) {
+        this.docxExporterPolarionService = docxExporterPolarionService;
+        this.docxConverter = docxConverter;
     }
 
     @Override
@@ -77,7 +77,7 @@ public class DocxExportFunction implements IFunction<IModule> {
         }
 
         ExportParams exportParams = getExportParams(module, args);
-        byte[] pdfBytes = pdfConverter.convertToPdf(exportParams);
+        byte[] pdfBytes = docxConverter.convertToPdf(exportParams);
         savePdfAsWorkItemAttachment(module, exportParams, context.getTargetStatusId(), args, pdfBytes);
     }
 
@@ -123,9 +123,9 @@ public class DocxExportFunction implements IFunction<IModule> {
 
         IWorkItem workItem;
         if (existingWorkItemId != null) {
-            workItem = pdfExporterPolarionService.getWorkItem(workItemProjectId, existingWorkItemId);
+            workItem = docxExporterPolarionService.getWorkItem(workItemProjectId, existingWorkItemId);
         } else if (createWorkItemType != null) {
-            workItem = pdfExporterPolarionService.getTrackerProject(workItemProjectId).createWorkItem(createWorkItemType);
+            workItem = docxExporterPolarionService.getTrackerProject(workItemProjectId).createWorkItem(createWorkItemType);
             workItem.setTitle(args.getAsString(PARAM_NAME_CREATE_WORK_ITEM_TITLE, "%s -> %s".formatted(module.getTitleWithSpace(), getStatusName(module, targetStatusId))));
             workItem.setDescription(Text.html(args.getAsString(PARAM_NAME_CREATE_WORK_ITEM_DESCRIPTION, "This item was created automatically. Check 'Attachments' section for the generated PDF document.")));
             workItem.save();
@@ -141,7 +141,7 @@ public class DocxExportFunction implements IFunction<IModule> {
 
     @VisibleForTesting
     String getLastBaselineRevision(IModule module) {
-        IInternalBaselinesManager baselinesManager = (IInternalBaselinesManager) pdfExporterPolarionService.getTrackerService().getTrackerProject(module.getProject().getId()).getBaselinesManager();
+        IInternalBaselinesManager baselinesManager = (IInternalBaselinesManager) docxExporterPolarionService.getTrackerService().getTrackerProject(module.getProject().getId()).getBaselinesManager();
         return new BaseObjectBaselinesSearch(module, baselinesManager)
                 .includeProjectBaselines(true).resolve(true).execute().stream()
                 .map(b -> Long.valueOf(b.getBaseRevision()))
@@ -150,7 +150,7 @@ public class DocxExportFunction implements IFunction<IModule> {
 
     @VisibleForTesting
     String getStatusName(IModule module, String targetStatusId) {
-        IEnumeration<?> enumeration = pdfExporterPolarionService.getTrackerService().getDataService().getEnumerationForEnumId(
+        IEnumeration<?> enumeration = docxExporterPolarionService.getTrackerService().getDataService().getEnumerationForEnumId(
                 new EnumType(Objects.requireNonNull(module.getStatus()).getEnumId()),
                 PObjectDataProvider.scopeToContextId(new ProjectScope(module.getProjectId())));
         return enumeration.getAllOptions().stream().filter(e -> Objects.equals(e.getId(), targetStatusId)).map(IEnumOption::getName).findFirst().orElse(targetStatusId);

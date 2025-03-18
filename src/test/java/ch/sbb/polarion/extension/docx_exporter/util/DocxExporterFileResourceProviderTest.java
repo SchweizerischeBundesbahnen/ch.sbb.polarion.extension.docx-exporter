@@ -34,18 +34,18 @@ import static org.mockito.Mockito.*;
         TransactionalExecutorExtension.class,
         PlatformContextMockExtension.class
 })
-class PdfExporterFileResourceProviderTest {
+class DocxExporterFileResourceProviderTest {
     @Mock
     private IUrlResolver resolverMock;
 
-    private PdfExporterFileResourceProvider resourceProvider;
+    private DocxExporterFileResourceProvider resourceProvider;
 
     private static final String TEST_RESOURCE = "test-resource";
     private static final byte[] TEST_CONTENT = "test-content".getBytes();
 
     @BeforeEach
     void setUp() {
-        resourceProvider = new PdfExporterFileResourceProvider(List.of(resolverMock));
+        resourceProvider = new DocxExporterFileResourceProvider(List.of(resolverMock));
     }
 
     @Test
@@ -62,7 +62,7 @@ class PdfExporterFileResourceProviderTest {
             imgBytes = is != null ? is.readAllBytes() : new byte[0];
         }
 
-        PdfExporterFileResourceProvider resourceProviderMock = mock(PdfExporterFileResourceProvider.class);
+        DocxExporterFileResourceProvider resourceProviderMock = mock(DocxExporterFileResourceProvider.class);
         when(resourceProviderMock.getResourceAsBytes("http://localhost/some-path/img.png")).thenReturn(imgBytes);
         when(resourceProviderMock.getResourceAsBase64String(any())).thenCallRealMethod();
         String result = resourceProviderMock.getResourceAsBase64String("http://localhost/some-path/img.png");
@@ -119,7 +119,7 @@ class PdfExporterFileResourceProviderTest {
             List<IUrlResolver> resolvers = List.of(resolver);
             List<String> unavailableWorkItemAttachments = new ArrayList<>();
 
-            PdfExporterFileResourceProvider fileResourceProvider = new PdfExporterFileResourceProvider(resolvers);
+            DocxExporterFileResourceProvider fileResourceProvider = new DocxExporterFileResourceProvider(resolvers);
 
             byte[] result = fileResourceProvider.getResourceAsBytesImpl(resource);
 
@@ -141,7 +141,7 @@ class PdfExporterFileResourceProviderTest {
             when(resolver.canResolve(resource)).thenReturn(true);
             when(resolver.resolve(resource)).thenReturn(new ByteArrayInputStream(resolvedBytes));
 
-            PdfExporterFileResourceProvider fileResourceProvider = spy(new PdfExporterFileResourceProvider(List.of(resolver)));
+            DocxExporterFileResourceProvider fileResourceProvider = spy(new DocxExporterFileResourceProvider(List.of(resolver)));
             doReturn(true).when(fileResourceProvider).isMediaTypeMismatch(resource, resolvedBytes);
             doReturn(defaultBytes).when(fileResourceProvider).getDefaultContent(resource);
             doReturn("unavailableId").when(fileResourceProvider).getWorkItemIdsWithUnavailableAttachments(resource);

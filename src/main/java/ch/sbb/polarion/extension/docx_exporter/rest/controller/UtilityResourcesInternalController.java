@@ -3,7 +3,7 @@ package ch.sbb.polarion.extension.docx_exporter.rest.controller;
 import ch.sbb.polarion.extension.docx_exporter.model.WebhooksStatus;
 import ch.sbb.polarion.extension.docx_exporter.properties.DocxExporterExtensionConfiguration;
 import ch.sbb.polarion.extension.docx_exporter.rest.model.conversion.ExportParams;
-import ch.sbb.polarion.extension.docx_exporter.service.PdfExporterPolarionService;
+import ch.sbb.polarion.extension.docx_exporter.service.DocxExporterPolarionService;
 import ch.sbb.polarion.extension.docx_exporter.util.DocumentFileNameHelper;
 import ch.sbb.polarion.extension.docx_exporter.util.EnumValuesProvider;
 import com.polarion.alm.tracker.model.IModule;
@@ -37,14 +37,14 @@ import static ch.sbb.polarion.extension.docx_exporter.util.placeholder.Placehold
 @Tag(name = "Utility resources")
 public class UtilityResourcesInternalController {
 
-    private final PdfExporterPolarionService pdfExporterPolarionService;
+    private final DocxExporterPolarionService docxExporterPolarionService;
 
     public UtilityResourcesInternalController() {
-        pdfExporterPolarionService = new PdfExporterPolarionService();
+        docxExporterPolarionService = new DocxExporterPolarionService();
     }
 
-    public UtilityResourcesInternalController(PdfExporterPolarionService pdfExporterPolarionService) {
-        this.pdfExporterPolarionService = pdfExporterPolarionService;
+    public UtilityResourcesInternalController(DocxExporterPolarionService docxExporterPolarionService) {
+        this.docxExporterPolarionService = docxExporterPolarionService;
     }
 
     @GET
@@ -59,7 +59,7 @@ public class UtilityResourcesInternalController {
             }
     )
     public List<String> readLinkRoleNames(@Parameter(description = "Project scope in form project/<PROJECT_ID>/", required = true) @QueryParam("scope") String scope) {
-        ITrackerProject project = pdfExporterPolarionService.getProjectFromScope(scope);
+        ITrackerProject project = docxExporterPolarionService.getProjectFromScope(scope);
         if (project != null) {
             return EnumValuesProvider.getAllLinkRoleNames(project);
         }
@@ -76,7 +76,7 @@ public class UtilityResourcesInternalController {
     )
     public String getDocumentLanguage(@QueryParam("projectId") String projectId, @QueryParam("spaceId") String spaceId,
                                       @QueryParam("documentName") String documentName, @QueryParam("revision") String revision) {
-        IModule module = pdfExporterPolarionService.getModule(projectId, spaceId, documentName, revision);
+        IModule module = docxExporterPolarionService.getModule(projectId, spaceId, documentName, revision);
         Object documentLanguageField = module.getCustomField(DOC_LANGUAGE_FIELD);
         return (documentLanguageField instanceof IEnumOption option) ? option.getId() : null;
     }
@@ -90,7 +90,7 @@ public class UtilityResourcesInternalController {
             }
     )
     public String getProjectName(@PathParam("projectId") String projectId) {
-        return pdfExporterPolarionService.getProject(projectId).getName();
+        return docxExporterPolarionService.getProject(projectId).getName();
     }
 
     @POST

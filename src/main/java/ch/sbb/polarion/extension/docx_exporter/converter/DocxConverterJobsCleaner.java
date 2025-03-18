@@ -5,10 +5,10 @@ import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
-public final class PdfConverterJobsCleaner {
+public final class DocxConverterJobsCleaner {
     private static Future<?> cleaningJob;
 
-    private PdfConverterJobsCleaner() {
+    private DocxConverterJobsCleaner() {
     }
 
     public static synchronized void startCleaningJob() {
@@ -19,7 +19,7 @@ public final class PdfConverterJobsCleaner {
 
         ScheduledExecutorService executorService = Executors.newSingleThreadScheduledExecutor();
         cleaningJob = executorService.scheduleWithFixedDelay(
-                () -> PdfConverterJobsService.cleanupExpiredJobs(propertiesUtility.getFinishedJobTimeout()),
+                () -> DocxConverterJobsService.cleanupExpiredJobs(propertiesUtility.getFinishedJobTimeout()),
                 0,
                 propertiesUtility.getFinishedJobTimeout(),
                 TimeUnit.MINUTES);

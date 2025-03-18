@@ -1262,6 +1262,32 @@
         ]
       }
     },
+    "/api/template": {
+      "get": {
+        "operationId": "getTemplate",
+        "responses": {
+          "200": {
+            "content": {
+              "application/vnd.openxmlformats-officedocument.wordprocessingml.document": {}
+            },
+            "description": "DOCX template file",
+            "headers": {
+              "Content-Disposition": {
+                "description": "To inform a browser that the response is a downloadable attachment",
+                "schema": {
+                  "type": "string"
+                },
+                "style": "simple"
+              }
+            }
+          }
+        },
+        "summary": "Returns DOCX template file",
+        "tags": [
+          "DOCX Processing"
+        ]
+      }
+    },
     "/api/version": {
       "get": {
         "operationId": "getVersion",
@@ -1570,6 +1596,10 @@
           },
           "revision": {
             "description": "The specific revision of the document",
+            "type": "string"
+          },
+          "template": {
+            "description": "Template settings name",
             "type": "string"
           },
           "urlQueryParameters": {

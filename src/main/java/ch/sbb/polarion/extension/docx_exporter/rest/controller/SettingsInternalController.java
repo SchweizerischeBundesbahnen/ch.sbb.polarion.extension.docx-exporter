@@ -5,7 +5,7 @@ import ch.sbb.polarion.extension.generic.settings.SettingName;
 import ch.sbb.polarion.extension.docx_exporter.rest.model.settings.localization.LocalizationModel;
 import ch.sbb.polarion.extension.docx_exporter.rest.model.settings.stylepackage.DocIdentifier;
 import ch.sbb.polarion.extension.docx_exporter.rest.model.settings.stylepackage.StylePackageWeightInfo;
-import ch.sbb.polarion.extension.docx_exporter.service.PdfExporterPolarionService;
+import ch.sbb.polarion.extension.docx_exporter.service.DocxExporterPolarionService;
 import ch.sbb.polarion.extension.docx_exporter.settings.LocalizationSettings;
 import ch.sbb.polarion.extension.docx_exporter.util.LocalizationHelper;
 import io.swagger.v3.oas.annotations.Hidden;
@@ -41,7 +41,7 @@ import java.util.Map;
 @Tag(name = "Settings", description = "Operations related to Docx-exporter settings management")
 public class SettingsInternalController {
 
-    private final PdfExporterPolarionService pdfExporterPolarionService = new PdfExporterPolarionService();
+    private final DocxExporterPolarionService docxExporterPolarionService = new DocxExporterPolarionService();
 
     @GET
     @Path("/settings/localization/names/{name}/download")
@@ -107,7 +107,7 @@ public class SettingsInternalController {
         if (docIdentifiers.isEmpty()) {
             throw new BadRequestException("At least one document identifier required");
         }
-        return pdfExporterPolarionService.getSuitableStylePackages(docIdentifiers);
+        return docxExporterPolarionService.getSuitableStylePackages(docIdentifiers);
     }
 
     @GET
@@ -120,7 +120,7 @@ public class SettingsInternalController {
             }
     )
     public Collection<StylePackageWeightInfo> getStylePackageWeights(@QueryParam("scope") String scope) {
-        return pdfExporterPolarionService.getStylePackagesWeights(scope);
+        return docxExporterPolarionService.getStylePackagesWeights(scope);
     }
 
     @POST
@@ -136,7 +136,7 @@ public class SettingsInternalController {
             )
     )
     public void updateStylePackageWeights(List<StylePackageWeightInfo> stylePackageWeights) {
-        pdfExporterPolarionService.updateStylePackagesWeights(stylePackageWeights);
+        docxExporterPolarionService.updateStylePackagesWeights(stylePackageWeights);
     }
 
 }

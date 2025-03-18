@@ -63,6 +63,15 @@
                   projectGroupScope="false"
                   repositoryScope="true"/>
 
+        <extender id="templates"
+                  name="Templates"
+                  parentNodeId="docx-export"
+                  iconUrl="/polarion/icons/default/topicIconsSmall/documentsAndWiki.svg"
+                  pageUrl="/polarion/docx-exporter-admin/pages/templates.jsp?scope=$scope$"
+                  projectScope="true"
+                  projectGroupScope="false"
+                  repositoryScope="true"/>
+
         <extender id="localization"
                   name="Localization"
                   parentNodeId="docx-export"

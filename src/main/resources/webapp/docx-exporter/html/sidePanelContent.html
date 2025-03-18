@@ -19,6 +19,12 @@
     <div id='docx-style-package-content' style='border-top: 1px solid #eee; padding-top: 10px;'>
         <p>Selected style package exposes its settings, so you can redefine them.</p>
         <div class='property-wrapper'>
+            <label for='docx-template-selector'>Template:</label>
+            <select id='docx-template-selector'>
+                {TEMPLATE_OPTIONS}
+            </select>
+        </div>
+        <div class='property-wrapper'>
             <label for='docx-localization-selector'>Localization:</label>
             <select id='docx-localization-selector'>
                 {LOCALIZATION_OPTIONS}

@@ -30,6 +30,14 @@ to use without possibility to redefine its settings:
 ## Options
 A package can also expose its options to be redefined by end user before exporting a document into DOCX.
 
+### Template
+A template (also "reference doc" in terms of Pandoc) is a file which is used as a style reference in producing a docx:
+
+![Template](docs/user_guide/img/template.png)
+
+The contents of the template docx are ignored, but its stylesheets and document properties (including margins, page size, header, and footer) are used in the new docx.
+Please refer official <a href="https://pandoc.org/MANUAL.html#option--reference-doc" target="_blank">pandoc manual</a> for more information.
+
 ### Localization
 The same relates to localization settings, which one to use during DOCX generation can be selected in next dropdown:
 

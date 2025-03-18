@@ -1,7 +1,7 @@
 package ch.sbb.polarion.extension.docx_exporter.rest.model.documents;
 
 import ch.sbb.polarion.extension.docx_exporter.rest.model.conversion.ExportParams;
-import ch.sbb.polarion.extension.docx_exporter.service.PdfExporterPolarionService;
+import ch.sbb.polarion.extension.docx_exporter.service.DocxExporterPolarionService;
 import com.polarion.alm.projects.model.IProject;
 import com.polarion.alm.shared.api.model.ModelObject;
 import com.polarion.alm.shared.api.model.document.Document;
@@ -18,16 +18,16 @@ public class ModelObjectProvider {
     private static final String PROJECT_ID_IS_REQUIRED_FOR_EXPORT = "Project id is required for export";
 
     private final @NotNull ExportParams exportParams;
-    private final @NotNull PdfExporterPolarionService pdfExporterPolarionService;
+    private final @NotNull DocxExporterPolarionService docxExporterPolarionService;
 
     public ModelObjectProvider(@NotNull ExportParams exportParams) {
         this.exportParams = exportParams;
-        this.pdfExporterPolarionService = new PdfExporterPolarionService();
+        this.docxExporterPolarionService = new DocxExporterPolarionService();
     }
 
-    public ModelObjectProvider(@NotNull ExportParams exportParams, @NotNull PdfExporterPolarionService pdfExporterPolarionService) {
+    public ModelObjectProvider(@NotNull ExportParams exportParams, @NotNull DocxExporterPolarionService docxExporterPolarionService) {
         this.exportParams = exportParams;
-        this.pdfExporterPolarionService = pdfExporterPolarionService;
+        this.docxExporterPolarionService = docxExporterPolarionService;
     }
 
     public ModelObject getModelObject(ReadOnlyTransaction transaction) {
@@ -50,7 +50,7 @@ public class ModelObjectProvider {
     private Optional<String> getProjectId() {
         IProject project = null;
         if (!StringUtils.isEmpty(exportParams.getProjectId())) {
-            project = pdfExporterPolarionService.getProject(exportParams.getProjectId());
+            project = docxExporterPolarionService.getProject(exportParams.getProjectId());
         }
         String projectId = project != null ? project.getId() : null;
         return Optional.ofNullable(projectId);

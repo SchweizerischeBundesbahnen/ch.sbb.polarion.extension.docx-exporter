@@ -6,7 +6,7 @@ import ch.sbb.polarion.extension.generic.settings.NamedSettings;
 import ch.sbb.polarion.extension.generic.settings.SettingId;
 import ch.sbb.polarion.extension.generic.util.HtmlUtils;
 import ch.sbb.polarion.extension.docx_exporter.rest.model.conversion.ExportParams;
-import ch.sbb.polarion.extension.docx_exporter.service.PdfExporterPolarionService;
+import ch.sbb.polarion.extension.docx_exporter.service.DocxExporterPolarionService;
 import ch.sbb.polarion.extension.docx_exporter.settings.LocalizationSettings;
 import ch.sbb.polarion.extension.docx_exporter.util.exporter.CustomPageBreakPart;
 import ch.sbb.polarion.extension.docx_exporter.util.html.HtmlLinksHelper;
@@ -57,13 +57,13 @@ public class HtmlProcessor {
     private final FileResourceProvider fileResourceProvider;
     private final LocalizationSettings localizationSettings;
     private final HtmlLinksHelper httpLinksHelper;
-    private final PdfExporterPolarionService pdfExporterPolarionService;
+    private final DocxExporterPolarionService docxExporterPolarionService;
 
-    public HtmlProcessor(FileResourceProvider fileResourceProvider, LocalizationSettings localizationSettings, HtmlLinksHelper httpLinksHelper, PdfExporterPolarionService pdfExporterPolarionService) {
+    public HtmlProcessor(FileResourceProvider fileResourceProvider, LocalizationSettings localizationSettings, HtmlLinksHelper httpLinksHelper, DocxExporterPolarionService docxExporterPolarionService) {
         this.fileResourceProvider = fileResourceProvider;
         this.localizationSettings = localizationSettings;
         this.httpLinksHelper = httpLinksHelper;
-        this.pdfExporterPolarionService = pdfExporterPolarionService;
+        this.docxExporterPolarionService = docxExporterPolarionService;
     }
 
     public String processHtmlForPDF(@NotNull String html, @NotNull ExportParams exportParams, @NotNull List<String> selectedRoleEnumValues) {
@@ -334,7 +334,7 @@ public class HtmlProcessor {
     @NotNull
     @SuppressWarnings("squid:S5843")
     private String filterByRoles(@NotNull String linkedWorkItems, @NotNull List<String> selectedRoleEnumValues) {
-        String polarionVersion = pdfExporterPolarionService.getPolarionVersion();
+        String polarionVersion = docxExporterPolarionService.getPolarionVersion();
         // This regexp searches for spans (named group "row") containing linked WorkItem with its role (named group "role").
         // If linked WorkItem role is not among ones selected by user we cut it from resulted HTML
         String regex = getRegexp(polarionVersion);

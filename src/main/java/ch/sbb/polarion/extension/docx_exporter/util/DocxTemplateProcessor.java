@@ -6,7 +6,7 @@ import com.polarion.core.config.Configuration;
 import com.polarion.core.util.StringUtils;
 import org.jetbrains.annotations.NotNull;
 
-public class PdfTemplateProcessor {
+public class DocxTemplateProcessor {
 
     private static final String LOCALHOST = "localhost";
     public static final String HTTP_PROTOCOL_PREFIX = "http://";
@@ -14,7 +14,7 @@ public class PdfTemplateProcessor {
 
     @NotNull
     public String processUsing(@NotNull String documentName, @NotNull String content) {
-        return ScopeUtils.getFileContent("webapp/docx-exporter/html/pdfTemplate.html")
+        return ScopeUtils.getFileContent("webapp/docx-exporter/html/docxTemplate.html")
                 .replace("{DOC_NAME}", documentName)
                 .replace("{BASE_URL}", buildBaseUrlHeader())
                 .replace("{DOC_CONTENT}", content);

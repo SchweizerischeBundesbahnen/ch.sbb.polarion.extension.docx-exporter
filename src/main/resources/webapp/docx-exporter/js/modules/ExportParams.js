@@ -5,6 +5,7 @@ export default class ExportParams {
         this.locationPath = builder.locationPath;
         this.baselineRevision = builder.baselineRevision;
         this.revision = builder.revision;
+        this.template = builder.template;
         this.localization = builder.localization;
         this.webhooks = builder.webhooks;
         this.enableCommentsRendering = builder.enableCommentsRendering;
@@ -39,6 +40,7 @@ export default class ExportParams {
                 this.locationPath = undefined;
                 this.baselineRevision = undefined;
                 this.revision = undefined;
+                this.template = undefined;
                 this.webhooks = undefined;
                 this.enableCommentsRendering = undefined;
                 this.cutEmptyChapters = undefined;
@@ -69,6 +71,11 @@ export default class ExportParams {
 
             setRevision(revision) {
                 this.revision = revision;
+                return this;
+            }
+
+            setTemplate(template) {
+                this.template = template;
                 return this;
             }
 

@@ -1,7 +1,7 @@
 package ch.sbb.polarion.extension.docx_exporter.rest.controller;
 
 import ch.sbb.polarion.extension.docx_exporter.rest.model.attachments.TestRunAttachment;
-import ch.sbb.polarion.extension.docx_exporter.service.PdfExporterPolarionService;
+import ch.sbb.polarion.extension.docx_exporter.service.DocxExporterPolarionService;
 import com.polarion.alm.tracker.model.ITestRunAttachment;
 import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.Operation;
@@ -29,14 +29,14 @@ public class TestRunAttachmentsInternalController {
 
     private static final String FILENAME_HEADER = "Filename";
 
-    private final PdfExporterPolarionService pdfExporterPolarionService;
+    private final DocxExporterPolarionService docxExporterPolarionService;
 
     public TestRunAttachmentsInternalController() {
-        pdfExporterPolarionService = new PdfExporterPolarionService();
+        docxExporterPolarionService = new DocxExporterPolarionService();
     }
 
-    public TestRunAttachmentsInternalController(PdfExporterPolarionService pdfExporterPolarionService) {
-        this.pdfExporterPolarionService = pdfExporterPolarionService;
+    public TestRunAttachmentsInternalController(DocxExporterPolarionService docxExporterPolarionService) {
+        this.docxExporterPolarionService = docxExporterPolarionService;
     }
 
     @GET
@@ -56,7 +56,7 @@ public class TestRunAttachmentsInternalController {
             @Parameter(description = "TestRun revision") @QueryParam("revision") String revision,
             @Parameter(description = "Filename filter for attachment") @QueryParam("filter") String filter
     ) {
-        return pdfExporterPolarionService.getTestRunAttachments(projectId, testRunId, revision, filter);
+        return docxExporterPolarionService.getTestRunAttachments(projectId, testRunId, revision, filter);
     }
 
     @GET
@@ -76,7 +76,7 @@ public class TestRunAttachmentsInternalController {
             @Parameter(description = "Attachment ID", required = true) @PathParam("attachmentId") String attachmentId,
             @Parameter(description = "Attachment revision") @QueryParam("revision") String revision
     ) {
-        ITestRunAttachment testRunAttachment = pdfExporterPolarionService.getTestRunAttachment(projectId, testRunId, attachmentId, revision);
+        ITestRunAttachment testRunAttachment = docxExporterPolarionService.getTestRunAttachment(projectId, testRunId, attachmentId, revision);
         return TestRunAttachment.fromAttachment(testRunAttachment);
     }
 
@@ -94,7 +94,7 @@ public class TestRunAttachmentsInternalController {
             @Parameter(description = "Attachment ID", required = true) @PathParam("attachmentId") String attachmentId,
             @Parameter(description = "Attachment revision") @QueryParam("revision") String revision
     ) {
-        ITestRunAttachment testRunAttachment = pdfExporterPolarionService.getTestRunAttachment(projectId, testRunId, attachmentId, revision);
+        ITestRunAttachment testRunAttachment = docxExporterPolarionService.getTestRunAttachment(projectId, testRunId, attachmentId, revision);
 
         return Response.ok(testRunAttachment.getDataStream())
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + testRunAttachment.getFileName() + "\"")
