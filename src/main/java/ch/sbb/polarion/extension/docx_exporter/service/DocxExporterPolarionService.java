@@ -42,16 +42,16 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
-public class PdfExporterPolarionService extends PolarionService {
+public class DocxExporterPolarionService extends PolarionService {
 
     protected final ITestManagementService testManagementService;
 
-    public PdfExporterPolarionService() {
+    public DocxExporterPolarionService() {
         super();
         this.testManagementService = new TestManagementServiceAccessor().getTestingService();
     }
 
-    public PdfExporterPolarionService(
+    public DocxExporterPolarionService(
             @NotNull ITrackerService trackerService,
             @NotNull IProjectService projectService,
             @NotNull ISecurityService securityService,

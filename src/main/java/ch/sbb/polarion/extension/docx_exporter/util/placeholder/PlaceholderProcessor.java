@@ -3,7 +3,7 @@ package ch.sbb.polarion.extension.docx_exporter.util.placeholder;
 import ch.sbb.polarion.extension.generic.regex.RegexMatcher;
 import ch.sbb.polarion.extension.docx_exporter.rest.model.conversion.ExportParams;
 import ch.sbb.polarion.extension.docx_exporter.rest.model.documents.DocumentData;
-import ch.sbb.polarion.extension.docx_exporter.service.PdfExporterPolarionService;
+import ch.sbb.polarion.extension.docx_exporter.service.DocxExporterPolarionService;
 import com.polarion.alm.projects.model.IUniqueObject;
 import com.polarion.alm.tracker.model.IModule;
 import org.jetbrains.annotations.NotNull;
@@ -17,14 +17,14 @@ import java.util.TreeSet;
 
 public class PlaceholderProcessor {
 
-    private final PdfExporterPolarionService pdfExporterPolarionService;
+    private final DocxExporterPolarionService docxExporterPolarionService;
 
     public PlaceholderProcessor() {
-        this.pdfExporterPolarionService = new PdfExporterPolarionService();
+        this.docxExporterPolarionService = new DocxExporterPolarionService();
     }
 
-    public PlaceholderProcessor(PdfExporterPolarionService pdfExporterPolarionService) {
-        this.pdfExporterPolarionService = pdfExporterPolarionService;
+    public PlaceholderProcessor(DocxExporterPolarionService docxExporterPolarionService) {
+        this.docxExporterPolarionService = docxExporterPolarionService;
     }
 
     public @NotNull String replacePlaceholders(@NotNull DocumentData<? extends IUniqueObject> documentData, @NotNull ExportParams exportParams, @NotNull String template) {
@@ -47,8 +47,8 @@ public class PlaceholderProcessor {
         String baselineName = documentData.getBaseline() != null ? documentData.getBaseline().asPlaceholder() : "";
 
         PlaceholderValues placeholderValues = PlaceholderValues.builder()
-                .productName(pdfExporterPolarionService.getPolarionProductName())
-                .productVersion(pdfExporterPolarionService.getPolarionVersion())
+                .productName(docxExporterPolarionService.getPolarionProductName())
+                .productVersion(docxExporterPolarionService.getPolarionVersion())
                 .projectName(documentData.getId().getDocumentProject() != null ? documentData.getId().getDocumentProject().getName() : "")
                 .revision(revision)
                 .revisionAndBaseLineName(baselineName.isEmpty() ? revision : (revision + " " + baselineName))

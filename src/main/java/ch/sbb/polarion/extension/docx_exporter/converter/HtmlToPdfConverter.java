@@ -5,7 +5,7 @@ import ch.sbb.polarion.extension.docx_exporter.properties.DocxExporterExtensionC
 import ch.sbb.polarion.extension.docx_exporter.settings.LocalizationSettings;
 import ch.sbb.polarion.extension.docx_exporter.util.HtmlLogger;
 import ch.sbb.polarion.extension.docx_exporter.util.HtmlProcessor;
-import ch.sbb.polarion.extension.docx_exporter.util.PdfExporterFileResourceProvider;
+import ch.sbb.polarion.extension.docx_exporter.util.DocxExporterFileResourceProvider;
 import ch.sbb.polarion.extension.docx_exporter.util.PdfTemplateProcessor;
 import ch.sbb.polarion.extension.docx_exporter.util.html.HtmlLinksHelper;
 import org.jetbrains.annotations.NotNull;
@@ -17,7 +17,7 @@ public class HtmlToPdfConverter {
 
     public HtmlToPdfConverter() {
         this.pdfTemplateProcessor = new PdfTemplateProcessor();
-        PdfExporterFileResourceProvider fileResourceProvider = new PdfExporterFileResourceProvider();
+        DocxExporterFileResourceProvider fileResourceProvider = new DocxExporterFileResourceProvider();
         this.htmlProcessor = new HtmlProcessor(fileResourceProvider, new LocalizationSettings(), new HtmlLinksHelper(fileResourceProvider), null);
     }
 

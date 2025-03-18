@@ -5,7 +5,7 @@ import ch.sbb.polarion.extension.generic.settings.NamedSettingsRegistry;
 import ch.sbb.polarion.extension.generic.settings.SettingsService;
 import ch.sbb.polarion.extension.docx_exporter.converter.PdfConverter;
 import ch.sbb.polarion.extension.docx_exporter.rest.model.conversion.ExportParams;
-import ch.sbb.polarion.extension.docx_exporter.service.PdfExporterPolarionService;
+import ch.sbb.polarion.extension.docx_exporter.service.DocxExporterPolarionService;
 import ch.sbb.polarion.extension.docx_exporter.settings.StylePackageSettings;
 import com.polarion.alm.projects.model.IFolder;
 import com.polarion.alm.tracker.internal.workflow.Arguments;
@@ -36,7 +36,7 @@ import static org.mockito.Mockito.*;
 @ExtendWith({MockitoExtension.class, CurrentContextExtension.class})
 class DocxExportFunctionTest {
 
-    PdfExporterPolarionService pdfExporterPolarionService;
+    DocxExporterPolarionService docxExporterPolarionService;
     PdfConverter pdfConverter;
     DocxExportFunction docxExportFunction;
     ICallContext<? extends IWorkflowObject> context;
@@ -48,12 +48,12 @@ class DocxExportFunctionTest {
 
     @BeforeEach
     public void setup() {
-        pdfExporterPolarionService = mock(PdfExporterPolarionService.class);
+        docxExporterPolarionService = mock(DocxExporterPolarionService.class);
         pdfConverter = mock(PdfConverter.class);
-        docxExportFunction = spy(new DocxExportFunction(pdfExporterPolarionService, pdfConverter));
+        docxExportFunction = spy(new DocxExportFunction(docxExporterPolarionService, pdfConverter));
         context = (ICallContext<? extends IWorkflowObject>) mock(ICallContext.class);
         trackerProject = mock(ITrackerProject.class);
-        lenient().when(pdfExporterPolarionService.getTrackerProject(anyString())).thenReturn(trackerProject);
+        lenient().when(docxExporterPolarionService.getTrackerProject(anyString())).thenReturn(trackerProject);
         module = mock(IModule.class);
         ILocation moduleLocation = mock(ILocation.class);
         lenient().when(module.getModuleLocation()).thenReturn(moduleLocation);
@@ -117,7 +117,7 @@ class DocxExportFunctionTest {
 
         Arguments args = new Arguments(Map.of("create_wi_type_id", "someType"));
         docxExportFunction.savePdfAsWorkItemAttachment(module, params, "TargetStatus", args, new byte[0]);
-        verify(pdfExporterPolarionService, times(1)).getTrackerProject("projectId");
+        verify(docxExporterPolarionService, times(1)).getTrackerProject("projectId");
         verify(trackerProject, times(1)).createWorkItem("someType");
         verify(newWorkItem, times(1)).createAttachment(eq("Attach Title.pdf"), eq("Attach Title"), any());
         verify(newWorkItem, times(1)).setTitle("Some space / Document Title -> Status name");
@@ -126,7 +126,7 @@ class DocxExportFunctionTest {
         // custom project, attachment title & description
         args = new Arguments(Map.of("create_wi_type_id", "someType", "project_id", "proj1", "attachment_title", "Custom title", "create_wi_description", "Custom description"));
         docxExportFunction.savePdfAsWorkItemAttachment(module, params, "TargetStatus", args, new byte[0]);
-        verify(pdfExporterPolarionService, times(1)).getTrackerProject("proj1");
+        verify(docxExporterPolarionService, times(1)).getTrackerProject("proj1");
         verify(newWorkItem, times(1)).createAttachment(eq("Attach Title.pdf"), eq("Custom title"), any());
         verify(newWorkItem, times(1)).setDescription(Text.html("Custom description"));
 
@@ -134,7 +134,7 @@ class DocxExportFunctionTest {
         args = new Arguments(Map.of("existing_wi_id", "ID-123"));
         IWorkItem foundWorkItem = mock(IWorkItem.class);
         when(foundWorkItem.createAttachment(anyString(), anyString(), any())).thenReturn(mock(IAttachment.class));
-        when(pdfExporterPolarionService.getWorkItem("projectId", "ID-123")).thenReturn(foundWorkItem);
+        when(docxExporterPolarionService.getWorkItem("projectId", "ID-123")).thenReturn(foundWorkItem);
         docxExportFunction.savePdfAsWorkItemAttachment(module, params, "TargetStatus", args, new byte[0]);
         verify(foundWorkItem, times(1)).createAttachment(any(), any(), any());
 
@@ -142,7 +142,7 @@ class DocxExportFunctionTest {
         args = new Arguments(Map.of("existing_wi_id", "ID-345", "project_id", "proj2"));
         foundWorkItem = mock(IWorkItem.class);
         when(foundWorkItem.createAttachment(anyString(), anyString(), any())).thenReturn(mock(IAttachment.class));
-        when(pdfExporterPolarionService.getWorkItem("proj2", "ID-345")).thenReturn(foundWorkItem);
+        when(docxExporterPolarionService.getWorkItem("proj2", "ID-345")).thenReturn(foundWorkItem);
         docxExportFunction.savePdfAsWorkItemAttachment(module, params, "TargetStatus", args, new byte[0]);
         verify(foundWorkItem, times(1)).createAttachment(any(), any(), any());
     }

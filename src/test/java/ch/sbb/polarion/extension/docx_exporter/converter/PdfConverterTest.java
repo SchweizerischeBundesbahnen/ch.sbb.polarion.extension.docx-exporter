@@ -1,11 +1,11 @@
 package ch.sbb.polarion.extension.docx_exporter.converter;
 
-import ch.sbb.polarion.extension.docx_exporter.configuration.PdfExporterExtensionConfigurationExtension;
+import ch.sbb.polarion.extension.docx_exporter.configuration.DocxExporterExtensionConfigurationExtension;
 import ch.sbb.polarion.extension.docx_exporter.pandoc.service.PandocServiceConnector;
 import ch.sbb.polarion.extension.docx_exporter.rest.model.conversion.ExportParams;
 import ch.sbb.polarion.extension.docx_exporter.rest.model.documents.DocumentData;
 import ch.sbb.polarion.extension.docx_exporter.rest.model.documents.id.LiveDocId;
-import ch.sbb.polarion.extension.docx_exporter.service.PdfExporterPolarionService;
+import ch.sbb.polarion.extension.docx_exporter.service.DocxExporterPolarionService;
 import ch.sbb.polarion.extension.docx_exporter.util.DocumentDataFactory;
 import ch.sbb.polarion.extension.docx_exporter.util.HtmlProcessor;
 import ch.sbb.polarion.extension.docx_exporter.util.PdfTemplateProcessor;
@@ -35,10 +35,10 @@ import java.util.stream.Stream;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.*;
 
-@ExtendWith({MockitoExtension.class, PdfExporterExtensionConfigurationExtension.class})
+@ExtendWith({MockitoExtension.class, DocxExporterExtensionConfigurationExtension.class})
 class PdfConverterTest {
     @Mock
-    private PdfExporterPolarionService pdfExporterPolarionService;
+    private DocxExporterPolarionService docxExporterPolarionService;
     @Mock
     private IModule module;
     @Mock
@@ -70,8 +70,8 @@ class PdfConverterTest {
                 .build();
 
         ITrackerProject project = mock(ITrackerProject.class);
-        lenient().when(pdfExporterPolarionService.getTrackerProject("testProjectId")).thenReturn(project);
-        PdfConverter pdfConverter = new PdfConverter(pdfExporterPolarionService, pandocServiceConnector, htmlProcessor, pdfTemplateProcessor);
+        lenient().when(docxExporterPolarionService.getTrackerProject("testProjectId")).thenReturn(project);
+        PdfConverter pdfConverter = new PdfConverter(docxExporterPolarionService, pandocServiceConnector, htmlProcessor, pdfTemplateProcessor);
         DocumentData<IModule> documentData = DocumentData.creator(module)
                 .id(LiveDocId.from("testProjectId", "_default", "testDocumentId"))
                 .title("testDocument")

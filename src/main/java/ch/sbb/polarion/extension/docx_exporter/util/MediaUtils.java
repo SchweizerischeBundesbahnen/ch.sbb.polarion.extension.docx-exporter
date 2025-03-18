@@ -2,7 +2,7 @@ package ch.sbb.polarion.extension.docx_exporter.util;
 
 import ch.sbb.polarion.extension.generic.regex.RegexMatcher;
 import ch.sbb.polarion.extension.generic.util.ScopeUtils;
-import ch.sbb.polarion.extension.docx_exporter.service.PdfExporterPolarionService;
+import ch.sbb.polarion.extension.docx_exporter.service.DocxExporterPolarionService;
 import com.polarion.alm.shared.api.transaction.TransactionalExecutor;
 import com.polarion.core.util.StringUtils;
 import com.polarion.core.util.logging.Logger;
@@ -182,7 +182,7 @@ public class MediaUtils {
     public byte[] getBinaryFileFromSvn(@NotNull String path) {
         ILocation location = Location.getLocationWithRepository("default", path);
         return TransactionalExecutor.executeSafelyInReadOnlyTransaction(transaction -> {
-            IRepositoryReadOnlyConnection readOnlyConnection = new PdfExporterPolarionService().getReadOnlyConnection(location);
+            IRepositoryReadOnlyConnection readOnlyConnection = new DocxExporterPolarionService().getReadOnlyConnection(location);
             if (!readOnlyConnection.exists(location)) {
                 logger.warn("Location does not exist: " + location.getLocationPath());
                 return null;

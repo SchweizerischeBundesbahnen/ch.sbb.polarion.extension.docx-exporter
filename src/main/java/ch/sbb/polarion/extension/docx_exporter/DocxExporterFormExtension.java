@@ -11,7 +11,7 @@ import ch.sbb.polarion.extension.docx_exporter.rest.model.conversion.ExportParam
 import ch.sbb.polarion.extension.docx_exporter.rest.model.settings.localization.Language;
 import ch.sbb.polarion.extension.docx_exporter.rest.model.settings.stylepackage.DocIdentifier;
 import ch.sbb.polarion.extension.docx_exporter.rest.model.settings.stylepackage.StylePackageModel;
-import ch.sbb.polarion.extension.docx_exporter.service.PdfExporterPolarionService;
+import ch.sbb.polarion.extension.docx_exporter.service.DocxExporterPolarionService;
 import ch.sbb.polarion.extension.docx_exporter.service.PolarionBaselineExecutor;
 import ch.sbb.polarion.extension.docx_exporter.settings.LocalizationSettings;
 import ch.sbb.polarion.extension.docx_exporter.settings.StylePackageSettings;
@@ -41,14 +41,14 @@ import java.util.stream.Collectors;
 
 import static ch.sbb.polarion.extension.docx_exporter.util.placeholder.PlaceholderValues.DOC_LANGUAGE_FIELD;
 
-public class PdfExporterFormExtension implements IFormExtension {
+public class DocxExporterFormExtension implements IFormExtension {
 
     private static final String OPTION_TEMPLATE = "<option value='%s' %s>%s</option>";
     private static final String OPTION_VALUE = "<option value='%s'";
     private static final String OPTION_SELECTED = "<option value='%s' selected";
     private static final String SELECTED = "selected";
 
-    private final PdfExporterPolarionService polarionService = new PdfExporterPolarionService();
+    private final DocxExporterPolarionService polarionService = new DocxExporterPolarionService();
 
     @Override
     @Nullable

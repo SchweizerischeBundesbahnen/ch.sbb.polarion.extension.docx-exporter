@@ -10,14 +10,14 @@ import ch.sbb.polarion.extension.docx_exporter.rest.model.documents.DocumentData
 import ch.sbb.polarion.extension.docx_exporter.rest.model.settings.webhooks.AuthType;
 import ch.sbb.polarion.extension.docx_exporter.rest.model.settings.webhooks.WebhookConfig;
 import ch.sbb.polarion.extension.docx_exporter.rest.model.settings.webhooks.WebhooksModel;
-import ch.sbb.polarion.extension.docx_exporter.service.PdfExporterPolarionService;
+import ch.sbb.polarion.extension.docx_exporter.service.DocxExporterPolarionService;
 import ch.sbb.polarion.extension.docx_exporter.settings.LocalizationSettings;
 import ch.sbb.polarion.extension.docx_exporter.settings.WebhooksSettings;
 import ch.sbb.polarion.extension.docx_exporter.util.DocumentDataFactory;
 import ch.sbb.polarion.extension.docx_exporter.util.EnumValuesProvider;
 import ch.sbb.polarion.extension.docx_exporter.util.HtmlLogger;
 import ch.sbb.polarion.extension.docx_exporter.util.HtmlProcessor;
-import ch.sbb.polarion.extension.docx_exporter.util.PdfExporterFileResourceProvider;
+import ch.sbb.polarion.extension.docx_exporter.util.DocxExporterFileResourceProvider;
 import ch.sbb.polarion.extension.docx_exporter.util.PdfGenerationLog;
 import ch.sbb.polarion.extension.docx_exporter.util.PdfTemplateProcessor;
 import ch.sbb.polarion.extension.docx_exporter.util.html.HtmlLinksHelper;
@@ -53,17 +53,17 @@ import java.util.List;
 @SuppressWarnings("java:S1200")
 public class PdfConverter {
     private final Logger logger = Logger.getLogger(PdfConverter.class);
-    private final PdfExporterPolarionService pdfExporterPolarionService;
+    private final DocxExporterPolarionService docxExporterPolarionService;
 
     private final PandocServiceConnector pandocServiceConnector;
     private final HtmlProcessor htmlProcessor;
     private final PdfTemplateProcessor pdfTemplateProcessor;
 
     public PdfConverter() {
-        pdfExporterPolarionService = new PdfExporterPolarionService();
+        docxExporterPolarionService = new DocxExporterPolarionService();
         pandocServiceConnector = new PandocServiceConnector();
-        PdfExporterFileResourceProvider fileResourceProvider = new PdfExporterFileResourceProvider();
-        htmlProcessor = new HtmlProcessor(fileResourceProvider, new LocalizationSettings(), new HtmlLinksHelper(fileResourceProvider), pdfExporterPolarionService);
+        DocxExporterFileResourceProvider fileResourceProvider = new DocxExporterFileResourceProvider();
+        htmlProcessor = new HtmlProcessor(fileResourceProvider, new LocalizationSettings(), new HtmlLinksHelper(fileResourceProvider), docxExporterPolarionService);
         pdfTemplateProcessor = new PdfTemplateProcessor();
     }
 
@@ -100,7 +100,7 @@ public class PdfConverter {
     private @Nullable ITrackerProject getTrackerProject(@NotNull ExportParams exportParams) {
         ITrackerProject project = null;
         if (!StringUtils.isEmpty(exportParams.getProjectId())) {
-            project = pdfExporterPolarionService.getTrackerProject(exportParams.getProjectId());
+            project = docxExporterPolarionService.getTrackerProject(exportParams.getProjectId());
         }
         return project;
     }

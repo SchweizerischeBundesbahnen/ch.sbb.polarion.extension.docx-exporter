@@ -1,6 +1,6 @@
 package ch.sbb.polarion.extension.docx_exporter.converter;
 
-import ch.sbb.polarion.extension.docx_exporter.configuration.PdfExporterExtensionConfigurationExtension;
+import ch.sbb.polarion.extension.docx_exporter.configuration.DocxExporterExtensionConfigurationExtension;
 import ch.sbb.polarion.extension.docx_exporter.pandoc.service.PandocServiceConnector;
 import ch.sbb.polarion.extension.docx_exporter.util.HtmlProcessor;
 import ch.sbb.polarion.extension.docx_exporter.util.PdfTemplateProcessor;
@@ -17,7 +17,7 @@ import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-@ExtendWith({MockitoExtension.class, PdfExporterExtensionConfigurationExtension.class})
+@ExtendWith({MockitoExtension.class, DocxExporterExtensionConfigurationExtension.class})
 class HtmlToPdfConverterTest {
     @Mock
     private PdfTemplateProcessor pdfTemplateProcessor;

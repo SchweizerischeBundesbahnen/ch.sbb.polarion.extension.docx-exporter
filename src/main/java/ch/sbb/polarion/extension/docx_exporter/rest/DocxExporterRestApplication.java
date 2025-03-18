@@ -29,10 +29,10 @@ import org.jetbrains.annotations.NotNull;
 import java.util.Arrays;
 import java.util.Set;
 
-public class PdfExporterRestApplication extends GenericRestApplication {
-    private final Logger logger = Logger.getLogger(PdfExporterRestApplication.class);
+public class DocxExporterRestApplication extends GenericRestApplication {
+    private final Logger logger = Logger.getLogger(DocxExporterRestApplication.class);
 
-    public PdfExporterRestApplication() {
+    public DocxExporterRestApplication() {
         logger.debug("Creating Docx-Exporter REST Application...");
 
         try {

@@ -5,7 +5,7 @@ import lombok.Getter;
 
 @AllArgsConstructor
 @Getter
-public class PdfExportException extends RuntimeException {
+public class DocxExportException extends RuntimeException {
 
     private final String command;
     private final int exitStatus;

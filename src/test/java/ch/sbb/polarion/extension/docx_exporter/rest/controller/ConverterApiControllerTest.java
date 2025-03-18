@@ -2,7 +2,7 @@ package ch.sbb.polarion.extension.docx_exporter.rest.controller;
 
 import ch.sbb.polarion.extension.generic.rest.filter.LogoutFilter;
 import ch.sbb.polarion.extension.docx_exporter.rest.model.conversion.ExportParams;
-import ch.sbb.polarion.extension.docx_exporter.service.PdfExporterPolarionService;
+import ch.sbb.polarion.extension.docx_exporter.service.DocxExporterPolarionService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -21,7 +21,7 @@ import static org.mockito.Mockito.verify;
 @ExtendWith(MockitoExtension.class)
 class ConverterApiControllerTest {
     @Mock
-    private PdfExporterPolarionService polarionService;
+    private DocxExporterPolarionService polarionService;
 
     @Mock
     private ServletRequestAttributes requestAttributes;

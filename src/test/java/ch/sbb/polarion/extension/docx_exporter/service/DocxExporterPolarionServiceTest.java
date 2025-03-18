@@ -35,12 +35,12 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
-class PdfExporterPolarionServiceTest {
+class DocxExporterPolarionServiceTest {
 
     private final ITrackerService trackerService = mock(ITrackerService.class);
     private final ITestManagementService testManagementService = mock(ITestManagementService.class);
     private StylePackageSettings stylePackageSettings;
-    private final PdfExporterPolarionService service = new PdfExporterPolarionService(
+    private final DocxExporterPolarionService service = new DocxExporterPolarionService(
             trackerService,
             mock(IProjectService.class),
             mock(ISecurityService.class),
@@ -63,7 +63,7 @@ class PdfExporterPolarionServiceTest {
         String expectedProjectId = "validProjectId";
         ITrackerProject mockProject = mock(ITrackerProject.class);
 
-        PdfExporterPolarionService polarionService = mock(PdfExporterPolarionService.class);
+        DocxExporterPolarionService polarionService = mock(DocxExporterPolarionService.class);
         when(polarionService.getProjectFromScope(anyString())).thenCallRealMethod();
         when(polarionService.getTrackerProject(anyString())).thenReturn(mockProject);
 

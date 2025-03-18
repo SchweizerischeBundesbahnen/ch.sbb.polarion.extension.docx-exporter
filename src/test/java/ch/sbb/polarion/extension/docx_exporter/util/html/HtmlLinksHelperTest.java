@@ -1,6 +1,6 @@
 package ch.sbb.polarion.extension.docx_exporter.util.html;
 
-import ch.sbb.polarion.extension.docx_exporter.configuration.PdfExporterExtensionConfigurationExtension;
+import ch.sbb.polarion.extension.docx_exporter.configuration.DocxExporterExtensionConfigurationExtension;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -16,7 +16,7 @@ import java.util.stream.Stream;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.*;
 
-@ExtendWith({MockitoExtension.class, PdfExporterExtensionConfigurationExtension.class})
+@ExtendWith({MockitoExtension.class, DocxExporterExtensionConfigurationExtension.class})
 class HtmlLinksHelperTest {
     @Mock
     private LinkInternalizer linkInternalizer1;
