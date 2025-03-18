@@ -48,6 +48,7 @@ export default class ExportPanel {
         }
         const documentLanguage = this.ctx.getElementById("docx-document-language").value;
 
+        this.ctx.setSelector("docx-template-selector", stylePackage.template);
         this.ctx.setSelector("docx-localization-selector", stylePackage.localization);
 
         this.ctx.setCheckbox("docx-webhooks-checkbox", !!stylePackage.webhooks);
@@ -114,6 +115,7 @@ export default class ExportPanel {
             .setLocationPath(locationPath)
             .setBaselineRevision(baselineRevision)
             .setRevision(revision)
+            .setTemplate(this.ctx.getElementById("docx-template-selector").value)
             .setLocalization(this.ctx.getElementById("docx-localization-selector").value)
             .setWebhooks(this.ctx.getElementById("docx-webhooks-checkbox").checked ? this.ctx.getElementById("docx-webhooks-selector").value : null)
             .setEnableCommentsRendering(this.ctx.getElementById('docx-enable-comments-rendering').checked)

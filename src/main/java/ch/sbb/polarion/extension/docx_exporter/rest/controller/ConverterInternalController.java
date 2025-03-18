@@ -370,6 +370,28 @@ public class ConverterInternalController {
         return NestedListsCheck.builder().containsNestedLists(containsNestedLists).build();
     }
 
+    @GET
+    @Path("/template")
+    @Produces("application/vnd.openxmlformats-officedocument.wordprocessingml.document")
+    @Operation(summary = "Returns DOCX template file",
+            responses = {
+                    @ApiResponse(responseCode = "200",
+                            description = "DOCX template file",
+                            content = {@Content(mediaType = "application/vnd.openxmlformats-officedocument.wordprocessingml.document")},
+                            headers = {
+                                    @Header(name = HttpHeaders.CONTENT_DISPOSITION,
+                                            description = "To inform a browser that the response is a downloadable attachment",
+                                            schema = @Schema(implementation = String.class)
+                                    )
+                            }
+                    )
+            })
+    public Response getTemplate() {
+        Response.ResponseBuilder responseBuilder = Response.ok(pdfConverter.getTemplate())
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"Template.docx\"");
+        return responseBuilder.build();
+    }
+
     private void validateExportParameters(ExportParams exportParams) {
         if (exportParams == null) {
             throw new BadRequestException("Missing export parameters");

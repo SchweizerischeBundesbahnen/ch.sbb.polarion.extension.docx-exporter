@@ -1,5 +1,7 @@
 package ch.sbb.polarion.extension.docx_exporter.converter;
 
+import ch.sbb.polarion.extension.docx_exporter.rest.model.settings.templates.TemplatesModel;
+import ch.sbb.polarion.extension.docx_exporter.settings.TemplatesSettings;
 import ch.sbb.polarion.extension.generic.settings.SettingId;
 import ch.sbb.polarion.extension.docx_exporter.pandoc.service.PandocServiceConnector;
 import ch.sbb.polarion.extension.docx_exporter.properties.DocxExporterExtensionConfiguration;
@@ -125,6 +127,10 @@ public class PdfConverter {
         return result;
     }
 
+    public byte[] getTemplate() {
+        return pandocServiceConnector.getTemplate();
+    }
+
     private @NotNull String applyWebhook(@NotNull WebhookConfig webhookConfig, @NotNull ExportParams exportParams, @NotNull String htmlContent) {
         Client client = null;
         try {
@@ -195,7 +201,14 @@ public class PdfConverter {
             htmlPage = htmlPage.substring(0, headerIndex) + htmlPage.substring(contentIndex);
         }
         htmlPage = htmlPage.replace("<div style='break-after:page'>page to be removed</div><?xml version='1.0' encoding='UTF-8'?>", "");
-        return pandocServiceConnector.convertToDocx(htmlPage);
+
+        byte[] template = null;
+        if (exportParams.getTemplate() != null) {
+            TemplatesModel templatesModel = new TemplatesSettings().load(exportParams.getProjectId(), SettingId.fromName(exportParams.getTemplate()));
+            template = templatesModel.getTemplate();
+        }
+
+        return pandocServiceConnector.convertToDocx(htmlPage, template);
     }
 
     @VisibleForTesting

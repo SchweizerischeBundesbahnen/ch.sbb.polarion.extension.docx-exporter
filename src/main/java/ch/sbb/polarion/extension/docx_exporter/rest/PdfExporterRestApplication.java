@@ -1,5 +1,6 @@
 package ch.sbb.polarion.extension.docx_exporter.rest;
 
+import ch.sbb.polarion.extension.docx_exporter.settings.TemplatesSettings;
 import ch.sbb.polarion.extension.generic.rest.GenericRestApplication;
 import ch.sbb.polarion.extension.generic.settings.NamedSettingsRegistry;
 import ch.sbb.polarion.extension.docx_exporter.converter.PdfConverterJobsCleaner;
@@ -38,6 +39,7 @@ public class PdfExporterRestApplication extends GenericRestApplication {
             NamedSettingsRegistry.INSTANCE.register(
                     Arrays.asList(
                             new StylePackageSettings(),
+                            new TemplatesSettings(),
                             new LocalizationSettings(),
                             new WebhooksSettings(),
                             new FileNameTemplateSettings()

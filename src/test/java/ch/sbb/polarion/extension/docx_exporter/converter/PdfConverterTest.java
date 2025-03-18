@@ -82,7 +82,7 @@ class PdfConverterTest {
 
         documentDataFactoryMockedStatic.when(() -> DocumentDataFactory.getDocumentData(eq(exportParams), anyBoolean())).thenReturn(documentData);
         when(pdfTemplateProcessor.processUsing(eq("testDocument"), anyString())).thenReturn("test html content");
-        when(pandocServiceConnector.convertToDocx("test html content")).thenReturn("test document content".getBytes());
+        when(pandocServiceConnector.convertToDocx("test html content", null)).thenReturn("test document content".getBytes());
         when(htmlProcessor.internalizeLinks(anyString())).thenAnswer(a -> a.getArgument(0));
 
         // Act

@@ -1,5 +1,6 @@
 package ch.sbb.polarion.extension.docx_exporter;
 
+import ch.sbb.polarion.extension.docx_exporter.settings.TemplatesSettings;
 import ch.sbb.polarion.extension.generic.settings.NamedSettings;
 import ch.sbb.polarion.extension.generic.settings.NamedSettingsRegistry;
 import ch.sbb.polarion.extension.generic.settings.SettingId;
@@ -79,6 +80,7 @@ public class PdfExporterFormExtension implements IFormExtension {
                 form = form.replace("<div id='docx-style-package-content'", "<div id='docx-style-package-content' class='hidden'"); // Hide settings pane if style package settings not exposed to end users
             }
 
+            form = adjustTemplate(scope, form, selectedStylePackage);
             form = adjustLocalization(scope, form, selectedStylePackage);
             form = adjustWebhooks(scope, form, selectedStylePackage);
             form = adjustCommentsRendering(form, selectedStylePackage);
@@ -108,6 +110,12 @@ public class PdfExporterFormExtension implements IFormExtension {
         return defaultStylePackageName != null
                 ? stylePackageSettings.read(scope, SettingId.fromName(defaultStylePackageName.getName()), null)
                 : stylePackageSettings.defaultValues();
+    }
+
+    private String adjustTemplate(String scope, String form, StylePackageModel stylePackage) {
+        Collection<SettingName> templateNames = getSettingNames(TemplatesSettings.FEATURE_NAME, scope);
+        String templateOptions = generateSelectOptions(templateNames, stylePackage.getTemplate());
+        return form.replace("{TEMPLATE_OPTIONS}", templateOptions);
     }
 
     private String adjustLocalization(String scope, String form, StylePackageModel stylePackage) {

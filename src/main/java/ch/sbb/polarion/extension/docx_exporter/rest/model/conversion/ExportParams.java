@@ -33,6 +33,9 @@ public class ExportParams {
     @Schema(description = "Webhooks settings name")
     private String webhooks;
 
+    @Schema(description = "Template settings name")
+    private String template;
+
     @Schema(description = "Comments should be rendered in the exported document", defaultValue = "true")
     private boolean enableCommentsRendering = true;
 

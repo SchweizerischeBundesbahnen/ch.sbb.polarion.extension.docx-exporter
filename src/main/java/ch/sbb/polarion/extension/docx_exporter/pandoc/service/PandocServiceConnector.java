@@ -4,23 +4,35 @@ import ch.sbb.polarion.extension.docx_exporter.pandoc.service.model.PandocInfo;
 import ch.sbb.polarion.extension.docx_exporter.properties.DocxExporterExtensionConfiguration;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.polarion.core.util.exceptions.UserFriendlyRuntimeException;
 import com.polarion.core.util.logging.Logger;
 import lombok.Getter;
+import org.glassfish.jersey.media.multipart.FormDataBodyPart;
+import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
+import org.glassfish.jersey.media.multipart.FormDataMultiPart;
+import org.glassfish.jersey.media.multipart.MultiPartFeature;
 import org.jetbrains.annotations.NotNull;
 
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.Entity;
+import javax.ws.rs.client.Invocation;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.concurrent.atomic.AtomicReference;
 
 import static com.polarion.core.util.StringUtils.isEmpty;
 
+@Getter
 public class PandocServiceConnector {
+
+    public static final String MEDIA_TYPE_DOCX = "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
 
     private static final Logger logger = Logger.getLogger(PandocServiceConnector.class);
 
@@ -32,7 +44,6 @@ public class PandocServiceConnector {
     private static final AtomicReference<String> pandocVersion = new AtomicReference<>();
     private static final AtomicReference<String> pandocServiceVersion = new AtomicReference<>();
 
-    @Getter
     private final @NotNull String pandocServiceBaseUrl;
 
     public PandocServiceConnector() {
@@ -43,30 +54,77 @@ public class PandocServiceConnector {
         this.pandocServiceBaseUrl = pandocServiceBaseUrl;
     }
 
-    public byte[] convertToDocx(String htmlPage) {
+    public byte[] convertToDocx(String htmlPage, byte[] template) {
         Client client = null;
         try {
             client = ClientBuilder.newClient();
-            WebTarget webTarget = client.target(getPandocServiceBaseUrl() + "/convert/html/to/docx");
+            WebTarget webTarget = client.target(getPandocServiceBaseUrl() + "/convert/html/to/docx-with-template").register(MultiPartFeature.class);
 
-            try (Response response = webTarget.request("application/vnd.openxmlformats-officedocument.wordprocessingml.document").post(Entity.entity(htmlPage, MediaType.TEXT_HTML))) {
-                if (response.getStatus() == Response.Status.OK.getStatusCode()) {
-                    InputStream inputStream = response.readEntity(InputStream.class);
-                    try {
-                        logPandocVersionFromHeader(response);
-                        return inputStream.readAllBytes();
-                    } catch (IOException e) {
-                        throw new IllegalStateException("Could not read response stream", e);
+            try (FormDataMultiPart multipart = new FormDataMultiPart()) {
+
+                multipart.bodyPart(new FormDataBodyPart("source", htmlPage.getBytes(StandardCharsets.UTF_8), MediaType.APPLICATION_OCTET_STREAM_TYPE));
+                if (template != null) {
+                    multipart.bodyPart(new FormDataBodyPart(
+                            FormDataContentDisposition.name("template")
+                                    .fileName("template.docx")
+                                    .size(template.length)
+                                    .build(),
+                            new ByteArrayInputStream(template),
+                            MediaType.valueOf(MEDIA_TYPE_DOCX)
+                    ));
+                }
+
+                Invocation.Builder requestBuilder = webTarget.request(MEDIA_TYPE_DOCX);
+
+                try (Response response = requestBuilder.post(Entity.entity(multipart, multipart.getMediaType()))) {
+                    if (response.getStatus() == Response.Status.OK.getStatusCode()) {
+                        InputStream inputStream = response.readEntity(InputStream.class);
+                        try {
+                            logPandocVersionFromHeader(response);
+                            return inputStream.readAllBytes();
+                        } catch (IOException e) {
+                            throw new IllegalStateException("Could not read response stream", e);
+                        }
+                    } else {
+                        String errorMessage = response.readEntity(String.class);
+                        throw new IllegalStateException(String.format("Not expected response from Pandoc Service. Status: %s, Message: [%s]", response.getStatus(), errorMessage));
                     }
-                } else {
-                    String errorMessage = response.readEntity(String.class);
-                    throw new IllegalStateException(String.format("Not expected response from Pandoc Service. Status: %s, Message: [%s]", response.getStatus(), errorMessage));
                 }
             }
+        } catch (Exception e) {
+            throw new UserFriendlyRuntimeException("Could not get response from pandoc service", e);
         } finally {
             if (client != null) {
                 client.close();
             }
+        }
+    }
+
+    public byte[] getTemplate() {
+        Client client = ClientBuilder.newClient();
+        WebTarget webTarget = client.target(getPandocServiceBaseUrl() + "/docx-template");
+
+        try (Response response = webTarget.request(MEDIA_TYPE_DOCX).get()) {
+            if (response.getStatus() == Response.Status.OK.getStatusCode()) {
+
+                try (InputStream inputStream = response.readEntity(InputStream.class);
+                     ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
+
+                    byte[] buffer = new byte[4096]; // Adjust buffer size as needed
+                    int bytesRead;
+                    while ((bytesRead = inputStream.read(buffer)) != -1) {
+                        outputStream.write(buffer, 0, bytesRead);
+                    }
+                    return outputStream.toByteArray();
+
+                } catch (IOException e) {
+                    throw new IllegalStateException("Could not read response from Pandoc Service");
+                }
+            } else {
+                throw new IllegalStateException("Could not get proper response from Pandoc Service");
+            }
+        } finally {
+            client.close();
         }
     }
 
