@@ -18,8 +18,8 @@ import ch.sbb.polarion.extension.docx_exporter.util.EnumValuesProvider;
 import ch.sbb.polarion.extension.docx_exporter.util.HtmlLogger;
 import ch.sbb.polarion.extension.docx_exporter.util.HtmlProcessor;
 import ch.sbb.polarion.extension.docx_exporter.util.DocxExporterFileResourceProvider;
-import ch.sbb.polarion.extension.docx_exporter.util.PdfGenerationLog;
-import ch.sbb.polarion.extension.docx_exporter.util.PdfTemplateProcessor;
+import ch.sbb.polarion.extension.docx_exporter.util.DocxGenerationLog;
+import ch.sbb.polarion.extension.docx_exporter.util.DocxTemplateProcessor;
 import ch.sbb.polarion.extension.docx_exporter.util.html.HtmlLinksHelper;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.polarion.alm.projects.model.IUniqueObject;
@@ -51,26 +51,26 @@ import java.util.List;
 
 @AllArgsConstructor
 @SuppressWarnings("java:S1200")
-public class PdfConverter {
-    private final Logger logger = Logger.getLogger(PdfConverter.class);
+public class DocxConverter {
+    private final Logger logger = Logger.getLogger(DocxConverter.class);
     private final DocxExporterPolarionService docxExporterPolarionService;
 
     private final PandocServiceConnector pandocServiceConnector;
     private final HtmlProcessor htmlProcessor;
-    private final PdfTemplateProcessor pdfTemplateProcessor;
+    private final DocxTemplateProcessor docxTemplateProcessor;
 
-    public PdfConverter() {
+    public DocxConverter() {
         docxExporterPolarionService = new DocxExporterPolarionService();
         pandocServiceConnector = new PandocServiceConnector();
         DocxExporterFileResourceProvider fileResourceProvider = new DocxExporterFileResourceProvider();
         htmlProcessor = new HtmlProcessor(fileResourceProvider, new LocalizationSettings(), new HtmlLinksHelper(fileResourceProvider), docxExporterPolarionService);
-        pdfTemplateProcessor = new PdfTemplateProcessor();
+        docxTemplateProcessor = new DocxTemplateProcessor();
     }
 
     public byte[] convertToPdf(@NotNull ExportParams exportParams) {
         long startTime = System.currentTimeMillis();
 
-        PdfGenerationLog generationLog = new PdfGenerationLog();
+        DocxGenerationLog generationLog = new DocxGenerationLog();
         generationLog.log("Starting html generation");
 
         @Nullable ITrackerProject project = getTrackerProject(exportParams);
@@ -225,6 +225,6 @@ public class PdfConverter {
     @VisibleForTesting
     String composeHtml(@NotNull String documentName, String documentContent) {
         String content = "<div class='content'>" + documentContent + "</div>";
-        return pdfTemplateProcessor.processUsing(documentName, content);
+        return docxTemplateProcessor.processUsing(documentName, content);
     }
 }

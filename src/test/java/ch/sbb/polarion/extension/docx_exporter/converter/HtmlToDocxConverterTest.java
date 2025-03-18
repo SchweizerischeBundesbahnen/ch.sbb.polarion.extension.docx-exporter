@@ -3,7 +3,7 @@ package ch.sbb.polarion.extension.docx_exporter.converter;
 import ch.sbb.polarion.extension.docx_exporter.configuration.DocxExporterExtensionConfigurationExtension;
 import ch.sbb.polarion.extension.docx_exporter.pandoc.service.PandocServiceConnector;
 import ch.sbb.polarion.extension.docx_exporter.util.HtmlProcessor;
-import ch.sbb.polarion.extension.docx_exporter.util.PdfTemplateProcessor;
+import ch.sbb.polarion.extension.docx_exporter.util.DocxTemplateProcessor;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -18,9 +18,9 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @ExtendWith({MockitoExtension.class, DocxExporterExtensionConfigurationExtension.class})
-class HtmlToPdfConverterTest {
+class HtmlToDocxConverterTest {
     @Mock
-    private PdfTemplateProcessor pdfTemplateProcessor;
+    private DocxTemplateProcessor docxTemplateProcessor;
 
     @Mock
     private HtmlProcessor htmlProcessor;
@@ -29,7 +29,7 @@ class HtmlToPdfConverterTest {
     private PandocServiceConnector pandocServiceConnector;
 
     @InjectMocks
-    private HtmlToPdfConverter htmlToPdfConverter;
+    private HtmlToDocxConverter htmlToDocxConverter;
 
     @Test
     void shouldInjectHeadAndStyle() {
@@ -40,12 +40,12 @@ class HtmlToPdfConverterTest {
                     </body>
                 </html>""";
 
-        when(pdfTemplateProcessor.buildBaseUrlHeader()).thenReturn("<base href='http://test' />");
-        when(pdfTemplateProcessor.buildSizeCss()).thenReturn("@page {size: test;}");
+        when(docxTemplateProcessor.buildBaseUrlHeader()).thenReturn("<base href='http://test' />");
+        when(docxTemplateProcessor.buildSizeCss()).thenReturn("@page {size: test;}");
         when(htmlProcessor.replaceResourcesAsBase64Encoded(anyString())).thenAnswer(invocation ->
                 invocation.getArgument(0));
         when(htmlProcessor.internalizeLinks(anyString())).thenAnswer(a -> a.getArgument(0));
-        String resultHtml = htmlToPdfConverter.preprocessHtml(html);
+        String resultHtml = htmlToDocxConverter.preprocessHtml(html);
 
         assertThat(resultHtml).isEqualTo("""
                 <html><head><base href='http://test' /><style>@page {size: test;}</style></head>
@@ -70,12 +70,12 @@ class HtmlToPdfConverterTest {
                     </body>
                 </html>""";
 
-        when(pdfTemplateProcessor.buildBaseUrlHeader()).thenReturn("<base href='http://test' />");
-        when(pdfTemplateProcessor.buildSizeCss()).thenReturn(" @page {size: test;}");
+        when(docxTemplateProcessor.buildBaseUrlHeader()).thenReturn("<base href='http://test' />");
+        when(docxTemplateProcessor.buildSizeCss()).thenReturn(" @page {size: test;}");
         when(htmlProcessor.replaceResourcesAsBase64Encoded(anyString())).thenAnswer(invocation ->
                 invocation.getArgument(0));
         when(htmlProcessor.internalizeLinks(anyString())).thenAnswer(a -> a.getArgument(0));
-        String resultHtml = htmlToPdfConverter.preprocessHtml(html);
+        String resultHtml = htmlToDocxConverter.preprocessHtml(html);
 
         assertThat(resultHtml).isEqualTo("""
                 <html>
@@ -103,12 +103,12 @@ class HtmlToPdfConverterTest {
                     </body>
                 </html>""";
 
-        when(pdfTemplateProcessor.buildBaseUrlHeader()).thenReturn("<base href='http://test' />");
-        when(pdfTemplateProcessor.buildSizeCss()).thenReturn(" @page {size: test;}");
+        when(docxTemplateProcessor.buildBaseUrlHeader()).thenReturn("<base href='http://test' />");
+        when(docxTemplateProcessor.buildSizeCss()).thenReturn(" @page {size: test;}");
         when(htmlProcessor.replaceResourcesAsBase64Encoded(anyString())).thenAnswer(invocation ->
                 invocation.getArgument(0));
         when(htmlProcessor.internalizeLinks(anyString())).thenAnswer(a -> a.getArgument(0));
-        String resultHtml = htmlToPdfConverter.preprocessHtml(html);
+        String resultHtml = htmlToDocxConverter.preprocessHtml(html);
 
         assertThat(resultHtml).isEqualTo("""
                 <html>
@@ -127,7 +127,7 @@ class HtmlToPdfConverterTest {
     void shouldThrowIllegalArgumentForMalformedHtml() {
         String html = "<span>example text</span>";
 
-        assertThatThrownBy(() -> htmlToPdfConverter.convert(html))
+        assertThatThrownBy(() -> htmlToDocxConverter.convert(html))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("html is malformed");
     }
@@ -139,12 +139,12 @@ class HtmlToPdfConverterTest {
                     <body/>
                 </html>""";
 
-        when(pdfTemplateProcessor.buildBaseUrlHeader()).thenReturn("<base href='http://test' />");
-        when(pdfTemplateProcessor.buildSizeCss()).thenReturn("@page {size: test;}");
+        when(docxTemplateProcessor.buildBaseUrlHeader()).thenReturn("<base href='http://test' />");
+        when(docxTemplateProcessor.buildSizeCss()).thenReturn("@page {size: test;}");
         when(htmlProcessor.replaceResourcesAsBase64Encoded(anyString())).thenAnswer(invocation ->
                 invocation.getArgument(0));
         when(htmlProcessor.internalizeLinks(anyString())).thenAnswer(a -> a.getArgument(0));
-        String resultHtml = htmlToPdfConverter.preprocessHtml(html);
+        String resultHtml = htmlToDocxConverter.preprocessHtml(html);
 
         assertThat(resultHtml).isEqualTo("""
                 <html myAttribute="test"><head><base href='http://test' /><style>@page {size: test;}</style></head>

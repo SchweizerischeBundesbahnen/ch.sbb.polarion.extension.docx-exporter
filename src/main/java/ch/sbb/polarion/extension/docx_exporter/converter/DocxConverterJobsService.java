@@ -29,18 +29,18 @@ import java.util.concurrent.TimeoutException;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-public class PdfConverterJobsService {
-    private final Logger logger = Logger.getLogger(PdfConverterJobsService.class);
+public class DocxConverterJobsService {
+    private final Logger logger = Logger.getLogger(DocxConverterJobsService.class);
     // Static maps are necessary for per-request scoped InternalController and ApiController. In case of singletons static can be removed
     private static final Map<String, JobDetails> jobs = new ConcurrentHashMap<>();
     private static final Map<String, String> failedJobsReasons = new ConcurrentHashMap<>();
     private static final String UNKNOWN_JOB_MESSAGE = "Converter Job is unknown: %s";
 
-    private final PdfConverter pdfConverter;
+    private final DocxConverter docxConverter;
     private final ISecurityService securityService;
 
-    public PdfConverterJobsService(PdfConverter pdfConverter, ISecurityService securityService) {
-        this.pdfConverter = pdfConverter;
+    public DocxConverterJobsService(DocxConverter docxConverter, ISecurityService securityService) {
+        this.docxConverter = docxConverter;
         this.securityService = securityService;
     }
 
@@ -52,7 +52,7 @@ public class PdfConverterJobsService {
 
         CompletableFuture<byte[]> asyncConversionJob = CompletableFuture.supplyAsync(() -> {
             try {
-                return securityService.doAsUser(userSubject, (PrivilegedAction<byte[]>) () -> pdfConverter.convertToPdf(exportParams));
+                return securityService.doAsUser(userSubject, (PrivilegedAction<byte[]>) () -> docxConverter.convertToPdf(exportParams));
             } catch (Exception e) {
                 String errorMessage = String.format("PDF conversion job '%s' is failed with error: %s", jobId, e.getMessage());
                 logger.error(errorMessage, e);
@@ -150,7 +150,7 @@ public class PdfConverterJobsService {
                 .filter(entry -> entry.getValue().future.isDone()
                         && entry.getValue().startingTime.plus(timeout, ChronoUnit.MINUTES).isBefore(currentTime))
                 .map(Map.Entry::getKey)
-                .forEach(PdfConverterJobsService::removeKeyFromJobMaps);
+                .forEach(DocxConverterJobsService::removeKeyFromJobMaps);
     }
 
     private static void removeKeyFromJobMaps(String id) {

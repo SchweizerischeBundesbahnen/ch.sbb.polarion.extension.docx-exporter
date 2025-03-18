@@ -4,7 +4,7 @@ import ch.sbb.polarion.extension.generic.exception.ObjectNotFoundException;
 import ch.sbb.polarion.extension.generic.settings.NamedSettingsRegistry;
 import ch.sbb.polarion.extension.generic.settings.SettingId;
 import ch.sbb.polarion.extension.generic.util.ScopeUtils;
-import ch.sbb.polarion.extension.docx_exporter.converter.PdfConverter;
+import ch.sbb.polarion.extension.docx_exporter.converter.DocxConverter;
 import ch.sbb.polarion.extension.docx_exporter.rest.model.conversion.ExportParams;
 import ch.sbb.polarion.extension.docx_exporter.rest.model.settings.stylepackage.StylePackageModel;
 import ch.sbb.polarion.extension.docx_exporter.service.DocxExporterPolarionService;
@@ -48,18 +48,18 @@ public class DocxExportFunction implements IFunction<IModule> {
 
     private static final String STYLE_PACKAGE_DEFAULT = "Default";
     private final DocxExporterPolarionService docxExporterPolarionService;
-    private final PdfConverter pdfConverter;
+    private final DocxConverter docxConverter;
 
     @SuppressWarnings("unused")
     public DocxExportFunction() {
         this.docxExporterPolarionService = new DocxExporterPolarionService();
-        this.pdfConverter = new PdfConverter();
+        this.docxConverter = new DocxConverter();
     }
 
     @VisibleForTesting
-    DocxExportFunction(DocxExporterPolarionService docxExporterPolarionService, PdfConverter pdfConverter) {
+    DocxExportFunction(DocxExporterPolarionService docxExporterPolarionService, DocxConverter docxConverter) {
         this.docxExporterPolarionService = docxExporterPolarionService;
-        this.pdfConverter = pdfConverter;
+        this.docxConverter = docxConverter;
     }
 
     @Override
@@ -77,7 +77,7 @@ public class DocxExportFunction implements IFunction<IModule> {
         }
 
         ExportParams exportParams = getExportParams(module, args);
-        byte[] pdfBytes = pdfConverter.convertToPdf(exportParams);
+        byte[] pdfBytes = docxConverter.convertToPdf(exportParams);
         savePdfAsWorkItemAttachment(module, exportParams, context.getTargetStatusId(), args, pdfBytes);
     }
 

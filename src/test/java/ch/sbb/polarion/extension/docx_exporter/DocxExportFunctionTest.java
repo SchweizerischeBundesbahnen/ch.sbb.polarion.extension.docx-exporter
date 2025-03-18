@@ -3,7 +3,7 @@ package ch.sbb.polarion.extension.docx_exporter;
 import ch.sbb.polarion.extension.generic.context.CurrentContextExtension;
 import ch.sbb.polarion.extension.generic.settings.NamedSettingsRegistry;
 import ch.sbb.polarion.extension.generic.settings.SettingsService;
-import ch.sbb.polarion.extension.docx_exporter.converter.PdfConverter;
+import ch.sbb.polarion.extension.docx_exporter.converter.DocxConverter;
 import ch.sbb.polarion.extension.docx_exporter.rest.model.conversion.ExportParams;
 import ch.sbb.polarion.extension.docx_exporter.service.DocxExporterPolarionService;
 import ch.sbb.polarion.extension.docx_exporter.settings.StylePackageSettings;
@@ -37,7 +37,7 @@ import static org.mockito.Mockito.*;
 class DocxExportFunctionTest {
 
     DocxExporterPolarionService docxExporterPolarionService;
-    PdfConverter pdfConverter;
+    DocxConverter docxConverter;
     DocxExportFunction docxExportFunction;
     ICallContext<? extends IWorkflowObject> context;
     IModule module;
@@ -49,8 +49,8 @@ class DocxExportFunctionTest {
     @BeforeEach
     public void setup() {
         docxExporterPolarionService = mock(DocxExporterPolarionService.class);
-        pdfConverter = mock(PdfConverter.class);
-        docxExportFunction = spy(new DocxExportFunction(docxExporterPolarionService, pdfConverter));
+        docxConverter = mock(DocxConverter.class);
+        docxExportFunction = spy(new DocxExportFunction(docxExporterPolarionService, docxConverter));
         context = (ICallContext<? extends IWorkflowObject>) mock(ICallContext.class);
         trackerProject = mock(ITrackerProject.class);
         lenient().when(docxExporterPolarionService.getTrackerProject(anyString())).thenReturn(trackerProject);

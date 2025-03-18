@@ -8,7 +8,7 @@ import ch.sbb.polarion.extension.docx_exporter.rest.model.documents.id.LiveDocId
 import ch.sbb.polarion.extension.docx_exporter.service.DocxExporterPolarionService;
 import ch.sbb.polarion.extension.docx_exporter.util.DocumentDataFactory;
 import ch.sbb.polarion.extension.docx_exporter.util.HtmlProcessor;
-import ch.sbb.polarion.extension.docx_exporter.util.PdfTemplateProcessor;
+import ch.sbb.polarion.extension.docx_exporter.util.DocxTemplateProcessor;
 import ch.sbb.polarion.extension.docx_exporter.util.velocity.VelocityEvaluator;
 import com.polarion.alm.tracker.internal.model.LinkRoleOpt;
 import com.polarion.alm.tracker.internal.model.TypeOpt;
@@ -36,7 +36,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.*;
 
 @ExtendWith({MockitoExtension.class, DocxExporterExtensionConfigurationExtension.class})
-class PdfConverterTest {
+class DocxConverterTest {
     @Mock
     private DocxExporterPolarionService docxExporterPolarionService;
     @Mock
@@ -48,7 +48,7 @@ class PdfConverterTest {
     @Mock
     private HtmlProcessor htmlProcessor;
     @Mock
-    private PdfTemplateProcessor pdfTemplateProcessor;
+    private DocxTemplateProcessor docxTemplateProcessor;
 
     private MockedStatic<DocumentDataFactory> documentDataFactoryMockedStatic;
 
@@ -71,7 +71,7 @@ class PdfConverterTest {
 
         ITrackerProject project = mock(ITrackerProject.class);
         lenient().when(docxExporterPolarionService.getTrackerProject("testProjectId")).thenReturn(project);
-        PdfConverter pdfConverter = new PdfConverter(docxExporterPolarionService, pandocServiceConnector, htmlProcessor, pdfTemplateProcessor);
+        DocxConverter docxConverter = new DocxConverter(docxExporterPolarionService, pandocServiceConnector, htmlProcessor, docxTemplateProcessor);
         DocumentData<IModule> documentData = DocumentData.creator(module)
                 .id(LiveDocId.from("testProjectId", "_default", "testDocumentId"))
                 .title("testDocument")
@@ -81,12 +81,12 @@ class PdfConverterTest {
                 .build();
 
         documentDataFactoryMockedStatic.when(() -> DocumentDataFactory.getDocumentData(eq(exportParams), anyBoolean())).thenReturn(documentData);
-        when(pdfTemplateProcessor.processUsing(eq("testDocument"), anyString())).thenReturn("test html content");
+        when(docxTemplateProcessor.processUsing(eq("testDocument"), anyString())).thenReturn("test html content");
         when(pandocServiceConnector.convertToDocx("test html content", null)).thenReturn("test document content".getBytes());
         when(htmlProcessor.internalizeLinks(anyString())).thenAnswer(a -> a.getArgument(0));
 
         // Act
-        byte[] result = pdfConverter.convertToPdf(exportParams);
+        byte[] result = docxConverter.convertToPdf(exportParams);
 
         // Assert
         assertThat(result).isEqualTo("test document content".getBytes());
@@ -116,8 +116,8 @@ class PdfConverterTest {
         when(htmlProcessor.processHtmlForPDF(anyString(), eq(exportParams), any(List.class))).thenReturn("result string");
 
         // Act
-        PdfConverter pdfConverter = new PdfConverter(null, null, htmlProcessor, null);
-        String resultContent = pdfConverter.postProcessDocumentContent(exportParams, project, "test content");
+        DocxConverter docxConverter = new DocxConverter(null, null, htmlProcessor, null);
+        String resultContent = docxConverter.postProcessDocumentContent(exportParams, project, "test content");
 
         // Assert
         assertThat(resultContent).isEqualTo("result string");

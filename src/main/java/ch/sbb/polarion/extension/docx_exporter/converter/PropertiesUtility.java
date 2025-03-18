@@ -32,7 +32,7 @@ public class PropertiesUtility {
     }
 
     private Properties loadProperties(String resourcePath) {
-        try(InputStream propsInputStream = PdfConverterJobsCleaner.class.getResourceAsStream(resourcePath)) {
+        try(InputStream propsInputStream = DocxConverterJobsCleaner.class.getResourceAsStream(resourcePath)) {
             if (propsInputStream == null) {
                 throw new IllegalStateException("Properties file is not found: " + JOBS_PROPERTIES_FILE);
             }

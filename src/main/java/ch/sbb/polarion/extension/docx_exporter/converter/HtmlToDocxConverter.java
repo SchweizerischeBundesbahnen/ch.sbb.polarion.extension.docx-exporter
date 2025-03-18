@@ -6,24 +6,24 @@ import ch.sbb.polarion.extension.docx_exporter.settings.LocalizationSettings;
 import ch.sbb.polarion.extension.docx_exporter.util.HtmlLogger;
 import ch.sbb.polarion.extension.docx_exporter.util.HtmlProcessor;
 import ch.sbb.polarion.extension.docx_exporter.util.DocxExporterFileResourceProvider;
-import ch.sbb.polarion.extension.docx_exporter.util.PdfTemplateProcessor;
+import ch.sbb.polarion.extension.docx_exporter.util.DocxTemplateProcessor;
 import ch.sbb.polarion.extension.docx_exporter.util.html.HtmlLinksHelper;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.VisibleForTesting;
 
-public class HtmlToPdfConverter {
-    private final PdfTemplateProcessor pdfTemplateProcessor;
+public class HtmlToDocxConverter {
+    private final DocxTemplateProcessor docxTemplateProcessor;
     private final HtmlProcessor htmlProcessor;
 
-    public HtmlToPdfConverter() {
-        this.pdfTemplateProcessor = new PdfTemplateProcessor();
+    public HtmlToDocxConverter() {
+        this.docxTemplateProcessor = new DocxTemplateProcessor();
         DocxExporterFileResourceProvider fileResourceProvider = new DocxExporterFileResourceProvider();
         this.htmlProcessor = new HtmlProcessor(fileResourceProvider, new LocalizationSettings(), new HtmlLinksHelper(fileResourceProvider), null);
     }
 
     @VisibleForTesting
-    public HtmlToPdfConverter(PdfTemplateProcessor pdfTemplateProcessor, HtmlProcessor htmlProcessor) {
-        this.pdfTemplateProcessor = pdfTemplateProcessor;
+    public HtmlToDocxConverter(DocxTemplateProcessor docxTemplateProcessor, HtmlProcessor htmlProcessor) {
+        this.docxTemplateProcessor = docxTemplateProcessor;
         this.htmlProcessor = htmlProcessor;
     }
 
@@ -52,8 +52,8 @@ public class HtmlToPdfConverter {
         String origHead = extractTagContent(origHtml, "head");
         String origCss = extractTagContent(origHead, "style");
 
-        String head = origHead + pdfTemplateProcessor.buildBaseUrlHeader();
-        String css = origCss + pdfTemplateProcessor.buildSizeCss();
+        String head = origHead + docxTemplateProcessor.buildBaseUrlHeader();
+        String css = origCss + docxTemplateProcessor.buildSizeCss();
         if (origCss.isBlank()) {
             head = head + String.format("<style>%s</style>", css);
         } else {

@@ -3,7 +3,7 @@ package ch.sbb.polarion.extension.docx_exporter.rest;
 import ch.sbb.polarion.extension.docx_exporter.settings.TemplatesSettings;
 import ch.sbb.polarion.extension.generic.rest.GenericRestApplication;
 import ch.sbb.polarion.extension.generic.settings.NamedSettingsRegistry;
-import ch.sbb.polarion.extension.docx_exporter.converter.PdfConverterJobsCleaner;
+import ch.sbb.polarion.extension.docx_exporter.converter.DocxConverterJobsCleaner;
 import ch.sbb.polarion.extension.docx_exporter.rest.controller.CollectionApiController;
 import ch.sbb.polarion.extension.docx_exporter.rest.controller.CollectionInternalController;
 import ch.sbb.polarion.extension.docx_exporter.rest.controller.ConverterApiController;
@@ -50,7 +50,7 @@ public class DocxExporterRestApplication extends GenericRestApplication {
         }
 
         try {
-            PdfConverterJobsCleaner.startCleaningJob();
+            DocxConverterJobsCleaner.startCleaningJob();
         } catch (Exception e) {
             logger.error("Error during starting of clearing job", e);
         }

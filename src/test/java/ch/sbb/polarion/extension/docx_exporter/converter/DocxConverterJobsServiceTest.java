@@ -1,7 +1,7 @@
 package ch.sbb.polarion.extension.docx_exporter.converter;
 
 import ch.sbb.polarion.extension.generic.rest.filter.LogoutFilter;
-import ch.sbb.polarion.extension.docx_exporter.converter.PdfConverterJobsService.JobState;
+import ch.sbb.polarion.extension.docx_exporter.converter.DocxConverterJobsService.JobState;
 import ch.sbb.polarion.extension.docx_exporter.rest.model.conversion.ExportParams;
 import com.polarion.platform.security.ISecurityService;
 import org.awaitility.Durations;
@@ -32,9 +32,9 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-class PdfConverterJobsServiceTest {
+class DocxConverterJobsServiceTest {
     @Mock
-    private PdfConverter pdfConverter;
+    private DocxConverter docxConverter;
 
     @Mock
     private ISecurityService securityService;
@@ -46,7 +46,7 @@ class PdfConverterJobsServiceTest {
     ServletRequestAttributes requestAttributes;
 
     @InjectMocks
-    private PdfConverterJobsService pdfConverterJobsService;
+    private DocxConverterJobsService docxConverterJobsService;
 
     @BeforeEach
     public void setup() {
@@ -55,7 +55,7 @@ class PdfConverterJobsServiceTest {
 
     @AfterEach
     public void tearDown() {
-        pdfConverterJobsService.cancelJobsAndCleanMap();
+        docxConverterJobsService.cancelJobsAndCleanMap();
     }
 
     @Test
@@ -64,25 +64,25 @@ class PdfConverterJobsServiceTest {
         when(requestAttributes.getAttribute(LogoutFilter.XSRF_SKIP_LOGOUT, RequestAttributes.SCOPE_REQUEST)).thenReturn(Boolean.FALSE);
         when(requestAttributes.getAttribute(LogoutFilter.ASYNC_SKIP_LOGOUT, RequestAttributes.SCOPE_REQUEST)).thenReturn(Boolean.TRUE);
         ExportParams exportParams = ExportParams.builder().build();
-        when(pdfConverter.convertToPdf(exportParams)).thenReturn("test pdf".getBytes());
+        when(docxConverter.convertToPdf(exportParams)).thenReturn("test pdf".getBytes());
 
-        String jobId = pdfConverterJobsService.startJob(exportParams, 60);
+        String jobId = docxConverterJobsService.startJob(exportParams, 60);
 
         assertThat(jobId).isNotBlank();
         waitToFinishJob(jobId);
-        JobState jobState = pdfConverterJobsService.getJobState(jobId);
+        JobState jobState = docxConverterJobsService.getJobState(jobId);
         assertThat(jobState.isCompletedExceptionally()).isFalse();
         assertThat(jobState.isCancelled()).isFalse();
-        Optional<byte[]> jobResult = pdfConverterJobsService.getJobResult(jobId);
+        Optional<byte[]> jobResult = docxConverterJobsService.getJobResult(jobId);
         assertThat(jobResult).isNotEmpty();
         assertThat(new String(jobResult.get())).isEqualTo("test pdf");
 
         // Second attempt to ensure that job is not removed
-        jobState = pdfConverterJobsService.getJobState(jobId);
+        jobState = docxConverterJobsService.getJobState(jobId);
         assertThat(jobState.isDone()).isTrue();
         assertThat(jobState.isCompletedExceptionally()).isFalse();
         assertThat(jobState.isCancelled()).isFalse();
-        jobResult = pdfConverterJobsService.getJobResult(jobId);
+        jobResult = docxConverterJobsService.getJobResult(jobId);
         assertThat(jobResult).isNotEmpty();
 
         verify(securityService).logout(subject);
@@ -94,18 +94,18 @@ class PdfConverterJobsServiceTest {
         when(requestAttributes.getAttribute(LogoutFilter.XSRF_SKIP_LOGOUT, RequestAttributes.SCOPE_REQUEST)).thenReturn(Boolean.FALSE);
         when(requestAttributes.getAttribute(LogoutFilter.ASYNC_SKIP_LOGOUT, RequestAttributes.SCOPE_REQUEST)).thenReturn(Boolean.TRUE);
         ExportParams exportParams = ExportParams.builder().build();
-        when(pdfConverter.convertToPdf(exportParams)).thenThrow(new RuntimeException("test error"));
+        when(docxConverter.convertToPdf(exportParams)).thenThrow(new RuntimeException("test error"));
 
-        String jobId = pdfConverterJobsService.startJob(exportParams, 60);
+        String jobId = docxConverterJobsService.startJob(exportParams, 60);
 
         assertThat(jobId).isNotBlank();
         waitToFinishJob(jobId);
-        JobState jobState = pdfConverterJobsService.getJobState(jobId);
+        JobState jobState = docxConverterJobsService.getJobState(jobId);
         assertThat(jobState.isCompletedExceptionally()).isTrue();
         assertThat(jobState.isCancelled()).isFalse();
         assertThat(jobState.errorMessage()).contains("test error");
 
-        assertThatThrownBy(() -> pdfConverterJobsService.getJobResult(jobId))
+        assertThatThrownBy(() -> docxConverterJobsService.getJobResult(jobId))
                 .isInstanceOf(IllegalStateException.class)
                 .hasMessageContaining("test error");
         verify(securityService).logout(subject);
@@ -115,12 +115,12 @@ class PdfConverterJobsServiceTest {
     void shouldGetAllJobsStatuses() {
         prepareSecurityServiceSubject(subject);
         ExportParams exportParams = ExportParams.builder().build();
-        lenient().when(pdfConverter.convertToPdf(exportParams)).thenReturn("test pdf".getBytes());
+        lenient().when(docxConverter.convertToPdf(exportParams)).thenReturn("test pdf".getBytes());
 
-        String jobId1 = pdfConverterJobsService.startJob(exportParams, 60);
-        String jobId2 = pdfConverterJobsService.startJob(exportParams, 60);
+        String jobId1 = docxConverterJobsService.startJob(exportParams, 60);
+        String jobId2 = docxConverterJobsService.startJob(exportParams, 60);
 
-        Map<String, JobState> allJobsStates = pdfConverterJobsService.getAllJobsStates();
+        Map<String, JobState> allJobsStates = docxConverterJobsService.getAllJobsStates();
         assertThat(allJobsStates).containsOnlyKeys(jobId1, jobId2);
     }
 
@@ -129,13 +129,13 @@ class PdfConverterJobsServiceTest {
         prepareSecurityServiceSubject(null);
 
         ExportParams exportParams = ExportParams.builder().build();
-        lenient().when(pdfConverter.convertToPdf(exportParams)).thenReturn("test pdf".getBytes());
+        lenient().when(docxConverter.convertToPdf(exportParams)).thenReturn("test pdf".getBytes());
 
-        String jobId = pdfConverterJobsService.startJob(exportParams, 60);
+        String jobId = docxConverterJobsService.startJob(exportParams, 60);
 
         assertThat(jobId).isNotBlank();
         waitToFinishJob(jobId);
-        JobState jobState = pdfConverterJobsService.getJobState(jobId);
+        JobState jobState = docxConverterJobsService.getJobState(jobId);
         assertThat(jobState.isCompletedExceptionally()).isFalse();
         assertThat(jobState.isCancelled()).isFalse();
         verify(securityService, never()).logout(null);
@@ -153,13 +153,13 @@ class PdfConverterJobsServiceTest {
         lenient().when(requestAttributes.getAttribute(LogoutFilter.ASYNC_SKIP_LOGOUT, RequestAttributes.SCOPE_REQUEST)).thenReturn(asyncSkipLogout);
 
         ExportParams exportParams = ExportParams.builder().build();
-        when(pdfConverter.convertToPdf(exportParams)).thenReturn("test pdf".getBytes());
+        when(docxConverter.convertToPdf(exportParams)).thenReturn("test pdf".getBytes());
 
-        String jobId = pdfConverterJobsService.startJob(exportParams, 60);
+        String jobId = docxConverterJobsService.startJob(exportParams, 60);
 
         assertThat(jobId).isNotBlank();
         waitToFinishJob(jobId);
-        JobState jobState = pdfConverterJobsService.getJobState(jobId);
+        JobState jobState = docxConverterJobsService.getJobState(jobId);
         assertThat(jobState.isCompletedExceptionally()).isFalse();
         assertThat(jobState.isCancelled()).isFalse();
         verify(securityService, never()).logout(subject);
@@ -174,10 +174,10 @@ class PdfConverterJobsServiceTest {
             Thread.sleep(TimeUnit.MINUTES.toMillis(10));
             return null;
         });
-        String jobId = pdfConverterJobsService.startJob(exportParams, timeout);
+        String jobId = docxConverterJobsService.startJob(exportParams, timeout);
 
         await().atMost(Durations.FIVE_SECONDS).untilAsserted(() -> {
-            JobState jobState = pdfConverterJobsService.getJobState(jobId);
+            JobState jobState = docxConverterJobsService.getJobState(jobId);
             if (isTimeoutExpected) {
                 assertThat(jobState.isDone()).isTrue();
                 assertThat(jobState.isCompletedExceptionally()).isTrue();
@@ -192,12 +192,12 @@ class PdfConverterJobsServiceTest {
     @CsvSource({"0,0", "1,1"})
     void shouldCleanupSuccessfullyFinishedJobs(int timeout, int expectedJobsCount) {
         ExportParams exportParams = ExportParams.builder().build();
-        String finishedJobId = pdfConverterJobsService.startJob(exportParams, 1);
+        String finishedJobId = docxConverterJobsService.startJob(exportParams, 1);
         waitToFinishJob(finishedJobId);
 
-        PdfConverterJobsService.cleanupExpiredJobs(timeout);
+        DocxConverterJobsService.cleanupExpiredJobs(timeout);
 
-        assertThat(pdfConverterJobsService.getAllJobsStates()).hasSize(expectedJobsCount);
+        assertThat(docxConverterJobsService.getAllJobsStates()).hasSize(expectedJobsCount);
     }
 
     @ParameterizedTest
@@ -205,17 +205,17 @@ class PdfConverterJobsServiceTest {
     void shouldCleanupFailedJobs(int timeout, int expectedJobsCount) {
         lenient().when(securityService.doAsUser(any(), any(PrivilegedAction.class))).thenThrow(new RuntimeException("test error"));
         ExportParams exportParams = ExportParams.builder().build();
-        String failedJobId = pdfConverterJobsService.startJob(exportParams, 1);
+        String failedJobId = docxConverterJobsService.startJob(exportParams, 1);
         waitToFinishJob(failedJobId);
 
-        JobState jobState = pdfConverterJobsService.getJobState(failedJobId);
+        JobState jobState = docxConverterJobsService.getJobState(failedJobId);
         assertThat(jobState.isDone()).isTrue();
         assertThat(jobState.isCompletedExceptionally()).isTrue();
         assertThat(jobState.errorMessage()).contains("test error");
 
-        PdfConverterJobsService.cleanupExpiredJobs(timeout);
+        DocxConverterJobsService.cleanupExpiredJobs(timeout);
 
-        assertThat(pdfConverterJobsService.getAllJobsStates()).hasSize(expectedJobsCount);
+        assertThat(docxConverterJobsService.getAllJobsStates()).hasSize(expectedJobsCount);
     }
 
     @Test
@@ -226,23 +226,23 @@ class PdfConverterJobsServiceTest {
             Thread.sleep(TimeUnit.MINUTES.toMillis(10));
             return null;
         });
-        String jobId = pdfConverterJobsService.startJob(exportParams, 0);
+        String jobId = docxConverterJobsService.startJob(exportParams, 0);
         await().atMost(Durations.FIVE_SECONDS).untilAsserted(() -> {
-            JobState jobState = pdfConverterJobsService.getJobState(jobId);
+            JobState jobState = docxConverterJobsService.getJobState(jobId);
             assertThat(jobState.isDone()).isTrue();
             assertThat(jobState.isCompletedExceptionally()).isTrue();
             assertThat(jobState.errorMessage()).contains("Timeout after 0 min");
         });
 
-        PdfConverterJobsService.cleanupExpiredJobs(0);
+        DocxConverterJobsService.cleanupExpiredJobs(0);
 
-        assertThat(pdfConverterJobsService.getAllJobsStates()).isEmpty();
+        assertThat(docxConverterJobsService.getAllJobsStates()).isEmpty();
     }
 
     private void waitToFinishJob(String jobId1) {
         await().atMost(Durations.FIVE_SECONDS)
                 .untilAsserted(() -> {
-                    JobState jobState = pdfConverterJobsService.getJobState(jobId1);
+                    JobState jobState = docxConverterJobsService.getJobState(jobId1);
                     assertThat(jobState.isDone()).isTrue();
                 });
     }

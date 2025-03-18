@@ -2,9 +2,9 @@ package ch.sbb.polarion.extension.docx_exporter.rest.controller;
 
 import ch.sbb.polarion.extension.generic.rest.filter.LogoutFilter;
 import ch.sbb.polarion.extension.generic.rest.filter.Secured;
-import ch.sbb.polarion.extension.docx_exporter.converter.HtmlToPdfConverter;
-import ch.sbb.polarion.extension.docx_exporter.converter.PdfConverter;
-import ch.sbb.polarion.extension.docx_exporter.converter.PdfConverterJobsService;
+import ch.sbb.polarion.extension.docx_exporter.converter.HtmlToDocxConverter;
+import ch.sbb.polarion.extension.docx_exporter.converter.DocxConverter;
+import ch.sbb.polarion.extension.docx_exporter.converter.DocxConverterJobsService;
 import ch.sbb.polarion.extension.docx_exporter.rest.model.NestedListsCheck;
 import ch.sbb.polarion.extension.docx_exporter.rest.model.conversion.ExportParams;
 import ch.sbb.polarion.extension.docx_exporter.service.DocxExporterPolarionService;
@@ -28,8 +28,8 @@ public class ConverterApiController extends ConverterInternalController {
 
     @VisibleForTesting
     @SuppressWarnings("squid:S5803")
-    ConverterApiController(DocxExporterPolarionService docxExporterPolarionService, PdfConverter pdfConverter, PdfConverterJobsService pdfConverterJobService, UriInfo uriInfo, HtmlToPdfConverter htmlToPdfConverter) {
-        super(pdfConverter, pdfConverterJobService, uriInfo, htmlToPdfConverter);
+    ConverterApiController(DocxExporterPolarionService docxExporterPolarionService, DocxConverter docxConverter, DocxConverterJobsService pdfConverterJobService, UriInfo uriInfo, HtmlToDocxConverter htmlToDocxConverter) {
+        super(docxConverter, pdfConverterJobService, uriInfo, htmlToDocxConverter);
         this.polarionService = docxExporterPolarionService;
     }
 
