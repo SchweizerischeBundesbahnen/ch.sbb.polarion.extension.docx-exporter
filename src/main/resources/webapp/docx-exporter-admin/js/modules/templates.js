@@ -113,25 +113,20 @@ function invalidatePanels() {
 
 function saveTemplate() {
     ctx.hideActionAlerts();
-    // const file = ctx.getElementById('template-file-upload').files[0];
-    if (ctx.docx) {
-        ctx.callAsync({
-            method: 'PUT',
-            url: `/polarion/${ctx.extension}/rest/internal/settings/${ctx.setting}/names/${conf.getSelectedConfiguration()}/content?scope=${ctx.scope}`,
-            contentType: 'application/json',
-            body: JSON.stringify({
-                'template': btoa(ctx.docx)
-            }),
-            onOk: () => {
-                ctx.showSaveSuccessAlert();
-                ctx.setNewerVersionNotificationVisible(false);
-                conf.loadConfigurationNames();
-            },
-            onError: () => ctx.showSaveErrorAlert()
-        });
-    } else {
-        console.log('No file selected.');
-    }
+    ctx.callAsync({
+        method: 'PUT',
+        url: `/polarion/${ctx.extension}/rest/internal/settings/${ctx.setting}/names/${conf.getSelectedConfiguration()}/content?scope=${ctx.scope}`,
+        contentType: 'application/json',
+        body: JSON.stringify({
+            'template': ctx.docx ? btoa(ctx.docx) : null
+        }),
+        onOk: () => {
+            ctx.showSaveSuccessAlert();
+            ctx.setNewerVersionNotificationVisible(false);
+            conf.loadConfigurationNames();
+        },
+        onError: () => ctx.showSaveErrorAlert()
+    });
 }
 
 function downloadDocx() {
