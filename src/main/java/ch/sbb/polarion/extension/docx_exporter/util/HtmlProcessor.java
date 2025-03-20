@@ -518,7 +518,7 @@ public class HtmlProcessor {
                 Element parent = element.parent();
                 Element prevSibling = element.previousElementSibling();
 
-                List<Element> elementsToInsert = transformComment(element, String.valueOf(startingIndex));
+                List<Element> elementsToInsert = transformComment(element, String.valueOf(index));
                 element.remove();
                 if (prevSibling != null) {
                     for (Element elementToInsert : elementsToInsert) {

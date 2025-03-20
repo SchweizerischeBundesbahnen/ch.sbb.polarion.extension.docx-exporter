@@ -585,6 +585,44 @@ class HtmlProcessorTest {
         assertEquals(3, processor.columnsCount("<div><td></td><td><span/></td><td></div>"));
     }
 
+    @Test
+    void commentsTest() {
+        String initialHtml = """
+                    <html>
+                        <head></head>
+                        <body>
+                            <span class='comment level-0'>
+                                <span class='meta'>
+                                    <span class='date'>2023-06-01 09:14</span>
+                                    <span class='author'>System Administrator</span>
+                                </span>
+                                <span class='text'>A comment</span>
+                            </span>
+                            <span class='comment level-1'>
+                                <span class='meta'>
+                                    <span class='date'>2023-06-02 14:53</span>
+                                    <span class='author'>System Administrator</span>
+                                </span>
+                                <span class='text'>Another comment</span>
+                            </span>
+                        </body>
+                    </html>
+                """;
+        String processedHtml = processor.processComments(initialHtml);
+
+        String expectedHtml = """
+                    <html>
+                        <head></head>
+                        <body>
+                            <span class="comment-start" id="0" author="System Administrator" date="2023-06-0109:14">A comment</span><span class="comment-end" id="0"></span>
+                            <span class="comment-start" id="1" author="System Administrator" date="2023-06-0214:53">Another comment</span><span class="comment-end" id="1"></span>
+                        </body>
+                    </html>
+                """;
+
+        assertEquals(TestStringUtils.removeNonsensicalSymbols(expectedHtml), TestStringUtils.removeNonsensicalSymbols(processedHtml.replaceAll(" ", "")));
+    }
+
     private ExportParams getExportParams() {
         return ExportParams.builder()
                 .projectId("test_project")
