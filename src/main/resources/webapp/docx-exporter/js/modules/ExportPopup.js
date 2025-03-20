@@ -222,7 +222,10 @@ export default class ExportPopup {
         this.ctx.setSelector("popup-docx-webhooks-selector", stylePackage.webhooks);
         this.ctx.visibleIf("popup-docx-webhooks-selector", !!stylePackage.webhooks)
 
-        this.ctx.setCheckbox("popup-docx-enable-comments-rendering", stylePackage.renderComments);
+        this.ctx.setCheckbox("popup-docx-render-comments", !!stylePackage.renderComments);
+        this.ctx.setValue("popup-docx-render-comments-selector", stylePackage.renderComments || 'OPEN');
+        this.ctx.visibleIf("popup-docx-render-comments-selector", !!stylePackage.renderComments);
+
         this.ctx.setCheckbox("popup-docx-cut-urls", stylePackage.cutLocalURLs);
         this.ctx.setCheckbox("popup-docx-cut-empty-chapters", stylePackage.cutEmptyChapters);
         this.ctx.setCheckbox("popup-docx-cut-empty-wi-attributes", stylePackage.cutEmptyWorkitemAttributes);
@@ -327,7 +330,7 @@ export default class ExportPopup {
             .setRevision(this.ctx.getRevision())
             .setLocalization(this.ctx.getElementById("popup-docx-localization-selector").value)
             .setWebhooks(this.ctx.getElementById("popup-docx-webhooks-checkbox").checked ? this.ctx.getElementById("popup-docx-webhooks-selector").value : null)
-            .setEnableCommentsRendering(this.ctx.getElementById('popup-docx-enable-comments-rendering').checked)
+            .setRenderComments(live_doc && this.ctx.getElementById('popup-docx-render-comments').checked ? this.ctx.getElementById("popup-docx-render-comments-selector").value : null)
             .setCutEmptyChapters(this.ctx.getElementById("popup-docx-cut-empty-chapters").checked)
             .setCutEmptyWIAttributes(this.ctx.getElementById('popup-docx-cut-empty-wi-attributes').checked)
             .setCutLocalUrls(this.ctx.getElementById("popup-docx-cut-urls").checked)

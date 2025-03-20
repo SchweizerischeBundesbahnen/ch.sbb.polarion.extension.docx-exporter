@@ -33,8 +33,8 @@ public class ExportParams {
     @Schema(description = "Webhooks settings name")
     private String webhooks;
 
-    @Schema(description = "Comments should be rendered in the exported document", defaultValue = "true")
-    private boolean enableCommentsRendering = true;
+    @Schema(description = "Which comments should be rendered in the exported document")
+    private CommentsRenderType renderComments;
 
     @Schema(description = "Empty chapters should be removed from the document")
     private boolean cutEmptyChapters;

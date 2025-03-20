@@ -1,5 +1,6 @@
 package ch.sbb.polarion.extension.docx_exporter.rest.model.settings.stylepackage;
 
+import ch.sbb.polarion.extension.docx_exporter.rest.model.conversion.CommentsRenderType;
 import ch.sbb.polarion.extension.generic.settings.NamedSettings;
 import ch.sbb.polarion.extension.generic.settings.SettingsModel;
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -45,7 +46,7 @@ public class StylePackageModel extends SettingsModel {
     private boolean exposeSettings;
     private String localization;
     private String webhooks;
-    private boolean renderComments;
+    private CommentsRenderType renderComments;
     private boolean cutEmptyChapters;
     private boolean cutEmptyWorkitemAttributes;
     private boolean cutLocalURLs;
@@ -60,7 +61,7 @@ public class StylePackageModel extends SettingsModel {
                 serializeEntry(EXPOSE_SETTINGS_ENTRY_NAME, exposeSettings) +
                 serializeEntry(LOCALIZATION_ENTRY_NAME, localization) +
                 serializeEntry(WEBHOOKS_ENTRY_NAME, webhooks) +
-                serializeEntry(RENDER_COMMENTS_ENTRY_NAME, renderComments) +
+                serializeEntry(RENDER_COMMENTS_ENTRY_NAME, renderComments == null ? null : renderComments.name()) +
                 serializeEntry(CUT_EMPTY_CHAPTERS_ENTRY_NAME, cutEmptyChapters) +
                 serializeEntry(CUT_EMPTY_WORKITEM_ATTRIBUTES_ENTRY_NAME, cutEmptyWorkitemAttributes) +
                 serializeEntry(CUT_LOCAL_URLS_ENTRY_NAME, cutLocalURLs) +
@@ -77,7 +78,7 @@ public class StylePackageModel extends SettingsModel {
         exposeSettings = Boolean.parseBoolean(deserializeEntry(EXPOSE_SETTINGS_ENTRY_NAME, serializedString));
         localization = deserializeEntry(LOCALIZATION_ENTRY_NAME, serializedString);
         webhooks = deserializeEntry(WEBHOOKS_ENTRY_NAME, serializedString);
-        renderComments = Boolean.parseBoolean(deserializeEntry(RENDER_COMMENTS_ENTRY_NAME, serializedString));
+        renderComments = parseRenderComments(deserializeEntry(RENDER_COMMENTS_ENTRY_NAME, serializedString));
         cutEmptyChapters = Boolean.parseBoolean(deserializeEntry(CUT_EMPTY_CHAPTERS_ENTRY_NAME, serializedString));
         cutEmptyWorkitemAttributes = Boolean.parseBoolean(deserializeEntry(CUT_EMPTY_WORKITEM_ATTRIBUTES_ENTRY_NAME, serializedString));
         cutLocalURLs = Boolean.parseBoolean(deserializeEntry(CUT_LOCAL_URLS_ENTRY_NAME, serializedString));
@@ -85,4 +86,13 @@ public class StylePackageModel extends SettingsModel {
         language = deserializeEntry(LANGUAGE_ENTRY_NAME, serializedString);
         linkedWorkitemRoles = deserializeListEntry(LINKED_WORKITEM_ROLES_ENTRY_NAME, serializedString, String.class);
     }
+
+    private CommentsRenderType parseRenderComments(String value) {
+        if (CommentsRenderType.OPEN.name().equals(value)) {
+            return CommentsRenderType.OPEN;
+        } else {
+            return CommentsRenderType.ALL.name().equals(value) ? CommentsRenderType.ALL : null;
+        }
+    }
+
 }

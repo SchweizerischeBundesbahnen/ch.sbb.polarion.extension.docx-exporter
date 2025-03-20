@@ -54,7 +54,10 @@ export default class ExportPanel {
         this.ctx.setSelector("docx-webhooks-selector", stylePackage.webhooks);
         this.ctx.displayIf("docx-webhooks-selector", !!stylePackage.webhooks, "inline-block")
 
-        this.ctx.setCheckbox("docx-enable-comments-rendering", stylePackage.renderComments);
+        this.ctx.setCheckbox("render-comments", !!stylePackage.renderComments);
+        this.ctx.setValue("render-comments-selector", stylePackage.renderComments  || 'OPEN');
+        this.ctx.displayIf("render-comments-selector", !!stylePackage.renderComments)
+
         this.ctx.setCheckbox("docx-cut-empty-chapters", stylePackage.cutEmptyChapters);
         this.ctx.setCheckbox("docx-cut-empty-wi-attributes", stylePackage.cutEmptyWorkitemAttributes);
         this.ctx.setCheckbox("docx-cut-urls", stylePackage.cutLocalURLs);
@@ -116,7 +119,7 @@ export default class ExportPanel {
             .setRevision(revision)
             .setLocalization(this.ctx.getElementById("docx-localization-selector").value)
             .setWebhooks(this.ctx.getElementById("docx-webhooks-checkbox").checked ? this.ctx.getElementById("docx-webhooks-selector").value : null)
-            .setEnableCommentsRendering(this.ctx.getElementById('docx-enable-comments-rendering').checked)
+            .setRenderComments(this.ctx.getElementById('render-comments').checked ? this.ctx.getElementById("render-comments-selector").value : null)
             .setCutEmptyChapters(this.ctx.getElementById("docx-cut-empty-chapters").checked)
             .setCutEmptyWIAttributes(this.ctx.getElementById('docx-cut-empty-wi-attributes').checked)
             .setCutLocalUrls(this.ctx.getElementById("docx-cut-urls").checked)
