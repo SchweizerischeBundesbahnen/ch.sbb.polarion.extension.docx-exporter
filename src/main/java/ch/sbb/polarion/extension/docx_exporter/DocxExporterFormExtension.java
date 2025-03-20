@@ -1,5 +1,6 @@
 package ch.sbb.polarion.extension.docx_exporter;
 
+import ch.sbb.polarion.extension.docx_exporter.settings.TemplatesSettings;
 import ch.sbb.polarion.extension.generic.settings.NamedSettings;
 import ch.sbb.polarion.extension.generic.settings.NamedSettingsRegistry;
 import ch.sbb.polarion.extension.generic.settings.SettingId;
@@ -10,7 +11,7 @@ import ch.sbb.polarion.extension.docx_exporter.rest.model.conversion.ExportParam
 import ch.sbb.polarion.extension.docx_exporter.rest.model.settings.localization.Language;
 import ch.sbb.polarion.extension.docx_exporter.rest.model.settings.stylepackage.DocIdentifier;
 import ch.sbb.polarion.extension.docx_exporter.rest.model.settings.stylepackage.StylePackageModel;
-import ch.sbb.polarion.extension.docx_exporter.service.PdfExporterPolarionService;
+import ch.sbb.polarion.extension.docx_exporter.service.DocxExporterPolarionService;
 import ch.sbb.polarion.extension.docx_exporter.service.PolarionBaselineExecutor;
 import ch.sbb.polarion.extension.docx_exporter.settings.LocalizationSettings;
 import ch.sbb.polarion.extension.docx_exporter.settings.StylePackageSettings;
@@ -40,14 +41,14 @@ import java.util.stream.Collectors;
 
 import static ch.sbb.polarion.extension.docx_exporter.util.placeholder.PlaceholderValues.DOC_LANGUAGE_FIELD;
 
-public class PdfExporterFormExtension implements IFormExtension {
+public class DocxExporterFormExtension implements IFormExtension {
 
     private static final String OPTION_TEMPLATE = "<option value='%s' %s>%s</option>";
     private static final String OPTION_VALUE = "<option value='%s'";
     private static final String OPTION_SELECTED = "<option value='%s' selected";
     private static final String SELECTED = "selected";
 
-    private final PdfExporterPolarionService polarionService = new PdfExporterPolarionService();
+    private final DocxExporterPolarionService polarionService = new DocxExporterPolarionService();
 
     @Override
     @Nullable
@@ -79,6 +80,7 @@ public class PdfExporterFormExtension implements IFormExtension {
                 form = form.replace("<div id='docx-style-package-content'", "<div id='docx-style-package-content' class='hidden'"); // Hide settings pane if style package settings not exposed to end users
             }
 
+            form = adjustTemplate(scope, form, selectedStylePackage);
             form = adjustLocalization(scope, form, selectedStylePackage);
             form = adjustWebhooks(scope, form, selectedStylePackage);
             form = adjustRenderComments(form, selectedStylePackage);
@@ -108,6 +110,12 @@ public class PdfExporterFormExtension implements IFormExtension {
         return defaultStylePackageName != null
                 ? stylePackageSettings.read(scope, SettingId.fromName(defaultStylePackageName.getName()), null)
                 : stylePackageSettings.defaultValues();
+    }
+
+    private String adjustTemplate(String scope, String form, StylePackageModel stylePackage) {
+        Collection<SettingName> templateNames = getSettingNames(TemplatesSettings.FEATURE_NAME, scope);
+        String templateOptions = generateSelectOptions(templateNames, stylePackage.getTemplate());
+        return form.replace("{TEMPLATE_OPTIONS}", templateOptions);
     }
 
     private String adjustLocalization(String scope, String form, StylePackageModel stylePackage) {

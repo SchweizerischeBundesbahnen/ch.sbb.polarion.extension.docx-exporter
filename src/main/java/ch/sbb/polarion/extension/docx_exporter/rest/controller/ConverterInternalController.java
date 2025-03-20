@@ -1,9 +1,9 @@
 package ch.sbb.polarion.extension.docx_exporter.rest.controller;
 
-import ch.sbb.polarion.extension.docx_exporter.converter.HtmlToPdfConverter;
-import ch.sbb.polarion.extension.docx_exporter.converter.PdfConverter;
-import ch.sbb.polarion.extension.docx_exporter.converter.PdfConverterJobsService;
-import ch.sbb.polarion.extension.docx_exporter.converter.PdfConverterJobsService.JobState;
+import ch.sbb.polarion.extension.docx_exporter.converter.HtmlToDocxConverter;
+import ch.sbb.polarion.extension.docx_exporter.converter.DocxConverter;
+import ch.sbb.polarion.extension.docx_exporter.converter.DocxConverterJobsService;
+import ch.sbb.polarion.extension.docx_exporter.converter.DocxConverterJobsService.JobState;
 import ch.sbb.polarion.extension.docx_exporter.converter.PropertiesUtility;
 import ch.sbb.polarion.extension.docx_exporter.rest.model.NestedListsCheck;
 import ch.sbb.polarion.extension.docx_exporter.rest.model.conversion.ExportParams;
@@ -64,29 +64,29 @@ public class ConverterInternalController {
     private static final String MISSING_WORKITEM_ATTACHMENTS_COUNT = "Missing-WorkItem-Attachments-Count";
     private static final String WORKITEM_IDS_WITH_MISSING_ATTACHMENT = "WorkItem-IDs-With-Missing-Attachment";
 
-    private final PdfConverter pdfConverter;
-    private final PdfConverterJobsService pdfConverterJobService;
+    private final DocxConverter docxConverter;
+    private final DocxConverterJobsService pdfConverterJobService;
     private final PropertiesUtility propertiesUtility;
-    private final HtmlToPdfConverter htmlToPdfConverter;
+    private final HtmlToDocxConverter htmlToDocxConverter;
 
     @Context
     private UriInfo uriInfo;
 
     public ConverterInternalController() {
-        this.pdfConverter = new PdfConverter();
+        this.docxConverter = new DocxConverter();
         ISecurityService securityService = PlatformContext.getPlatform().lookupService(ISecurityService.class);
-        this.pdfConverterJobService = new PdfConverterJobsService(pdfConverter, securityService);
+        this.pdfConverterJobService = new DocxConverterJobsService(docxConverter, securityService);
         this.propertiesUtility = new PropertiesUtility();
-        this.htmlToPdfConverter = new HtmlToPdfConverter();
+        this.htmlToDocxConverter = new HtmlToDocxConverter();
     }
 
     @VisibleForTesting
-    ConverterInternalController(PdfConverter pdfConverter, PdfConverterJobsService pdfConverterJobService, UriInfo uriInfo, HtmlToPdfConverter htmlToPdfConverter) {
-        this.pdfConverter = pdfConverter;
+    ConverterInternalController(DocxConverter docxConverter, DocxConverterJobsService pdfConverterJobService, UriInfo uriInfo, HtmlToDocxConverter htmlToDocxConverter) {
+        this.docxConverter = docxConverter;
         this.pdfConverterJobService = pdfConverterJobService;
         this.uriInfo = uriInfo;
         this.propertiesUtility = new PropertiesUtility();
-        this.htmlToPdfConverter = htmlToPdfConverter;
+        this.htmlToDocxConverter = htmlToDocxConverter;
     }
 
     @POST
@@ -127,7 +127,7 @@ public class ConverterInternalController {
     public Response convertToPdf(ExportParams exportParams) {
         validateExportParameters(exportParams);
         String fileName = getFileName(exportParams);
-        byte[] pdfBytes = pdfConverter.convertToPdf(exportParams);
+        byte[] pdfBytes = docxConverter.convertToPdf(exportParams);
         return Response.ok(pdfBytes)
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + fileName + "\"")
                 .header(EXPORT_FILENAME_HEADER, fileName)
@@ -156,7 +156,7 @@ public class ConverterInternalController {
             })
     public String prepareHtmlContent(ExportParams exportParams) {
         validateExportParameters(exportParams);
-        return pdfConverter.prepareHtmlContent(exportParams);
+        return docxConverter.prepareHtmlContent(exportParams);
     }
 
     @POST
@@ -333,7 +333,7 @@ public class ConverterInternalController {
     public Response convertHtmlToPdf(
             @Parameter(description = "input html (must include html and body elements)") String html,
             @Parameter(description = "default value: document.docx") @QueryParam("fileName") String fileName) {
-        byte[] pdfBytes = htmlToPdfConverter.convert(html);
+        byte[] pdfBytes = htmlToDocxConverter.convert(html);
         String headerFileName = (fileName != null) ? fileName : "document.docx";
         return Response.ok(pdfBytes)
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + headerFileName)
@@ -368,6 +368,28 @@ public class ConverterInternalController {
         boolean containsNestedLists = new NumberedListsSanitizer().containsNestedNumberedLists(content);
 
         return NestedListsCheck.builder().containsNestedLists(containsNestedLists).build();
+    }
+
+    @GET
+    @Path("/template")
+    @Produces("application/vnd.openxmlformats-officedocument.wordprocessingml.document")
+    @Operation(summary = "Returns DOCX template file",
+            responses = {
+                    @ApiResponse(responseCode = "200",
+                            description = "DOCX template file",
+                            content = {@Content(mediaType = "application/vnd.openxmlformats-officedocument.wordprocessingml.document")},
+                            headers = {
+                                    @Header(name = HttpHeaders.CONTENT_DISPOSITION,
+                                            description = "To inform a browser that the response is a downloadable attachment",
+                                            schema = @Schema(implementation = String.class)
+                                    )
+                            }
+                    )
+            })
+    public Response getTemplate() {
+        Response.ResponseBuilder responseBuilder = Response.ok(docxConverter.getTemplate())
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"Template.docx\"");
+        return responseBuilder.build();
     }
 
     private void validateExportParameters(ExportParams exportParams) {

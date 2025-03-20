@@ -2,12 +2,12 @@ package ch.sbb.polarion.extension.docx_exporter.rest.controller;
 
 import ch.sbb.polarion.extension.generic.rest.filter.LogoutFilter;
 import ch.sbb.polarion.extension.generic.rest.filter.Secured;
-import ch.sbb.polarion.extension.docx_exporter.converter.HtmlToPdfConverter;
-import ch.sbb.polarion.extension.docx_exporter.converter.PdfConverter;
-import ch.sbb.polarion.extension.docx_exporter.converter.PdfConverterJobsService;
+import ch.sbb.polarion.extension.docx_exporter.converter.HtmlToDocxConverter;
+import ch.sbb.polarion.extension.docx_exporter.converter.DocxConverter;
+import ch.sbb.polarion.extension.docx_exporter.converter.DocxConverterJobsService;
 import ch.sbb.polarion.extension.docx_exporter.rest.model.NestedListsCheck;
 import ch.sbb.polarion.extension.docx_exporter.rest.model.conversion.ExportParams;
-import ch.sbb.polarion.extension.docx_exporter.service.PdfExporterPolarionService;
+import ch.sbb.polarion.extension.docx_exporter.service.DocxExporterPolarionService;
 import org.jetbrains.annotations.VisibleForTesting;
 import org.springframework.web.context.request.RequestAttributes;
 import org.springframework.web.context.request.RequestContextHolder;
@@ -20,17 +20,17 @@ import javax.ws.rs.core.UriInfo;
 @Path("/api")
 public class ConverterApiController extends ConverterInternalController {
 
-    private final PdfExporterPolarionService polarionService;
+    private final DocxExporterPolarionService polarionService;
 
     public ConverterApiController() {
-        this.polarionService = new PdfExporterPolarionService();
+        this.polarionService = new DocxExporterPolarionService();
     }
 
     @VisibleForTesting
     @SuppressWarnings("squid:S5803")
-    ConverterApiController(PdfExporterPolarionService pdfExporterPolarionService, PdfConverter pdfConverter, PdfConverterJobsService pdfConverterJobService, UriInfo uriInfo, HtmlToPdfConverter htmlToPdfConverter) {
-        super(pdfConverter, pdfConverterJobService, uriInfo, htmlToPdfConverter);
-        this.polarionService = pdfExporterPolarionService;
+    ConverterApiController(DocxExporterPolarionService docxExporterPolarionService, DocxConverter docxConverter, DocxConverterJobsService pdfConverterJobService, UriInfo uriInfo, HtmlToDocxConverter htmlToDocxConverter) {
+        super(docxConverter, pdfConverterJobService, uriInfo, htmlToDocxConverter);
+        this.polarionService = docxExporterPolarionService;
     }
 
     @Override

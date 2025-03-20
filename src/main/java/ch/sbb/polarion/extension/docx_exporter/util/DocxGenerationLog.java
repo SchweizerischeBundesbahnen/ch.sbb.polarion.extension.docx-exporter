@@ -4,7 +4,7 @@ import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 
-public class PdfGenerationLog {
+public class DocxGenerationLog {
 
     private final StringBuilder builder = new StringBuilder();
 

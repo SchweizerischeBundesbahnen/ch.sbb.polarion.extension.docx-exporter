@@ -1,7 +1,7 @@
 package ch.sbb.polarion.extension.docx_exporter.rest.controller;
 
-import ch.sbb.polarion.extension.docx_exporter.converter.PdfConverterJobsService;
-import ch.sbb.polarion.extension.docx_exporter.converter.PdfConverterJobsService.JobState;
+import ch.sbb.polarion.extension.docx_exporter.converter.DocxConverterJobsService;
+import ch.sbb.polarion.extension.docx_exporter.converter.DocxConverterJobsService.JobState;
 import ch.sbb.polarion.extension.docx_exporter.rest.model.conversion.ExportParams;
 import ch.sbb.polarion.extension.docx_exporter.rest.model.jobs.ConverterJobDetails;
 import ch.sbb.polarion.extension.docx_exporter.rest.model.jobs.ConverterJobStatus;
@@ -34,7 +34,7 @@ import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 class ConverterInternalControllerTest {
     @Mock
-    private PdfConverterJobsService pdfConverterJobService;
+    private DocxConverterJobsService pdfConverterJobService;
     @Mock
     private UriInfo uriInfo;
 
@@ -117,7 +117,7 @@ class ConverterInternalControllerTest {
     @Test
     void getPdfConverterJobResult_success() {
         when(pdfConverterJobService.getJobResult("testJobId")).thenReturn(Optional.of("test pdf".getBytes()));
-        when(pdfConverterJobService.getJobContext("testJobId")).thenReturn(PdfConverterJobsService.JobContext.builder().workItemIDsWithMissingAttachment(new ArrayList<String>()).build());
+        when(pdfConverterJobService.getJobContext("testJobId")).thenReturn(DocxConverterJobsService.JobContext.builder().workItemIDsWithMissingAttachment(new ArrayList<String>()).build());
         Response jobResult = internalController.getPdfConverterJobResult("testJobId");
 
         assertThat(jobResult.getStatus()).isEqualTo(HttpStatus.OK.value());

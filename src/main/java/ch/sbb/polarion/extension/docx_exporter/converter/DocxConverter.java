@@ -1,5 +1,7 @@
 package ch.sbb.polarion.extension.docx_exporter.converter;
 
+import ch.sbb.polarion.extension.docx_exporter.rest.model.settings.templates.TemplatesModel;
+import ch.sbb.polarion.extension.docx_exporter.settings.TemplatesSettings;
 import ch.sbb.polarion.extension.generic.settings.SettingId;
 import ch.sbb.polarion.extension.docx_exporter.pandoc.service.PandocServiceConnector;
 import ch.sbb.polarion.extension.docx_exporter.properties.DocxExporterExtensionConfiguration;
@@ -8,16 +10,16 @@ import ch.sbb.polarion.extension.docx_exporter.rest.model.documents.DocumentData
 import ch.sbb.polarion.extension.docx_exporter.rest.model.settings.webhooks.AuthType;
 import ch.sbb.polarion.extension.docx_exporter.rest.model.settings.webhooks.WebhookConfig;
 import ch.sbb.polarion.extension.docx_exporter.rest.model.settings.webhooks.WebhooksModel;
-import ch.sbb.polarion.extension.docx_exporter.service.PdfExporterPolarionService;
+import ch.sbb.polarion.extension.docx_exporter.service.DocxExporterPolarionService;
 import ch.sbb.polarion.extension.docx_exporter.settings.LocalizationSettings;
 import ch.sbb.polarion.extension.docx_exporter.settings.WebhooksSettings;
 import ch.sbb.polarion.extension.docx_exporter.util.DocumentDataFactory;
 import ch.sbb.polarion.extension.docx_exporter.util.EnumValuesProvider;
 import ch.sbb.polarion.extension.docx_exporter.util.HtmlLogger;
 import ch.sbb.polarion.extension.docx_exporter.util.HtmlProcessor;
-import ch.sbb.polarion.extension.docx_exporter.util.PdfExporterFileResourceProvider;
-import ch.sbb.polarion.extension.docx_exporter.util.PdfGenerationLog;
-import ch.sbb.polarion.extension.docx_exporter.util.PdfTemplateProcessor;
+import ch.sbb.polarion.extension.docx_exporter.util.DocxExporterFileResourceProvider;
+import ch.sbb.polarion.extension.docx_exporter.util.DocxGenerationLog;
+import ch.sbb.polarion.extension.docx_exporter.util.DocxTemplateProcessor;
 import ch.sbb.polarion.extension.docx_exporter.util.html.HtmlLinksHelper;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.polarion.alm.projects.model.IUniqueObject;
@@ -49,26 +51,26 @@ import java.util.List;
 
 @AllArgsConstructor
 @SuppressWarnings("java:S1200")
-public class PdfConverter {
-    private final Logger logger = Logger.getLogger(PdfConverter.class);
-    private final PdfExporterPolarionService pdfExporterPolarionService;
+public class DocxConverter {
+    private final Logger logger = Logger.getLogger(DocxConverter.class);
+    private final DocxExporterPolarionService docxExporterPolarionService;
 
     private final PandocServiceConnector pandocServiceConnector;
     private final HtmlProcessor htmlProcessor;
-    private final PdfTemplateProcessor pdfTemplateProcessor;
+    private final DocxTemplateProcessor docxTemplateProcessor;
 
-    public PdfConverter() {
-        pdfExporterPolarionService = new PdfExporterPolarionService();
+    public DocxConverter() {
+        docxExporterPolarionService = new DocxExporterPolarionService();
         pandocServiceConnector = new PandocServiceConnector();
-        PdfExporterFileResourceProvider fileResourceProvider = new PdfExporterFileResourceProvider();
-        htmlProcessor = new HtmlProcessor(fileResourceProvider, new LocalizationSettings(), new HtmlLinksHelper(fileResourceProvider), pdfExporterPolarionService);
-        pdfTemplateProcessor = new PdfTemplateProcessor();
+        DocxExporterFileResourceProvider fileResourceProvider = new DocxExporterFileResourceProvider();
+        htmlProcessor = new HtmlProcessor(fileResourceProvider, new LocalizationSettings(), new HtmlLinksHelper(fileResourceProvider), docxExporterPolarionService);
+        docxTemplateProcessor = new DocxTemplateProcessor();
     }
 
     public byte[] convertToPdf(@NotNull ExportParams exportParams) {
         long startTime = System.currentTimeMillis();
 
-        PdfGenerationLog generationLog = new PdfGenerationLog();
+        DocxGenerationLog generationLog = new DocxGenerationLog();
         generationLog.log("Starting html generation");
 
         @Nullable ITrackerProject project = getTrackerProject(exportParams);
@@ -98,7 +100,7 @@ public class PdfConverter {
     private @Nullable ITrackerProject getTrackerProject(@NotNull ExportParams exportParams) {
         ITrackerProject project = null;
         if (!StringUtils.isEmpty(exportParams.getProjectId())) {
-            project = pdfExporterPolarionService.getTrackerProject(exportParams.getProjectId());
+            project = docxExporterPolarionService.getTrackerProject(exportParams.getProjectId());
         }
         return project;
     }
@@ -123,6 +125,10 @@ public class PdfConverter {
             result = applyWebhook(webhookConfig, exportParams, result);
         }
         return result;
+    }
+
+    public byte[] getTemplate() {
+        return pandocServiceConnector.getTemplate();
     }
 
     private @NotNull String applyWebhook(@NotNull WebhookConfig webhookConfig, @NotNull ExportParams exportParams, @NotNull String htmlContent) {
@@ -195,7 +201,14 @@ public class PdfConverter {
             htmlPage = htmlPage.substring(0, headerIndex) + htmlPage.substring(contentIndex);
         }
         htmlPage = htmlPage.replace("<div style='break-after:page'>page to be removed</div><?xml version='1.0' encoding='UTF-8'?>", "");
-        return pandocServiceConnector.convertToDocx(htmlPage);
+
+        byte[] template = null;
+        if (exportParams.getTemplate() != null) {
+            TemplatesModel templatesModel = new TemplatesSettings().load(exportParams.getProjectId(), SettingId.fromName(exportParams.getTemplate()));
+            template = templatesModel.getTemplate();
+        }
+
+        return pandocServiceConnector.convertToDocx(htmlPage, template);
     }
 
     @VisibleForTesting
@@ -212,6 +225,6 @@ public class PdfConverter {
     @VisibleForTesting
     String composeHtml(@NotNull String documentName, String documentContent) {
         String content = "<div class='content'>" + documentContent + "</div>";
-        return pdfTemplateProcessor.processUsing(documentName, content);
+        return docxTemplateProcessor.processUsing(documentName, content);
     }
 }

@@ -34,6 +34,10 @@ const ChildConfigurations = {
         selectContainer: ctx.getElementById("localization-select"),
         label: ctx.getElementById("localization-select-label")
     }),
+    templateSelect: new CustomSelect({
+        selectContainer: ctx.getElementById("template-select"),
+        label: ctx.getElementById("template-select-label")
+    }),
     webhooksSelect: new CustomSelect({
         selectContainer: ctx.getElementById("webhooks-select")
     }),
@@ -44,6 +48,7 @@ const ChildConfigurations = {
         return new Promise((resolve) => {
             Promise.all([
                 this.loadSettingNames("localization", this.localizationSelect),
+                this.loadSettingNames("templates", this.templateSelect),
                 this.loadSettingNames("webhooks", this.webhooksSelect)
             ]).then(() => {
                 resolve();
@@ -146,6 +151,7 @@ function saveStylePackage() {
             'weight': ctx.getValueById('style-package-weight'),
             'exposeSettings': ctx.getCheckboxValueById('exposeSettings'),
             'localization': ChildConfigurations.localizationSelect.getSelectedValue(),
+            'template': ChildConfigurations.templateSelect.getSelectedValue(),
             'webhooks': ctx.getCheckboxValueById('webhooks-checkbox') ? ChildConfigurations.webhooksSelect.getSelectedValue() : null,
             'renderComments': ctx.getCheckboxValueById('render-comments') ? RenderComments.renderCommentsSelect.getSelectedValue() : null,
             'cutEmptyChapters': ctx.getCheckboxValueById('cut-empty-chapters'),
@@ -191,6 +197,7 @@ function setStylePackage(content) {
 
     ctx.setCheckboxValueById('exposeSettings', stylePackage.exposeSettings);
     ChildConfigurations.localizationSelect.selectValue(ChildConfigurations.localizationSelect.containsOption(stylePackage.localization) ? stylePackage.localization : DEFAULT_SETTING_NAME);
+    ChildConfigurations.templateSelect.selectValue(ChildConfigurations.templateSelect.containsOption(stylePackage.template) ? stylePackage.template : DEFAULT_SETTING_NAME);
     ctx.setCheckboxValueById('webhooks-checkbox', !!stylePackage.webhooks);
     ctx.getElementById('webhooks-checkbox').dispatchEvent(new Event('change'));
     ChildConfigurations.webhooksSelect.selectValue(ChildConfigurations.webhooksSelect.containsOption(stylePackage.webhooks) ? stylePackage.webhooks : DEFAULT_SETTING_NAME);

@@ -36,18 +36,18 @@ import static ch.sbb.polarion.extension.docx_exporter.util.exporter.Constants.MI
 /**
  * Initial code taken from {@link com.polarion.alm.tracker.web.internal.server.CustomFileResourceProvider}
  */
-public class PdfExporterFileResourceProvider implements FileResourceProvider {
+public class DocxExporterFileResourceProvider implements FileResourceProvider {
 
-    private static final Logger logger = Logger.getLogger(PdfExporterFileResourceProvider.class);
+    private static final Logger logger = Logger.getLogger(DocxExporterFileResourceProvider.class);
 
     private final List<IUrlResolver> resolvers;
 
-    public PdfExporterFileResourceProvider() {
+    public DocxExporterFileResourceProvider() {
         this.resolvers = Arrays.asList(getPolarionUrlResolverWithoutGenericUrlChildResolver(), new CustomResourceUrlResolver());
     }
 
     @VisibleForTesting
-    public PdfExporterFileResourceProvider(List<IUrlResolver> resolvers) {
+    public DocxExporterFileResourceProvider(List<IUrlResolver> resolvers) {
         this.resolvers = resolvers;
     }
 

@@ -29,6 +29,7 @@ public class StylePackageModel extends SettingsModel {
     private static final String MATCHING_QUERY_ENTRY_NAME = "MATCHING QUERY";
     private static final String WEIGHT_ENTRY_NAME = "WEIGHT";
     private static final String EXPOSE_SETTINGS_ENTRY_NAME = "EXPOSE SETTINGS";
+    private static final String TEMPLATE_ENTRY_NAME = "TEMPLATE";
     private static final String LOCALIZATION_ENTRY_NAME = "LOCALIZATION";
     private static final String WEBHOOKS_ENTRY_NAME = "WEBHOOKS";
     private static final String RENDER_COMMENTS_ENTRY_NAME = "RENDER COMMENTS";
@@ -44,6 +45,7 @@ public class StylePackageModel extends SettingsModel {
     private String matchingQuery;
     private Float weight;
     private boolean exposeSettings;
+    private String template;
     private String localization;
     private String webhooks;
     private CommentsRenderType renderComments;
@@ -59,6 +61,7 @@ public class StylePackageModel extends SettingsModel {
         return serializeEntry(MATCHING_QUERY_ENTRY_NAME, matchingQuery) +
                 serializeEntry(WEIGHT_ENTRY_NAME, weight) +
                 serializeEntry(EXPOSE_SETTINGS_ENTRY_NAME, exposeSettings) +
+                serializeEntry(TEMPLATE_ENTRY_NAME, template) +
                 serializeEntry(LOCALIZATION_ENTRY_NAME, localization) +
                 serializeEntry(WEBHOOKS_ENTRY_NAME, webhooks) +
                 serializeEntry(RENDER_COMMENTS_ENTRY_NAME, renderComments == null ? null : renderComments.name()) +
@@ -76,6 +79,7 @@ public class StylePackageModel extends SettingsModel {
         weight = Optional.ofNullable(deserializeEntry(WEIGHT_ENTRY_NAME, serializedString)).map(Float::parseFloat)
                 .orElse(NamedSettings.DEFAULT_NAME.equals(name) ? DEFAULT_INITIAL_WEIGHT : DEFAULT_WEIGHT);
         exposeSettings = Boolean.parseBoolean(deserializeEntry(EXPOSE_SETTINGS_ENTRY_NAME, serializedString));
+        template = deserializeEntry(TEMPLATE_ENTRY_NAME, serializedString);
         localization = deserializeEntry(LOCALIZATION_ENTRY_NAME, serializedString);
         webhooks = deserializeEntry(WEBHOOKS_ENTRY_NAME, serializedString);
         renderComments = parseRenderComments(deserializeEntry(RENDER_COMMENTS_ENTRY_NAME, serializedString));

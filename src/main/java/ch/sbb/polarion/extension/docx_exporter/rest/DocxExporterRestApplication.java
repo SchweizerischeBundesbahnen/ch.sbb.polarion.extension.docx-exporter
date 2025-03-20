@@ -1,8 +1,9 @@
 package ch.sbb.polarion.extension.docx_exporter.rest;
 
+import ch.sbb.polarion.extension.docx_exporter.settings.TemplatesSettings;
 import ch.sbb.polarion.extension.generic.rest.GenericRestApplication;
 import ch.sbb.polarion.extension.generic.settings.NamedSettingsRegistry;
-import ch.sbb.polarion.extension.docx_exporter.converter.PdfConverterJobsCleaner;
+import ch.sbb.polarion.extension.docx_exporter.converter.DocxConverterJobsCleaner;
 import ch.sbb.polarion.extension.docx_exporter.rest.controller.CollectionApiController;
 import ch.sbb.polarion.extension.docx_exporter.rest.controller.CollectionInternalController;
 import ch.sbb.polarion.extension.docx_exporter.rest.controller.ConverterApiController;
@@ -28,16 +29,17 @@ import org.jetbrains.annotations.NotNull;
 import java.util.Arrays;
 import java.util.Set;
 
-public class PdfExporterRestApplication extends GenericRestApplication {
-    private final Logger logger = Logger.getLogger(PdfExporterRestApplication.class);
+public class DocxExporterRestApplication extends GenericRestApplication {
+    private final Logger logger = Logger.getLogger(DocxExporterRestApplication.class);
 
-    public PdfExporterRestApplication() {
+    public DocxExporterRestApplication() {
         logger.debug("Creating Docx-Exporter REST Application...");
 
         try {
             NamedSettingsRegistry.INSTANCE.register(
                     Arrays.asList(
                             new StylePackageSettings(),
+                            new TemplatesSettings(),
                             new LocalizationSettings(),
                             new WebhooksSettings(),
                             new FileNameTemplateSettings()
@@ -48,7 +50,7 @@ public class PdfExporterRestApplication extends GenericRestApplication {
         }
 
         try {
-            PdfConverterJobsCleaner.startCleaningJob();
+            DocxConverterJobsCleaner.startCleaningJob();
         } catch (Exception e) {
             logger.error("Error during starting of clearing job", e);
         }

@@ -16,7 +16,7 @@ Require-Bundle: com.polarion.portal.tomcat,
  org.jsoup,
  org.apache.tika.patched;resolution:=optional,
  org.apache.tika;resolution:=optional
-Guice-Modules: ch.sbb.polarion.extension.docx_exporter.PdfExporterModule
+Guice-Modules: ch.sbb.polarion.extension.docx_exporter.DocxExporterModule
 Export-Package: ch.sbb.polarion.extension.docx_exporter,
  ch.sbb.polarion.extension.docx_exporter.converter,
  ch.sbb.polarion.extension.docx_exporter.rest.model,

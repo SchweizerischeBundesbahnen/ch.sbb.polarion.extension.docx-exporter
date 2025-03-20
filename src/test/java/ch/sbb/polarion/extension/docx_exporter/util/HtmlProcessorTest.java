@@ -5,7 +5,7 @@ import ch.sbb.polarion.extension.docx_exporter.TestStringUtils;
 import ch.sbb.polarion.extension.docx_exporter.rest.model.conversion.ExportParams;
 import ch.sbb.polarion.extension.docx_exporter.rest.model.settings.localization.Language;
 import ch.sbb.polarion.extension.docx_exporter.rest.model.settings.localization.LocalizationModel;
-import ch.sbb.polarion.extension.docx_exporter.service.PdfExporterPolarionService;
+import ch.sbb.polarion.extension.docx_exporter.service.DocxExporterPolarionService;
 import ch.sbb.polarion.extension.docx_exporter.settings.LocalizationSettings;
 import ch.sbb.polarion.extension.docx_exporter.util.html.HtmlLinksHelper;
 import lombok.SneakyThrows;
@@ -33,19 +33,19 @@ import static org.mockito.Mockito.*;
 class HtmlProcessorTest {
 
     @Mock
-    private PdfExporterFileResourceProvider fileResourceProvider;
+    private DocxExporterFileResourceProvider fileResourceProvider;
     @Mock
     private LocalizationSettings localizationSettings;
     @Mock
     private HtmlLinksHelper htmlLinksHelper;
     @Mock
-    private PdfExporterPolarionService pdfExporterPolarionService;
+    private DocxExporterPolarionService docxExporterPolarionService;
 
     private HtmlProcessor processor;
 
     @BeforeEach
     void init() {
-        processor = new HtmlProcessor(fileResourceProvider, localizationSettings, htmlLinksHelper, pdfExporterPolarionService);
+        processor = new HtmlProcessor(fileResourceProvider, localizationSettings, htmlLinksHelper, docxExporterPolarionService);
         Map<String, String> deTranslations = Map.of(
                 "draft", "Entwurf",
                 "not reviewed", "Nicht überprüft"
@@ -78,7 +78,7 @@ class HtmlProcessorTest {
     @SneakyThrows
     void cutLocalUrlsWithRolesFilteringTest() {
         when(localizationSettings.load(any(), any(SettingId.class))).thenReturn(new LocalizationModel(Collections.emptyMap(), Collections.emptyMap(), Collections.emptyMap()));
-        when(pdfExporterPolarionService.getPolarionVersion()).thenReturn("2310");
+        when(docxExporterPolarionService.getPolarionVersion()).thenReturn("2310");
 
         try (InputStream isInvalidHtml = this.getClass().getResourceAsStream("/cutLocalUrlsWithRolesFilteringBeforeProcessing.html");
              InputStream isValidHtml = this.getClass().getResourceAsStream("/cutLocalUrlsWithRolesFilteringAfterProcessing.html")) {
@@ -206,7 +206,7 @@ class HtmlProcessorTest {
     @Test
     @SneakyThrows
     void selectLinkedWorkItemTypesTableTest() {
-        when(pdfExporterPolarionService.getPolarionVersion()).thenReturn("2404");
+        when(docxExporterPolarionService.getPolarionVersion()).thenReturn("2404");
 
         try (InputStream isInvalidHtml = this.getClass().getResourceAsStream("/linkedWorkItemsTableBeforeProcessing.html");
              InputStream isValidHtml = this.getClass().getResourceAsStream("/linkedWorkItemsTableAfterProcessing.html")) {
@@ -228,7 +228,7 @@ class HtmlProcessorTest {
     @Test
     @SneakyThrows
     void selectLinkedWorkItemTypesTest() {
-        when(pdfExporterPolarionService.getPolarionVersion()).thenReturn(null);
+        when(docxExporterPolarionService.getPolarionVersion()).thenReturn(null);
 
         try (InputStream isInvalidHtml = this.getClass().getResourceAsStream("/linkedWorkItemsBeforeProcessing.html");
              InputStream isValidHtml = this.getClass().getResourceAsStream("/linkedWorkItemsAfterProcessing.html")) {

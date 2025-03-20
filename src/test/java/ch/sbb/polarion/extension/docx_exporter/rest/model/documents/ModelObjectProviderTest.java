@@ -2,7 +2,7 @@ package ch.sbb.polarion.extension.docx_exporter.rest.model.documents;
 
 import ch.sbb.polarion.extension.generic.exception.ObjectNotFoundException;
 import ch.sbb.polarion.extension.docx_exporter.rest.model.conversion.ExportParams;
-import ch.sbb.polarion.extension.docx_exporter.service.PdfExporterPolarionService;
+import ch.sbb.polarion.extension.docx_exporter.service.DocxExporterPolarionService;
 import ch.sbb.polarion.extension.generic.test_extensions.CustomExtensionMock;
 import ch.sbb.polarion.extension.generic.test_extensions.TransactionalExecutorExtension;
 import com.polarion.alm.projects.model.IProject;
@@ -38,14 +38,14 @@ class ModelObjectProviderTest {
     private InternalReadOnlyTransaction internalReadOnlyTransactionMock;
 
     @Mock
-    private PdfExporterPolarionService pdfExporterPolarionService;
+    private DocxExporterPolarionService docxExporterPolarionService;
 
     @BeforeEach
     void setUp() {
         IProject projectMock = mock(IProject.class);
         lenient().when(projectMock.getId()).thenReturn("testProjectId");
-        lenient().when(pdfExporterPolarionService.getProject(eq("testProjectId"))).thenReturn(projectMock);
-        lenient().when(pdfExporterPolarionService.getProject(eq("nonExistingProjectId"))).thenThrow(new ObjectNotFoundException("Project not found"));
+        lenient().when(docxExporterPolarionService.getProject(eq("testProjectId"))).thenReturn(projectMock);
+        lenient().when(docxExporterPolarionService.getProject(eq("nonExistingProjectId"))).thenThrow(new ObjectNotFoundException("Project not found"));
     }
 
     public static Stream<Arguments> paramsForModelObjectProviderGetDocument() {
@@ -73,7 +73,7 @@ class ModelObjectProviderTest {
         when(internalDocumentsMock.getBy()).thenReturn(documentSelectorMock);
         when(internalReadOnlyTransactionMock.documents()).thenReturn(internalDocumentsMock);
 
-        ModelObjectProvider modelObjectProvider = new ModelObjectProvider(exportParams, pdfExporterPolarionService);
+        ModelObjectProvider modelObjectProvider = new ModelObjectProvider(exportParams, docxExporterPolarionService);
         ModelObject modelObject = TransactionalExecutor.executeSafelyInReadOnlyTransaction(modelObjectProvider::getModelObject);
 
         assertEquals(documentMock, modelObject);
@@ -123,7 +123,7 @@ class ModelObjectProviderTest {
     @ParameterizedTest
     @MethodSource("paramsForModelObjectProviderShouldFail")
     void testModelObjectProviderShouldFail(@NotNull ExportParams exportParams, @NotNull Class<? extends Exception> expectedExceptionClass) {
-        ModelObjectProvider modelObjectProvider = new ModelObjectProvider(exportParams, pdfExporterPolarionService);
+        ModelObjectProvider modelObjectProvider = new ModelObjectProvider(exportParams, docxExporterPolarionService);
         assertThrows(expectedExceptionClass, () -> TransactionalExecutor.executeSafelyInReadOnlyTransaction(modelObjectProvider::getModelObject));
     }
 }

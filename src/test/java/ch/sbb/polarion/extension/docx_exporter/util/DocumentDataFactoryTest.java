@@ -4,7 +4,7 @@ import ch.sbb.polarion.extension.docx_exporter.rest.model.conversion.ExportParam
 import ch.sbb.polarion.extension.docx_exporter.rest.model.documents.DocumentData;
 import ch.sbb.polarion.extension.docx_exporter.rest.model.documents.ModelObjectProvider;
 import ch.sbb.polarion.extension.docx_exporter.rest.model.documents.id.LiveDocId;
-import ch.sbb.polarion.extension.docx_exporter.service.PdfExporterPolarionService;
+import ch.sbb.polarion.extension.docx_exporter.service.DocxExporterPolarionService;
 import ch.sbb.polarion.extension.generic.test_extensions.CustomExtensionMock;
 import ch.sbb.polarion.extension.generic.test_extensions.PlatformContextMockExtension;
 import ch.sbb.polarion.extension.generic.test_extensions.TransactionalExecutorExtension;
@@ -40,13 +40,13 @@ class DocumentDataFactoryTest {
     private IProjectService projectServiceMock;
 
     @Mock
-    PdfExporterPolarionService pdfExporterPolarionServiceMock;
+    DocxExporterPolarionService docxExporterPolarionServiceMock;
 
     @BeforeEach
     void setUp() {
         IProject projectMock = mock(IProject.class);
         when(projectMock.getId()).thenReturn("testProjectId");
-        when(pdfExporterPolarionServiceMock.getProject("testProjectId")).thenReturn(projectMock);
+        when(docxExporterPolarionServiceMock.getProject("testProjectId")).thenReturn(projectMock);
 
         InternalDocuments internalDocumentsMock = mock(InternalDocuments.class);
         DocumentSelector documentSelectorMock = mock(DocumentSelector.class);
@@ -87,7 +87,7 @@ class DocumentDataFactoryTest {
                 .projectId("testProjectId")
                 .locationPath("testModuleFolder/testLocationPath")
                 .build();
-        when(new ModelObjectProvider(exportParamsMock, pdfExporterPolarionServiceMock).getModelObject(internalReadOnlyTransactionMock))
+        when(new ModelObjectProvider(exportParamsMock, docxExporterPolarionServiceMock).getModelObject(internalReadOnlyTransactionMock))
                 .thenReturn(documentMock);
 
         DocumentData<IUniqueObject> actualDocumentData = DocumentDataFactory.getDocumentData(exportParamsMock, false);

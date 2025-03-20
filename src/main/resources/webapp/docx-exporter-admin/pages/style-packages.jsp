@@ -124,6 +124,15 @@
         <div class="flex-container">
             <div class="flex-column">
                 <div class="input-group">
+                    <label for="template-select" id="template-select-label">Template:</label>
+                    <div id="template-select"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="flex-container">
+            <div class="flex-column">
+                <div class="input-group">
                     <label for="localization-select" id="localization-select-label">Localization:</label>
                     <div id="localization-select"></div>
                 </div>
