@@ -16,6 +16,10 @@ import lombok.SneakyThrows;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.VisibleForTesting;
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
+import org.jsoup.select.Elements;
 
 import java.util.Arrays;
 import java.util.HashMap;
@@ -44,6 +48,7 @@ public class HtmlProcessor {
     private static final String TABLE_COLUMN_END_TAG = "</td>";
     private static final String DIV_START_TAG = "<div>";
     private static final String DIV_END_TAG = "</div>";
+    private static final String SPAN = "span";
     private static final String SPAN_END_TAG = "</span>";
     private static final String COMMENT_START = "[span";
     private static final String COMMENT_END = "[/span]";
@@ -53,6 +58,13 @@ public class HtmlProcessor {
     private static final String HEIGHT = "height";
     private static final String MEASURE_HEIGHT = "measureHeight";
     private static final String NUMBER = "number";
+    private static final String CLASS = "class";
+    private static final String COMMENT_START_CLASS = "comment-start";
+    private static final String COMMENT_END_CLASS = "comment-end";
+    private static final String META = "meta";
+    private static final String AUTHOR = "author";
+    private static final String DATE = "date";
+    private static final String TEXT = "text";
 
     private final FileResourceProvider fileResourceProvider;
     private final LocalizationSettings localizationSettings;
@@ -115,7 +127,7 @@ public class HtmlProcessor {
 
         html = localizeEnums(html, exportParams);
 
-        if (exportParams.isEnableCommentsRendering()) {
+        if (exportParams.getRenderComments() != null) {
             html = processComments(html);
         }
         if (hasCustomPageBreaks(html)) {
@@ -488,11 +500,84 @@ public class HtmlProcessor {
             return String.format("<span class='comment level-%s'>", nestingLevel);
         });
         html = html.replace("[span class=meta]", "<span class='meta'>");
+        html = html.replace("[span class=details]", "<span class='details'>");
         html = html.replace("[span class=date]", "<span class='date'>");
+        html = html.replace("[span class=status-resolved]", "<span class='status-resolved'>");
         html = html.replace("[span class=author]", "<span class='author'>");
         html = html.replace("[span class=text]", "<span class='text'>");
         html = html.replace(COMMENT_END, SPAN_END_TAG);
-        return html;
+
+        Document parsedHtml = Jsoup.parse(html);
+        processComments(parsedHtml.body().children(), 0);
+
+        return parsedHtml.html();
+    }
+
+    private int processComments(@NotNull Elements elements, int startingIndex) {
+        int index = startingIndex;
+        for (Element element : elements) {
+            if (isComment(element)) {
+                Element parent = element.parent();
+                Element prevSibling = element.previousElementSibling();
+
+                List<Element> elementsToInsert = transformComment(element, String.valueOf(index));
+                element.remove();
+                if (prevSibling != null) {
+                    for (Element elementToInsert : elementsToInsert) {
+                        prevSibling.after(elementToInsert);
+                        prevSibling = elementToInsert;
+                    }
+                } else if (parent != null) {
+                    parent.insertChildren(0, elementsToInsert);
+                }
+                index++;
+            } else if (!element.children().isEmpty()) {
+                index = processComments(element.children(), index);
+            }
+        }
+        return index;
+    }
+
+    private boolean isComment(@NotNull Element element) {
+        return SPAN.equals(element.nodeName()) && element.classNames().contains("comment");
+    }
+
+    private List<Element> transformComment(@NotNull Element commentElement, @NotNull String index) {
+        Element commentStart = new Element(SPAN);
+        commentStart.attr(CLASS, COMMENT_START_CLASS);
+        commentStart.id(index);
+
+        Element textElement = extractChildSpanByClassName(commentElement, TEXT);
+        if (textElement != null) {
+            commentStart.text(textElement.text());
+        }
+
+        Element metaElement = extractChildSpanByClassName(commentElement, META);
+        if (metaElement != null) {
+            Element authorElement = extractChildSpanByClassName(metaElement, AUTHOR);
+            if (authorElement != null) {
+                commentStart.attr(AUTHOR, authorElement.text());
+            }
+            Element dateElement = extractChildSpanByClassName(metaElement, DATE);
+            if (dateElement != null) {
+                commentStart.attr(DATE, dateElement.text());
+            }
+        }
+
+        Element commentEnd = new Element(SPAN);
+        commentEnd.attr(CLASS, COMMENT_END_CLASS);
+        commentEnd.id(index);
+
+        return List.of(commentStart, commentEnd);
+    }
+
+    private Element extractChildSpanByClassName(@NotNull Element parentElement, @NotNull String className) {
+        for (Element element : parentElement.children()) {
+            if (SPAN.equals(element.nodeName()) && element.classNames().contains(className)) {
+                return element;
+            }
+        }
+        return null;
     }
 
     @NotNull

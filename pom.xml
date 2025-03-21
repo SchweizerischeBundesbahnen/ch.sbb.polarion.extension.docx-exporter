@@ -88,6 +88,7 @@
             </activation>
             <properties>
                 <velocity-engine-core.artifactId>org.apache.velocity.engine-core_2.3.0</velocity-engine-core.artifactId>
+                <org.jsoup.artifactId>org.jsoup_1.15.2</org.jsoup.artifactId>
             </properties>
         </profile>
 
@@ -130,6 +131,13 @@
         <dependency>
             <groupId>com.polarion.alm.wiki</groupId>
             <artifactId>sidecar</artifactId>
+            <version>${polarion.version}</version>
+            <scope>provided</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>com.polarion.thirdparty</groupId>
+            <artifactId>${org.jsoup.artifactId}</artifactId>
             <version>${polarion.version}</version>
             <scope>provided</scope>
         </dependency>

@@ -1,5 +1,6 @@
 package ch.sbb.polarion.extension.docx_exporter.settings;
 
+import ch.sbb.polarion.extension.docx_exporter.rest.model.conversion.CommentsRenderType;
 import ch.sbb.polarion.extension.generic.settings.GenericNamedSettings;
 import ch.sbb.polarion.extension.generic.settings.SettingsService;
 import ch.sbb.polarion.extension.docx_exporter.rest.model.settings.stylepackage.StylePackageModel;
@@ -29,7 +30,7 @@ public class StylePackageSettings extends GenericNamedSettings<StylePackageModel
         return StylePackageModel.builder()
                 .localization(DEFAULT_NAME)
                 .webhooks(DEFAULT_NAME)
-                .renderComments(true)
+                .renderComments(CommentsRenderType.OPEN)
                 .cutEmptyWorkitemAttributes(true)
                 .weight(StylePackageModel.DEFAULT_WEIGHT)
                 .build();

@@ -83,7 +83,7 @@ public class DocxExporterFormExtension implements IFormExtension {
             form = adjustTemplate(scope, form, selectedStylePackage);
             form = adjustLocalization(scope, form, selectedStylePackage);
             form = adjustWebhooks(scope, form, selectedStylePackage);
-            form = adjustCommentsRendering(form, selectedStylePackage);
+            form = adjustRenderComments(form, selectedStylePackage);
             form = adjustCutEmptyChapters(form, selectedStylePackage);
             form = adjustCutEmptyWorkitemAttributes(form, selectedStylePackage);
             form = adjustCutLocalURLs(form, selectedStylePackage);
@@ -173,8 +173,13 @@ public class DocxExporterFormExtension implements IFormExtension {
         }
     }
 
-    private String adjustCommentsRendering(String form, StylePackageModel stylePackage) {
-        return stylePackage.isRenderComments() ? form.replace("<input id='docx-enable-comments-rendering'", "<input id='docx-enable-comments-rendering' checked") : form;
+    private String adjustRenderComments(String form, StylePackageModel stylePackage) {
+        if (stylePackage.getRenderComments() != null) {
+            form = form.replace("<input id='render-comments'", "<input id='render-comments' checked");
+            form = form.replace("id='render-comments' style='display: none'", "id='render-comments'");
+            form = form.replace(String.format(OPTION_VALUE, stylePackage.getRenderComments()), String.format(OPTION_SELECTED, stylePackage.getRenderComments()));
+        }
+        return form;
     }
 
     private String adjustCutEmptyChapters(String form, StylePackageModel stylePackage) {
@@ -244,6 +249,7 @@ public class DocxExporterFormExtension implements IFormExtension {
         return form.replace("{FILENAME}", filename).replace("{DATA_FILENAME}", filename);
     }
 
+    @SuppressWarnings("java:S3252") // allow to build ExportParams using its own builder
     private String getFilename(@NotNull IModule module) {
         DocumentFileNameHelper documentFileNameHelper = new DocumentFileNameHelper();
 

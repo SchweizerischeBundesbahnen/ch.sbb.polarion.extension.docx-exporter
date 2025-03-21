@@ -116,6 +116,17 @@ const LinkRoles = {
     }
 }
 
+const RenderComments = {
+    renderCommentsSelect: new CustomSelect({
+        selectContainer: ctx.getElementById("render-comments-select")
+    }),
+
+    init: function () {
+        this.renderCommentsSelect.addOption('OPEN', 'Open');
+        this.renderCommentsSelect.addOption('ALL', 'All');
+    }
+}
+
 const Languages = {
     languageSelect: new CustomSelect({
         selectContainer: ctx.getElementById("language-select")
@@ -142,7 +153,7 @@ function saveStylePackage() {
             'localization': ChildConfigurations.localizationSelect.getSelectedValue(),
             'template': ChildConfigurations.templateSelect.getSelectedValue(),
             'webhooks': ctx.getCheckboxValueById('webhooks-checkbox') ? ChildConfigurations.webhooksSelect.getSelectedValue() : null,
-            'renderComments': ctx.getCheckboxValueById('enable-comments-rendering'),
+            'renderComments': ctx.getCheckboxValueById('render-comments') ? RenderComments.renderCommentsSelect.getSelectedValue() : null,
             'cutEmptyChapters': ctx.getCheckboxValueById('cut-empty-chapters'),
             'cutEmptyWorkitemAttributes': ctx.getCheckboxValueById('cut-empty-wi-attributes'),
             'cutLocalURLs': ctx.getCheckboxValueById('cut-urls'),
@@ -191,7 +202,9 @@ function setStylePackage(content) {
     ctx.getElementById('webhooks-checkbox').dispatchEvent(new Event('change'));
     ChildConfigurations.webhooksSelect.selectValue(ChildConfigurations.webhooksSelect.containsOption(stylePackage.webhooks) ? stylePackage.webhooks : DEFAULT_SETTING_NAME);
 
-    ctx.setCheckboxValueById('enable-comments-rendering', stylePackage.renderComments);
+    ctx.setCheckboxValueById('render-comments', !!stylePackage.renderComments);
+    ctx.getElementById('render-comments').dispatchEvent(new Event('change'));
+    RenderComments.renderCommentsSelect.selectValue(stylePackage.renderComments || 'OPEN');
 
     ctx.setCheckboxValueById('cut-empty-chapters', stylePackage.cutEmptyChapters);
     ctx.setCheckboxValueById('cut-empty-wi-attributes', stylePackage.cutEmptyWorkitemAttributes);
@@ -219,6 +232,7 @@ function newConfigurationCreated() {
     ctx.setValueById('style-package-weight', 50);
 }
 
+RenderComments.init();
 Languages.init();
 Promise.all([
     LinkRoles.load(),

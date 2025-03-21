@@ -1,5 +1,6 @@
 package ch.sbb.polarion.extension.docx_exporter.settings;
 
+import ch.sbb.polarion.extension.docx_exporter.rest.model.conversion.CommentsRenderType;
 import ch.sbb.polarion.extension.generic.context.CurrentContextConfig;
 import ch.sbb.polarion.extension.generic.context.CurrentContextExtension;
 import ch.sbb.polarion.extension.generic.exception.ObjectNotFoundException;
@@ -84,6 +85,8 @@ class StylePackageSettingsTest {
             StylePackageModel loadedModel = stylePackageSettings.load(projectName, SettingId.fromName("Any setting name"));
             assertEquals("fr", loadedModel.getLocalization());
             assertEquals("custom", loadedModel.getBundleTimestamp());
+
+            assertNull(loadedModel.getRenderComments());
         }
     }
 

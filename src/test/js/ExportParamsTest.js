@@ -13,7 +13,7 @@ describe('ExportParams', function () {
             .setRevision(20)
             .setLocalization('en-US')
             .setWebhooks(['webhook1', 'webhook2'])
-            .setEnableCommentsRendering(true)
+            .setRenderComments('ALL')
             .setCutEmptyChapters(false)
             .setCutEmptyWIAttributes(true)
             .setCutLocalUrls(false)
@@ -30,7 +30,7 @@ describe('ExportParams', function () {
         expect(params.revision).to.equal(20);
         expect(params.localization).to.equal('en-US');
         expect(params.webhooks).to.deep.equal(['webhook1', 'webhook2']);
-        expect(params.enableCommentsRendering).to.be.true;
+        expect(params.renderComments).to.equal('ALL');
         expect(params.cutEmptyChapters).to.be.false;
         expect(params.cutEmptyWIAttributes).to.be.true;
         expect(params.cutLocalUrls).to.be.false;

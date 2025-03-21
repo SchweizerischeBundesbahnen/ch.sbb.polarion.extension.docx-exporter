@@ -1550,11 +1550,6 @@
             "description": "Local Polarion URLs should be removed from the document",
             "type": "boolean"
           },
-          "enableCommentsRendering": {
-            "default": true,
-            "description": "Comments should be rendered in the exported document",
-            "type": "boolean"
-          },
           "fileName": {
             "description": "Target file name of exported document",
             "type": "string"
@@ -1592,6 +1587,14 @@
           "projectId": {
             "description": "The unique identifier for the project",
             "example": "elibrary",
+            "type": "string"
+          },
+          "renderComments": {
+            "description": "Which comments should be rendered in the exported document",
+            "enum": [
+              "OPEN",
+              "ALL"
+            ],
             "type": "string"
           },
           "revision": {

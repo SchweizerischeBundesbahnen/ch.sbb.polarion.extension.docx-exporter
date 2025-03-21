@@ -8,7 +8,7 @@ export default class ExportParams {
         this.template = builder.template;
         this.localization = builder.localization;
         this.webhooks = builder.webhooks;
-        this.enableCommentsRendering = builder.enableCommentsRendering;
+        this.renderComments = builder.renderComments;
         this.cutEmptyChapters = builder.cutEmptyChapters;
         this.cutEmptyWIAttributes = builder.cutEmptyWIAttributes;
         this.cutLocalUrls = builder.cutLocalUrls;
@@ -42,7 +42,7 @@ export default class ExportParams {
                 this.revision = undefined;
                 this.template = undefined;
                 this.webhooks = undefined;
-                this.enableCommentsRendering = undefined;
+                this.renderComments = undefined;
                 this.cutEmptyChapters = undefined;
                 this.cutEmptyWIAttributes = undefined;
                 this.cutLocalUrls = undefined;
@@ -90,8 +90,8 @@ export default class ExportParams {
             }
 
 
-            setEnableCommentsRendering(enableCommentsRendering) {
-                this.enableCommentsRendering = enableCommentsRendering;
+            setRenderComments(renderComments) {
+                this.renderComments = renderComments;
                 return this;
             }
 
