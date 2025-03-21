@@ -27,12 +27,17 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import org.glassfish.jersey.media.multipart.FormDataBodyPart;
+import org.glassfish.jersey.media.multipart.FormDataParam;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.VisibleForTesting;
 import org.springframework.http.HttpStatus;
 
 import javax.ws.rs.BadRequestException;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
+import java.io.IOException;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
@@ -311,7 +316,7 @@ public class ConverterInternalController {
 
     @POST
     @Path("/convert/html")
-    @Consumes(MediaType.TEXT_HTML)
+    @Consumes(MediaType.MULTIPART_FORM_DATA)
     @Produces("application/vnd.openxmlformats-officedocument.wordprocessingml.document")
     @Operation(summary = "Converts input HTML to DOCX",
             responses = {
@@ -331,14 +336,27 @@ public class ConverterInternalController {
                     )
             })
     public Response convertHtmlToPdf(
-            @Parameter(description = "input html (must include html and body elements)") String html,
+            @Parameter(description = "Required html file", required = true, schema = @Schema(type = "string", format = "binary"))
+            @FormDataParam("html")
+            FormDataBodyPart html,
+
+            @Parameter(description = "Optional template file", schema = @Schema(type = "string", format = "binary"))
+            @FormDataParam(value = "template")
+            FormDataBodyPart template,
             @Parameter(description = "default value: document.docx") @QueryParam("fileName") String fileName) {
-        byte[] pdfBytes = htmlToDocxConverter.convert(html);
-        String headerFileName = (fileName != null) ? fileName : "document.docx";
-        return Response.ok(pdfBytes)
-                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + headerFileName)
-                .header(EXPORT_FILENAME_HEADER, headerFileName)
-                .build();
+        try {
+            byte[] htmlBytes = html.getEntityAs(InputStream.class).readAllBytes();
+            byte[] templateBytes = template != null ? template.getEntityAs(InputStream.class).readAllBytes() : null;
+            byte[] docxBytes = htmlToDocxConverter.convert(new String(htmlBytes, StandardCharsets.UTF_8), templateBytes);
+
+            String headerFileName = (fileName != null) ? fileName : "document.docx";
+            return Response.ok(docxBytes)
+                    .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + headerFileName)
+                    .header(EXPORT_FILENAME_HEADER, headerFileName)
+                    .build();
+        } catch (IOException e) {
+            throw new BadRequestException("Error processing files", e);
+        }
     }
 
     @POST

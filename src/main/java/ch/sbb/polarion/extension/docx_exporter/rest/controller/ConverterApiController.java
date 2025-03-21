@@ -8,6 +8,7 @@ import ch.sbb.polarion.extension.docx_exporter.converter.DocxConverterJobsServic
 import ch.sbb.polarion.extension.docx_exporter.rest.model.NestedListsCheck;
 import ch.sbb.polarion.extension.docx_exporter.rest.model.conversion.ExportParams;
 import ch.sbb.polarion.extension.docx_exporter.service.DocxExporterPolarionService;
+import org.glassfish.jersey.media.multipart.FormDataBodyPart;
 import org.jetbrains.annotations.VisibleForTesting;
 import org.springframework.web.context.request.RequestAttributes;
 import org.springframework.web.context.request.RequestContextHolder;
@@ -62,8 +63,8 @@ public class ConverterApiController extends ConverterInternalController {
     }
 
     @Override
-    public Response convertHtmlToPdf(String html, String fileName) {
-        return polarionService.callPrivileged(() -> super.convertHtmlToPdf(html, fileName));
+    public Response convertHtmlToPdf(FormDataBodyPart html, FormDataBodyPart template, String fileName) {
+        return polarionService.callPrivileged(() -> super.convertHtmlToPdf(html, template, fileName));
     }
 
     @Override

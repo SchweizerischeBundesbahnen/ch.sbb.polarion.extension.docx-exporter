@@ -1,5 +1,6 @@
 package ch.sbb.polarion.extension.docx_exporter.converter;
 
+import ch.sbb.polarion.extension.docx_exporter.pandoc.service.PandocServiceConnector;
 import ch.sbb.polarion.extension.generic.regex.RegexMatcher;
 import ch.sbb.polarion.extension.docx_exporter.properties.DocxExporterExtensionConfiguration;
 import ch.sbb.polarion.extension.docx_exporter.settings.LocalizationSettings;
@@ -14,26 +15,29 @@ import org.jetbrains.annotations.VisibleForTesting;
 public class HtmlToDocxConverter {
     private final DocxTemplateProcessor docxTemplateProcessor;
     private final HtmlProcessor htmlProcessor;
+    private final PandocServiceConnector pandocServiceConnector;
 
     public HtmlToDocxConverter() {
         this.docxTemplateProcessor = new DocxTemplateProcessor();
         DocxExporterFileResourceProvider fileResourceProvider = new DocxExporterFileResourceProvider();
         this.htmlProcessor = new HtmlProcessor(fileResourceProvider, new LocalizationSettings(), new HtmlLinksHelper(fileResourceProvider), null);
+        this.pandocServiceConnector = new PandocServiceConnector();
     }
 
     @VisibleForTesting
-    public HtmlToDocxConverter(DocxTemplateProcessor docxTemplateProcessor, HtmlProcessor htmlProcessor) {
+    public HtmlToDocxConverter(DocxTemplateProcessor docxTemplateProcessor, HtmlProcessor htmlProcessor, PandocServiceConnector pandocServiceConnector) {
         this.docxTemplateProcessor = docxTemplateProcessor;
         this.htmlProcessor = htmlProcessor;
+        this.pandocServiceConnector = pandocServiceConnector;
     }
 
-    public byte[] convert(String origHtml) {
+    public byte[] convert(String origHtml, byte[] template) {
         validateHtml(origHtml);
         String html = preprocessHtml(origHtml);
         if (DocxExporterExtensionConfiguration.getInstance().isDebug()) {
             new HtmlLogger().log(origHtml, html, "");
         }
-        return null;
+        return pandocServiceConnector.convertToDocx(origHtml, template);
     }
 
     private void validateHtml(String origHtml) {

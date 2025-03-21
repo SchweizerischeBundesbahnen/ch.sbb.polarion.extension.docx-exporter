@@ -246,13 +246,27 @@
         ],
         "requestBody": {
           "content": {
-            "text/html": {
+            "multipart/form-data": {
               "schema": {
-                "type": "string"
+                "properties": {
+                  "html": {
+                    "description": "Required html file",
+                    "format": "binary",
+                    "type": "string"
+                  },
+                  "template": {
+                    "description": "Optional template file",
+                    "format": "binary",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "html"
+                ],
+                "type": "object"
               }
             }
-          },
-          "description": "input html (must include html and body elements)"
+          }
         },
         "responses": {
           "200": {
