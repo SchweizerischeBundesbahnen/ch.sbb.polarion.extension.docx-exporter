@@ -337,7 +337,7 @@ export default class ExportPopup {
             .setTemplate(this.ctx.getElementById("popup-docx-template-selector").value)
             .setLocalization(this.ctx.getElementById("popup-docx-localization-selector").value)
             .setWebhooks(this.ctx.getElementById("popup-docx-webhooks-checkbox").checked ? this.ctx.getElementById("popup-docx-webhooks-selector").value : null)
-            .setRenderComments(live_doc && this.ctx.getElementById('popup-docx-render-comments').checked ? this.ctx.getElementById("popup-docx-render-comments-selector").value : null)
+            .setRenderComments(this.ctx.getElementById('popup-docx-render-comments').checked ? this.ctx.getElementById("popup-docx-render-comments-selector").value : null)
             .setCutEmptyChapters(this.ctx.getElementById("popup-docx-cut-empty-chapters").checked)
             .setCutEmptyWIAttributes(this.ctx.getElementById('popup-docx-cut-empty-wi-attributes').checked)
             .setCutLocalUrls(this.ctx.getElementById("popup-docx-cut-urls").checked)
