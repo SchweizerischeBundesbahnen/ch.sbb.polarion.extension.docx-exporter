@@ -132,7 +132,7 @@ public class HtmlProcessor {
         }
         if (hasCustomPageBreaks(html)) {
             //processPageBrakes contains its own adjustContentToFitPage() calls
-            html = processPageBrakes(html, exportParams);
+            html = processPageBrakes(html);
         }
         html = adjustContentToFitPage(html);
 
@@ -165,7 +165,7 @@ public class HtmlProcessor {
     @NotNull
     @VisibleForTesting
     @SuppressWarnings("java:S3776")
-    String processPageBrakes(@NotNull String html, ExportParams exportParams) {
+    String processPageBrakes(@NotNull String html) {
         //remove repeated page breaks, leave just the first one
         html = RegexMatcher.get(String.format("(%s|%s){2,}", PAGE_BREAK_PORTRAIT_ABOVE, PAGE_BREAK_LANDSCAPE_ABOVE)).replace(html, regexEngine -> {
             String sequence = regexEngine.group();
@@ -198,7 +198,7 @@ public class HtmlProcessor {
             resultBuf.insert(0, area);
             if (firstArea) {
                 //instead of wrapping  the first area into div we place on the body specific orientation (IMPORTANT: here we must use page identifiers but luckily in our case they are the same as the class names)
-                //this will prevent weasyprint from creating leading empty page
+                //this will prevent from creating leading empty page
                 resultBuf.insert(0, String.format("<style>body {page: %s;}</style>", orientationClass));
             } else {
                 resultBuf.insert(0, String.format("<div class=\"sbb_page_break %s\">", orientationClass));

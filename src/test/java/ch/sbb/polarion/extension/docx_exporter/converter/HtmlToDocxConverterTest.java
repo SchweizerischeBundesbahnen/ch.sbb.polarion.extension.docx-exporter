@@ -1,7 +1,6 @@
 package ch.sbb.polarion.extension.docx_exporter.converter;
 
 import ch.sbb.polarion.extension.docx_exporter.configuration.DocxExporterExtensionConfigurationExtension;
-import ch.sbb.polarion.extension.docx_exporter.pandoc.service.PandocServiceConnector;
 import ch.sbb.polarion.extension.docx_exporter.util.HtmlProcessor;
 import ch.sbb.polarion.extension.docx_exporter.util.DocxTemplateProcessor;
 import org.junit.jupiter.api.Test;
@@ -24,9 +23,6 @@ class HtmlToDocxConverterTest {
 
     @Mock
     private HtmlProcessor htmlProcessor;
-
-    @Mock
-    private PandocServiceConnector pandocServiceConnector;
 
     @InjectMocks
     private HtmlToDocxConverter htmlToDocxConverter;

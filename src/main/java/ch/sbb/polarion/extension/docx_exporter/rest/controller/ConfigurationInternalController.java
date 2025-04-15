@@ -96,11 +96,11 @@ public class ConfigurationInternalController {
     @Produces(MediaType.APPLICATION_JSON)
     @Path("/configuration/pandoc")
     @Operation(
-            summary = "Checks WeasyPrint configuration",
-            description = "Retrieves the status of the WeasyPrint configuration.",
+            summary = "Checks Pandoc configuration",
+            description = "Retrieves the status of the Pandoc configuration.",
             responses = {
                     @ApiResponse(responseCode = "200",
-                            description = "Successfully retrieved WeasyPrint configuration",
+                            description = "Successfully retrieved Pandoc configuration",
                             content = @Content(array = @ArraySchema(schema = @Schema(implementation = ConfigurationStatus.class)))
                     )
             }

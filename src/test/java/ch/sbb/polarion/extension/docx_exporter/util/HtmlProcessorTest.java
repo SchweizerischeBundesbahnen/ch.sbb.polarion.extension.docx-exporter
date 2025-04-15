@@ -102,12 +102,10 @@ class HtmlProcessorTest {
         try (InputStream isInvalidHtml = this.getClass().getResourceAsStream("/pageBreaksBeforeProcessing.html");
              InputStream isValidHtml = this.getClass().getResourceAsStream("/pageBreaksAfterProcessing.html")) {
 
-            ExportParams context = new ExportParams();
-
             String invalidHtml = new String(isInvalidHtml.readAllBytes(), StandardCharsets.UTF_8);
 
             // Spaces and new lines are removed to exclude difference in space characters
-            String fixedHtml = processor.processPageBrakes(invalidHtml, context);
+            String fixedHtml = processor.processPageBrakes(invalidHtml);
             String validHtml = new String(isValidHtml.readAllBytes(), StandardCharsets.UTF_8);
             assertEquals(TestStringUtils.removeNonsensicalSymbols(validHtml), TestStringUtils.removeNonsensicalSymbols(fixedHtml));
         }

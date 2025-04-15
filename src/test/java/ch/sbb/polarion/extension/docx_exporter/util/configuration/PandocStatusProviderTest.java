@@ -68,7 +68,7 @@ class PandocStatusProviderTest {
     }
 
     @Test
-    void testUpdateWeasyPrintRequired() {
+    void testUpdatePandocRequired() {
         String timestamp = ZonedDateTime.now(ZoneOffset.UTC).truncatedTo(ChronoUnit.SECONDS).format(DateTimeFormatter.ISO_INSTANT);
         PandocInfo pandocInfo = PandocInfo.builder()
                 .python("3.12.5")
@@ -96,7 +96,7 @@ class PandocStatusProviderTest {
     }
 
     @Test
-    void testUnknownWeasyPrintServiceVersion() {
+    void testUnknownPandocServiceVersion() {
         String timestamp = ZonedDateTime.now(ZoneOffset.UTC).truncatedTo(ChronoUnit.SECONDS).format(DateTimeFormatter.ISO_INSTANT);
         PandocInfo pandocInfo = PandocInfo.builder()
                 .python("3.12.5")
@@ -124,7 +124,7 @@ class PandocStatusProviderTest {
     }
 
     @Test
-    void testUnknownWeasyPrintServiceVersionNoTimestamp() {
+    void testUnknownPandocServiceVersionNoTimestamp() {
         PandocInfo pandocInfo = PandocInfo.builder()
                 .python("3.12.5")
                 .timestamp(null)
@@ -178,7 +178,7 @@ class PandocStatusProviderTest {
     }
 
     @Test
-    void testWeasyPrintVersionIsHigherThanRequired() {
+    void testPandocVersionIsHigherThanRequired() {
         String timestamp = ZonedDateTime.now(ZoneOffset.UTC).truncatedTo(ChronoUnit.SECONDS).format(DateTimeFormatter.ISO_INSTANT);
         PandocInfo pandocInfo = PandocInfo.builder()
                 .python("3.12.5")

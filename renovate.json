@@ -10,9 +10,9 @@
         "versions.properties$"
       ],
       "datasourceTemplate": "github-releases",
-      "depNameTemplate": "SchweizerischeBundesbahnen/weasyprint-service",
+      "depNameTemplate": "SchweizerischeBundesbahnen/pandoc-service",
       "matchStrings": [
-        "weasyprint-service.version=(?<currentValue>.*)"
+        "pandoc-service.version=(?<currentValue>.*)"
       ]
     }
   ]
