@@ -14,16 +14,7 @@ public class DocxExporterExtensionConfiguration extends ExtensionConfiguration {
 
     public static final String DEBUG_DESCRIPTION = "Enable <a href='#debug-option'>debug mode</a>";
 
-    public static final String WEASYPRINT_SERVICE = "weasyprint.service";
-    public static final String WEASYPRINT_SERVICE_DESCRIPTION = "The URL of the <a href='#weasyprint-configuration'>WeasyPrint service</a>";
-    public static final String WEASYPRINT_SERVICE_DEFAULT_VALUE = "http://localhost:9080";
-
-    public static final String WEASYPRINT_PDF_VARIANT = "weasyprint.pdf.variant";
-    public static final String WEASYPRINT_PDF_VARIANT_DESCRIPTION = "The <a href='#pdf-variants-configuration'>PDF variant</a> of generated PDF files";
-    public static final String WEASYPRINT_PDF_VARIANT_DEFAULT_VALUE = "pdf/a-2b";
-
     public static final String PANDOC_SERVICE = "pandoc.service";
-    public static final String PANDOC_SERVICE_DESCRIPTION = "The URL of the <a href='#pandoc-configuration'>Pandoc service</a>";
     public static final String PANDOC_SERVICE_DEFAULT_VALUE = "http://localhost:9082";
 
     public static final String WEBHOOKS_ENABLED = "webhooks.enabled";
@@ -33,34 +24,6 @@ public class DocxExporterExtensionConfiguration extends ExtensionConfiguration {
     @Override
     public String getDebugDescription() {
         return DEBUG_DESCRIPTION;
-    }
-
-    public String getWeasyprintService() {
-        return SystemValueReader.getInstance().readString(getPropertyPrefix() + WEASYPRINT_SERVICE, WEASYPRINT_SERVICE_DEFAULT_VALUE);
-    }
-
-    @SuppressWarnings("unused")
-    public String getWeasyprintServiceDescription() {
-        return WEASYPRINT_SERVICE_DESCRIPTION;
-    }
-
-    @SuppressWarnings("unused")
-    public String getWeasyprintServiceDefaultValue() {
-        return WEASYPRINT_SERVICE_DEFAULT_VALUE;
-    }
-
-    public String getWeasyprintPdfVariant() {
-        return SystemValueReader.getInstance().readString(getPropertyPrefix() + WEASYPRINT_PDF_VARIANT, WEASYPRINT_PDF_VARIANT_DEFAULT_VALUE);
-    }
-
-    @SuppressWarnings("unused")
-    public String getWeasyprintPdfVariantDescription() {
-        return WEASYPRINT_PDF_VARIANT_DESCRIPTION;
-    }
-
-    @SuppressWarnings("unused")
-    public String getWeasyprintPdfVariantDefaultValue() {
-        return WEASYPRINT_PDF_VARIANT_DEFAULT_VALUE;
     }
 
     public String getPandocService() {

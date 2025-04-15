@@ -132,7 +132,7 @@
     },
     "/api/configuration/pandoc": {
       "get": {
-        "description": "Retrieves the status of the WeasyPrint configuration.",
+        "description": "Retrieves the status of the Pandoc configuration.",
         "operationId": "checkPandoc",
         "responses": {
           "200": {
@@ -146,10 +146,10 @@
                 }
               }
             },
-            "description": "Successfully retrieved WeasyPrint configuration"
+            "description": "Successfully retrieved Pandoc configuration"
           }
         },
-        "summary": "Checks WeasyPrint configuration"
+        "summary": "Checks Pandoc configuration"
       }
     },
     "/api/context": {

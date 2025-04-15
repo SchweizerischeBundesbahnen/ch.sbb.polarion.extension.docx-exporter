@@ -24,9 +24,9 @@ public class PageBreakAvoidRemover {
         // </table>
         //
         // This styling "page-break-inside: avoid" doesn't influence rendering by pd4ml converter,
-        // but breaks rendering of tables with help of WeasyPrint. More over this configuration was initially introduced
+        // but breaks rendering of tables with help of Pandoc. More over this configuration was initially introduced
         // for pd4ml converter because table headers are not repeated at page start when table takes more than 1 page.
-        // Last drawback is not applied to WeasyPrint and thus such workaround can be safely removed.
+        // Last drawback is not applied to Pandoc and thus such workaround can be safely removed.
         //
         // Taking into account that work item content can also contain tables this task should be done with cautious.
         // Removing "page-break-inside:avoid;" from table's styling doesn't help, tables are still broken. So, solution
