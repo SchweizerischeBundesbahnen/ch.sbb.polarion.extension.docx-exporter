@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.1.3](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/compare/v1.1.2...v1.1.3) (2025-04-15)
+
+
+### Bug Fixes
+
+* **deps:** update dependency ch.sbb.polarion.extensions:ch.sbb.polarion.extension.generic to v8.1.1 ([39ece6a](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/commit/39ece6a05a44e6890d751692acc05a7de1c1391b))
+* pandoc-service.version ([#36](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/issues/36)) ([e3cfae5](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/commit/e3cfae5e57ae795b44e94bdaf6a564e2b03349b1))
+
 ## [1.1.2](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/compare/v1.1.1...v1.1.2) (2025-04-15)
 
 
