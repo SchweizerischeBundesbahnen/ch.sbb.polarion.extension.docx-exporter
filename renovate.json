@@ -13,7 +13,7 @@
       "depNameTemplate": "SchweizerischeBundesbahnen/pandoc-service",
       "matchStrings": [
         "pandoc-service.version=(?<currentValue>.*)"
-      ], 
+      ],
       "versioningTemplate": "semver"
     }
   ]
