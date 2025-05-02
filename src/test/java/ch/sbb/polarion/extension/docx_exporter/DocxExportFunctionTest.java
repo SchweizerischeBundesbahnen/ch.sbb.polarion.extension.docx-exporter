@@ -20,6 +20,7 @@ import com.polarion.alm.tracker.workflow.ICallContext;
 import com.polarion.core.util.exceptions.UserFriendlyRuntimeException;
 import com.polarion.core.util.types.Text;
 import com.polarion.subterra.base.location.ILocation;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -47,7 +48,8 @@ class DocxExportFunctionTest {
     private SettingsService settingsService;
 
     @BeforeEach
-    public void setup() {
+    void beforeEach() {
+        NamedSettingsRegistry.INSTANCE.getAll().clear();
         docxExporterPolarionService = mock(DocxExporterPolarionService.class);
         docxConverter = mock(DocxConverter.class);
         docxExportFunction = spy(new DocxExportFunction(docxExporterPolarionService, docxConverter));
@@ -63,6 +65,11 @@ class DocxExportFunctionTest {
         lenient().when(moduleStatus.getId()).thenReturn("currentStatusId");
         lenient().when(module.getStatus()).thenReturn(moduleStatus);
         lenient().when(context.getTarget()).thenAnswer((Answer<?>) invocationOnMock -> module);
+    }
+
+    @AfterEach
+    void afterEach() {
+        NamedSettingsRegistry.INSTANCE.getAll().clear();
     }
 
     @Test
