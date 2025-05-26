@@ -11,6 +11,7 @@ import org.glassfish.jersey.media.multipart.FormDataBodyPart;
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
 import org.glassfish.jersey.media.multipart.FormDataMultiPart;
 import org.glassfish.jersey.media.multipart.MultiPartFeature;
+import org.glassfish.jersey.media.multipart.file.FileDataBodyPart;
 import org.jetbrains.annotations.NotNull;
 
 import javax.ws.rs.client.Client;
@@ -22,6 +23,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
@@ -33,6 +35,7 @@ import static com.polarion.core.util.StringUtils.isEmpty;
 public class PandocServiceConnector {
 
     public static final String MEDIA_TYPE_DOCX = "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
+    public static final String MEDIA_TYPE_PDF = "application/pdf";
 
     private static final Logger logger = Logger.getLogger(PandocServiceConnector.class);
 
@@ -75,6 +78,41 @@ public class PandocServiceConnector {
                 }
 
                 Invocation.Builder requestBuilder = webTarget.request(MEDIA_TYPE_DOCX);
+
+                try (Response response = requestBuilder.post(Entity.entity(multipart, multipart.getMediaType()))) {
+                    if (response.getStatus() == Response.Status.OK.getStatusCode()) {
+                        InputStream inputStream = response.readEntity(InputStream.class);
+                        try {
+                            logPandocVersionFromHeader(response);
+                            return inputStream.readAllBytes();
+                        } catch (IOException e) {
+                            throw new IllegalStateException("Could not read response stream", e);
+                        }
+                    } else {
+                        String errorMessage = response.readEntity(String.class);
+                        throw new IllegalStateException(String.format("Not expected response from Pandoc Service. Status: %s, Message: [%s]", response.getStatus(), errorMessage));
+                    }
+                }
+            }
+        } catch (Exception e) {
+            throw new UserFriendlyRuntimeException("Could not get response from pandoc service", e);
+        } finally {
+            if (client != null) {
+                client.close();
+            }
+        }
+    }
+
+    public byte[] convertToPDF(File docx) {
+        Client client = null;
+        try {
+            client = ClientBuilder.newClient();
+            WebTarget webTarget = client.target(getPandocServiceBaseUrl() + "/convert/docx/to/pdf").register(MultiPartFeature.class);
+
+            try (FormDataMultiPart multipart = new FormDataMultiPart()) {
+                multipart.bodyPart(new FileDataBodyPart("source", docx, MediaType.APPLICATION_OCTET_STREAM_TYPE));
+
+                Invocation.Builder requestBuilder = webTarget.request(MEDIA_TYPE_PDF);
 
                 try (Response response = requestBuilder.post(Entity.entity(multipart, multipart.getMediaType()))) {
                     if (response.getStatus() == Response.Status.OK.getStatusCode()) {

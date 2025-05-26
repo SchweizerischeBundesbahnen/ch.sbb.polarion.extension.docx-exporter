@@ -90,6 +90,26 @@
                 <org.jsoup.artifactId>org.jsoup_1.15.2</org.jsoup.artifactId>
             </properties>
         </profile>
+        <profile>
+            <id>tests-with-pandoc-docker</id>
+
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-surefire-plugin</artifactId>
+                        <version>${maven-surefire-plugin.version}</version>
+                        <configuration>
+                            <!-- hide unwanted exceptions logging -->
+                            <redirectTestOutputToFile>true</redirectTestOutputToFile>
+                            <systemPropertyVariables>
+                                <docxExporterImpl>docker</docxExporterImpl>
+                            </systemPropertyVariables>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
     </profiles>
 
     <dependencies>
@@ -186,6 +206,25 @@
             <artifactId>ch.sbb.polarion.extension.generic.app</artifactId>
             <version>${project.parent.version}</version>
             <type>test-jar</type>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.docx4j</groupId>
+            <artifactId>docx4j-core</artifactId>
+            <version>11.4.8</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.docx4j</groupId>
+            <artifactId>docx4j-JAXB-ReferenceImpl</artifactId>
+            <version>11.4.8</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.docx4j</groupId>
+            <artifactId>docx4j-diffx</artifactId>
+            <version>11.4.8</version>
             <scope>test</scope>
         </dependency>
     </dependencies>
