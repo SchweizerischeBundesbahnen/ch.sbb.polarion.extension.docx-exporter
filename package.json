@@ -8,7 +8,7 @@
   "devDependencies": {
     "jsdom": "26.1.0",
     "chai": "5.2.0",
-    "mocha": "11.6.0",
+    "mocha": "11.7.0",
     "testdouble": "3.20.2"
   }
 }
