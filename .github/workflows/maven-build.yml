@@ -154,18 +154,16 @@ jobs:
           distribution: ${{ env.JAVA_DISTRIBUTION }}
           java-version: ${{ env.JAVA_VERSION }}
           cache: maven
-      - name: 📦 Deploy to Maven Central
-        # This cannot be implemented using deploy:deploy-file
-        # The central-publishing-maven-plugin must be used instead due to specific deployment requirements
-        # Additionally, timeouts are set to 1 hour to avoid issues with the connection to Sonatype Central during deployment
+      - name: 📦 Deploy to GitHub Packages
+        # Releases should only be deployed to GitHub packages when the repo is private
+        # Only snapshots should always be deployed here
+        # if: ${{ needs.build.outputs.is_release == 'false' }}  # Comment out when the repository is public
         run: |
-          mvn --batch-mode -s "${SETTINGS_XML}" clean deploy \
+          mvn --batch-mode -s "${SETTINGS_XML}" deploy \
             -Dmaven.test.skip=true \
-            -P gpg-sign \
-            -P central-publishing \
-            -Dcentral.timeout=3600 \
-            -Dmaven.wagon.http.connectionTimeout=3600000 \
-            -Dmaven.wagon.http.readTimeout=3600000
+            -Dmaven.javadoc.skip=true \
+            -Dmaven.source.skip=true \
+            -P deploy-github-packages
       - name: 📦 Upload assets to GitHub Release
         if: ${{ needs.build.outputs.is_release == 'true' }}
         run: |-
