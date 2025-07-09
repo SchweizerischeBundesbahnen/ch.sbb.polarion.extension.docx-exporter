@@ -1,5 +1,26 @@
 # Changelog
 
+## [2.0.0](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/compare/v1.1.3...v2.0.0) (2025-07-09)
+
+
+### ⚠ BREAKING CHANGES
+
+* Polarion 2506 support ([#61](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/issues/61))
+
+### Features
+
+* add tests interacting with pandoc-service in docker ([#49](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/issues/49)) ([a6a076f](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/commit/a6a076f258daa3f0ed09aaa9e05eb144e2c702fa)), closes [#33](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/issues/33)
+* Polarion 2506 support ([#61](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/issues/61)) ([242493b](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/commit/242493b1e3e9b1b5a94e00a4a3ceb7dad0f77fb4)), closes [#60](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/issues/60)
+
+
+### Bug Fixes
+
+* **deps:** update dependency ch.sbb.polarion.extensions:ch.sbb.polarion.extension.generic to v10.1.0 ([#53](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/issues/53)) ([50d3154](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/commit/50d31540985036951b386d502fc0b885ddaca8f9))
+* **deps:** update dependency ch.sbb.polarion.extensions:ch.sbb.polarion.extension.generic to v9.1.1 ([#51](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/issues/51)) ([3115530](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/commit/311553041b9f5688e60d7875abbaf00596ce2be1))
+* **deps:** update dependency net.bytebuddy:byte-buddy to v1.17.6 ([c900bd5](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/commit/c900bd5e5ec605e48bf171dd80ef3a5c62cd2005))
+* **deps:** update dependency org.apache.pdfbox:pdfbox to v3.0.5 ([#42](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/issues/42)) ([1d8ff7e](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/commit/1d8ff7ed8b85c93e3909c5e69a8eba915828453b))
+* extension registration using bundle activator ([#45](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/issues/45)) ([3c5f629](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/commit/3c5f629f3e3fea2a60045e7f5d3eb56e284731aa))
+
 ## [1.1.3](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/compare/v1.1.2...v1.1.3) (2025-04-15)
 
 
