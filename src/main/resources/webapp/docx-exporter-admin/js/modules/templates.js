@@ -47,7 +47,6 @@ function processDocx(file) {
             // processDocxContent(event.target.result);
             await processDocxContent(arrayBufferToBinary(reader.result));
         };
-        // reader.readAsArrayBuffer(file);
         reader.readAsArrayBuffer(file);
     } catch (error) {
         console.error("Error reading DOCX:", error);
@@ -112,13 +111,15 @@ function invalidatePanels() {
 }
 
 function saveTemplate() {
+    const template = ctx.docx instanceof Uint8Array ? arrayBufferToBinary(ctx.docx) : ctx.docx;
+
     ctx.hideActionAlerts();
     ctx.callAsync({
         method: 'PUT',
         url: `/polarion/${ctx.extension}/rest/internal/settings/${ctx.setting}/names/${conf.getSelectedConfiguration()}/content?scope=${ctx.scope}`,
         contentType: 'application/json',
         body: JSON.stringify({
-            'template': ctx.docx ? btoa(ctx.docx) : null
+            'template': template ? btoa(template) : null
         }),
         onOk: () => {
             ctx.showSaveSuccessAlert();
