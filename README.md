@@ -213,4 +213,12 @@ jobs.timeout.in-progress.minutes=60
 
 ## Known issues
 
+### Outline (chapter) numbers are displayed twice
+The outline (chapter) numbers are currently showing up twice because Word is adding its own numbering. To fix this, heading numbering should be disabled in the Word template used by Pandoc.
+
+### Style of table is not assigned automatically
+
+Styles were not applied because the table style in the Word template was defined incorrectly. When converting HTML to DOCX, Pandoc applies only the style named Table, which is considered the default table style. Even if the template contains other custom table styles, Pandoc ignores them unless they are directly linked to the Table style.
+To use a custom table style, the Word template must be configured so that the Table style inherits the formatting of the custom style. This can be done by redefining the default Table style within the template or by setting it to be based on the desired custom style.
+
 All good so far.

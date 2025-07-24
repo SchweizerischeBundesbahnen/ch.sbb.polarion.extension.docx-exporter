@@ -77,7 +77,7 @@ public class DocxExportFunction implements IFunction<IModule> {
         }
 
         ExportParams exportParams = getExportParams(module, args);
-        byte[] pdfBytes = docxConverter.convertToPdf(exportParams);
+        byte[] pdfBytes = docxConverter.convertToDocx(exportParams);
         savePdfAsWorkItemAttachment(module, exportParams, context.getTargetStatusId(), args, pdfBytes);
     }
 

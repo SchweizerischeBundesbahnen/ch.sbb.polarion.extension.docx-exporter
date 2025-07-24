@@ -129,10 +129,10 @@ public class ConverterInternalController {
                             }
                     )
             })
-    public Response convertToPdf(ExportParams exportParams) {
+    public Response convertToDocx(ExportParams exportParams) {
         validateExportParameters(exportParams);
         String fileName = getFileName(exportParams);
-        byte[] pdfBytes = docxConverter.convertToPdf(exportParams);
+        byte[] pdfBytes = docxConverter.convertToDocx(exportParams);
         return Response.ok(pdfBytes)
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + fileName + "\"")
                 .header(EXPORT_FILENAME_HEADER, fileName)

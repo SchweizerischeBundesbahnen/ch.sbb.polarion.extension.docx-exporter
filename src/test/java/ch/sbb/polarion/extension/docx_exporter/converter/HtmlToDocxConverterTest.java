@@ -35,16 +35,15 @@ class HtmlToDocxConverterTest {
                         <span>example text</span>
                     </body>
                 </html>""";
-
-        when(docxTemplateProcessor.buildBaseUrlHeader()).thenReturn("<base href='http://test' />");
         when(docxTemplateProcessor.buildSizeCss()).thenReturn("@page {size: test;}");
         when(htmlProcessor.replaceResourcesAsBase64Encoded(anyString())).thenAnswer(invocation ->
                 invocation.getArgument(0));
         when(htmlProcessor.internalizeLinks(anyString())).thenAnswer(a -> a.getArgument(0));
+        when(htmlProcessor.replaceLinks(anyString())).thenCallRealMethod();
         String resultHtml = htmlToDocxConverter.preprocessHtml(html);
 
         assertThat(resultHtml).isEqualTo("""
-                <html><head><base href='http://test' /><style>@page {size: test;}</style></head>
+                <html><head><style>@page {size: test;}</style></head>
                     <body>
                         <span>example text</span>
                     </body>
@@ -65,12 +64,11 @@ class HtmlToDocxConverterTest {
                         <span>example text</span>
                     </body>
                 </html>""";
-
-        when(docxTemplateProcessor.buildBaseUrlHeader()).thenReturn("<base href='http://test' />");
         when(docxTemplateProcessor.buildSizeCss()).thenReturn(" @page {size: test;}");
         when(htmlProcessor.replaceResourcesAsBase64Encoded(anyString())).thenAnswer(invocation ->
                 invocation.getArgument(0));
         when(htmlProcessor.internalizeLinks(anyString())).thenAnswer(a -> a.getArgument(0));
+        when(htmlProcessor.replaceLinks(anyString())).thenCallRealMethod();
         String resultHtml = htmlToDocxConverter.preprocessHtml(html);
 
         assertThat(resultHtml).isEqualTo("""
@@ -78,7 +76,7 @@ class HtmlToDocxConverterTest {
                     <head>
                         test head content before
                         <style>style content @page {size: test;}</style>
-                    <base href='http://test' /></head>
+                    </head>
                     <body>
                         <span>example text</span>
                     </body>
@@ -98,19 +96,18 @@ class HtmlToDocxConverterTest {
                         <span>example text</span>
                     </body>
                 </html>""";
-
-        when(docxTemplateProcessor.buildBaseUrlHeader()).thenReturn("<base href='http://test' />");
         when(docxTemplateProcessor.buildSizeCss()).thenReturn(" @page {size: test;}");
         when(htmlProcessor.replaceResourcesAsBase64Encoded(anyString())).thenAnswer(invocation ->
                 invocation.getArgument(0));
         when(htmlProcessor.internalizeLinks(anyString())).thenAnswer(a -> a.getArgument(0));
+        when(htmlProcessor.replaceLinks(anyString())).thenCallRealMethod();
         String resultHtml = htmlToDocxConverter.preprocessHtml(html);
 
         assertThat(resultHtml).isEqualTo("""
                 <html>
                     <head>
                         test head content before
-                    <base href='http://test' /><style> @page {size: test;}</style></head>
+                    <style> @page {size: test;}</style></head>
                     <body>
                         <span>example text</span>
                     </body>
@@ -134,16 +131,15 @@ class HtmlToDocxConverterTest {
                 <html myAttribute="test">
                     <body/>
                 </html>""";
-
-        when(docxTemplateProcessor.buildBaseUrlHeader()).thenReturn("<base href='http://test' />");
         when(docxTemplateProcessor.buildSizeCss()).thenReturn("@page {size: test;}");
         when(htmlProcessor.replaceResourcesAsBase64Encoded(anyString())).thenAnswer(invocation ->
                 invocation.getArgument(0));
         when(htmlProcessor.internalizeLinks(anyString())).thenAnswer(a -> a.getArgument(0));
+        when(htmlProcessor.replaceLinks(anyString())).thenCallRealMethod();
         String resultHtml = htmlToDocxConverter.preprocessHtml(html);
 
         assertThat(resultHtml).isEqualTo("""
-                <html myAttribute="test"><head><base href='http://test' /><style>@page {size: test;}</style></head>
+                <html myAttribute="test"><head><style>@page {size: test;}</style></head>
                     <body/>
                 </html>""");
 

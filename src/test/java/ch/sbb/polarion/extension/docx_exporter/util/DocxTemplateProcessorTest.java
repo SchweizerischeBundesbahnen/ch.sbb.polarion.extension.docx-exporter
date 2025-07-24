@@ -1,22 +1,15 @@
 package ch.sbb.polarion.extension.docx_exporter.util;
 
 import ch.sbb.polarion.extension.docx_exporter.TestStringUtils;
-import com.polarion.core.boot.PolarionProperties;
-import com.polarion.core.config.Configuration;
-import com.polarion.core.config.IClusterConfiguration;
-import com.polarion.core.config.IConfiguration;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
-import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.MethodSource;
-import org.mockito.MockedStatic;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.stream.Stream;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class DocxTemplateProcessorTest {
@@ -24,82 +17,46 @@ class DocxTemplateProcessorTest {
 
     @ParameterizedTest
     @MethodSource("paramsForProcessHtmlTemplate")
-    void shouldProcessHtmlTemplate(String baseUrl, String expectedResult) {
-        MockedStatic<Configuration> configuration = null;
-        try {
-            if (baseUrl != null) {
-                System.setProperty(PolarionProperties.BASE_URL, baseUrl);
-            } else {
-                System.clearProperty(PolarionProperties.BASE_URL);
-                configuration = mockStaticHostNameConfiguration();
-            }
+    void shouldProcessHtmlTemplate(String expectedResult) {
 
-            // Act
-            String resultHtml = docxTemplateProcessor.processUsing("testDocumentName", "test html content");
+        // Act
+        String resultHtml = docxTemplateProcessor.processUsing("testDocumentName", "test html content");
 
-            // Assert
-            assertThat(TestStringUtils.removeNonsensicalSymbols(resultHtml).replaceAll(" ", ""))
-                    .isEqualTo(TestStringUtils.removeNonsensicalSymbols(expectedResult).replaceAll(" ", ""));
-        } finally {
-            if (configuration != null) {
-                configuration.close();
-            }
-        }
-    }
+        // Assert
+        assertThat(TestStringUtils.removeNonsensicalSymbols(resultHtml).replaceAll(" ", ""))
+                .isEqualTo(TestStringUtils.removeNonsensicalSymbols(expectedResult).replaceAll(" ", ""));
 
-    @ParameterizedTest
-    @CsvSource({"test, <base href='http://test' />", "http://test, <base href='http://test' />", "https://test, <base href='https://test' />"})
-    void shouldBuildBaseUrlFromProperties(String baseUrl, String expectedResult) {
-        System.setProperty(PolarionProperties.BASE_URL, baseUrl);
-        try {
-            String result = docxTemplateProcessor.buildBaseUrlHeader();
-            assertThat(result).isEqualTo(expectedResult);
-        } finally {
-            System.setProperty(PolarionProperties.BASE_URL, "");
-        }
-    }
-
-    private static MockedStatic<Configuration> mockStaticHostNameConfiguration() {
-        MockedStatic<Configuration> configuration = mockStatic(Configuration.class);
-        IConfiguration configInstance = mock(IConfiguration.class);
-        IClusterConfiguration clusterConfiguration = mock(IClusterConfiguration.class);
-        configuration.when(Configuration::getInstance).thenReturn(configInstance);
-        when(configInstance.cluster()).thenReturn(clusterConfiguration);
-        when(clusterConfiguration.nodeHostname()).thenReturn("testClusterNodeHostName");
-        return configuration;
     }
 
     private static Stream<Arguments> paramsForProcessHtmlTemplate() {
         return Stream.of(
-                Arguments.of(null, """
-                    <?xml version='1.0' encoding='UTF-8'?>
-                    <!DOCTYPE html PUBLIC '-//W3C//DTD XHTML 1.0 Strict//EN' 'http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd'>
-                    <html lang='en' xml:lang='en' xmlns='http://www.w3.org/1999/xhtml'>
-                    <head>
-                        <title>testDocumentName</title>
-                        <meta content='text/html; charset=UTF-8' http-equiv='Content-Type'/>
-                        <base href='http://testClusterNodeHostName' />
-                        <link crossorigin='anonymous' href='/polarion/ria/font-awesome-4.0.3/css/font-awesome.css' referrerpolicy='no-referrer' rel='stylesheet'/>
-                    </head>
-                    <body>
-                    test html content
-                    </body>
-                    </html>""".indent(0).trim()),
+                Arguments.of("""
+                        <?xml version='1.0' encoding='UTF-8'?>
+                        <!DOCTYPE html PUBLIC '-//W3C//DTD XHTML 1.0 Strict//EN' 'http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd'>
+                        <html lang='en' xml:lang='en' xmlns='http://www.w3.org/1999/xhtml'>
+                        <head>
+                            <title>testDocumentName</title>
+                            <meta content='text/html; charset=UTF-8' http-equiv='Content-Type'/>                   
+                            <link crossorigin='anonymous' href='/polarion/ria/font-awesome-4.0.3/css/font-awesome.css' referrerpolicy='no-referrer' rel='stylesheet'/>
+                        </head>
+                        <body>
+                        test html content
+                        </body>
+                        </html>""".indent(0).trim()),
 
-                Arguments.of("custom base url","""
-                    <?xml version='1.0' encoding='UTF-8'?>
-                    <!DOCTYPE html PUBLIC '-//W3C//DTD XHTML 1.0 Strict//EN' 'http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd'>
-                    <html lang='en' xml:lang='en' xmlns='http://www.w3.org/1999/xhtml'>
-                    <head>
-                        <title>testDocumentName</title>
-                        <meta content='text/html; charset=UTF-8' http-equiv='Content-Type'/>
-                        <base href='http://custom base url' />
-                        <link crossorigin='anonymous' href='/polarion/ria/font-awesome-4.0.3/css/font-awesome.css' referrerpolicy='no-referrer' rel='stylesheet'/>
-                    </head>
-                    <body>
-                    test html content
-                    </body>
-                    </html>""".indent(0).trim())
+                Arguments.of("""
+                        <?xml version='1.0' encoding='UTF-8'?>
+                        <!DOCTYPE html PUBLIC '-//W3C//DTD XHTML 1.0 Strict//EN' 'http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd'>
+                        <html lang='en' xml:lang='en' xmlns='http://www.w3.org/1999/xhtml'>
+                        <head>
+                            <title>testDocumentName</title>
+                            <meta content='text/html; charset=UTF-8' http-equiv='Content-Type'/>
+                            <link crossorigin='anonymous' href='/polarion/ria/font-awesome-4.0.3/css/font-awesome.css' referrerpolicy='no-referrer' rel='stylesheet'/>
+                        </head>
+                        <body>
+                        test html content
+                        </body>
+                        </html>""".indent(0).trim())
         );
     }
 }

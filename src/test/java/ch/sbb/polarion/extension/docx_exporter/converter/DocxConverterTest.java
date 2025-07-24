@@ -86,7 +86,7 @@ class DocxConverterTest {
         when(htmlProcessor.internalizeLinks(anyString())).thenAnswer(a -> a.getArgument(0));
 
         // Act
-        byte[] result = docxConverter.convertToPdf(exportParams);
+        byte[] result = docxConverter.convertToDocx(exportParams);
 
         // Assert
         assertThat(result).isEqualTo("test document content".getBytes());

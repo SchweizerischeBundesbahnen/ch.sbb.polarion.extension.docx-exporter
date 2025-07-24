@@ -35,8 +35,8 @@ public class ConverterApiController extends ConverterInternalController {
     }
 
     @Override
-    public Response convertToPdf(ExportParams exportParams) {
-        return polarionService.callPrivileged(() -> super.convertToPdf(exportParams));
+    public Response convertToDocx(ExportParams exportParams) {
+        return polarionService.callPrivileged(() -> super.convertToDocx(exportParams));
     }
 
     @Override
