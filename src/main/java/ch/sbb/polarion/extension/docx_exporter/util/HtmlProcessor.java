@@ -11,6 +11,8 @@ import ch.sbb.polarion.extension.docx_exporter.settings.LocalizationSettings;
 import ch.sbb.polarion.extension.docx_exporter.util.exporter.CustomPageBreakPart;
 import ch.sbb.polarion.extension.docx_exporter.util.html.HtmlLinksHelper;
 import com.polarion.alm.shared.util.StringUtils;
+import com.polarion.core.boot.PolarionProperties;
+import com.polarion.core.config.Configuration;
 import com.polarion.core.util.xml.CSSStyle;
 import lombok.SneakyThrows;
 import org.jetbrains.annotations.NotNull;
@@ -21,6 +23,8 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -28,6 +32,8 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import static ch.sbb.polarion.extension.docx_exporter.util.exporter.Constants.*;
 
@@ -65,6 +71,10 @@ public class HtmlProcessor {
     private static final String AUTHOR = "author";
     private static final String DATE = "date";
     private static final String TEXT = "text";
+
+    private static final String LOCALHOST = "localhost";
+    public static final String HTTP_PROTOCOL_PREFIX = "http://";
+    public static final String HTTPS_PROTOCOL_PREFIX = "https://";
 
     private final FileResourceProvider fileResourceProvider;
     private final LocalizationSettings localizationSettings;
@@ -135,6 +145,8 @@ public class HtmlProcessor {
             html = processPageBrakes(html);
         }
         html = adjustContentToFitPage(html);
+
+        html = replaceLinks(html);
 
         // Do not change this entry order, '&nbsp;' can be used in the logic above, so we must cut them off as the last step
         html = cutExtraNbsp(html);
@@ -972,8 +984,65 @@ public class HtmlProcessor {
         return httpLinksHelper.internalizeLinks(html);
     }
 
+    public String replaceLinks(String html) {
+        String baseUrl = getBaseUrl();
+        // Use RegexMatcher to process anchor tags with href
+        return RegexMatcher.get("<a\\s+[^>]*href=\\\"(?<href>[^\\\"]*)\\\"[^>]*>")
+            .replace(html, regexEngine -> {
+                String originalHref = regexEngine.group("href");
+                String anchorTag = regexEngine.group();
+                if (originalHref.matches("#dlecaption_\\d+") || isInTOC(anchorTag)) {
+                    return anchorTag;
+                }
+                if (isRelativeLink(originalHref)) {
+                    String absoluteUrl = resolveUrl(baseUrl, originalHref);
+                    return anchorTag.replace("href=\"" + originalHref + "\"", "href=\"" + absoluteUrl + "\"");
+                }
+                return anchorTag;
+            });
+    }
+
+    @VisibleForTesting
+    boolean isInTOC(String anchorTag) {
+        return anchorTag.contains("class=\"toc\"") || anchorTag.contains("class='toc'");
+    }
+
+    @VisibleForTesting
+    boolean isRelativeLink(String url) {
+        return !(url.startsWith("http://") || url.startsWith("https://") || url.startsWith("#") || url.startsWith("mailto:"));
+    }
+
+    @VisibleForTesting
+    String resolveUrl(String baseUrl, String relativeUrl) {
+        try {
+            URI base = new URI(baseUrl);
+            URI resolved = base.resolve(relativeUrl);
+            return resolved.toString();
+        } catch (URISyntaxException e) {
+            return relativeUrl;
+        }
+    }
+
+    @VisibleForTesting
+    String getBaseUrl() {
+        String polarionBaseUrl = System.getProperty(PolarionProperties.BASE_URL, LOCALHOST);
+        if (!polarionBaseUrl.contains(LOCALHOST)) {
+            return enrichByProtocolPrefix(polarionBaseUrl);
+        }
+        String hostname = Configuration.getInstance().cluster().nodeHostname();
+        return enrichByProtocolPrefix(hostname);
+    }
+
+    @VisibleForTesting
+    String enrichByProtocolPrefix(String hostname) {
+        if (com.polarion.core.util.StringUtils.isEmpty(hostname) || hostname.startsWith(HTTP_PROTOCOL_PREFIX) || hostname.startsWith(HTTPS_PROTOCOL_PREFIX)) {
+            return hostname;
+        } else {
+            return HTTP_PROTOCOL_PREFIX + hostname;
+        }
+    }
+
     private boolean hasCustomPageBreaks(String html) {
         return html.contains(PAGE_BREAK_MARK);
     }
-
 }

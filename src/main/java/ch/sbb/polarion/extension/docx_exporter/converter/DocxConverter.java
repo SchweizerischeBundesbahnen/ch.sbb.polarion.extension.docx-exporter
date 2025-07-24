@@ -67,7 +67,7 @@ public class DocxConverter {
         docxTemplateProcessor = new DocxTemplateProcessor();
     }
 
-    public byte[] convertToPdf(@NotNull ExportParams exportParams) {
+    public byte[] convertToDocx(@NotNull ExportParams exportParams) {
         long startTime = System.currentTimeMillis();
 
         DocxGenerationLog generationLog = new DocxGenerationLog();
@@ -84,7 +84,7 @@ public class DocxConverter {
         byte[] bytes = generateDocx(exportParams, htmlContent);
 
         if (exportParams.getInternalContent() == null) { //do not log time for internal parts processing
-            String finalMessage = "PDF document '" + documentData.getTitle() + "' has been generated within " + (System.currentTimeMillis() - startTime) + " milliseconds";
+            String finalMessage = "DOCX document '" + documentData.getTitle() + "' has been generated within " + (System.currentTimeMillis() - startTime) + " milliseconds";
             logger.info(finalMessage);
             generationLog.log(finalMessage);
         }

@@ -52,9 +52,9 @@ public class DocxConverterJobsService {
 
         CompletableFuture<byte[]> asyncConversionJob = CompletableFuture.supplyAsync(() -> {
             try {
-                return securityService.doAsUser(userSubject, (PrivilegedAction<byte[]>) () -> docxConverter.convertToPdf(exportParams));
+                return securityService.doAsUser(userSubject, (PrivilegedAction<byte[]>) () -> docxConverter.convertToDocx(exportParams));
             } catch (Exception e) {
-                String errorMessage = String.format("PDF conversion job '%s' is failed with error: %s", jobId, e.getMessage());
+                String errorMessage = String.format("DOCX conversion job '%s' is failed with error: %s", jobId, e.getMessage());
                 logger.error(errorMessage, e);
                 failedJobsReasons.put(jobId, e.getMessage());
                 throw e;
@@ -74,7 +74,7 @@ public class DocxConverterJobsService {
                         failedReason = String.format("Timeout after %d min", timeoutInMinutes);
                     }
                     failedJobsReasons.put(jobId, failedReason);
-                    logger.error(String.format("PDF conversion job '%s' is failed with error: %s", jobId, failedReason), e);
+                    logger.error(String.format("DOCX conversion job '%s' is failed with error: %s", jobId, failedReason), e);
                     asyncConversionJob.completeExceptionally(e);
                     return null;
                 });

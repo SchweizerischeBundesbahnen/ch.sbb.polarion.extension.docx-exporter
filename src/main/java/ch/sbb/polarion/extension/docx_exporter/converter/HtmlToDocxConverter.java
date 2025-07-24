@@ -56,8 +56,8 @@ public class HtmlToDocxConverter {
         String origHead = extractTagContent(origHtml, "head");
         String origCss = extractTagContent(origHead, "style");
 
-        String head = origHead + docxTemplateProcessor.buildBaseUrlHeader();
         String css = origCss + docxTemplateProcessor.buildSizeCss();
+        String head = origHead;
         if (origCss.isBlank()) {
             head = head + String.format("<style>%s</style>", css);
         } else {
@@ -69,8 +69,10 @@ public class HtmlToDocxConverter {
         } else {
             html = replaceTagContent(origHtml, "head", head);
         }
-        html = htmlProcessor.replaceResourcesAsBase64Encoded(html);
+
         html = htmlProcessor.internalizeLinks(html);
+        html = htmlProcessor.replaceLinks(html);
+        html = htmlProcessor.replaceResourcesAsBase64Encoded(html);
 
         return html;
     }

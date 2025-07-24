@@ -1,6 +1,5 @@
 package ch.sbb.polarion.extension.docx_exporter.util;
 
-import ch.sbb.polarion.extension.generic.settings.SettingId;
 import ch.sbb.polarion.extension.docx_exporter.TestStringUtils;
 import ch.sbb.polarion.extension.docx_exporter.rest.model.conversion.ExportParams;
 import ch.sbb.polarion.extension.docx_exporter.rest.model.settings.localization.Language;
@@ -8,6 +7,8 @@ import ch.sbb.polarion.extension.docx_exporter.rest.model.settings.localization.
 import ch.sbb.polarion.extension.docx_exporter.service.DocxExporterPolarionService;
 import ch.sbb.polarion.extension.docx_exporter.settings.LocalizationSettings;
 import ch.sbb.polarion.extension.docx_exporter.util.html.HtmlLinksHelper;
+import ch.sbb.polarion.extension.generic.settings.SettingId;
+import com.polarion.core.boot.PolarionProperties;
 import lombok.SneakyThrows;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -24,7 +25,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
@@ -619,6 +620,69 @@ class HtmlProcessorTest {
                 """;
 
         assertEquals(TestStringUtils.removeNonsensicalSymbols(expectedHtml), TestStringUtils.removeNonsensicalSymbols(processedHtml.replaceAll(" ", "")));
+    }
+
+    @Test
+    void replaceRelativeLinkTest() {
+        String baseUrl = "http://example.com/base/";
+        System.setProperty(PolarionProperties.BASE_URL, baseUrl);
+        try {
+            String html = "<a href=\"page.html\">Page</a>";
+            String result = processor.replaceLinks(html);
+            assertTrue(result.contains("href=\"http://example.com/base/page.html\""));
+        } finally {
+            System.setProperty(PolarionProperties.BASE_URL, "");
+        }
+    }
+
+    @Test
+    public void ignoreAbsoluteLinkTest() {
+        String html = "<a href=\"https://external.com/page\">External</a>";
+        String result = processor.replaceLinks(html);
+        assertEquals(html, result);
+    }
+
+    @Test
+    public void ignoreMailtoLinkTest() {
+        String html = "<a href=\"mailto:someone@example.com\">Email</a>";
+        String result = processor.replaceLinks(html);
+        assertEquals(html, result);
+    }
+
+    @Test
+    public void ignoreDleCaptionAnchorTest() {
+        String html = "<a href=\"#dlecaption_123\">Caption</a>";
+        String result = processor.replaceLinks(html);
+        assertEquals(html, result);
+    }
+
+    @Test
+    public void malformedHrefIsSafeTest() {
+        String baseUrl = "http://example.com/base/";
+        System.setProperty(PolarionProperties.BASE_URL, baseUrl);
+        try {
+            String html = "<a href=\"..//page\">Broken path</a>";
+            String result = processor.replaceLinks(html);
+            assertTrue(result.contains("http://example.com/page"));
+        } finally {
+            System.setProperty(PolarionProperties.BASE_URL, "");
+        }
+    }
+
+    @Test
+    public void testIsRelativeLink() {
+        assertTrue(processor.isRelativeLink("about.html"));
+        assertFalse(processor.isRelativeLink("http://foo.com"));
+        assertFalse(processor.isRelativeLink("mailto:someone"));
+        assertFalse(processor.isRelativeLink("#section1"));
+    }
+
+    @Test
+    public void testResolveUrl() {
+        String baseUrl = "http://example.com/base/";
+        String rel = "foo/bar.html";
+        String result = processor.resolveUrl(baseUrl, rel);
+        assertEquals("http://example.com/base/foo/bar.html", result);
     }
 
     private ExportParams getExportParams() {
