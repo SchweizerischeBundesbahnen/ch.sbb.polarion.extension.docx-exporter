@@ -7,6 +7,7 @@ import ch.sbb.polarion.extension.docx_exporter.rest.model.documents.id.DocumentP
 import ch.sbb.polarion.extension.docx_exporter.rest.model.documents.id.LiveDocId;
 import ch.sbb.polarion.extension.docx_exporter.service.PolarionBaselineExecutor;
 import ch.sbb.polarion.extension.docx_exporter.util.LiveDocCommentsProcessor;
+import ch.sbb.polarion.extension.docx_exporter.util.WorkItemCommentsProcessor;
 import ch.sbb.polarion.extension.docx_exporter.util.exporter.ModifiedDocumentRenderer;
 import com.polarion.alm.projects.model.IUniqueObject;
 import com.polarion.alm.server.api.model.document.ProxyDocument;
@@ -64,6 +65,7 @@ public class LiveDocAdapter extends CommonUniqueObjectAdapter {
             if (internalContent != null && exportParams.getRenderComments() != null) {
                 // Add inline comments into document content
                 internalContent = new LiveDocCommentsProcessor().addLiveDocComments(document, internalContent, CommentsRenderType.OPEN.equals(exportParams.getRenderComments()));
+                internalContent = new WorkItemCommentsProcessor().addWorkItemComments(document, internalContent, CommentsRenderType.OPEN.equals(exportParams.getRenderComments()));
             }
             Map<String, String> documentParameters = exportParams.getUrlQueryParameters() == null ? Map.of() : exportParams.getUrlQueryParameters();
             DocumentRendererParameters parameters = new DocumentRendererParameters(null, documentParameters.get(URL_QUERY_PARAM_LANGUAGE));
