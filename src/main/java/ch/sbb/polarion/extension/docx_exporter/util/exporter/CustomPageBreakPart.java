@@ -38,7 +38,7 @@ public class CustomPageBreakPart extends PageBreakPart {
             htmlMethod.setAccessible(true);
 
             // pandoc's pagebreak.lua will convert <p> tag with '\f' content into a page break
-            htmlMethod.invoke(fragment, "<p class=\"sbb_page_break\">&#12;</p>");
+            htmlMethod.invoke(fragment, "<p class=\"page_break\"></p>");
 
             fragment.finished();
         } else {
