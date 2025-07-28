@@ -1,5 +1,20 @@
 # Changelog
 
+## [2.1.0](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/compare/v2.0.0...v2.1.0) (2025-07-28)
+
+
+### Features
+
+* added rendering of comments from WI ([#72](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/issues/72)) ([c2bb114](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/commit/c2bb114a1637fc4ac69967356edc8edccd90465b)), closes [#71](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/issues/71)
+
+
+### Bug Fixes
+
+* **deps:** update dependency ch.sbb.polarion.extensions:ch.sbb.polarion.extension.generic to v11.0.2 ([98613d4](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/commit/98613d43939487d3ed7dad7b789df4c56cadb866))
+* fix page breaks (issue introduced by JSoup) ([#75](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/issues/75)) ([48f0695](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/commit/48f0695d06d0a1be51b5b86e65f4023430c226c5)), closes [#74](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/issues/74)
+* fix reverting to a template from previous revision ([#68](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/issues/68)) ([454c5be](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/commit/454c5befdd86be10949d343b1afc94c45e4f3a5d))
+* fixed links to ToC, ToF, ToT ([#70](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/issues/70)) ([578b434](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/commit/578b434fc11d9f187990ed9c76f0c93f3bbc5200)), closes [#67](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/issues/67)
+
 ## [2.0.0](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/compare/v1.1.3...v2.0.0) (2025-07-09)
 
 
