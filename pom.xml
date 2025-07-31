@@ -46,7 +46,7 @@
     <properties>
         <pdfbox.version>3.0.5</pdfbox.version>
         <docx4j.version>11.5.4</docx4j.version>
-        <jakarta.xml.bind.bersion>3.0.1</jakarta.xml.bind.bersion>
+        <jakarta.xml.bind.bersion>4.0.2</jakarta.xml.bind.bersion>
         <okapi.xliff.version>1.47.0</okapi.xliff.version>
         <byte-buddy.version>1.17.6</byte-buddy.version>
 
