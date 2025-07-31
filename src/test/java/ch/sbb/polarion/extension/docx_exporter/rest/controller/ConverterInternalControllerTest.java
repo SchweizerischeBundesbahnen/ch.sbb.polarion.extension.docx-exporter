@@ -34,7 +34,7 @@ import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 class ConverterInternalControllerTest {
     @Mock
-    private DocxConverterJobsService pdfConverterJobService;
+    private DocxConverterJobsService docxConverterJobService;
     @Mock
     private UriInfo uriInfo;
 
@@ -47,7 +47,7 @@ class ConverterInternalControllerTest {
                 .projectId("testProjectId")
                 .locationPath("testLocationPath")
                 .build();
-        when(pdfConverterJobService.startJob(params, 60)).thenReturn("testJobId");
+        when(docxConverterJobService.startJob(params, 60)).thenReturn("testJobId");
         when(uriInfo.getRequestUri()).thenReturn(UriBuilder.fromUri("http://testHost:8090/polarion/docx-exporter/rest/api/convert/jobs").build());
         try (Response response = internalController.startPdfConverterJob(params)) {
             assertThat(response.getStatus()).isEqualTo(HttpStatus.ACCEPTED.value());
@@ -81,7 +81,7 @@ class ConverterInternalControllerTest {
         if (expectedLocationUrl != null) {
             when(uriInfo.getRequestUri()).thenReturn(UriBuilder.fromUri("http://testHost:8090/polarion/docx-exporter/rest/api/convert/jobs/testJobId").build());
         }
-        when(pdfConverterJobService.getJobState("testJobId")).thenReturn(jobState);
+        when(docxConverterJobService.getJobState("testJobId")).thenReturn(jobState);
         try (Response response = internalController.getPdfConverterJobStatus("testJobId")) {
             assertThat(response.getStatus()).isEqualTo(expectedHttpStatus.value());
             assertThat(response.getEntity()).isInstanceOf(ConverterJobDetails.class);
@@ -106,7 +106,7 @@ class ConverterInternalControllerTest {
 
     @Test
     void getPdfConverterJobStatus_notFound() {
-        when(pdfConverterJobService.getJobState(anyString())).thenAnswer(id -> {
+        when(docxConverterJobService.getJobState(anyString())).thenAnswer(id -> {
             throw new NoSuchElementException("Job not found: " + id);
         });
         assertThatThrownBy(() -> internalController.getPdfConverterJobStatus("testJobIdUnknown"))
@@ -116,17 +116,17 @@ class ConverterInternalControllerTest {
 
     @Test
     void getPdfConverterJobResult_success() {
-        when(pdfConverterJobService.getJobResult("testJobId")).thenReturn(Optional.of("test pdf".getBytes()));
-        when(pdfConverterJobService.getJobContext("testJobId")).thenReturn(DocxConverterJobsService.JobContext.builder().workItemIDsWithMissingAttachment(new ArrayList<String>()).build());
+        when(docxConverterJobService.getJobResult("testJobId")).thenReturn(Optional.of("test docx".getBytes()));
+        when(docxConverterJobService.getJobContext("testJobId")).thenReturn(DocxConverterJobsService.JobContext.builder().workItemIDsWithMissingAttachment(new ArrayList<String>()).build());
         Response jobResult = internalController.getPdfConverterJobResult("testJobId");
 
         assertThat(jobResult.getStatus()).isEqualTo(HttpStatus.OK.value());
-        assertThat(jobResult.getEntity()).isEqualTo("test pdf".getBytes());
+        assertThat(jobResult.getEntity()).isEqualTo("test docx".getBytes());
     }
 
     @Test
     void getPdfConverterJobResult_notFound() {
-        when(pdfConverterJobService.getJobResult(anyString())).thenAnswer(id -> {
+        when(docxConverterJobService.getJobResult(anyString())).thenAnswer(id -> {
             throw new NoSuchElementException("Job not found: " + id);
         });
         assertThatThrownBy(() -> internalController.getPdfConverterJobResult("testJobIdUnknown"))
@@ -136,7 +136,7 @@ class ConverterInternalControllerTest {
 
     @Test
     void getPdfConverterJobResult_illegalState() {
-        when(pdfConverterJobService.getJobResult("testJobId")).thenThrow(new IllegalStateException("Job was cancelled or failed: testJobId"));
+        when(docxConverterJobService.getJobResult("testJobId")).thenThrow(new IllegalStateException("Job was cancelled or failed: testJobId"));
 
         assertThatThrownBy(() -> internalController.getPdfConverterJobResult("testJobId"))
                 .isInstanceOf(IllegalStateException.class)
@@ -145,7 +145,7 @@ class ConverterInternalControllerTest {
 
     @Test
     void getAllPdfConverterJobs() {
-        when(pdfConverterJobService.getAllJobsStates()).thenReturn(
+        when(docxConverterJobService.getAllJobsStates()).thenReturn(
                 Map.of(
                         "testJobId1", new JobState(true, false, false, null),
                         "testJobId2", new JobState(false, false, false, null),

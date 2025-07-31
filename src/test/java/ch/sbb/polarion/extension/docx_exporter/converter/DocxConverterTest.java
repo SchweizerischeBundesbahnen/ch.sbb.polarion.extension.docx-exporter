@@ -42,8 +42,6 @@ class DocxConverterTest {
     @Mock
     private IModule module;
     @Mock
-    private VelocityEvaluator velocityEvaluator;
-    @Mock
     private PandocServiceConnector pandocServiceConnector;
     @Mock
     private HtmlProcessor htmlProcessor;
@@ -126,10 +124,4 @@ class DocxConverterTest {
         assertThat(rolesCaptor.getValue()).containsExactly("role1", "testRole1OppositeName", "role2", "testRole2OppositeName");
     }
 
-    private static Stream<Arguments> paramsForGeneratePdf() {
-        return Stream.of(
-                Arguments.of(null),
-                Arguments.of("internal content", "test cover page")
-        );
-    }
 }

@@ -1,6 +1,5 @@
 package ch.sbb.polarion.extension.docx_exporter.settings;
 
-import ch.sbb.polarion.extension.docx_exporter.rest.model.conversion.CommentsRenderType;
 import ch.sbb.polarion.extension.generic.context.CurrentContextConfig;
 import ch.sbb.polarion.extension.generic.context.CurrentContextExtension;
 import ch.sbb.polarion.extension.generic.exception.ObjectNotFoundException;
@@ -48,7 +47,7 @@ class StylePackageSettingsTest {
             mockScopeUtils.when(() -> ScopeUtils.getContextLocation("")).thenReturn(mockDefaultLocation);
 
             assertThrows(ObjectNotFoundException.class, () -> {
-                StylePackageModel loadedModel = stylePackageSettings.load(projectName, SettingId.fromName("Any setting name"));
+                stylePackageSettings.load(projectName, SettingId.fromName("Any setting name"));
             });
         }
     }

@@ -45,6 +45,8 @@
 
     <properties>
         <pdfbox.version>3.0.5</pdfbox.version>
+        <docx4j.version>11.5.4</docx4j.version>
+        <jakarta.xml.bind.bersion>3.0.1</jakarta.xml.bind.bersion>
         <okapi.xliff.version>1.47.0</okapi.xliff.version>
         <byte-buddy.version>1.17.6</byte-buddy.version>
 
@@ -110,6 +112,16 @@
             </build>
         </profile>
     </profiles>
+
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>org.apache.commons</groupId>
+                <artifactId>commons-compress</artifactId>
+                <version>1.27.1</version>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
 
     <dependencies>
         <dependency>
@@ -211,19 +223,31 @@
         <dependency>
             <groupId>org.docx4j</groupId>
             <artifactId>docx4j-core</artifactId>
-            <version>11.5.4</version>
+            <version>${docx4j.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.docx4j</groupId>
+            <artifactId>docx4j-export-fo</artifactId>
+            <version>${docx4j.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.docx4j</groupId>
             <artifactId>docx4j-JAXB-ReferenceImpl</artifactId>
-            <version>11.5.4</version>
+            <version>${docx4j.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>jakarta.xml.bind</groupId>
+            <artifactId>jakarta.xml.bind-api</artifactId>
+            <version>${jakarta.xml.bind.bersion}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.docx4j</groupId>
             <artifactId>docx4j-diffx</artifactId>
-            <version>11.5.4</version>
+            <version>${docx4j.version}</version>
             <scope>test</scope>
         </dependency>
     </dependencies>
