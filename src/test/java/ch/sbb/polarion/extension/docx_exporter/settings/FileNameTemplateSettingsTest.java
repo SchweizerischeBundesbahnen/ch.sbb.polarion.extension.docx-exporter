@@ -48,7 +48,7 @@ class FileNameTemplateSettingsTest {
             mockScopeUtils.when(() -> ScopeUtils.getContextLocation("")).thenReturn(mockDefaultLocation);
 
             assertThrows(ObjectNotFoundException.class, () -> {
-                FileNameTemplateModel loadedModel = fileNameTemplateSettings.load(projectName, SettingId.fromName("Any setting name"));
+                fileNameTemplateSettings.load(projectName, SettingId.fromName("Any setting name"));
             });
         }
     }

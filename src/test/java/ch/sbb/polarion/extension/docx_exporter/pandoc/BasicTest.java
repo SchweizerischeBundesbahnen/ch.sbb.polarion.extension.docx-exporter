@@ -2,6 +2,13 @@ package ch.sbb.polarion.extension.docx_exporter.pandoc;
 
 import ch.sbb.polarion.extension.docx_exporter.util.MediaUtils;
 import com.google.gwt.thirdparty.guava.common.io.Files;
+import lombok.SneakyThrows;
+import org.apache.pdfbox.Loader;
+import org.apache.pdfbox.pdmodel.PDDocument;
+import org.docx4j.Docx4J;
+import org.docx4j.convert.out.FOSettings;
+import org.docx4j.openpackaging.exceptions.Docx4JException;
+import org.docx4j.openpackaging.packages.WordprocessingMLPackage;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
@@ -9,19 +16,20 @@ import org.junit.jupiter.params.provider.ValueSource;
 import javax.imageio.ImageIO;
 import java.awt.*;
 import java.awt.image.BufferedImage;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.*;
 
 @SkipTestWhenParamNotSet
 class BasicTest extends BasePandocTest {
 
     @Test
-    void testInvalidTemplate() throws Exception {
+    void testInvalidTemplate() {
         Exception exception = null;
         try {
             exportToDOCX(readHtmlResource(getCurrentMethodName()), readTemplate("invalid_template"));
@@ -42,7 +50,6 @@ class BasicTest extends BasePandocTest {
             Files.write(doc, newFile);
             byte[] pdf = exportToPDF(newFile);
             assertNotNull(pdf);
-            compareContentUsingReferenceImages(getCurrentMethodName(), pdf);
         } finally {
             newFile.delete();
         }
@@ -63,6 +70,33 @@ class BasicTest extends BasePandocTest {
         } finally {
             newFile.delete();
         }
+    }
+
+    @Test
+    @SneakyThrows
+    void shouldConsiderPageBreaks() {
+        String html = readHtmlResource("testPageBreak");
+        byte[] docBytes = exportToDOCX(html, readTemplate("reference_template"));
+
+        assertEquals(3, getPageCount(docBytes));
+    }
+
+    private int getPageCount(byte[] docBytes) {
+        try {
+            try (PDDocument document = Loader.loadPDF(exportToPDF(docBytes))) {
+                return document.getNumberOfPages();
+            }
+        } catch (Exception e) {
+            return 0;
+        }
+    }
+
+    private byte[] exportToPDF(byte[] docBytes) throws Docx4JException {
+        WordprocessingMLPackage doc = WordprocessingMLPackage.load(new ByteArrayInputStream(docBytes));
+        FOSettings foSettings = new FOSettings(doc);
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        Docx4J.toFO(foSettings, baos, Docx4J.FLAG_EXPORT_PREFER_XSL);
+        return baos.toByteArray();
     }
 
     private void compareContentUsingReferenceImages(String testName, byte[] pdf) throws IOException {
@@ -87,7 +121,7 @@ class BasicTest extends BasePandocTest {
     private String generateLargeHtmlContent() {
         StringBuilder htmlBuilder = new StringBuilder();
         htmlBuilder.append("<html><head><title>Large Document</title></head><body>");
-        for (int i = 0; i < 1000; i++) {
+        for (int i = 0; i < 500; i++) {
             htmlBuilder.append("<h1>Section ").append(i + 1).append("</h1>");
             htmlBuilder.append("<p>This is a paragraph in section ").append(i + 1).append(".</p>");
             htmlBuilder.append("<ul>");

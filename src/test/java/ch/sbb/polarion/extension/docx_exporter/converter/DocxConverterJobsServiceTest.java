@@ -64,7 +64,7 @@ class DocxConverterJobsServiceTest {
         when(requestAttributes.getAttribute(LogoutFilter.XSRF_SKIP_LOGOUT, RequestAttributes.SCOPE_REQUEST)).thenReturn(Boolean.FALSE);
         when(requestAttributes.getAttribute(LogoutFilter.ASYNC_SKIP_LOGOUT, RequestAttributes.SCOPE_REQUEST)).thenReturn(Boolean.TRUE);
         ExportParams exportParams = ExportParams.builder().build();
-        when(docxConverter.convertToDocx(exportParams)).thenReturn("test pdf".getBytes());
+        when(docxConverter.convertToDocx(exportParams)).thenReturn("test docx".getBytes());
 
         String jobId = docxConverterJobsService.startJob(exportParams, 60);
 
@@ -75,7 +75,7 @@ class DocxConverterJobsServiceTest {
         assertThat(jobState.isCancelled()).isFalse();
         Optional<byte[]> jobResult = docxConverterJobsService.getJobResult(jobId);
         assertThat(jobResult).isNotEmpty();
-        assertThat(new String(jobResult.get())).isEqualTo("test pdf");
+        assertThat(new String(jobResult.get())).isEqualTo("test docx");
 
         // Second attempt to ensure that job is not removed
         jobState = docxConverterJobsService.getJobState(jobId);
@@ -115,7 +115,7 @@ class DocxConverterJobsServiceTest {
     void shouldGetAllJobsStatuses() {
         prepareSecurityServiceSubject(subject);
         ExportParams exportParams = ExportParams.builder().build();
-        lenient().when(docxConverter.convertToDocx(exportParams)).thenReturn("test pdf".getBytes());
+        lenient().when(docxConverter.convertToDocx(exportParams)).thenReturn("test docx".getBytes());
 
         String jobId1 = docxConverterJobsService.startJob(exportParams, 60);
         String jobId2 = docxConverterJobsService.startJob(exportParams, 60);
@@ -129,7 +129,7 @@ class DocxConverterJobsServiceTest {
         prepareSecurityServiceSubject(null);
 
         ExportParams exportParams = ExportParams.builder().build();
-        lenient().when(docxConverter.convertToDocx(exportParams)).thenReturn("test pdf".getBytes());
+        lenient().when(docxConverter.convertToDocx(exportParams)).thenReturn("test docx".getBytes());
 
         String jobId = docxConverterJobsService.startJob(exportParams, 60);
 
@@ -153,7 +153,7 @@ class DocxConverterJobsServiceTest {
         lenient().when(requestAttributes.getAttribute(LogoutFilter.ASYNC_SKIP_LOGOUT, RequestAttributes.SCOPE_REQUEST)).thenReturn(asyncSkipLogout);
 
         ExportParams exportParams = ExportParams.builder().build();
-        when(docxConverter.convertToDocx(exportParams)).thenReturn("test pdf".getBytes());
+        when(docxConverter.convertToDocx(exportParams)).thenReturn("test docx".getBytes());
 
         String jobId = docxConverterJobsService.startJob(exportParams, 60);
 
