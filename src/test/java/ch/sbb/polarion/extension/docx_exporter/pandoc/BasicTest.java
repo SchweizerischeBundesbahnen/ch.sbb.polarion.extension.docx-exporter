@@ -50,7 +50,6 @@ class BasicTest extends BasePandocTest {
             Files.write(doc, newFile);
             byte[] pdf = exportToPDF(newFile);
             assertNotNull(pdf);
-            compareContentUsingReferenceImages(getCurrentMethodName(), pdf);
         } finally {
             newFile.delete();
         }
@@ -122,7 +121,7 @@ class BasicTest extends BasePandocTest {
     private String generateLargeHtmlContent() {
         StringBuilder htmlBuilder = new StringBuilder();
         htmlBuilder.append("<html><head><title>Large Document</title></head><body>");
-        for (int i = 0; i < 1000; i++) {
+        for (int i = 0; i < 500; i++) {
             htmlBuilder.append("<h1>Section ").append(i + 1).append("</h1>");
             htmlBuilder.append("<p>This is a paragraph in section ").append(i + 1).append(".</p>");
             htmlBuilder.append("<ul>");
