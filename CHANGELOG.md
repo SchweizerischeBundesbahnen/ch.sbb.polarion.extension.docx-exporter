@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.1.1](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/compare/v2.1.0...v2.1.1) (2025-08-07)
+
+
+### Bug Fixes
+
+* **deps:** update dependency org.apache.commons:commons-compress to v1.28.0 ([18b6dba](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/commit/18b6dbae37fa130535f8e82e5519c4f8d09183a3))
+
 ## [2.1.0](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/compare/v2.0.0...v2.1.0) (2025-07-28)
 
 
