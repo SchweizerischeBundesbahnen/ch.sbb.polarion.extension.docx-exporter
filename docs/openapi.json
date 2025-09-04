@@ -175,7 +175,7 @@
     },
     "/api/convert": {
       "post": {
-        "operationId": "convertToPdf",
+        "operationId": "convertToDocx",
         "requestBody": {
           "content": {
             "application/json": {
