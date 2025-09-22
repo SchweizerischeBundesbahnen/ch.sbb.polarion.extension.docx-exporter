@@ -45,6 +45,11 @@ class BasicTest extends BasePandocTest {
         byte[] doc = exportToDOCX(largeHtml, readTemplate("reference_template"));
         assertNotNull(doc);
         File newFile = File.createTempFile("test", ".docx");
+        newFile.setReadable(false, false);
+        newFile.setReadable(true, true);
+        newFile.setWritable(false, false);
+        newFile.setWritable(true, true);
+        newFile.setExecutable(false, false);
         newFile.deleteOnExit();
         try {
             Files.write(doc, newFile);
@@ -61,6 +66,11 @@ class BasicTest extends BasePandocTest {
         byte[] doc = exportToDOCX(readHtmlResource(testName), readTemplate("reference_template"));
         assertNotNull(doc);
         File newFile = File.createTempFile("test", ".docx");
+        newFile.setReadable(false, false);
+        newFile.setReadable(true, true);
+        newFile.setWritable(false, false);
+        newFile.setWritable(true, true);
+        newFile.setExecutable(false, false);
         newFile.deleteOnExit();
         try {
             Files.write(doc, newFile);
@@ -77,7 +87,7 @@ class BasicTest extends BasePandocTest {
     void shouldConsiderPageBreaks() {
         String html = readHtmlResource("testPageBreak");
         byte[] docBytes = exportToDOCX(html, readTemplate("reference_template"));
-
+        Files.write(docBytes, new File("target/testPageBreak.docx"));
         assertEquals(3, getPageCount(docBytes));
     }
 
