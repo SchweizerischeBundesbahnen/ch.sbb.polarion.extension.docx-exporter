@@ -1,7 +1,7 @@
 package ch.sbb.polarion.extension.docx_exporter.pandoc;
 
 import ch.sbb.polarion.extension.docx_exporter.util.MediaUtils;
-import com.google.gwt.thirdparty.guava.common.io.Files;
+import java.nio.file.Files;
 import lombok.SneakyThrows;
 import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.pdmodel.PDDocument;
@@ -9,6 +9,7 @@ import org.docx4j.Docx4J;
 import org.docx4j.convert.out.FOSettings;
 import org.docx4j.openpackaging.exceptions.Docx4JException;
 import org.docx4j.openpackaging.packages.WordprocessingMLPackage;
+import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
@@ -21,6 +22,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.Path;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -44,10 +46,10 @@ class BasicTest extends BasePandocTest {
         String largeHtml = generateLargeHtmlContent();
         byte[] doc = exportToDOCX(largeHtml, readTemplate("reference_template"));
         assertNotNull(doc);
-        File newFile = File.createTempFile("test", ".docx");
+        File newFile = getTestFile();
         newFile.deleteOnExit();
         try {
-            Files.write(doc, newFile);
+            Files.write(newFile.toPath(), doc);
             byte[] pdf = exportToPDF(newFile);
             assertNotNull(pdf);
         } finally {
@@ -60,10 +62,9 @@ class BasicTest extends BasePandocTest {
     void runTest(String testName) throws Exception {
         byte[] doc = exportToDOCX(readHtmlResource(testName), readTemplate("reference_template"));
         assertNotNull(doc);
-        File newFile = File.createTempFile("test", ".docx");
-        newFile.deleteOnExit();
+        File newFile = getTestFile();
         try {
-            Files.write(doc, newFile);
+            Files.write(newFile.toPath(), doc);
             byte[] pdf = exportToPDF(newFile);
             assertNotNull(pdf);
             compareContentUsingReferenceImages(testName, pdf);
@@ -72,12 +73,18 @@ class BasicTest extends BasePandocTest {
         }
     }
 
+    private static @NotNull File getTestFile() throws IOException {
+        Path tempPath = Files.createTempFile("test", ".docx");
+        File newFile = tempPath.toFile();
+        newFile.deleteOnExit();
+        return newFile;
+    }
+
     @Test
     @SneakyThrows
     void shouldConsiderPageBreaks() {
         String html = readHtmlResource("testPageBreak");
         byte[] docBytes = exportToDOCX(html, readTemplate("reference_template"));
-
         assertEquals(3, getPageCount(docBytes));
     }
 
