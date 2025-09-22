@@ -9,6 +9,7 @@ import org.docx4j.Docx4J;
 import org.docx4j.convert.out.FOSettings;
 import org.docx4j.openpackaging.exceptions.Docx4JException;
 import org.docx4j.openpackaging.packages.WordprocessingMLPackage;
+import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
@@ -44,12 +45,7 @@ class BasicTest extends BasePandocTest {
         String largeHtml = generateLargeHtmlContent();
         byte[] doc = exportToDOCX(largeHtml, readTemplate("reference_template"));
         assertNotNull(doc);
-        File newFile = File.createTempFile("test", ".docx");
-        newFile.setReadable(false, false);
-        newFile.setReadable(true, true);
-        newFile.setWritable(false, false);
-        newFile.setWritable(true, true);
-        newFile.setExecutable(false, false);
+        File newFile = getFile();
         newFile.deleteOnExit();
         try {
             Files.write(doc, newFile);
@@ -65,12 +61,7 @@ class BasicTest extends BasePandocTest {
     void runTest(String testName) throws Exception {
         byte[] doc = exportToDOCX(readHtmlResource(testName), readTemplate("reference_template"));
         assertNotNull(doc);
-        File newFile = File.createTempFile("test", ".docx");
-        newFile.setReadable(false, false);
-        newFile.setReadable(true, true);
-        newFile.setWritable(false, false);
-        newFile.setWritable(true, true);
-        newFile.setExecutable(false, false);
+        File newFile = getFile();
         newFile.deleteOnExit();
         try {
             Files.write(doc, newFile);
@@ -80,6 +71,13 @@ class BasicTest extends BasePandocTest {
         } finally {
             newFile.delete();
         }
+    }
+
+    private static @NotNull File getFile() throws IOException {
+        File newFile = File.createTempFile("test", ".docx");
+        newFile.setReadable(true, true);
+        newFile.setWritable(true, true);
+        return newFile;
     }
 
     @Test
