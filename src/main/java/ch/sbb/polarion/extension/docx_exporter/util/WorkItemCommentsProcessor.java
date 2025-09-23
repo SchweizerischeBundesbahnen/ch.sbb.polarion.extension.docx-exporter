@@ -13,7 +13,6 @@ import java.text.SimpleDateFormat;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 
 public class WorkItemCommentsProcessor {
 
@@ -76,7 +75,7 @@ public class WorkItemCommentsProcessor {
         WorkItemComment build = WorkItemComment.builder()
                 .title(iComment.getTitle())
                 .id(iComment.getId())
-                .text(Objects.requireNonNull(iComment.getText()).getContent())
+                .text(iComment.getText() == null ? iComment.getTitle() : iComment.getText().getContent())
                 .project(iComment.getProject().getId())
                 .author(iComment.getAuthor().getName())
                 .created(iComment.getCreated())
