@@ -1,5 +1,13 @@
 # Changelog
 
+## [2.1.2](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/compare/v2.1.1...v2.1.2) (2025-09-23)
+
+
+### Bug Fixes
+
+* comment rendering causes a NullPointerException ([#90](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/issues/90)) ([c68eab3](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/commit/c68eab3757bd0beb361532c0f970e88ac3b85d71)), closes [#89](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/issues/89)
+* fixed security issue ([#87](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/issues/87)) ([4916cc6](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/commit/4916cc61ec283f43484aef0d29714dafaf4f370f)), closes [#86](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/issues/86)
+
 ## [2.1.1](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/compare/v2.1.0...v2.1.1) (2025-09-04)
 
 
