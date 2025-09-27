@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.1.3](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/compare/v2.1.2...v2.1.3) (2025-09-27)
+
+
+### Bug Fixes
+
+* **deps:** update dependency ch.sbb.polarion.extensions:ch.sbb.polarion.extension.generic to v11.1.0 ([511b360](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/commit/511b36020773393d8954b9539311b09813f3c4c9))
+
 ## [2.1.2](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/compare/v2.1.1...v2.1.2) (2025-09-23)
 
 
