@@ -46,7 +46,7 @@
     <properties>
         <pdfbox.version>3.0.5</pdfbox.version>
         <docx4j.version>11.5.5</docx4j.version>
-        <jakarta.xml.bind.bersion>3.0.1</jakarta.xml.bind.bersion>
+        <jakarta.xml.bind.version>3.0.1</jakarta.xml.bind.version>
         <okapi.xliff.version>1.47.0</okapi.xliff.version>
         <byte-buddy.version>1.17.7</byte-buddy.version>
 
@@ -181,6 +181,39 @@
             <version>${byte-buddy.version}</version>
         </dependency>
 
+        <dependency>
+            <groupId>org.docx4j</groupId>
+            <artifactId>docx4j-core</artifactId>
+            <version>${docx4j.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.docx4j</groupId>
+            <artifactId>docx4j-export-fo</artifactId>
+            <version>${docx4j.version}</version>
+            <exclusions>
+                <!-- conflicts with xliff2 so the latter stops working -->
+                <exclusion>
+                    <groupId>xml-apis</groupId>
+                    <artifactId>xml-apis</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>org.docx4j</groupId>
+            <artifactId>docx4j-JAXB-ReferenceImpl</artifactId>
+            <version>${docx4j.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>jakarta.xml.bind</groupId>
+            <artifactId>jakarta.xml.bind-api</artifactId>
+            <version>${jakarta.xml.bind.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.docx4j</groupId>
+            <artifactId>docx4j-diffx</artifactId>
+            <version>${docx4j.version}</version>
+        </dependency>
+
         <!--  Test dependencies  -->
         <dependency>
             <groupId>org.slf4j</groupId>
@@ -217,37 +250,6 @@
             <artifactId>ch.sbb.polarion.extension.generic.app</artifactId>
             <version>${project.parent.version}</version>
             <type>test-jar</type>
-            <scope>test</scope>
-        </dependency>
-
-        <dependency>
-            <groupId>org.docx4j</groupId>
-            <artifactId>docx4j-core</artifactId>
-            <version>${docx4j.version}</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.docx4j</groupId>
-            <artifactId>docx4j-export-fo</artifactId>
-            <version>${docx4j.version}</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.docx4j</groupId>
-            <artifactId>docx4j-JAXB-ReferenceImpl</artifactId>
-            <version>${docx4j.version}</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>jakarta.xml.bind</groupId>
-            <artifactId>jakarta.xml.bind-api</artifactId>
-            <version>${jakarta.xml.bind.bersion}</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.docx4j</groupId>
-            <artifactId>docx4j-diffx</artifactId>
-            <version>${docx4j.version}</version>
             <scope>test</scope>
         </dependency>
     </dependencies>

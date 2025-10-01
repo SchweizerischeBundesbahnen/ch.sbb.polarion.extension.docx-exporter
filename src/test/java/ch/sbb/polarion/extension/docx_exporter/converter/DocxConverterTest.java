@@ -5,7 +5,9 @@ import ch.sbb.polarion.extension.docx_exporter.pandoc.service.PandocServiceConne
 import ch.sbb.polarion.extension.docx_exporter.rest.model.conversion.ExportParams;
 import ch.sbb.polarion.extension.docx_exporter.rest.model.documents.DocumentData;
 import ch.sbb.polarion.extension.docx_exporter.rest.model.documents.id.LiveDocId;
+import ch.sbb.polarion.extension.docx_exporter.rest.model.settings.templates.TemplatesModel;
 import ch.sbb.polarion.extension.docx_exporter.service.DocxExporterPolarionService;
+import ch.sbb.polarion.extension.docx_exporter.settings.TemplatesSettings;
 import ch.sbb.polarion.extension.docx_exporter.util.DocumentDataFactory;
 import ch.sbb.polarion.extension.docx_exporter.util.HtmlProcessor;
 import ch.sbb.polarion.extension.docx_exporter.util.DocxTemplateProcessor;
@@ -17,18 +19,21 @@ import com.polarion.alm.tracker.model.ITrackerProject;
 import com.polarion.alm.tracker.model.ITypeOpt;
 import com.polarion.platform.persistence.IEnumeration;
 import com.polarion.platform.persistence.spi.EnumOption;
+import lombok.SneakyThrows;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
+import org.mockito.MockedConstruction;
 import org.mockito.MockedStatic;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.List;
 import java.util.Properties;
 
+import static ch.sbb.polarion.extension.docx_exporter.pandoc.BasePandocTest.readTemplate;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.*;
 
@@ -43,21 +48,28 @@ class DocxConverterTest {
     @Mock
     private HtmlProcessor htmlProcessor;
     @Mock
+    private TemplatesModel templatesModel;
+    @Mock
     private DocxTemplateProcessor docxTemplateProcessor;
 
     private MockedStatic<DocumentDataFactory> documentDataFactoryMockedStatic;
+    MockedConstruction<TemplatesSettings> templateSettingsMockedConstruction;
 
     @BeforeEach
     void setUp() {
         documentDataFactoryMockedStatic = mockStatic(DocumentDataFactory.class);
+        templateSettingsMockedConstruction = mockConstruction(TemplatesSettings.class,
+                (mock, context) -> when(mock.load(anyString(), any())).thenReturn(templatesModel));
     }
 
     @AfterEach
     void tearDown() {
         documentDataFactoryMockedStatic.close();
+        templateSettingsMockedConstruction.close();
     }
 
     @Test
+    @SneakyThrows
     void shouldConvertToDocxInSimplestWorkflow() {
         // Arrange
         ExportParams exportParams = ExportParams.builder()
@@ -79,6 +91,9 @@ class DocxConverterTest {
         when(docxTemplateProcessor.processUsing(eq("testDocument"), anyString())).thenReturn("test html content");
         when(pandocServiceConnector.convertToDocx("test html content", null)).thenReturn("test document content".getBytes());
         when(htmlProcessor.internalizeLinks(anyString())).thenAnswer(a -> a.getArgument(0));
+
+        exportParams.setTemplate("testTemplate");
+        when(templatesModel.getTemplate()).thenReturn(readTemplate("reference_template"));
 
         // Act
         byte[] result = docxConverter.convertToDocx(exportParams);
