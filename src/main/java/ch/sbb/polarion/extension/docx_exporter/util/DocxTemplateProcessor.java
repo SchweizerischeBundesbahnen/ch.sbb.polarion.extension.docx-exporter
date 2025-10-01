@@ -47,7 +47,7 @@ public class DocxTemplateProcessor {
                 PARAM_PROCESS_TEMPLATE, template,
                 PARAM_PROCESS_FUNCTION, (UnaryOperator<String>) text -> processPlaceholdersAndVelocity(documentData, exportParams, text)
         );
-        return (byte[]) BundleJarsPrioritizingRunnable.execute(OpenXMLTextEntriesProcessor.class, params).getOrDefault(PARAM_PROCESS_RESULT, template);
+        return (byte[]) BundleJarsPrioritizingRunnable.execute(OpenXMLTextEntriesProcessor.class, params, true).get(PARAM_PROCESS_RESULT);
     }
 
     private String processPlaceholdersAndVelocity(DocumentData<? extends IUniqueObject> documentData, ExportParams exportParams, String text) {
