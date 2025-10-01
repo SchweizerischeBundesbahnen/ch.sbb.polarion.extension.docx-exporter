@@ -7,7 +7,6 @@ import ch.sbb.polarion.extension.docx_exporter.util.velocity.VelocityEvaluator;
 import ch.sbb.polarion.extension.generic.util.BundleJarsPrioritizingRunnable;
 import ch.sbb.polarion.extension.generic.util.ScopeUtils;
 import com.polarion.alm.projects.model.IUniqueObject;
-import lombok.SneakyThrows;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.VisibleForTesting;
 
@@ -43,7 +42,6 @@ public class DocxTemplateProcessor {
         return " @page {size: A4 %portrait;}";
     }
 
-    @SneakyThrows
     public byte[] processDocxTemplate(byte[] template, DocumentData<? extends IUniqueObject> documentData, @NotNull ExportParams exportParams) {
         Map<String, Object> params = Map.of(
                 PARAM_PROCESS_TEMPLATE, template,

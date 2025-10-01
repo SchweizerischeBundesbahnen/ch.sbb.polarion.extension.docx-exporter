@@ -79,6 +79,15 @@ class DocxTemplateProcessorTest {
     }
 
     @Test
+    void testBuildSizeCss() {
+        // Act
+        String css = new DocxTemplateProcessor(velocityEvaluator, placeholderProcessor).buildSizeCss();
+
+        // Assert
+        assertThat(css).isEqualTo(" @page {size: A4 %portrait;}");
+    }
+
+    @Test
     @SneakyThrows
     void testProcessDocxTemplate() {
         // Arrange
