@@ -10,20 +10,15 @@ import org.docx4j.relationships.Relationship;
 import org.docx4j.wml.ContentAccessor;
 import org.docx4j.wml.P;
 import org.docx4j.wml.ProofErr;
-import org.docx4j.wml.R;
-import org.docx4j.wml.SdtBlock;
-import org.docx4j.wml.SdtRun;
-import org.docx4j.wml.Tbl;
-import org.docx4j.wml.Tc;
+import org.docx4j.wml.SdtElement;
 import org.docx4j.wml.Text;
-import org.docx4j.wml.Tr;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.function.Function;
+import java.util.function.UnaryOperator;
 
 /**
  * Processor for text entries in OpenXML (docx) documents. It traverses the document's headers/footers
@@ -33,17 +28,21 @@ import java.util.function.Function;
 @SuppressWarnings("unchecked")
 public class OpenXMLTextEntriesProcessor implements BundleJarsPrioritizingRunnable {
 
+    public static final String PARAM_PROCESS_TEMPLATE = "template";
+    public static final String PARAM_PROCESS_FUNCTION = "processFunction";
+    public static final String PARAM_PROCESS_RESULT = "result";
+
     private final Logger logger = Logger.getLogger(OpenXMLTextEntriesProcessor.class);
 
     @Override
     public Map<String, Object> run(Map<String, Object> params) {
-        return Map.of(DocxTemplateProcessor.PARAM_PROCESS_RESULT, processTextEntries(
-                (byte[]) params.get(DocxTemplateProcessor.PARAM_PROCESS_TEMPLATE),
-                (Function<String, String>) params.get(DocxTemplateProcessor.PARAM_PROCESS_FUNCTION)
+        return Map.of(PARAM_PROCESS_RESULT, processTextEntries(
+                (byte[]) params.get(PARAM_PROCESS_TEMPLATE),
+                (UnaryOperator<String>) params.get(PARAM_PROCESS_FUNCTION)
         ));
     }
 
-    public byte[] processTextEntries(byte[] document, Function<String, String> processTextFunction) {
+    public byte[] processTextEntries(byte[] document, UnaryOperator<String> processTextFunction) {
         try {
             WordprocessingMLPackage wordPackage = WordprocessingMLPackage.load(new ByteArrayInputStream(document));
             List<Relationship> relationships = wordPackage.getMainDocumentPart().getRelationshipsPart().getRelationships().getRelationship();
@@ -60,52 +59,32 @@ public class OpenXMLTextEntriesProcessor implements BundleJarsPrioritizingRunnab
             return outputStream.toByteArray();
 
         } catch (Exception e) {
-            logger.info("Failed to process docx template: " + e.getMessage());
+            logger.error("Failed to process docx template", e);
             return document;
         }
     }
 
     private void walkContentRecursively(List<Object> content, Context context) {
-        if (content == null) return;
-
-        for (Object item : content) {
-            if (item instanceof P paragraph) {
-                cleanProofErrors(paragraph);
-                VariablePrepare.joinupRuns(paragraph);
-                processTextContent(paragraph.getContent(), context);
-            } else if (item instanceof Tbl table) {
-                for (Object tableChild : table.getContent()) {
-                    if (tableChild instanceof Tr row) {
-                        for (Object rowChild : row.getContent()) {
-                            if (rowChild instanceof Tc cell) {
-                                walkContentRecursively(cell.getContent(), context);
-                            }
-                        }
-                    }
-                }
-            } else if (item instanceof SdtBlock sdtBlock) {
-                if (sdtBlock.getSdtContent() != null) {
-                    walkContentRecursively(sdtBlock.getSdtContent().getContent(), context);
-                }
+        if (content != null) {
+            for (Object item : content) {
+                processContentItem(item, context);
             }
         }
     }
 
-    private void processTextContent(List<Object> content, Context context) {
-        for (Object item : content) {
-            if (item instanceof R run) {
-                for (Object runChild : run.getContent()) {
-                    if (runChild instanceof Text text) {
-                        processTextValue(text, context);
-                    } else if (runChild instanceof JAXBElement<?> jaxbElement && jaxbElement.getValue() instanceof Text text) {
-                        processTextValue(text, context);
-                    }
-                }
-            } else if (item instanceof SdtRun sdtRun) {
-                if (sdtRun.getSdtContent() != null) {
-                    processTextContent(sdtRun.getSdtContent().getContent(), context);
-                }
-            }
+    private void processContentItem(Object item, Context context) {
+        if (item instanceof Text text) {
+            processTextValue(text, context);
+        } else if (item instanceof JAXBElement<?> jaxbElement) {
+            processContentItem(jaxbElement.getValue(), context);
+        } else if (item instanceof P paragraph) {
+            cleanProofErrors(paragraph);
+            VariablePrepare.joinupRuns(paragraph);
+            walkContentRecursively(paragraph.getContent(), context);
+        } else if (item instanceof ContentAccessor accessor) {
+            walkContentRecursively(accessor.getContent(), context);
+        } else if (item instanceof SdtElement sdtElement && sdtElement.getSdtContent() != null) {
+            walkContentRecursively(sdtElement.getSdtContent().getContent(), context);
         }
     }
 
@@ -115,20 +94,18 @@ public class OpenXMLTextEntriesProcessor implements BundleJarsPrioritizingRunnab
             String processed = context.processTextFunction.apply(textValue);
             if (!Objects.equals(textValue, processed)) {
                 text.setValue(processed);
-                context.atLeastOneReplaced = true;
             }
         }
     }
 
     private void cleanProofErrors(P paragraph) {
-        paragraph.getContent().removeIf(item -> item instanceof ProofErr);
+        paragraph.getContent().removeIf(ProofErr.class::isInstance);
     }
 
     private static class Context {
-        Function<String, String> processTextFunction;
-        boolean atLeastOneReplaced = false;
+        UnaryOperator<String> processTextFunction;
 
-        public Context(Function<String, String> processTextFunction) {
+        public Context(UnaryOperator<String> processTextFunction) {
             this.processTextFunction = processTextFunction;
         }
     }

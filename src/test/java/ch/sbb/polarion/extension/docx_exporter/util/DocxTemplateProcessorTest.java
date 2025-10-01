@@ -93,9 +93,15 @@ class DocxTemplateProcessorTest {
         assertDoesNotThrow(() -> new DocxTemplateProcessor(velocityEvaluator, placeholderProcessor).processDocxTemplate(templateContent, documentData, exportParams));
 
         // Assert
+        verify(velocityEvaluator, times(1)).evaluateVelocityExpressions(any(), eq("$document.getId()"));
         verify(velocityEvaluator, times(1)).evaluateVelocityExpressions(any(), eq("$document.title"));
         verify(velocityEvaluator, times(1)).evaluateVelocityExpressions(any(), eq("{{ TIMESTAMP }}"));
+        verify(placeholderProcessor, times(1)).replacePlaceholders(any(), any(), eq("$document.getId()"));
         verify(placeholderProcessor, times(1)).replacePlaceholders(any(), any(), eq("$document.title"));
         verify(placeholderProcessor, times(1)).replacePlaceholders(any(), any(), eq("{{ TIMESTAMP }}"));
+
+        // Verify that exceptions in processors are handled properly
+        when(placeholderProcessor.replacePlaceholders(any(), any(), eq("$document.getId()"))).thenThrow(new RuntimeException("Placeholder processing failed"));
+        assertDoesNotThrow(() -> new DocxTemplateProcessor(velocityEvaluator, placeholderProcessor).processDocxTemplate(templateContent, documentData, exportParams));
     }
 }

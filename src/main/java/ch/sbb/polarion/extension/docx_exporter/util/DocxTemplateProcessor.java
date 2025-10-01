@@ -12,13 +12,11 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.VisibleForTesting;
 
 import java.util.Map;
-import java.util.function.Function;
+import java.util.function.UnaryOperator;
+
+import static ch.sbb.polarion.extension.docx_exporter.util.OpenXMLTextEntriesProcessor.*;
 
 public class DocxTemplateProcessor {
-
-    public static final String PARAM_PROCESS_TEMPLATE = "template";
-    public static final String PARAM_PROCESS_FUNCTION = "processFunction";
-    public static final String PARAM_PROCESS_RESULT = "result";
 
     private final VelocityEvaluator velocityEvaluator;
     private final PlaceholderProcessor placeholderProcessor;
@@ -49,10 +47,14 @@ public class DocxTemplateProcessor {
     public byte[] processDocxTemplate(byte[] template, DocumentData<? extends IUniqueObject> documentData, @NotNull ExportParams exportParams) {
         Map<String, Object> params = Map.of(
                 PARAM_PROCESS_TEMPLATE, template,
-                PARAM_PROCESS_FUNCTION, (Function<String, String>) text ->
-                        velocityEvaluator.evaluateVelocityExpressions(documentData, placeholderProcessor.replacePlaceholders(documentData, exportParams, text))
+                PARAM_PROCESS_FUNCTION, (UnaryOperator<String>) text -> processPlaceholdersAndVelocity(documentData, exportParams, text)
         );
         return (byte[]) BundleJarsPrioritizingRunnable.execute(OpenXMLTextEntriesProcessor.class, params).getOrDefault(PARAM_PROCESS_RESULT, template);
+    }
+
+    private String processPlaceholdersAndVelocity(DocumentData<? extends IUniqueObject> documentData, ExportParams exportParams, String text) {
+        String afterPlaceholdersReplacement = placeholderProcessor.replacePlaceholders(documentData, exportParams, text);
+        return velocityEvaluator.evaluateVelocityExpressions(documentData, afterPlaceholdersReplacement);
     }
 
 }

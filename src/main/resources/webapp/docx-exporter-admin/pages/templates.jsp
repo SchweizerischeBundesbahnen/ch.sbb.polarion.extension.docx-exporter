@@ -86,7 +86,7 @@
             padding: 5px;
         }
         table td:first-child {
-            padding-left: 10px
+            padding-left: 10px;
         }
 
         .admin-page-screenshot {
