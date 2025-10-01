@@ -63,6 +63,36 @@
         #docx-image {
             cursor: pointer;
         }
+
+        table {
+            border-collapse: collapse;
+        }
+        table th {
+            height: 12px;
+            padding: 5px;
+            text-align: left;
+            border: 1px solid #CCCCCC;
+            font-weight: bold;
+            vertical-align: top;
+            white-space: nowrap;
+            background-color: #F0F0F0;
+        }
+        table td {
+            height: 12px;
+            text-align: left;
+            vertical-align: top;
+            line-height: 18px;
+            border: 1px solid #CCCCCC;
+            padding: 5px;
+        }
+        table td:first-child {
+            padding-left: 10px
+        }
+
+        .admin-page-screenshot {
+            display: block;
+            padding: 20px;
+        }
     </style>
 </head>
 
@@ -116,6 +146,17 @@
                 The contents of the template docx are ignored, but its stylesheets and document properties (including margins, page size, header, and footer) are used in the new docx.
                 If no reference docx is provided then pandoc-service will use built-in template (which also can be downloaded from this page using 'download' link above).
                 Please refer official <a href="https://pandoc.org/MANUAL.html#option--reference-doc" target="_blank">pandoc manual</a> for more information.
+            </p>
+
+            <p>
+                Header and footer parts can contain dynamic elements which will be evaluated before DOCX generation, e.g.: $document.getId() for velocity expressions, {{ DOCUMENT_TITLE }} for special variables or {{ docRevision }} for document's custom fields.
+            </p>
+            <jsp:include page="../pages/placeholders.jsp"/>
+
+            <h3>Different first, odd and even pages</h3>
+            <p>
+                Headers and footers can be configured differently for the first, odd and even pages - changes made in an editor will be applied to the resulting document:
+                <img class="admin-page-screenshot" src="../images/first_odd_even.png" alt="first_odd_even"/>
             </p>
         </div>
     </div>

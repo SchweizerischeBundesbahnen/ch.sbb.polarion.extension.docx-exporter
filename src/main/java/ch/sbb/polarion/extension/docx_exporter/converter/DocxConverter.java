@@ -81,7 +81,16 @@ public class DocxConverter {
         if (DocxExporterExtensionConfiguration.getInstance().isDebug()) {
             new HtmlLogger().log(documentData.getContent(), htmlContent, generationLog.getLog());
         }
-        byte[] bytes = generateDocx(exportParams, htmlContent);
+
+        byte[] template = null;
+        if (exportParams.getTemplate() != null) {
+            TemplatesModel templatesModel = new TemplatesSettings().load(exportParams.getProjectId(), SettingId.fromName(exportParams.getTemplate()));
+            if (templatesModel.getTemplate() != null) {
+                template = docxTemplateProcessor.processDocxTemplate(templatesModel.getTemplate(), documentData, exportParams);
+            }
+        }
+
+        byte[] bytes = generateDocx(htmlContent, template);
 
         if (exportParams.getInternalContent() == null) { //do not log time for internal parts processing
             String finalMessage = "DOCX document '" + documentData.getTitle() + "' has been generated within " + (System.currentTimeMillis() - startTime) + " milliseconds";
@@ -194,20 +203,13 @@ public class DocxConverter {
     }
 
     @VisibleForTesting
-    byte[] generateDocx(ExportParams exportParams, String htmlPage) {
+    byte[] generateDocx(String htmlPage, byte[] template) {
         int headerIndex = htmlPage.indexOf("<div class='header'>");
         if (headerIndex > -1) {
             int contentIndex = htmlPage.indexOf("<div class='content'>");
             htmlPage = htmlPage.substring(0, headerIndex) + htmlPage.substring(contentIndex);
         }
         htmlPage = htmlPage.replace("<div style='break-after:page'>page to be removed</div><?xml version='1.0' encoding='UTF-8'?>", "");
-
-        byte[] template = null;
-        if (exportParams.getTemplate() != null) {
-            TemplatesModel templatesModel = new TemplatesSettings().load(exportParams.getProjectId(), SettingId.fromName(exportParams.getTemplate()));
-            template = templatesModel.getTemplate();
-        }
-
         return pandocServiceConnector.convertToDocx(htmlPage, template);
     }
 
