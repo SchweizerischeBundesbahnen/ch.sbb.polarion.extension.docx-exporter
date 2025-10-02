@@ -1,5 +1,19 @@
 # Changelog
 
+## [2.2.0](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/compare/v2.1.2...v2.2.0) (2025-10-02)
+
+
+### Features
+
+* ability to use velocity expressions & special variables in docx templates ([bb42752](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/commit/bb42752f681668254e92efd9f4c12d3d74d2946d)), closes [#93](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/issues/93)
+* ability to use velocity expressions & special variables in docx… ([#94](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/issues/94)) ([bb42752](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/commit/bb42752f681668254e92efd9f4c12d3d74d2946d))
+
+
+### Bug Fixes
+
+* **deps:** update dependency ch.sbb.polarion.extensions:ch.sbb.polarion.extension.generic to v11.1.0 ([511b360](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/commit/511b36020773393d8954b9539311b09813f3c4c9))
+* **deps:** update dependency ch.sbb.polarion.extensions:ch.sbb.polarion.extension.generic to v11.2.0 ([8d80d67](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/commit/8d80d677522d416afac9bb99ca24349971dfb25f))
+
 ## [2.1.2](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/compare/v2.1.1...v2.1.2) (2025-09-23)
 
 
