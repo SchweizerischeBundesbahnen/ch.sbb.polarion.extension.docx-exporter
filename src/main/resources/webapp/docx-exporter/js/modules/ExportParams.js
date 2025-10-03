@@ -8,6 +8,7 @@ export default class ExportParams {
         this.template = builder.template;
         this.localization = builder.localization;
         this.webhooks = builder.webhooks;
+        this.removalSelector = builder.removalSelector;
         this.renderComments = builder.renderComments;
         this.cutEmptyChapters = builder.cutEmptyChapters;
         this.cutEmptyWIAttributes = builder.cutEmptyWIAttributes;
@@ -42,6 +43,7 @@ export default class ExportParams {
                 this.revision = undefined;
                 this.template = undefined;
                 this.webhooks = undefined;
+                this.removalSelector = undefined;
                 this.renderComments = undefined;
                 this.cutEmptyChapters = undefined;
                 this.cutEmptyWIAttributes = undefined;
@@ -81,6 +83,11 @@ export default class ExportParams {
 
             setLocalization(localization) {
                 this.localization = localization;
+                return this;
+            }
+
+            setRemovalSelector(removalSelector) {
+                this.removalSelector = removalSelector;
                 return this;
             }
 

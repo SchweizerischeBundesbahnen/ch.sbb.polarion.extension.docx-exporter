@@ -90,6 +90,7 @@ public class DocxExporterFormExtension implements IFormExtension {
             form = adjustChapters(form, selectedStylePackage);
             form = adjustLocalizeEnums(form, selectedStylePackage, module.getCustomField(DOC_LANGUAGE_FIELD));
             form = adjustLinkRoles(form, EnumValuesProvider.getAllLinkRoleNames(module.getProject()), selectedStylePackage);
+            form = adjustRemovalSelector(form, selectedStylePackage);
             form = adjustFilename(form, module);
 
             builder.html(form);
@@ -242,6 +243,10 @@ public class DocxExporterFormExtension implements IFormExtension {
         } else {
             return form.replace("class='docx-roles-fields'", "class='docx-roles-fields' style='display: none;'"); // Hide roles fields when no roles obtained
         }
+    }
+
+    private String adjustRemovalSelector(@NotNull String form, @NotNull StylePackageModel stylePackage) {
+        return form.replace("{REMOVAL_SELECTOR}", StringUtils.getEmptyIfNull(stylePackage.getRemovalSelector()));
     }
 
     private String adjustFilename(@NotNull String form, @NotNull IModule module) {

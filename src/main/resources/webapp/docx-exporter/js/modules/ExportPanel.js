@@ -50,6 +50,7 @@ export default class ExportPanel {
 
         this.ctx.setSelector("docx-template-selector", stylePackage.template);
         this.ctx.setSelector("docx-localization-selector", stylePackage.localization);
+        this.ctx.setValue("docx-removal-selector", stylePackage.removalSelector);
 
         this.ctx.setCheckbox("docx-webhooks-checkbox", !!stylePackage.webhooks);
         this.ctx.setSelector("docx-webhooks-selector", stylePackage.webhooks);
@@ -121,6 +122,7 @@ export default class ExportPanel {
             .setTemplate(this.ctx.getElementById("docx-template-selector").value)
             .setLocalization(this.ctx.getElementById("docx-localization-selector").value)
             .setWebhooks(this.ctx.getElementById("docx-webhooks-checkbox").checked ? this.ctx.getElementById("docx-webhooks-selector").value : null)
+            .setRemovalSelector(this.ctx.getValueById("docx-removal-selector"))
             .setRenderComments(this.ctx.getElementById('render-comments').checked ? this.ctx.getElementById("render-comments-selector").value : null)
             .setCutEmptyChapters(this.ctx.getElementById("docx-cut-empty-chapters").checked)
             .setCutEmptyWIAttributes(this.ctx.getElementById('docx-cut-empty-wi-attributes').checked)
