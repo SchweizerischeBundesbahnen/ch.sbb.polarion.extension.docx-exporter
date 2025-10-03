@@ -10,6 +10,7 @@
     * [Specific higher level chapters](#specific-higher-level-chapters)
     * [Localize enums](#localize-enums)
     * [Specific Workitem roles](#specific-workitem-roles)
+    * [Removal selector](#removal-selector)
     * [File name](#file-name)
 
 ## Export panel layout
@@ -104,6 +105,11 @@ If you check this checkbox and select only certain roles of Workitem relations:
 And here is the resulted DOCX document:
 
 ![Specific Workitem roles after](docs/user_guide/img/specific_wi_roles_after.png)
+
+### Removal selector
+CSS-like expression (e.g., `.polarion-Hyperlink .polarion-Icons`). HTML elements matching this expression will be removed from the source HTML.
+
+![Removal selector](docs/user_guide/img/removal_selector.png)
 
 ### File name
 Here you can specify the resulting file name:
