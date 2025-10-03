@@ -686,6 +686,18 @@ class HtmlProcessorTest {
     }
 
     @Test
+    void processHtmlForPDFWithRemovalSelectorTest() {
+        String html = "<html><body><div class='remove-me'>Should be removed</div><div class='keep-me'>Should be kept</div></body></html>";
+        ExportParams exportParams = getExportParams();
+        exportParams.setRemovalSelector(".remove-me");
+
+        String result = processor.processHtmlForPDF(html, exportParams, List.of());
+
+        assertFalse(result.contains("Should be removed"));
+        assertTrue(result.contains("Should be kept"));
+    }
+
+    @Test
     void clearSelectorsRemovesMatchingElementsTest() {
         String html = "<html><body><div class='foo'>Content 1</div><div class='bar'>Content 2</div><div class='foo'>Content 3</div></body></html>";
         String result = processor.clearSelectors(html, ".foo");
