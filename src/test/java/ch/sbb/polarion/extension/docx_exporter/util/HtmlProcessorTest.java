@@ -685,6 +685,95 @@ class HtmlProcessorTest {
         assertEquals("http://example.com/base/foo/bar.html", result);
     }
 
+    @Test
+    void processHtmlForPDFWithRemovalSelectorTest() {
+        String html = "<html><body><div class='remove-me'>Should be removed</div><div class='keep-me'>Should be kept</div></body></html>";
+        ExportParams exportParams = getExportParams();
+        exportParams.setRemovalSelector(".remove-me");
+
+        String result = processor.processHtmlForPDF(html, exportParams, List.of());
+
+        assertFalse(result.contains("Should be removed"));
+        assertTrue(result.contains("Should be kept"));
+    }
+
+    @Test
+    void clearSelectorsRemovesMatchingElementsTest() {
+        String html = "<html><body><div class='foo'>Content 1</div><div class='bar'>Content 2</div><div class='foo'>Content 3</div></body></html>";
+        String result = processor.clearSelectors(html, ".foo");
+        assertFalse(result.contains("Content 1"));
+        assertFalse(result.contains("Content 3"));
+        assertTrue(result.contains("Content 2"));
+    }
+
+    @Test
+    void clearSelectorsRemovesElementsByIdTest() {
+        String html = "<html><body><div id='remove-me'>Should be removed</div><div id='keep-me'>Should be kept</div></body></html>";
+        String result = processor.clearSelectors(html, "#remove-me");
+        assertFalse(result.contains("Should be removed"));
+        assertTrue(result.contains("Should be kept"));
+    }
+
+    @Test
+    void clearSelectorsRemovesMultipleElementsTest() {
+        String html = "<html><body><span class='test'>A</span><span class='test'>B</span><span class='test'>C</span></body></html>";
+        String result = processor.clearSelectors(html, ".test");
+        assertFalse(result.contains(">A<"));
+        assertFalse(result.contains(">B<"));
+        assertFalse(result.contains(">C<"));
+    }
+
+    @Test
+    void clearSelectorsWithComplexSelectorTest() {
+        String html = "<html><body><div class='container'><p class='text'>Remove this</p><p>Keep this</p></div></body></html>";
+        String result = processor.clearSelectors(html, "div.container p.text");
+        assertFalse(result.contains("Remove this"));
+        assertTrue(result.contains("Keep this"));
+    }
+
+    @Test
+    void clearSelectorsWithNoMatchesTest() {
+        String html = "<html><body><div>Content</div></body></html>";
+        String result = processor.clearSelectors(html, ".non-existent");
+        assertTrue(result.contains("Content"));
+    }
+
+    @Test
+    void clearSelectorsRemovesNestedElementsTest() {
+        String html = "<html><body><div class='outer'><div class='inner'>Nested content</div></div><div>Other content</div></body></html>";
+        String result = processor.clearSelectors(html, ".outer");
+        assertFalse(result.contains("Nested content"));
+        assertTrue(result.contains("Other content"));
+    }
+
+    @Test
+    void clearSelectorsWithAttributeSelectorTest() {
+        String html = "<html><body><a href='http://example.com'>Link 1</a><a href='http://other.com'>Link 2</a></body></html>";
+        String result = processor.clearSelectors(html, "a[href='http://example.com']");
+        assertFalse(result.contains("Link 1"));
+        assertTrue(result.contains("Link 2"));
+    }
+
+    @Test
+    void clearSelectorsPreservesDocumentStructureTest() {
+        String html = "<html><head><title>Test</title></head><body><div class='remove'>Text</div></body></html>";
+        String result = processor.clearSelectors(html, ".remove");
+        assertTrue(result.contains("<html"));
+        assertTrue(result.contains("<head"));
+        assertTrue(result.contains("<title>Test</title>"));
+        assertFalse(result.contains("class=\"remove\""));
+    }
+
+    @Test
+    void clearSelectorsWithMultipleSelectorsCombinedTest() {
+        String html = "<html><body><div class='foo'>Remove 1</div><span id='bar'>Remove 2</span><p class='baz'>Remove 3</p><div>Keep this</div></body></html>";
+        String result = processor.clearSelectors(html, ".foo, #bar, .baz");
+        assertFalse(result.contains("Remove 1"));
+        assertFalse(result.contains("Remove 2"));
+        assertFalse(result.contains("Remove 3"));
+        assertTrue(result.contains("Keep this"));
+    }
+
     private ExportParams getExportParams() {
         return ExportParams.builder()
                 .projectId("test_project")

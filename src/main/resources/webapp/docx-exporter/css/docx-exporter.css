@@ -540,3 +540,11 @@
         background-position: 50px 50px;
     }
 }
+
+.more-info {
+    background: url(/polarion/ria/images/msginfo.png) no-repeat;
+    display: inline-block;
+    width: 17px;
+    height: 17px;
+    cursor: pointer;
+}

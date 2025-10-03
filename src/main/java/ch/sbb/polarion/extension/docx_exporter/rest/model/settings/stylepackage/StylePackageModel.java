@@ -32,6 +32,7 @@ public class StylePackageModel extends SettingsModel {
     private static final String TEMPLATE_ENTRY_NAME = "TEMPLATE";
     private static final String LOCALIZATION_ENTRY_NAME = "LOCALIZATION";
     private static final String WEBHOOKS_ENTRY_NAME = "WEBHOOKS";
+    private static final String REMOVAL_SELECTOR_ENTRY_NAME = "REMOVAL SELECTOR";
     private static final String RENDER_COMMENTS_ENTRY_NAME = "RENDER COMMENTS";
     private static final String CUT_EMPTY_CHAPTERS_ENTRY_NAME = "CUT EMPTY CHAPTERS";
     private static final String CUT_EMPTY_WORKITEM_ATTRIBUTES_ENTRY_NAME = "CUT EMPTY WORKITEM ATTRIBUTES";
@@ -48,6 +49,8 @@ public class StylePackageModel extends SettingsModel {
     private String template;
     private String localization;
     private String webhooks;
+    // Add a new style package settings - text input `Removal selector`. It expects expression like CSS (e.g. `.polarion-Hyperlink .polarion-Icons`) - html elements queried using this expression will be removed from source html.
+    private String removalSelector;
     private CommentsRenderType renderComments;
     private boolean cutEmptyChapters;
     private boolean cutEmptyWorkitemAttributes;
@@ -64,6 +67,7 @@ public class StylePackageModel extends SettingsModel {
                 serializeEntry(TEMPLATE_ENTRY_NAME, template) +
                 serializeEntry(LOCALIZATION_ENTRY_NAME, localization) +
                 serializeEntry(WEBHOOKS_ENTRY_NAME, webhooks) +
+                serializeEntry(REMOVAL_SELECTOR_ENTRY_NAME, removalSelector) +
                 serializeEntry(RENDER_COMMENTS_ENTRY_NAME, renderComments == null ? null : renderComments.name()) +
                 serializeEntry(CUT_EMPTY_CHAPTERS_ENTRY_NAME, cutEmptyChapters) +
                 serializeEntry(CUT_EMPTY_WORKITEM_ATTRIBUTES_ENTRY_NAME, cutEmptyWorkitemAttributes) +
@@ -82,6 +86,7 @@ public class StylePackageModel extends SettingsModel {
         template = deserializeEntry(TEMPLATE_ENTRY_NAME, serializedString);
         localization = deserializeEntry(LOCALIZATION_ENTRY_NAME, serializedString);
         webhooks = deserializeEntry(WEBHOOKS_ENTRY_NAME, serializedString);
+        removalSelector = deserializeEntry(REMOVAL_SELECTOR_ENTRY_NAME, serializedString);
         renderComments = parseRenderComments(deserializeEntry(RENDER_COMMENTS_ENTRY_NAME, serializedString));
         cutEmptyChapters = Boolean.parseBoolean(deserializeEntry(CUT_EMPTY_CHAPTERS_ENTRY_NAME, serializedString));
         cutEmptyWorkitemAttributes = Boolean.parseBoolean(deserializeEntry(CUT_EMPTY_WORKITEM_ATTRIBUTES_ENTRY_NAME, serializedString));

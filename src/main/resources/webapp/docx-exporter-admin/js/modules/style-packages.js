@@ -160,6 +160,7 @@ function saveStylePackage() {
             'specificChapters': ctx.getCheckboxValueById('specific-chapters') ? ctx.getValueById('chapters') : null,
             'language': ctx.getCheckboxValueById('localization') ? Languages.languageSelect.getSelectedValue() : null,
             'linkedWorkitemRoles': ctx.getCheckboxValueById('selected-roles') ? LinkRoles.rolesSelect.getSelectedValue() : null,
+            'removalSelector': ctx.getValueById('removal-selector-input'),
         }),
         onOk: () => {
             ctx.showSaveSuccessAlert();
@@ -202,6 +203,7 @@ function setStylePackage(content) {
     ctx.getElementById('webhooks-checkbox').dispatchEvent(new Event('change'));
     ChildConfigurations.webhooksSelect.selectValue(ChildConfigurations.webhooksSelect.containsOption(stylePackage.webhooks) ? stylePackage.webhooks : DEFAULT_SETTING_NAME);
 
+    ctx.setValueById('removal-selector-input', stylePackage.removalSelector || "");
     ctx.setCheckboxValueById('render-comments', !!stylePackage.renderComments);
     ctx.getElementById('render-comments').dispatchEvent(new Event('change'));
     RenderComments.renderCommentsSelect.selectValue(stylePackage.renderComments || 'OPEN');

@@ -60,6 +60,9 @@ public class ExportParams {
     @Schema(description = "Target file name of exported document")
     private String fileName;
 
+    @Schema(description = "CSS-like selector for elements to remove")
+    private String removalSelector;
+
     @Schema(description = "Map of attributes extracted from the URL")
     private Map<String, String> urlQueryParameters;
 

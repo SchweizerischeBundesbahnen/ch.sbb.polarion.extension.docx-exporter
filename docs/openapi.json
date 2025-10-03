@@ -1603,6 +1603,10 @@
             "example": "elibrary",
             "type": "string"
           },
+          "removalSelector": {
+            "description": "CSS-like selector for elements to remove",
+            "type": "string"
+          },
           "renderComments": {
             "description": "Which comments should be rendered in the exported document",
             "enum": [

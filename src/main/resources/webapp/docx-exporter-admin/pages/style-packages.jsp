@@ -209,6 +209,15 @@
                 </div>
             </div>
         </div>
+
+        <div class="flex-container">
+                <div class="input-group flex-centered">
+                    <label for="removal-selector-input" id="removal-selector-label" style="width: auto">Removal selector:</label>
+                    <div class='more-info' title="CSS-like selector(s) for elements to remove. Example: img.specificClass removes images with that class. Separate multiple selectors with commas, e.g. img.specificClass, table.unwanted, div#ad-banner."></div>
+                    <input id="removal-selector-input" style="margin-left: 35px; width: 615px" type="text">
+                </div>
+        </div>
+
     </div>
 
     <input id="scope" type="hidden" value="<%= request.getParameter("scope")%>"/>
