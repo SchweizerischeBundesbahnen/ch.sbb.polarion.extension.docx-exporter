@@ -223,6 +223,7 @@ export default class ExportPopup {
         }
         this.ctx.setSelector("popup-docx-template-selector", stylePackage.template);
         this.ctx.setSelector("popup-docx-localization-selector", stylePackage.localization);
+        this.ctx.setValue("popup-docx-removal-selector", stylePackage.removalSelector);
 
         this.ctx.setCheckbox("popup-docx-webhooks-checkbox", !!stylePackage.webhooks);
         this.ctx.setSelector("popup-docx-webhooks-selector", stylePackage.webhooks);
@@ -337,6 +338,7 @@ export default class ExportPopup {
             .setTemplate(this.ctx.getElementById("popup-docx-template-selector").value)
             .setLocalization(this.ctx.getElementById("popup-docx-localization-selector").value)
             .setWebhooks(this.ctx.getElementById("popup-docx-webhooks-checkbox").checked ? this.ctx.getElementById("popup-docx-webhooks-selector").value : null)
+            .setRemovalSelector(this.ctx.getValueById("popup-docx-removal-selector"))
             .setRenderComments(this.ctx.getElementById('popup-docx-render-comments').checked ? this.ctx.getElementById("popup-docx-render-comments-selector").value : null)
             .setCutEmptyChapters(this.ctx.getElementById("popup-docx-cut-empty-chapters").checked)
             .setCutEmptyWIAttributes(this.ctx.getElementById('popup-docx-cut-empty-wi-attributes').checked)

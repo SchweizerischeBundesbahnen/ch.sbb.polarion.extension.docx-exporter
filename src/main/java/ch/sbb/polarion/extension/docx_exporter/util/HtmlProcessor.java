@@ -150,6 +150,10 @@ public class HtmlProcessor {
 
         html = html.replace("<p class=\"page_break\"></p>", "<p class=\"page_break\">&#12;</p>");
 
+        if (!StringUtils.isEmptyTrimmed(exportParams.getRemovalSelector())) {
+            html = clearSelectors(html, exportParams.getRemovalSelector());
+        }
+
         // Do not change this entry order, '&nbsp;' can be used in the logic above, so we must cut them off as the last step
         html = cutExtraNbsp(html);
         return html;
@@ -601,6 +605,13 @@ public class HtmlProcessor {
         //which may contain a lot of nbsp too. This may occasionally result in exceeding page width lines.
         //Seems that there is no better solution than basically remove them completely.
         return html.replaceAll("&nbsp;|\u00A0", " ");
+    }
+
+    public @NotNull String clearSelectors(@NotNull String html, @NotNull String clearSelector) {
+        Document doc = Jsoup.parse(html);
+        Elements elementsToRemove = doc.select(clearSelector);
+        elementsToRemove.remove();
+        return doc.outerHtml();
     }
 
     @NotNull

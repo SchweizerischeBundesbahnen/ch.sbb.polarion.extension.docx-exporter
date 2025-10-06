@@ -31,6 +31,7 @@ import com.polarion.platform.persistence.IEnumOption;
 import com.polarion.platform.persistence.model.IPObject;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.jetbrains.annotations.VisibleForTesting;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -90,6 +91,7 @@ public class DocxExporterFormExtension implements IFormExtension {
             form = adjustChapters(form, selectedStylePackage);
             form = adjustLocalizeEnums(form, selectedStylePackage, module.getCustomField(DOC_LANGUAGE_FIELD));
             form = adjustLinkRoles(form, EnumValuesProvider.getAllLinkRoleNames(module.getProject()), selectedStylePackage);
+            form = adjustRemovalSelector(form, selectedStylePackage);
             form = adjustFilename(form, module);
 
             builder.html(form);
@@ -105,7 +107,8 @@ public class DocxExporterFormExtension implements IFormExtension {
                 .orElse(null);
     }
 
-    private StylePackageModel getSelectedStylePackage(SettingName defaultStylePackageName, String scope) {
+    @VisibleForTesting
+    StylePackageModel getSelectedStylePackage(SettingName defaultStylePackageName, String scope) {
         StylePackageSettings stylePackageSettings = (StylePackageSettings) NamedSettingsRegistry.INSTANCE.getByFeatureName(StylePackageSettings.FEATURE_NAME);
         return defaultStylePackageName != null
                 ? stylePackageSettings.read(scope, SettingId.fromName(defaultStylePackageName.getName()), null)
@@ -134,7 +137,8 @@ public class DocxExporterFormExtension implements IFormExtension {
         return form.replace("{WEBHOOKS_SELECTED}", noHooks ? "" : "checked");
     }
 
-    private Collection<SettingName> getSuitableStylePackages(@NotNull IModule module) {
+    @VisibleForTesting
+    Collection<SettingName> getSuitableStylePackages(@NotNull IModule module) {
         String locationPath = module.getModuleLocation().getLocationPath();
         String spaceId = "";
         final String documentName;
@@ -147,7 +151,8 @@ public class DocxExporterFormExtension implements IFormExtension {
         return polarionService.getSuitableStylePackages(List.of(new DocIdentifier(module.getProject().getId(), spaceId, documentName)));
     }
 
-    private Collection<SettingName> getSettingNames(@NotNull String featureName, @NotNull String scope) {
+    @VisibleForTesting
+    Collection<SettingName> getSettingNames(@NotNull String featureName, @NotNull String scope) {
         try {
             return NamedSettingsRegistry.INSTANCE.getByFeatureName(featureName).readNames(scope);
         } catch (IllegalStateException ex) {
@@ -244,13 +249,18 @@ public class DocxExporterFormExtension implements IFormExtension {
         }
     }
 
+    private String adjustRemovalSelector(@NotNull String form, @NotNull StylePackageModel stylePackage) {
+        return form.replace("{REMOVAL_SELECTOR}", StringUtils.getEmptyIfNull(stylePackage.getRemovalSelector()));
+    }
+
     private String adjustFilename(@NotNull String form, @NotNull IModule module) {
         String filename = getFilename(module);
         return form.replace("{FILENAME}", filename).replace("{DATA_FILENAME}", filename);
     }
 
+    @VisibleForTesting
     @SuppressWarnings("java:S3252") // allow to build ExportParams using its own builder
-    private String getFilename(@NotNull IModule module) {
+    String getFilename(@NotNull IModule module) {
         DocumentFileNameHelper documentFileNameHelper = new DocumentFileNameHelper();
 
         ExportParams exportParams = ExportParams.builder()
