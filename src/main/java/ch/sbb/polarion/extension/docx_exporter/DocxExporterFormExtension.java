@@ -93,6 +93,7 @@ public class DocxExporterFormExtension implements IFormExtension {
             form = adjustLinkRoles(form, EnumValuesProvider.getAllLinkRoleNames(module.getProject()), selectedStylePackage);
             form = adjustRemovalSelector(form, selectedStylePackage);
             form = adjustFilename(form, module);
+            form = adjustToC(form, selectedStylePackage);
 
             builder.html(form);
         }
@@ -197,6 +198,10 @@ public class DocxExporterFormExtension implements IFormExtension {
 
     private String adjustCutLocalURLs(String form, StylePackageModel stylePackage) {
         return stylePackage.isCutLocalURLs() ? form.replace("<input id='docx-cut-urls'", "<input id='docx-cut-urls' checked") : form;
+    }
+
+    private String adjustToC(String form, StylePackageModel stylePackage) {
+        return stylePackage.isAddToC() ? form.replace("<input id='docx-toc'", "<input id='docx-toc' checked") : form;
     }
 
     private String adjustChapters(String form, StylePackageModel stylePackage) {

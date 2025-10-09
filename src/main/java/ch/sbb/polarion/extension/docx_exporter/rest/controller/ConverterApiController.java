@@ -1,13 +1,13 @@
 package ch.sbb.polarion.extension.docx_exporter.rest.controller;
 
-import ch.sbb.polarion.extension.generic.rest.filter.LogoutFilter;
-import ch.sbb.polarion.extension.generic.rest.filter.Secured;
-import ch.sbb.polarion.extension.docx_exporter.converter.HtmlToDocxConverter;
 import ch.sbb.polarion.extension.docx_exporter.converter.DocxConverter;
 import ch.sbb.polarion.extension.docx_exporter.converter.DocxConverterJobsService;
+import ch.sbb.polarion.extension.docx_exporter.converter.HtmlToDocxConverter;
 import ch.sbb.polarion.extension.docx_exporter.rest.model.NestedListsCheck;
 import ch.sbb.polarion.extension.docx_exporter.rest.model.conversion.ExportParams;
 import ch.sbb.polarion.extension.docx_exporter.service.DocxExporterPolarionService;
+import ch.sbb.polarion.extension.generic.rest.filter.LogoutFilter;
+import ch.sbb.polarion.extension.generic.rest.filter.Secured;
 import org.glassfish.jersey.media.multipart.FormDataBodyPart;
 import org.jetbrains.annotations.VisibleForTesting;
 import org.springframework.web.context.request.RequestAttributes;
@@ -73,8 +73,8 @@ public class ConverterApiController extends ConverterInternalController {
     }
 
     @Override
-    public Response convertHtmlToPdf(FormDataBodyPart html, FormDataBodyPart template, String fileName) {
-        return polarionService.callPrivileged(() -> super.convertHtmlToPdf(html, template, fileName));
+    public Response convertHtmlToPdf(FormDataBodyPart html, FormDataBodyPart template, String fileName, FormDataBodyPart options) {
+        return polarionService.callPrivileged(() -> super.convertHtmlToPdf(html, template, fileName, options));
     }
 
     @Override

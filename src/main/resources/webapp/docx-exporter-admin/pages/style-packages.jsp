@@ -1,4 +1,6 @@
 <%@ page import="ch.sbb.polarion.extension.docx_exporter.properties.DocxExporterExtensionConfiguration" %>
+<%@ page import="java.lang.Boolean" %>
+<%@ page import="java.lang.String" %>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
 
@@ -19,6 +21,7 @@
         html {
             height: 100%;
         }
+
         body {
             height: 100%;
             padding-left: 10px;
@@ -27,43 +30,54 @@
             display: flex;
             flex-direction: column;
         }
+
         .standard-admin-page {
             flex: 1;
             display: flex;
             flex-direction: column;
         }
+
         .style-package-error {
             color: red;
         }
+
         .flex-container {
             display: flex;
             column-gap: 20px;
             flex-wrap: wrap;
         }
+
         .flex-column {
             width: 440px;
         }
+
         .input-group {
             margin-bottom: 10px;
         }
+
         input[type="checkbox"] {
             width: auto;
             vertical-align: middle;
         }
+
         .checkbox.input-group label {
             width: auto;
         }
+
         .flex-centered {
             display: flex;
             align-items: center;
         }
+
         .flex-centered label {
             width: auto;
             margin-right: 4px;
         }
+
         .flex-grow {
             flex-grow: 1;
         }
+
         .more-info {
             background: url(/polarion/ria/images/msginfo.png) no-repeat;
             display: inline-block;
@@ -78,9 +92,9 @@
 <div class="standard-admin-page">
     <h1>DOCX Exporter: Style Packages</h1>
 
-    <jsp:include page='/common/jsp/notifications.jsp' />
+    <jsp:include page='/common/jsp/notifications.jsp'/>
 
-    <jsp:include page='/common/jsp/configurations.jsp' />
+    <jsp:include page='/common/jsp/configurations.jsp'/>
 
     <div class="content-area">
         <div id="child-configs-load-error" class="style-package-error" style="display: none; margin-bottom: 15px">
@@ -95,7 +109,8 @@
             <div class="flex-column">
                 <div class='input-group flex-centered'>
                     <label for='style-package-weight'>Weight:</label>
-                    <div class='more-info' title="A float number from 0.0 to 100, which will determine the position of current style package in the resulting style packages list. The higher the number, the higher its position will be."></div>
+                    <div class='more-info'
+                         title="A float number from 0.0 to 100, which will determine the position of current style package in the resulting style packages list. The higher the number, the higher its position will be."></div>
                     <input id="style-package-weight" style="margin-left: 59px" type="number" min="1" max="100" step="0.1">
                 </div>
             </div>
@@ -103,7 +118,8 @@
             <div class="flex-grow" id="matching-query-container">
                 <div class='input-group flex-centered'>
                     <label for='matching-query'>Matching query:</label>
-                    <div class='more-info' title="A query to select documents to which this style package will be relevant. For documents not matching this query the style package won't be visible. If you want to make this style package be available to all documents, just leave this field empty."></div>
+                    <div class='more-info'
+                         title="A query to select documents to which this style package will be relevant. For documents not matching this query the style package won't be visible. If you want to make this style package be available to all documents, just leave this field empty."></div>
                     <input id='matching-query' class="flex-grow" style="margin-left: 8px;"/>
                 </div>
             </div>
@@ -155,14 +171,14 @@
             <div class="flex-column">
                 <div class='checkbox input-group'>
                     <label for='render-comments' id='render-comments-label'>
-                        <input id="render-comments" onchange='document.getElementById("render-comments-select").style.visibility = this.checked ? "visible" : "hidden"' type='checkbox' />
+                        <input id="render-comments" onchange='document.getElementById("render-comments-select").style.visibility = this.checked ? "visible" : "hidden"' type='checkbox'/>
                         Comments rendering
                     </label>
                     <div id="render-comments-select" style="visibility: hidden; margin-left: 10px; width: 200px"></div>
                 </div>
                 <div class='checkbox input-group'>
                     <label for='cut-empty-wi-attributes'>
-                        <input id="cut-empty-wi-attributes" type='checkbox' />
+                        <input id="cut-empty-wi-attributes" type='checkbox'/>
                         Cut empty Workitem attributes
                     </label>
                 </div>
@@ -207,15 +223,22 @@
                     </label>
                     <div id="language-select" style="visibility: hidden; margin-left: 10px; width: 200px"></div>
                 </div>
+                <div class='checkbox input-group'>
+                    <label for='toc'>
+                        <input id="toc" onchange='document.getElementById("toc").style.visibility = this.checked ? "visible" : "hidden"' type='checkbox'/>
+                        ToC
+                    </label>
+                </div>
             </div>
         </div>
 
         <div class="flex-container">
-                <div class="input-group flex-centered">
-                    <label for="removal-selector-input" id="removal-selector-label" style="width: auto">Removal selector:</label>
-                    <div class='more-info' title="CSS-like selector(s) for elements to remove. Example: img.specificClass removes images with that class. Separate multiple selectors with commas, e.g. img.specificClass, table.unwanted, div#ad-banner."></div>
-                    <input id="removal-selector-input" style="margin-left: 35px; width: 615px" type="text">
-                </div>
+            <div class="input-group flex-centered">
+                <label for="removal-selector-input" id="removal-selector-label" style="width: auto">Removal selector:</label>
+                <div class='more-info'
+                     title="CSS-like selector(s) for elements to remove. Example: img.specificClass removes images with that class. Separate multiple selectors with commas, e.g. img.specificClass, table.unwanted, div#ad-banner."></div>
+                <input id="removal-selector-input" style="margin-left: 35px; width: 615px" type="text">
+            </div>
         </div>
 
     </div>

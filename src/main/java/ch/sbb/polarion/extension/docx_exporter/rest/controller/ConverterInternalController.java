@@ -57,6 +57,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Hidden
 @Path("/internal")
@@ -343,11 +344,19 @@ public class ConverterInternalController {
             @Parameter(description = "Optional template file", schema = @Schema(type = "string", format = "binary"))
             @FormDataParam(value = "template")
             FormDataBodyPart template,
-            @Parameter(description = "default value: document.docx") @QueryParam("fileName") String fileName) {
+            @Parameter(description = "default value: document.docx") @QueryParam("fileName") String fileName,
+
+            @Parameter(description = "Optional list of additional options", schema = @Schema(type = "array", implementation = List.class))
+            @FormDataParam(value = "template")
+            FormDataBodyPart options) {
         try {
             byte[] htmlBytes = html.getEntityAs(InputStream.class).readAllBytes();
             byte[] templateBytes = template != null ? template.getEntityAs(InputStream.class).readAllBytes() : null;
-            byte[] docxBytes = htmlToDocxConverter.convert(new String(htmlBytes, StandardCharsets.UTF_8), templateBytes);
+            List<String> optionsList = options != null
+                    ? Stream.of(options.getValue().split(",")).map(String::trim).filter(s -> !s.isEmpty()).toList()
+                    : null;
+
+            byte[] docxBytes = htmlToDocxConverter.convert(new String(htmlBytes, StandardCharsets.UTF_8), templateBytes, optionsList);
 
             String headerFileName = (fileName != null) ? fileName : "document.docx";
             return Response.ok(docxBytes)

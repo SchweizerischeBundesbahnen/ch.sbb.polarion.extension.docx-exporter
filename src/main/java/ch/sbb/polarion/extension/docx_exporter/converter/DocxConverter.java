@@ -68,6 +68,7 @@ public class DocxConverter {
     }
 
     public byte[] convertToDocx(@NotNull ExportParams exportParams) {
+        List<String> options = null;
         long startTime = System.currentTimeMillis();
 
         DocxGenerationLog generationLog = new DocxGenerationLog();
@@ -90,7 +91,11 @@ public class DocxConverter {
             }
         }
 
-        byte[] bytes = generateDocx(htmlContent, template);
+        if (exportParams.isAddToC()) {
+            options = Collections.singletonList("--toc");
+        }
+
+        byte[] bytes = generateDocx(htmlContent, template, options);
 
         if (exportParams.getInternalContent() == null) { //do not log time for internal parts processing
             String finalMessage = "DOCX document '" + documentData.getTitle() + "' has been generated within " + (System.currentTimeMillis() - startTime) + " milliseconds";
@@ -203,14 +208,14 @@ public class DocxConverter {
     }
 
     @VisibleForTesting
-    byte[] generateDocx(String htmlPage, byte[] template) {
+    byte[] generateDocx(String htmlPage, byte[] template, @Nullable List<String> options) {
         int headerIndex = htmlPage.indexOf("<div class='header'>");
         if (headerIndex > -1) {
             int contentIndex = htmlPage.indexOf("<div class='content'>");
             htmlPage = htmlPage.substring(0, headerIndex) + htmlPage.substring(contentIndex);
         }
         htmlPage = htmlPage.replace("<div style='break-after:page'>page to be removed</div><?xml version='1.0' encoding='UTF-8'?>", "");
-        return pandocServiceConnector.convertToDocx(htmlPage, template);
+        return pandocServiceConnector.convertToDocx(htmlPage, template, options);
     }
 
     @VisibleForTesting

@@ -157,6 +157,7 @@ function saveStylePackage() {
             'cutEmptyChapters': ctx.getCheckboxValueById('cut-empty-chapters'),
             'cutEmptyWorkitemAttributes': ctx.getCheckboxValueById('cut-empty-wi-attributes'),
             'cutLocalURLs': ctx.getCheckboxValueById('cut-urls'),
+            'addToC': ctx.getCheckboxValueById('toc'),
             'specificChapters': ctx.getCheckboxValueById('specific-chapters') ? ctx.getValueById('chapters') : null,
             'language': ctx.getCheckboxValueById('localization') ? Languages.languageSelect.getSelectedValue() : null,
             'linkedWorkitemRoles': ctx.getCheckboxValueById('selected-roles') ? LinkRoles.rolesSelect.getSelectedValue() : null,
@@ -219,6 +220,8 @@ function setStylePackage(content) {
     ctx.setCheckboxValueById('localization', !!stylePackage.language);
     ctx.getElementById('localization').dispatchEvent(new Event('change'));
     Languages.languageSelect.selectValue(stylePackage.language);
+
+    ctx.setCheckboxValueById('toc', stylePackage.addToC);
 
     const rolesProvided = stylePackage.linkedWorkitemRoles && stylePackage.linkedWorkitemRoles.length && stylePackage.linkedWorkitemRoles.length > 0;
     ctx.setCheckboxValueById('selected-roles', rolesProvided);

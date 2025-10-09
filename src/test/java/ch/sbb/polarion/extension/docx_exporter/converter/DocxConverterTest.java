@@ -89,7 +89,7 @@ class DocxConverterTest {
 
         documentDataFactoryMockedStatic.when(() -> DocumentDataFactory.getDocumentData(eq(exportParams), anyBoolean())).thenReturn(documentData);
         when(docxTemplateProcessor.processUsing(eq("testDocument"), anyString())).thenReturn("test html content");
-        when(pandocServiceConnector.convertToDocx("test html content", null)).thenReturn("test document content".getBytes());
+        when(pandocServiceConnector.convertToDocx("test html content", null, null)).thenReturn("test document content".getBytes());
         when(htmlProcessor.internalizeLinks(anyString())).thenAnswer(a -> a.getArgument(0));
 
         exportParams.setTemplate("testTemplate");

@@ -236,6 +236,7 @@ export default class ExportPopup {
         this.ctx.setCheckbox("popup-docx-cut-urls", stylePackage.cutLocalURLs);
         this.ctx.setCheckbox("popup-docx-cut-empty-chapters", stylePackage.cutEmptyChapters);
         this.ctx.setCheckbox("popup-docx-cut-empty-wi-attributes", stylePackage.cutEmptyWorkitemAttributes);
+        this.ctx.setCheckbox("popup-docx-toc", stylePackage.addToC);
 
         this.ctx.setCheckbox("popup-docx-specific-chapters", stylePackage.specificChapters);
         this.ctx.setValue("popup-docx-chapters", stylePackage.specificChapters || "");
@@ -343,6 +344,7 @@ export default class ExportPopup {
             .setCutEmptyChapters(this.ctx.getElementById("popup-docx-cut-empty-chapters").checked)
             .setCutEmptyWIAttributes(this.ctx.getElementById('popup-docx-cut-empty-wi-attributes').checked)
             .setCutLocalUrls(this.ctx.getElementById("popup-docx-cut-urls").checked)
+            .setToC(this.ctx.getElementById("popup-docx-toc").checked)
             .setChapters(selectedChapters)
             .setLanguage(this.ctx.getElementById('popup-docx-localization').checked ? this.ctx.getElementById("popup-docx-language").value : null)
             .setLinkedWorkitemRoles(selectedRoles)

@@ -68,4 +68,7 @@ public class ExportParams {
 
     @Schema(description = "Internal content")
     private String internalContent;
+
+    @Schema(description = "Add Table of Content")
+    private boolean addToC;
 }
