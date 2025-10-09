@@ -15,7 +15,6 @@ public class ParamSetCondition implements ExecutionCondition {
     @Override
     public ConditionEvaluationResult evaluateExecutionCondition(ExtensionContext extensionContext) {
         String implValue = System.getProperty(BasePandocTest.IMPL_NAME_PARAM);
-       // implValue = "docker"; // for debug only, to be removed
         if (DOCKER.equalsIgnoreCase(implValue)) {
             return ConditionEvaluationResult.enabled("ok");
         } else {
