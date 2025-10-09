@@ -1,6 +1,4 @@
 <%@ page import="ch.sbb.polarion.extension.docx_exporter.properties.DocxExporterExtensionConfiguration" %>
-<%@ page import="java.lang.Boolean" %>
-<%@ page import="java.lang.String" %>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
 
@@ -225,7 +223,7 @@
                 </div>
                 <div class='checkbox input-group'>
                     <label for='toc'>
-                        <input id="toc" onchange='document.getElementById("toc").style.visibility = this.checked ? "visible" : "hidden"' type='checkbox'/>
+                        <input id="toc" type='checkbox'/>
                         ToC
                     </label>
                 </div>

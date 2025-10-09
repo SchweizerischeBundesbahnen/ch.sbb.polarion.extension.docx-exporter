@@ -347,13 +347,13 @@ public class ConverterInternalController {
             @Parameter(description = "default value: document.docx") @QueryParam("fileName") String fileName,
 
             @Parameter(description = "Optional list of additional options", schema = @Schema(type = "array", implementation = List.class))
-            @FormDataParam(value = "template")
+            @FormDataParam(value = "options")
             FormDataBodyPart options) {
         try {
             byte[] htmlBytes = html.getEntityAs(InputStream.class).readAllBytes();
             byte[] templateBytes = template != null ? template.getEntityAs(InputStream.class).readAllBytes() : null;
             List<String> optionsList = options != null
-                    ? Stream.of(options.getValue().split(",")).map(String::trim).filter(s -> !s.isEmpty()).toList()
+                    ? Stream.of(options.getValue().split(" ")).map(String::trim).filter(s -> !s.isEmpty()).toList()
                     : null;
 
             byte[] docxBytes = htmlToDocxConverter.convert(new String(htmlBytes, StandardCharsets.UTF_8), templateBytes, optionsList);
