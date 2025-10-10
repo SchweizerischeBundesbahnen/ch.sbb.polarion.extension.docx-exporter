@@ -74,6 +74,7 @@ class DocxConverterTest {
         // Arrange
         ExportParams exportParams = ExportParams.builder()
                 .projectId("testProjectId")
+                .addToC(true)
                 .build();
 
         ITrackerProject project = mock(ITrackerProject.class);
@@ -89,7 +90,7 @@ class DocxConverterTest {
 
         documentDataFactoryMockedStatic.when(() -> DocumentDataFactory.getDocumentData(eq(exportParams), anyBoolean())).thenReturn(documentData);
         when(docxTemplateProcessor.processUsing(eq("testDocument"), anyString())).thenReturn("test html content");
-        when(pandocServiceConnector.convertToDocx("test html content", null, null)).thenReturn("test document content".getBytes());
+        when(pandocServiceConnector.convertToDocx("test html content", null, List.of("--toc"))).thenReturn("test document content".getBytes());
         when(htmlProcessor.internalizeLinks(anyString())).thenAnswer(a -> a.getArgument(0));
 
         exportParams.setTemplate("testTemplate");
@@ -99,6 +100,7 @@ class DocxConverterTest {
         byte[] result = docxConverter.convertToDocx(exportParams);
 
         // Assert
+        verify(pandocServiceConnector).convertToDocx("test html content", null, List.of("--toc"));
         assertThat(result).isEqualTo("test document content".getBytes());
     }
 
