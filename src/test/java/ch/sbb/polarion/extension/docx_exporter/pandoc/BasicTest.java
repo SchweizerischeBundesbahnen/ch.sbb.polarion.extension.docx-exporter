@@ -1,11 +1,16 @@
 package ch.sbb.polarion.extension.docx_exporter.pandoc;
 
 import ch.sbb.polarion.extension.docx_exporter.util.MediaUtils;
+import jakarta.xml.bind.JAXBElement;
 import lombok.SneakyThrows;
 import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.pdmodel.interactive.documentnavigation.outline.PDDocumentOutline;
 import org.docx4j.Docx4J;
 import org.docx4j.convert.out.FOSettings;
+import org.docx4j.fonts.IdentityPlusMapper;
+import org.docx4j.fonts.Mapper;
+import org.docx4j.fonts.PhysicalFonts;
 import org.docx4j.openpackaging.exceptions.Docx4JException;
 import org.docx4j.openpackaging.packages.WordprocessingMLPackage;
 import org.docx4j.openpackaging.parts.WordprocessingML.MainDocumentPart;
@@ -95,34 +100,7 @@ class BasicTest extends BasePandocTest {
     void shouldContainsToC() {
         String html = readHtmlResource("testToC");
         byte[] docBytes = exportToDOCX(html, readTemplate("reference_template"), List.of("--toc"));
-        assertTrue(containsToC(docBytes));
-    }
-
-    public boolean containsToC(byte[] docBytes) {
-        try {
-            WordprocessingMLPackage wordMLPackage = WordprocessingMLPackage.load(new ByteArrayInputStream(docBytes));
-            MainDocumentPart documentPart = wordMLPackage.getMainDocumentPart();
-
-            List<Object> fldSimples = documentPart.getJAXBNodesViaXPath("//w:fldSimple[contains(@w:instr, 'TOC')]", true);
-            if (fldSimples != null && !fldSimples.isEmpty()) {
-                return true;
-            }
-
-            List<Object> instrTexts = documentPart.getJAXBNodesViaXPath("//w:instrText", true);
-            for (Object obj : instrTexts) {
-                if (obj instanceof Text text) {
-                    String value = text.getValue();
-                    if (value != null && value.toUpperCase().contains("TOC")) {
-                        return true;
-                    }
-                }
-            }
-
-            return false;
-
-        } catch (Exception e) {
-            return false;
-        }
+        assertTrue(containsText(docBytes, "Table of Contents"));
     }
 
     private int getPageCount(byte[] docBytes) {
@@ -176,6 +154,33 @@ class BasicTest extends BasePandocTest {
         }
         htmlBuilder.append("</body></html>");
         return htmlBuilder.toString();
+    }
+
+    private boolean containsText(byte[] docBytes, String search) {
+        if (search == null || search.isEmpty()) {
+            return false;
+        }
+
+        try {
+            WordprocessingMLPackage wordMLPackage = WordprocessingMLPackage.load(new ByteArrayInputStream(docBytes));
+            MainDocumentPart documentPart = wordMLPackage.getMainDocumentPart();
+            List<Object> textNodes = documentPart.getJAXBNodesViaXPath("//w:t", true);
+
+            for (Object node : textNodes) {
+                if (node instanceof JAXBElement<?> jaxbElement) {
+                    Object value = jaxbElement.getValue();
+                    if (value instanceof Text textElement) {
+                        String textContent = textElement.getValue();
+                        if (textContent != null && textContent.contains(search)) {
+                            return true;
+                        }
+                    }
+                }
+            }
+            return false;
+        } catch (Exception e) {
+            return false;
+        }
     }
 
     protected String getCurrentMethodName() {
