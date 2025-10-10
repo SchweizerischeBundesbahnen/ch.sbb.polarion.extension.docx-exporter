@@ -1539,6 +1539,10 @@
       },
       "ExportParams": {
         "properties": {
+          "addToC": {
+            "description": "Add Table of Contents",
+            "type": "boolean"
+          },
           "baselineRevision": {
             "description": "The specific revision of the provided baseline",
             "type": "string"

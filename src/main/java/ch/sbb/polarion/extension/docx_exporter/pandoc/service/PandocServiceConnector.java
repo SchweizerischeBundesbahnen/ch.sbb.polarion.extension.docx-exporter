@@ -27,6 +27,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 
 import static com.polarion.core.util.StringUtils.isEmpty;
@@ -57,7 +58,7 @@ public class PandocServiceConnector {
         this.pandocServiceBaseUrl = pandocServiceBaseUrl;
     }
 
-    public byte[] convertToDocx(String htmlPage, byte[] template) {
+    public byte[] convertToDocx(String htmlPage, byte[] template, List<String> options) {
         Client client = null;
         try {
             client = ClientBuilder.newClient();
@@ -75,6 +76,11 @@ public class PandocServiceConnector {
                             new ByteArrayInputStream(template),
                             MediaType.valueOf(MEDIA_TYPE_DOCX)
                     ));
+                }
+
+                if (options != null && !options.isEmpty()) {
+                    String optionsString = String.join(" ", options);
+                    multipart.bodyPart(new FormDataBodyPart("options", optionsString, MediaType.TEXT_PLAIN_TYPE));
                 }
 
                 Invocation.Builder requestBuilder = webTarget.request(MEDIA_TYPE_DOCX);

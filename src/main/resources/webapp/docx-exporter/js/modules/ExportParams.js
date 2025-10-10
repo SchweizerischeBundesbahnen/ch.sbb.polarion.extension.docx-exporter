@@ -19,6 +19,7 @@ export default class ExportParams {
         this.fileName = builder.fileName;
         this.urlQueryParameters = builder.urlQueryParameters;
         this.internalContent = builder.internalContent;
+        this.addToC = builder.addToC;
     }
 
     toJSON() {
@@ -48,6 +49,7 @@ export default class ExportParams {
                 this.cutEmptyChapters = undefined;
                 this.cutEmptyWIAttributes = undefined;
                 this.cutLocalUrls = undefined;
+                this.addToC = undefined;
                 this.chapters = undefined;
                 this.language = undefined;
                 this.linkedWorkitemRoles = undefined;
@@ -114,6 +116,11 @@ export default class ExportParams {
 
             setCutLocalUrls(cutLocalUrls) {
                 this.cutLocalUrls = cutLocalUrls;
+                return this;
+            }
+
+            setToC(toc) {
+                this.addToC = toc;
                 return this;
             }
 

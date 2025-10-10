@@ -10,7 +10,10 @@ import ch.sbb.polarion.extension.docx_exporter.util.DocxExporterFileResourceProv
 import ch.sbb.polarion.extension.docx_exporter.util.DocxTemplateProcessor;
 import ch.sbb.polarion.extension.docx_exporter.util.html.HtmlLinksHelper;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.VisibleForTesting;
+
+import java.util.List;
 
 public class HtmlToDocxConverter {
     private final DocxTemplateProcessor docxTemplateProcessor;
@@ -31,13 +34,13 @@ public class HtmlToDocxConverter {
         this.pandocServiceConnector = pandocServiceConnector;
     }
 
-    public byte[] convert(String origHtml, byte[] template) {
+    public byte[] convert(String origHtml, byte[] template, @Nullable List<String> options) {
         validateHtml(origHtml);
         String html = preprocessHtml(origHtml);
         if (DocxExporterExtensionConfiguration.getInstance().isDebug()) {
             new HtmlLogger().log(origHtml, html, "");
         }
-        return pandocServiceConnector.convertToDocx(origHtml, template);
+        return pandocServiceConnector.convertToDocx(origHtml, template, options);
     }
 
     private void validateHtml(String origHtml) {

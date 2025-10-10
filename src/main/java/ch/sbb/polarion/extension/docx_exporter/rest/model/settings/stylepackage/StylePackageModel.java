@@ -42,6 +42,7 @@ public class StylePackageModel extends SettingsModel {
     private static final String LANGUAGE_ENTRY_NAME = "LANGUAGE";
     private static final String LINKED_WORKITEM_ROLES_ENTRY_NAME = "LINKED WORKITEM ROLES";
     private static final String ATTACHMENTS_FILTER = "ATTACHMENTS_FILTER";
+    private static final String TOC_ENTRY_NAME = "TOC";
 
     private String matchingQuery;
     private Float weight;
@@ -58,6 +59,7 @@ public class StylePackageModel extends SettingsModel {
     private String specificChapters;
     private String language;
     private List<String> linkedWorkitemRoles;
+    private boolean addToC;
 
     @Override
     protected String serializeModelData() {
@@ -74,7 +76,9 @@ public class StylePackageModel extends SettingsModel {
                 serializeEntry(CUT_LOCAL_URLS_ENTRY_NAME, cutLocalURLs) +
                 serializeEntry(SPECIFIC_CHAPTERS_ENTRY_NAME, specificChapters) +
                 serializeEntry(LANGUAGE_ENTRY_NAME, language) +
-                serializeEntry(LINKED_WORKITEM_ROLES_ENTRY_NAME, linkedWorkitemRoles);
+                serializeEntry(LINKED_WORKITEM_ROLES_ENTRY_NAME, linkedWorkitemRoles) +
+                serializeEntry(TOC_ENTRY_NAME, addToC);
+
     }
 
     @Override
@@ -94,6 +98,7 @@ public class StylePackageModel extends SettingsModel {
         specificChapters = deserializeEntry(SPECIFIC_CHAPTERS_ENTRY_NAME, serializedString);
         language = deserializeEntry(LANGUAGE_ENTRY_NAME, serializedString);
         linkedWorkitemRoles = deserializeListEntry(LINKED_WORKITEM_ROLES_ENTRY_NAME, serializedString, String.class);
+        addToC = Boolean.parseBoolean(deserializeEntry(TOC_ENTRY_NAME, serializedString));
     }
 
     private CommentsRenderType parseRenderComments(String value) {

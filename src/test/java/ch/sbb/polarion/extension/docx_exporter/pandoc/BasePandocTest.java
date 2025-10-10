@@ -65,7 +65,7 @@ public abstract class BasePandocTest {
         return inputStream;
     }
 
-    protected byte[] exportToDOCX(String html, byte[] template) {
+    protected byte[] exportToDOCX(String html, byte[] template, List<String> options) {
         try (GenericContainer<?> pandocService = new GenericContainer<>(DOCKER_IMAGE_NAME)) {
             pandocService
                     .withImagePullPolicy(PullPolicy.alwaysPull())
@@ -77,7 +77,7 @@ public abstract class BasePandocTest {
 
             String pandocServiceBaseUrl = "http://" + pandocService.getHost() + ":" + pandocService.getFirstMappedPort();
             PandocServiceConnector pandocServiceConnector = new PandocServiceConnector(pandocServiceBaseUrl);
-            return pandocServiceConnector.convertToDocx(html, template);
+            return pandocServiceConnector.convertToDocx(html, template, options);
         }
     }
 

@@ -68,6 +68,13 @@
             </label>
         </div>
         <div class='property-wrapper'>
+            <label for='docx-toc'>
+                <input id='docx-toc' type='checkbox'/>
+                Table of Contents
+            </label>
+            <div class='more-info' title="A Table of Contents will be added to the exported DOCX file."></div>
+        </div>
+        <div class='property-wrapper'>
             <label for='docx-specific-chapters' style='width: 195px'>
                 <input id='docx-specific-chapters' onchange='document.querySelector("#docx-exporter-panel #docx-chapters").style.display = this.checked ? "block" : "none"' type='checkbox'/>
                 Specific higher level chapters

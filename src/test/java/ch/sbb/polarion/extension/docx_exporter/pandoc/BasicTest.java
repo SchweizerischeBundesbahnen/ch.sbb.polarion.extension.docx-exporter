@@ -1,7 +1,7 @@
 package ch.sbb.polarion.extension.docx_exporter.pandoc;
 
 import ch.sbb.polarion.extension.docx_exporter.util.MediaUtils;
-import java.nio.file.Files;
+import jakarta.xml.bind.JAXBElement;
 import lombok.SneakyThrows;
 import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.pdmodel.PDDocument;
@@ -9,6 +9,8 @@ import org.docx4j.Docx4J;
 import org.docx4j.convert.out.FOSettings;
 import org.docx4j.openpackaging.exceptions.Docx4JException;
 import org.docx4j.openpackaging.packages.WordprocessingMLPackage;
+import org.docx4j.openpackaging.parts.WordprocessingML.MainDocumentPart;
+import org.docx4j.wml.Text;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -22,6 +24,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 
@@ -34,7 +37,7 @@ class BasicTest extends BasePandocTest {
     void testInvalidTemplate() {
         Exception exception = null;
         try {
-            exportToDOCX(readHtmlResource(getCurrentMethodName()), readTemplate("invalid_template"));
+            exportToDOCX(readHtmlResource(getCurrentMethodName()), readTemplate("invalid_template"), null);
         } catch (Exception e) {
             exception = e;
         }
@@ -44,7 +47,7 @@ class BasicTest extends BasePandocTest {
     @Test
     void testLargeDocument() throws Exception {
         String largeHtml = generateLargeHtmlContent();
-        byte[] doc = exportToDOCX(largeHtml, readTemplate("reference_template"));
+        byte[] doc = exportToDOCX(largeHtml, readTemplate("reference_template"), null);
         assertNotNull(doc);
         File newFile = getTestFile();
         newFile.deleteOnExit();
@@ -60,7 +63,7 @@ class BasicTest extends BasePandocTest {
     @ParameterizedTest
     @ValueSource(strings = {"testSimple", "testTable", "testLists", "testParagraphs"})
     void runTest(String testName) throws Exception {
-        byte[] doc = exportToDOCX(readHtmlResource(testName), readTemplate("reference_template"));
+        byte[] doc = exportToDOCX(readHtmlResource(testName), readTemplate("reference_template"), null);
         assertNotNull(doc);
         File newFile = getTestFile();
         try {
@@ -84,8 +87,16 @@ class BasicTest extends BasePandocTest {
     @SneakyThrows
     void shouldConsiderPageBreaks() {
         String html = readHtmlResource("testPageBreak");
-        byte[] docBytes = exportToDOCX(html, readTemplate("reference_template"));
+        byte[] docBytes = exportToDOCX(html, readTemplate("reference_template"), null);
         assertEquals(3, getPageCount(docBytes));
+    }
+
+    @Test
+    @SneakyThrows
+    void shouldContainsToC() {
+        String html = readHtmlResource("testToC");
+        byte[] docBytes = exportToDOCX(html, readTemplate("reference_template"), List.of("--toc"));
+        assertTrue(containsText(docBytes, "Table of Contents"));
     }
 
     private int getPageCount(byte[] docBytes) {
@@ -139,6 +150,33 @@ class BasicTest extends BasePandocTest {
         }
         htmlBuilder.append("</body></html>");
         return htmlBuilder.toString();
+    }
+
+    private boolean containsText(byte[] docBytes, String search) {
+        if (search == null || search.isEmpty()) {
+            return false;
+        }
+
+        try {
+            WordprocessingMLPackage wordMLPackage = WordprocessingMLPackage.load(new ByteArrayInputStream(docBytes));
+            MainDocumentPart documentPart = wordMLPackage.getMainDocumentPart();
+            List<Object> textNodes = documentPart.getJAXBNodesViaXPath("//w:t", true);
+
+            for (Object node : textNodes) {
+                if (node instanceof JAXBElement<?> jaxbElement) {
+                    Object value = jaxbElement.getValue();
+                    if (value instanceof Text textElement) {
+                        String textContent = textElement.getValue();
+                        if (textContent != null && textContent.contains(search)) {
+                            return true;
+                        }
+                    }
+                }
+            }
+            return false;
+        } catch (Exception e) {
+            return false;
+        }
     }
 
     protected String getCurrentMethodName() {
