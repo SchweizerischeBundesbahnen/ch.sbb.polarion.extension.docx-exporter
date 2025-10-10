@@ -68,7 +68,6 @@ public class DocxConverter {
     }
 
     public byte[] convertToDocx(@NotNull ExportParams exportParams) {
-        List<String> options = null;
         long startTime = System.currentTimeMillis();
 
         DocxGenerationLog generationLog = new DocxGenerationLog();
@@ -91,6 +90,7 @@ public class DocxConverter {
             }
         }
 
+        List<String> options = null;
         if (exportParams.isAddToC()) {
             options = Collections.singletonList("--toc");
         }
