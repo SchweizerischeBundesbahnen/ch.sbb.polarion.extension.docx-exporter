@@ -1,5 +1,14 @@
 # Changelog
 
+## [2.2.1](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/compare/v2.2.0...v2.2.1) (2025-10-17)
+
+
+### Bug Fixes
+
+* **deps:** update dependency net.bytebuddy:byte-buddy to v1.17.8 ([20ecb80](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/commit/20ecb80d94b1c6687b55806d2a36e32f11a72d66))
+* **deps:** update dependency org.apache.pdfbox:pdfbox to v3.0.6 ([605c39c](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/commit/605c39c7efffae1ca580d3845b4fb11ead999bc8))
+* **deps:** update dependency org.testcontainers:testcontainers-bom to v2.0.1 ([43bb1f5](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/commit/43bb1f5845ccc3f318b375b6bfff4670f96e54c4))
+
 ## [2.2.0](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/compare/v2.1.2...v2.2.0) (2025-10-06)
 
 
