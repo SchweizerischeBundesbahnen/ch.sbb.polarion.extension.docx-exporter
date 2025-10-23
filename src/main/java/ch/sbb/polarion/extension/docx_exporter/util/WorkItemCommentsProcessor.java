@@ -48,6 +48,9 @@ public class WorkItemCommentsProcessor {
         Map<String, Map<String, WorkItemComment>> comments = new HashMap<>();
         List<IWorkItem> workItems = document.getOldApi().getAllWorkItems();
         for (IWorkItem workItem : workItems) {
+            if (workItem.isUnresolvable()) {
+                continue;
+            }
             Map<String, WorkItemComment> commentMap = new HashMap<>();
             for (IComment comment : workItem.getRootComments(onlyOpen)) {
                 WorkItemComment wiComment = getCommentFromWorkItem(comment);
