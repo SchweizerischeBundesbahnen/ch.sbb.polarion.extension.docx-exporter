@@ -1,6 +1,7 @@
 package ch.sbb.polarion.extension.docx_exporter.pandoc;
 
 import ch.sbb.polarion.extension.docx_exporter.pandoc.service.PandocServiceConnector;
+import ch.sbb.polarion.extension.docx_exporter.pandoc.service.model.PandocParams;
 import ch.sbb.polarion.extension.docx_exporter.util.MediaUtils;
 import com.polarion.core.util.StringUtils;
 import org.apache.pdfbox.Loader;
@@ -65,7 +66,7 @@ public abstract class BasePandocTest {
         return inputStream;
     }
 
-    protected byte[] exportToDOCX(String html, byte[] template, List<String> options) {
+    protected byte[] exportToDOCX(String html, byte[] template, List<String> options, @NotNull PandocParams params) {
         try (GenericContainer<?> pandocService = new GenericContainer<>(DOCKER_IMAGE_NAME)) {
             pandocService
                     .withImagePullPolicy(PullPolicy.alwaysPull())
@@ -77,7 +78,7 @@ public abstract class BasePandocTest {
 
             String pandocServiceBaseUrl = "http://" + pandocService.getHost() + ":" + pandocService.getFirstMappedPort();
             PandocServiceConnector pandocServiceConnector = new PandocServiceConnector(pandocServiceBaseUrl);
-            return pandocServiceConnector.convertToDocx(html, template, options);
+            return pandocServiceConnector.convertToDocx(html, template, options, params);
         }
     }
 
@@ -96,6 +97,12 @@ public abstract class BasePandocTest {
     protected void writeReportImage(String resourceName, BufferedImage image) throws IOException {
         try (FileOutputStream fileOutputStream = new FileOutputStream(REPORTS_FOLDER_PATH + resourceName + EXT_PNG)) {
             fileOutputStream.write(MediaUtils.toPng(image));
+        }
+    }
+
+    protected void writeReportDocx(String resourceName, byte[] data) throws IOException {
+        try (FileOutputStream fileOutputStream = new FileOutputStream(REPORTS_FOLDER_PATH + resourceName + EXT_DOCX)) {
+            fileOutputStream.write(data);
         }
     }
 

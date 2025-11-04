@@ -1,5 +1,23 @@
 export default class ExportParams {
 
+    static Orientation = {
+        PORTRAIT: 'PORTRAIT',
+        LANDSCAPE: 'LANDSCAPE',
+    };
+
+    static PaperSize = {
+        A5: 'A5',
+        A4: 'A4',
+        A3: 'A3',
+        B5: 'B5',
+        B4: 'B4',
+        JIS_B5: 'JIS_B5',
+        JIS_B4: 'JIS_B4',
+        LETTER: 'LETTER',
+        LEGAL: 'LEGAL',
+        LEDGER: 'LEDGER',
+    };
+
     constructor(builder) {
         this.projectId = builder.projectId;
         this.locationPath = builder.locationPath;
@@ -7,6 +25,8 @@ export default class ExportParams {
         this.revision = builder.revision;
         this.template = builder.template;
         this.localization = builder.localization;
+        this.paperSize = builder.paperSize;
+        this.orientation = builder.orientation;
         this.webhooks = builder.webhooks;
         this.removalSelector = builder.removalSelector;
         this.renderComments = builder.renderComments;
@@ -43,6 +63,9 @@ export default class ExportParams {
                 this.baselineRevision = undefined;
                 this.revision = undefined;
                 this.template = undefined;
+                this.localization = undefined;
+                this.paperSize = undefined;
+                this.orientation = undefined;
                 this.webhooks = undefined;
                 this.removalSelector = undefined;
                 this.renderComments = undefined;
@@ -85,6 +108,16 @@ export default class ExportParams {
 
             setLocalization(localization) {
                 this.localization = localization;
+                return this;
+            }
+
+            setPaperSize(paperSize) {
+                this.paperSize = paperSize;
+                return this;
+            }
+
+            setOrientation(orientation) {
+                this.orientation = orientation;
                 return this;
             }
 

@@ -5,6 +5,7 @@ import ch.sbb.polarion.extension.docx_exporter.converter.DocxConverter;
 import ch.sbb.polarion.extension.docx_exporter.converter.DocxConverterJobsService;
 import ch.sbb.polarion.extension.docx_exporter.converter.DocxConverterJobsService.JobState;
 import ch.sbb.polarion.extension.docx_exporter.converter.PropertiesUtility;
+import ch.sbb.polarion.extension.docx_exporter.pandoc.service.model.PandocParams;
 import ch.sbb.polarion.extension.docx_exporter.rest.model.NestedListsCheck;
 import ch.sbb.polarion.extension.docx_exporter.rest.model.conversion.ExportParams;
 import ch.sbb.polarion.extension.docx_exporter.rest.model.documents.DocumentData;
@@ -348,7 +349,11 @@ public class ConverterInternalController {
 
             @Parameter(description = "Optional list of additional options", schema = @Schema(type = "array", implementation = List.class))
             @FormDataParam(value = "options")
-            FormDataBodyPart options) {
+            FormDataBodyPart options,
+
+            @Parameter(description = "Optional params json object", schema = @Schema(type = "string"))
+            @FormDataParam(value = "params")
+            FormDataBodyPart params) {
         try {
             byte[] htmlBytes = html.getEntityAs(InputStream.class).readAllBytes();
             byte[] templateBytes = template != null ? template.getEntityAs(InputStream.class).readAllBytes() : null;
@@ -356,7 +361,9 @@ public class ConverterInternalController {
                     ? Stream.of(options.getValue().split(" ")).map(String::trim).filter(s -> !s.isEmpty()).toList()
                     : null;
 
-            byte[] docxBytes = htmlToDocxConverter.convert(new String(htmlBytes, StandardCharsets.UTF_8), templateBytes, optionsList);
+            String paramsJson = params.getValue();
+            PandocParams pandocParams = StringUtils.isEmpty(paramsJson) ? PandocParams.fromJson(paramsJson) : PandocParams.builder().build();
+            byte[] docxBytes = htmlToDocxConverter.convert(new String(htmlBytes, StandardCharsets.UTF_8), templateBytes, optionsList, pandocParams);
 
             String headerFileName = (fileName != null) ? fileName : "document.docx";
             return Response.ok(docxBytes)

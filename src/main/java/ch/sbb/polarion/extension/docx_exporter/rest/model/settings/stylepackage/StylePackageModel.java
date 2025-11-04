@@ -31,6 +31,8 @@ public class StylePackageModel extends SettingsModel {
     private static final String EXPOSE_SETTINGS_ENTRY_NAME = "EXPOSE SETTINGS";
     private static final String TEMPLATE_ENTRY_NAME = "TEMPLATE";
     private static final String LOCALIZATION_ENTRY_NAME = "LOCALIZATION";
+    private static final String ORIENTATION_ENTRY_NAME = "ORIENTATION";
+    private static final String PAPER_SIZE_ENTRY_NAME = "PAPER SIZE";
     private static final String WEBHOOKS_ENTRY_NAME = "WEBHOOKS";
     private static final String REMOVAL_SELECTOR_ENTRY_NAME = "REMOVAL SELECTOR";
     private static final String RENDER_COMMENTS_ENTRY_NAME = "RENDER COMMENTS";
@@ -49,6 +51,8 @@ public class StylePackageModel extends SettingsModel {
     private boolean exposeSettings;
     private String template;
     private String localization;
+    private String orientation;
+    private String paperSize;
     private String webhooks;
     // Add a new style package settings - text input `Removal selector`. It expects expression like CSS (e.g. `.polarion-Hyperlink .polarion-Icons`) - html elements queried using this expression will be removed from source html.
     private String removalSelector;
@@ -68,6 +72,8 @@ public class StylePackageModel extends SettingsModel {
                 serializeEntry(EXPOSE_SETTINGS_ENTRY_NAME, exposeSettings) +
                 serializeEntry(TEMPLATE_ENTRY_NAME, template) +
                 serializeEntry(LOCALIZATION_ENTRY_NAME, localization) +
+                serializeEntry(ORIENTATION_ENTRY_NAME, orientation) +
+                serializeEntry(PAPER_SIZE_ENTRY_NAME, paperSize) +
                 serializeEntry(WEBHOOKS_ENTRY_NAME, webhooks) +
                 serializeEntry(REMOVAL_SELECTOR_ENTRY_NAME, removalSelector) +
                 serializeEntry(RENDER_COMMENTS_ENTRY_NAME, renderComments == null ? null : renderComments.name()) +
@@ -89,6 +95,8 @@ public class StylePackageModel extends SettingsModel {
         exposeSettings = Boolean.parseBoolean(deserializeEntry(EXPOSE_SETTINGS_ENTRY_NAME, serializedString));
         template = deserializeEntry(TEMPLATE_ENTRY_NAME, serializedString);
         localization = deserializeEntry(LOCALIZATION_ENTRY_NAME, serializedString);
+        orientation = deserializeEntry(ORIENTATION_ENTRY_NAME, serializedString);
+        paperSize = deserializeEntry(PAPER_SIZE_ENTRY_NAME, serializedString);
         webhooks = deserializeEntry(WEBHOOKS_ENTRY_NAME, serializedString);
         removalSelector = deserializeEntry(REMOVAL_SELECTOR_ENTRY_NAME, serializedString);
         renderComments = parseRenderComments(deserializeEntry(RENDER_COMMENTS_ENTRY_NAME, serializedString));

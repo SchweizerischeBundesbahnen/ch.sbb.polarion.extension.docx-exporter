@@ -73,6 +73,14 @@ export default class ExportPanel {
         this.ctx.setValue("docx-language", (stylePackage.exposeSettings && stylePackage.language && documentLanguage) ? documentLanguage : stylePackage.language);
         this.ctx.displayIf("docx-language", stylePackage.language);
 
+        this.ctx.setCheckbox("docx-orientation", !!stylePackage.orientation);
+        this.ctx.setValue("docx-orientation-selector", stylePackage.orientation || ExportParams.Orientation.PORTRAIT);
+        this.ctx.displayIf("docx-orientation-selector", !!stylePackage.orientation);
+
+        this.ctx.setCheckbox("docx-paper-size", !!stylePackage.paperSize);
+        this.ctx.setValue("docx-paper-size-selector", stylePackage.paperSize || ExportParams.PaperSize.A4);
+        this.ctx.displayIf("docx-paper-size-selector", !!stylePackage.paperSize);
+
         this.ctx.setCheckbox("docx-selected-roles", stylePackage.linkedWorkitemRoles);
         this.ctx.querySelectorAll(`#docx-roles-selector option`).forEach(roleOption => {
             roleOption.selected = false;
@@ -122,6 +130,8 @@ export default class ExportPanel {
             .setRevision(revision)
             .setTemplate(this.ctx.getElementById("docx-template-selector").value)
             .setLocalization(this.ctx.getElementById("docx-localization-selector").value)
+            .setOrientation(this.ctx.getElementById("docx-orientation").checked ? this.ctx.getElementById("docx-orientation-selector").value : null)
+            .setPaperSize(this.ctx.getElementById("docx-paper-size").checked ? this.ctx.getElementById("docx-paper-size-selector").value : null)
             .setWebhooks(this.ctx.getElementById("docx-webhooks-checkbox").checked ? this.ctx.getElementById("docx-webhooks-selector").value : null)
             .setRemovalSelector(this.ctx.getValueById("docx-removal-selector"))
             .setRenderComments(this.ctx.getElementById('render-comments').checked ? this.ctx.getElementById("render-comments-selector").value : null)

@@ -120,7 +120,7 @@ class HtmlToDocxConverterTest {
     void shouldThrowIllegalArgumentForMalformedHtml() {
         String html = "<span>example text</span>";
 
-        assertThatThrownBy(() -> htmlToDocxConverter.convert(html, null, null))
+        assertThatThrownBy(() -> htmlToDocxConverter.convert(html, null, null, null))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("html is malformed");
     }

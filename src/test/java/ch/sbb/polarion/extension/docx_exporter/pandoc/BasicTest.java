@@ -1,5 +1,6 @@
 package ch.sbb.polarion.extension.docx_exporter.pandoc;
 
+import ch.sbb.polarion.extension.docx_exporter.pandoc.service.model.PandocParams;
 import ch.sbb.polarion.extension.docx_exporter.util.MediaUtils;
 import jakarta.xml.bind.JAXBElement;
 import lombok.SneakyThrows;
@@ -10,6 +11,7 @@ import org.docx4j.convert.out.FOSettings;
 import org.docx4j.openpackaging.exceptions.Docx4JException;
 import org.docx4j.openpackaging.packages.WordprocessingMLPackage;
 import org.docx4j.openpackaging.parts.WordprocessingML.MainDocumentPart;
+import org.docx4j.wml.SectPr;
 import org.docx4j.wml.Text;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Test;
@@ -31,13 +33,14 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.*;
 
 @SkipTestWhenParamNotSet
+@SuppressWarnings("ResultOfMethodCallIgnored")
 class BasicTest extends BasePandocTest {
 
     @Test
     void testInvalidTemplate() {
         Exception exception = null;
         try {
-            exportToDOCX(readHtmlResource(getCurrentMethodName()), readTemplate("invalid_template"), null);
+            exportToDOCX(readHtmlResource(getCurrentMethodName()), readTemplate("invalid_template"), null, PandocParams.builder().build());
         } catch (Exception e) {
             exception = e;
         }
@@ -47,7 +50,8 @@ class BasicTest extends BasePandocTest {
     @Test
     void testLargeDocument() throws Exception {
         String largeHtml = generateLargeHtmlContent();
-        byte[] doc = exportToDOCX(largeHtml, readTemplate("reference_template"), null);
+        byte[] doc = exportToDOCX(largeHtml, readTemplate("reference_template"), null, PandocParams.builder().build());
+        writeReportDocx("testLargeDocument_generated", doc);
         assertNotNull(doc);
         File newFile = getTestFile();
         newFile.deleteOnExit();
@@ -63,8 +67,9 @@ class BasicTest extends BasePandocTest {
     @ParameterizedTest
     @ValueSource(strings = {"testSimple", "testTable", "testLists", "testParagraphs"})
     void runTest(String testName) throws Exception {
-        byte[] doc = exportToDOCX(readHtmlResource(testName), readTemplate("reference_template"), null);
+        byte[] doc = exportToDOCX(readHtmlResource(testName), readTemplate("reference_template"), null, PandocParams.builder().build());
         assertNotNull(doc);
+        writeReportDocx("testName_generated", doc);
         File newFile = getTestFile();
         try {
             Files.write(newFile.toPath(), doc);
@@ -87,7 +92,8 @@ class BasicTest extends BasePandocTest {
     @SneakyThrows
     void shouldConsiderPageBreaks() {
         String html = readHtmlResource("testPageBreak");
-        byte[] docBytes = exportToDOCX(html, readTemplate("reference_template"), null);
+        byte[] docBytes = exportToDOCX(html, readTemplate("reference_template"), null, PandocParams.builder().build());
+        writeReportDocx("shouldConsiderPageBreaks_generated", docBytes);
         assertEquals(3, getPageCount(docBytes));
     }
 
@@ -95,8 +101,22 @@ class BasicTest extends BasePandocTest {
     @SneakyThrows
     void shouldContainsToC() {
         String html = readHtmlResource("testToC");
-        byte[] docBytes = exportToDOCX(html, readTemplate("reference_template"), List.of("--toc"));
+        byte[] docBytes = exportToDOCX(html, readTemplate("reference_template"), List.of("--toc"), PandocParams.builder().build());
+        writeReportDocx("shouldContainsToC_generated", docBytes);
         assertTrue(containsText(docBytes, "Table of Contents"));
+    }
+
+    @Test
+    @SneakyThrows
+    void testOrientationAndPaperSize() {
+        String html = readHtmlResource("testSimple");
+        byte[] docBytes = exportToDOCX(html, readTemplate("reference_template"), null, PandocParams.builder().orientation("landscape").paperSize("B5").build());
+        writeReportDocx("testOrientationAndPaperSize_B5_landscape_generated", docBytes);
+        assertTrue(hasDimensions(docBytes, 14144, 9979));
+
+        docBytes = exportToDOCX(html, readTemplate("reference_template"), null, PandocParams.builder().paperSize("A3").build());
+        writeReportDocx("testOrientationAndPaperSize_A3_portrait_generated", docBytes);
+        assertTrue(hasDimensions(docBytes, 16838, 23811));
     }
 
     private int getPageCount(byte[] docBytes) {
@@ -170,6 +190,28 @@ class BasicTest extends BasePandocTest {
                         if (textContent != null && textContent.contains(search)) {
                             return true;
                         }
+                    }
+                }
+            }
+            return false;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    private boolean hasDimensions(byte[] docBytes, int width, int height) {
+        try {
+            WordprocessingMLPackage wordMLPackage = WordprocessingMLPackage.load(new ByteArrayInputStream(docBytes));
+            MainDocumentPart documentPart = wordMLPackage.getMainDocumentPart();
+
+            // Get section properties from the document
+            List<Object> sectPrNodes = documentPart.getJAXBNodesViaXPath("//w:sectPr", true);
+
+            if (!sectPrNodes.isEmpty()) {
+                Object sectPrNode = sectPrNodes.get(0);
+                if (sectPrNode instanceof SectPr sectPr) {
+                    if (sectPr.getPgSz() != null) {
+                        return sectPr.getPgSz().getW().intValue() == width && sectPr.getPgSz().getH().intValue() == height;
                     }
                 }
             }

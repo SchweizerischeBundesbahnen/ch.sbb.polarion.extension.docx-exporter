@@ -1,6 +1,7 @@
 package ch.sbb.polarion.extension.docx_exporter.pandoc.service;
 
 import ch.sbb.polarion.extension.docx_exporter.pandoc.service.model.PandocInfo;
+import ch.sbb.polarion.extension.docx_exporter.pandoc.service.model.PandocParams;
 import ch.sbb.polarion.extension.docx_exporter.properties.DocxExporterExtensionConfiguration;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -58,11 +59,11 @@ public class PandocServiceConnector {
         this.pandocServiceBaseUrl = pandocServiceBaseUrl;
     }
 
-    public byte[] convertToDocx(String htmlPage, byte[] template, List<String> options) {
+    public byte[] convertToDocx(String htmlPage, byte[] template, List<String> options, PandocParams params) {
         Client client = null;
         try {
             client = ClientBuilder.newClient();
-            WebTarget webTarget = client.target(getPandocServiceBaseUrl() + "/convert/html/to/docx-with-template").register(MultiPartFeature.class);
+            WebTarget webTarget = client.target(getPandocServiceBaseUrl() + "/convert/html/to/docx-with-template%s".formatted(params.toUrlParams())).register(MultiPartFeature.class);
 
             try (FormDataMultiPart multipart = new FormDataMultiPart()) {
 

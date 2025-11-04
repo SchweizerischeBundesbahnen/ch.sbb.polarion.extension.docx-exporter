@@ -1,6 +1,7 @@
 package ch.sbb.polarion.extension.docx_exporter.converter;
 
 import ch.sbb.polarion.extension.docx_exporter.pandoc.service.PandocServiceConnector;
+import ch.sbb.polarion.extension.docx_exporter.pandoc.service.model.PandocParams;
 import ch.sbb.polarion.extension.generic.regex.RegexMatcher;
 import ch.sbb.polarion.extension.docx_exporter.properties.DocxExporterExtensionConfiguration;
 import ch.sbb.polarion.extension.docx_exporter.settings.LocalizationSettings;
@@ -34,13 +35,13 @@ public class HtmlToDocxConverter {
         this.pandocServiceConnector = pandocServiceConnector;
     }
 
-    public byte[] convert(String origHtml, byte[] template, @Nullable List<String> options) {
+    public byte[] convert(String origHtml, byte[] template, @Nullable List<String> options, @NotNull PandocParams params) {
         validateHtml(origHtml);
         String html = preprocessHtml(origHtml);
         if (DocxExporterExtensionConfiguration.getInstance().isDebug()) {
             new HtmlLogger().log(origHtml, html, "");
         }
-        return pandocServiceConnector.convertToDocx(origHtml, template, options);
+        return pandocServiceConnector.convertToDocx(origHtml, template, options, params);
     }
 
     private void validateHtml(String origHtml) {

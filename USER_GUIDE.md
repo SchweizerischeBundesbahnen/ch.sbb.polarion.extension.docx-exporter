@@ -36,7 +36,7 @@ A template (also "reference doc" in terms of Pandoc) is a file which is used as 
 
 ![Template](docs/user_guide/img/template.png)
 
-The contents of the template docx are ignored, but its stylesheets and document properties (including margins, page size, header, and footer) are used in the new docx.
+The contents of the template docx are ignored, but its stylesheets and document properties (including margins, paper size, header, and footer) are used in the new docx.
 Please refer official <a href="https://pandoc.org/MANUAL.html#option--reference-doc" target="_blank">pandoc manual</a> for more information.
 
 ### Localization
