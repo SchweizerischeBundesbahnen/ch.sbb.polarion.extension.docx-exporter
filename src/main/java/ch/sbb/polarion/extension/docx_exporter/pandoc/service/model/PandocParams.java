@@ -2,14 +2,18 @@ package ch.sbb.polarion.extension.docx_exporter.pandoc.service.model;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.polarion.core.util.StringUtils;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.util.Map;
 import java.util.stream.Collectors;
 
 @Data
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class PandocParams {
 
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();

@@ -1,6 +1,7 @@
 package ch.sbb.polarion.extension.docx_exporter.converter;
 
 import ch.sbb.polarion.extension.docx_exporter.configuration.DocxExporterExtensionConfigurationExtension;
+import ch.sbb.polarion.extension.docx_exporter.pandoc.service.model.PandocParams;
 import ch.sbb.polarion.extension.docx_exporter.util.HtmlProcessor;
 import ch.sbb.polarion.extension.docx_exporter.util.DocxTemplateProcessor;
 import org.junit.jupiter.api.Test;
@@ -120,7 +121,7 @@ class HtmlToDocxConverterTest {
     void shouldThrowIllegalArgumentForMalformedHtml() {
         String html = "<span>example text</span>";
 
-        assertThatThrownBy(() -> htmlToDocxConverter.convert(html, null, null, null))
+        assertThatThrownBy(() -> htmlToDocxConverter.convert(html, null, null, PandocParams.builder().build()))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("html is malformed");
     }

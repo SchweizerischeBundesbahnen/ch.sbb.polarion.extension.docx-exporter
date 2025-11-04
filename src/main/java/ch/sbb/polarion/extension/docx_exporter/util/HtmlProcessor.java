@@ -1022,7 +1022,7 @@ public class HtmlProcessor {
 
     @VisibleForTesting
     boolean isRelativeLink(String url) {
-        return !(url.startsWith("http://") || url.startsWith("https://") || url.startsWith("#") || url.startsWith("mailto:"));
+        return !(url.startsWith(HTTP_PROTOCOL_PREFIX) || url.startsWith(HTTPS_PROTOCOL_PREFIX) || url.startsWith("#") || url.startsWith("mailto:"));
     }
 
     @VisibleForTesting

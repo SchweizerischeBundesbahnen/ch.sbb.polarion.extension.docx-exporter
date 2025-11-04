@@ -54,12 +54,12 @@ class DocxConverterJobsServiceTest {
     private DocxConverterJobsService docxConverterJobsService;
 
     @BeforeEach
-    public void setup() {
+    void setup() {
         RequestContextHolder.setRequestAttributes(requestAttributes);
     }
 
     @AfterEach
-    public void tearDown() {
+    void tearDown() {
         docxConverterJobsService.cancelJobsAndCleanMap();
     }
 

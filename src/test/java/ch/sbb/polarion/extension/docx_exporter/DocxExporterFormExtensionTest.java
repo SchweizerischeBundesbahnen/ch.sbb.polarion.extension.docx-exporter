@@ -1,6 +1,7 @@
 package ch.sbb.polarion.extension.docx_exporter;
 
 import ch.sbb.polarion.extension.docx_exporter.configuration.DocxExporterExtensionConfigurationExtension;
+import ch.sbb.polarion.extension.docx_exporter.rest.model.conversion.CommentsRenderType;
 import ch.sbb.polarion.extension.docx_exporter.rest.model.settings.stylepackage.StylePackageModel;
 import ch.sbb.polarion.extension.docx_exporter.util.EnumValuesProvider;
 import ch.sbb.polarion.extension.generic.settings.SettingName;
@@ -34,12 +35,15 @@ class DocxExporterFormExtensionTest {
         DocxExporterFormExtension extension = spy(new DocxExporterFormExtension());
         SettingName settingName = SettingName.builder().id("testId").name("testName").build();
         doReturn(List.of(settingName)).when(extension).getSuitableStylePackages(any());
-        StylePackageModel stylePackage = mock(StylePackageModel.class);
+        StylePackageModel stylePackage = StylePackageModel.builder()
+                .removalSelector("someSpecificSelector")
+                .renderComments(CommentsRenderType.ALL)
+                .orientation("LANDSCAPE")
+                .paperSize("A3")
+                .build();
         doReturn(stylePackage).when(extension).getSelectedStylePackage(any(), any());
         doReturn(List.of(settingName)).when(extension).getSettingNames(any(), any());
         doReturn("TestFileName.docx").when(extension).getFilename(any());
-
-        when(stylePackage.getRemovalSelector()).thenReturn("someSpecificSelector");
 
         try (MockedStatic<EnumValuesProvider> mockEnumValuesProvider = mockStatic(EnumValuesProvider.class)) {
             mockEnumValuesProvider.when(() -> EnumValuesProvider.getAllLinkRoleNames(any())).thenReturn(List.of("relates to", "blocks", "duplicates"));

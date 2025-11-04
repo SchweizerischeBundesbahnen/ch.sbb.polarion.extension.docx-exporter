@@ -207,15 +207,8 @@ class BasicTest extends BasePandocTest {
             // Get section properties from the document
             List<Object> sectPrNodes = documentPart.getJAXBNodesViaXPath("//w:sectPr", true);
 
-            if (!sectPrNodes.isEmpty()) {
-                Object sectPrNode = sectPrNodes.get(0);
-                if (sectPrNode instanceof SectPr sectPr) {
-                    if (sectPr.getPgSz() != null) {
-                        return sectPr.getPgSz().getW().intValue() == width && sectPr.getPgSz().getH().intValue() == height;
-                    }
-                }
-            }
-            return false;
+            return !sectPrNodes.isEmpty() && sectPrNodes.get(0) instanceof SectPr sectPr && sectPr.getPgSz() != null &&
+                    sectPr.getPgSz().getW().intValue() == width && sectPr.getPgSz().getH().intValue() == height;
         } catch (Exception e) {
             return false;
         }

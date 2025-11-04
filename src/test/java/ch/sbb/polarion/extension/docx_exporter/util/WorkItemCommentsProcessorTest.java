@@ -23,7 +23,7 @@ import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 @SuppressWarnings({"rawtypes", "unchecked"})
-public class WorkItemCommentsProcessorTest {
+class WorkItemCommentsProcessorTest {
     @Test
     void addWorkItemComments_withOneWorkItemAndOneCommentTest() {
         // Arrange
