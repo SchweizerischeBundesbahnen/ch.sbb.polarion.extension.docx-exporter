@@ -154,6 +154,7 @@ public class DocxExporterFormExtension implements IFormExtension {
     }
 
     @VisibleForTesting
+    @SuppressWarnings("unchecked")
     Collection<SettingName> getSettingNames(@NotNull String featureName, @NotNull String scope) {
         try {
             return NamedSettingsRegistry.INSTANCE.getByFeatureName(featureName).readNames(scope);
@@ -199,7 +200,7 @@ public class DocxExporterFormExtension implements IFormExtension {
     }
 
     private String adjustPaperSize(String form, StylePackageModel stylePackage) {
-        if (stylePackage.getRenderComments() != null) {
+        if (stylePackage.getPaperSize() != null) {
             form = form.replace("<input id='docx-paper-size'", "<input id='docx-paper-size' checked");
             form = form.replace("id='docx-paper-size-selector' style='display: none'", "id='docx-paper-size-selector'");
             form = form.replace(String.format(OPTION_VALUE, stylePackage.getPaperSize()), String.format(OPTION_SELECTED, stylePackage.getPaperSize()));

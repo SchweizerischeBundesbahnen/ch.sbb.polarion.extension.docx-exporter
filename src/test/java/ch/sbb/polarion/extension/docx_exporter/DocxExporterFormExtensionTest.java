@@ -15,6 +15,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.MockedStatic;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.util.Arrays;
 import java.util.List;
 
 import static org.mockito.Mockito.*;
@@ -35,12 +36,7 @@ class DocxExporterFormExtensionTest {
         DocxExporterFormExtension extension = spy(new DocxExporterFormExtension());
         SettingName settingName = SettingName.builder().id("testId").name("testName").build();
         doReturn(List.of(settingName)).when(extension).getSuitableStylePackages(any());
-        StylePackageModel stylePackage = StylePackageModel.builder()
-                .removalSelector("someSpecificSelector")
-                .renderComments(CommentsRenderType.ALL)
-                .orientation("LANDSCAPE")
-                .paperSize("A3")
-                .build();
+        StylePackageModel stylePackage = StylePackageModel.builder().build();
         doReturn(stylePackage).when(extension).getSelectedStylePackage(any(), any());
         doReturn(List.of(settingName)).when(extension).getSettingNames(any(), any());
         doReturn("TestFileName.docx").when(extension).getFilename(any());
@@ -48,7 +44,15 @@ class DocxExporterFormExtensionTest {
         try (MockedStatic<EnumValuesProvider> mockEnumValuesProvider = mockStatic(EnumValuesProvider.class)) {
             mockEnumValuesProvider.when(() -> EnumValuesProvider.getAllLinkRoleNames(any())).thenReturn(List.of("relates to", "blocks", "duplicates"));
             extension.renderForm(context, module);
-            verify(builder).html(argThat(arg -> arg != null && arg.contains("someSpecificSelector")));
+            List<String> expectedEntries = Arrays.asList("someSpecificSelector", "<input id='render-comments' checked", "<input id='docx-orientation' checked", "<input id='docx-paper-size' checked");
+            verify(builder, times(0)).html(argThat(arg -> expectedEntries.stream().allMatch(arg::contains)));
+
+            stylePackage.setRemovalSelector("someSpecificSelector");
+            stylePackage.setRenderComments(CommentsRenderType.ALL);
+            stylePackage.setOrientation("LANDSCAPE");
+            stylePackage.setPaperSize("A3");
+            extension.renderForm(context, module);
+            verify(builder, times(1)).html(argThat(arg -> expectedEntries.stream().allMatch(arg::contains)));
         }
     }
 
