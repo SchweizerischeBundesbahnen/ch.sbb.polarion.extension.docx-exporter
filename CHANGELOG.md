@@ -1,5 +1,21 @@
 # Changelog
 
+## [2.3.0](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/compare/v2.2.0...v2.3.0) (2025-11-05)
+
+
+### Features
+
+* ability to set custom paper size and orientation ([#110](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/issues/110)) ([e5f6364](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/commit/e5f6364be51caeb5d7f09c0ff336e543545bdb9e)), closes [#109](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/issues/109)
+
+
+### Bug Fixes
+
+* **deps:** update dependency ch.sbb.polarion.extensions:ch.sbb.polarion.extension.generic to v11.3.0 ([88671cd](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/commit/88671cd4236bcbf1caa893265540eeb39843eaa6))
+* **deps:** update dependency net.bytebuddy:byte-buddy to v1.17.8 ([20ecb80](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/commit/20ecb80d94b1c6687b55806d2a36e32f11a72d66))
+* **deps:** update dependency org.apache.pdfbox:pdfbox to v3.0.6 ([605c39c](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/commit/605c39c7efffae1ca580d3845b4fb11ead999bc8))
+* **deps:** update dependency org.testcontainers:testcontainers-bom to v2.0.1 ([43bb1f5](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/commit/43bb1f5845ccc3f318b375b6bfff4670f96e54c4))
+* export fails if unresolvable workitem in document ([#106](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/issues/106)) ([dfc822e](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/commit/dfc822ee748ffd621b5e7e5784d64141ee2ee854)), closes [#105](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/issues/105)
+
 ## [2.2.0](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/compare/v2.1.2...v2.2.0) (2025-10-06)
 
 
