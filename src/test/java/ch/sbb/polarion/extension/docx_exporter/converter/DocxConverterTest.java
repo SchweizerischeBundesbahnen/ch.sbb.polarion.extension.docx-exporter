@@ -2,6 +2,7 @@ package ch.sbb.polarion.extension.docx_exporter.converter;
 
 import ch.sbb.polarion.extension.docx_exporter.configuration.DocxExporterExtensionConfigurationExtension;
 import ch.sbb.polarion.extension.docx_exporter.pandoc.service.PandocServiceConnector;
+import ch.sbb.polarion.extension.docx_exporter.pandoc.service.model.PandocParams;
 import ch.sbb.polarion.extension.docx_exporter.rest.model.conversion.ExportParams;
 import ch.sbb.polarion.extension.docx_exporter.rest.model.documents.DocumentData;
 import ch.sbb.polarion.extension.docx_exporter.rest.model.documents.id.LiveDocId;
@@ -75,6 +76,8 @@ class DocxConverterTest {
         ExportParams exportParams = ExportParams.builder()
                 .projectId("testProjectId")
                 .addToC(true)
+                .orientation("LANDSCAPE")
+                .paperSize("A3")
                 .build();
 
         ITrackerProject project = mock(ITrackerProject.class);
@@ -90,7 +93,8 @@ class DocxConverterTest {
 
         documentDataFactoryMockedStatic.when(() -> DocumentDataFactory.getDocumentData(eq(exportParams), anyBoolean())).thenReturn(documentData);
         when(docxTemplateProcessor.processUsing(eq("testDocument"), anyString())).thenReturn("test html content");
-        when(pandocServiceConnector.convertToDocx("test html content", null, List.of("--toc"))).thenReturn("test document content".getBytes());
+        PandocParams params = PandocParams.builder().orientation("LANDSCAPE").paperSize("A3").build();
+        when(pandocServiceConnector.convertToDocx(eq("test html content"), isNull(), eq(List.of("--toc")), eq(params))).thenReturn("test document content".getBytes());
         when(htmlProcessor.internalizeLinks(anyString())).thenAnswer(a -> a.getArgument(0));
 
         exportParams.setTemplate("testTemplate");
@@ -100,7 +104,7 @@ class DocxConverterTest {
         byte[] result = docxConverter.convertToDocx(exportParams);
 
         // Assert
-        verify(pandocServiceConnector).convertToDocx("test html content", null, List.of("--toc"));
+        verify(pandocServiceConnector).convertToDocx(eq("test html content"), isNull(), eq(List.of("--toc")), eq(params));
         assertThat(result).isEqualTo("test document content".getBytes());
     }
 

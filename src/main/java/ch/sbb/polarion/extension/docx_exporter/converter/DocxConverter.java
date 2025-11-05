@@ -1,5 +1,6 @@
 package ch.sbb.polarion.extension.docx_exporter.converter;
 
+import ch.sbb.polarion.extension.docx_exporter.pandoc.service.model.PandocParams;
 import ch.sbb.polarion.extension.docx_exporter.rest.model.settings.templates.TemplatesModel;
 import ch.sbb.polarion.extension.docx_exporter.settings.TemplatesSettings;
 import ch.sbb.polarion.extension.generic.settings.SettingId;
@@ -95,7 +96,9 @@ public class DocxConverter {
             options = Collections.singletonList("--toc");
         }
 
-        byte[] bytes = generateDocx(htmlContent, template, options);
+
+
+        byte[] bytes = generateDocx(htmlContent, template, options, PandocParams.builder().orientation(exportParams.getOrientation()).paperSize(exportParams.getPaperSize()).build());
 
         if (exportParams.getInternalContent() == null) { //do not log time for internal parts processing
             String finalMessage = "DOCX document '" + documentData.getTitle() + "' has been generated within " + (System.currentTimeMillis() - startTime) + " milliseconds";
@@ -208,14 +211,14 @@ public class DocxConverter {
     }
 
     @VisibleForTesting
-    byte[] generateDocx(String htmlPage, byte[] template, @Nullable List<String> options) {
+    byte[] generateDocx(String htmlPage, byte[] template, @Nullable List<String> options, @NotNull PandocParams params) {
         int headerIndex = htmlPage.indexOf("<div class='header'>");
         if (headerIndex > -1) {
             int contentIndex = htmlPage.indexOf("<div class='content'>");
             htmlPage = htmlPage.substring(0, headerIndex) + htmlPage.substring(contentIndex);
         }
         htmlPage = htmlPage.replace("<div style='break-after:page'>page to be removed</div><?xml version='1.0' encoding='UTF-8'?>", "");
-        return pandocServiceConnector.convertToDocx(htmlPage, template, options);
+        return pandocServiceConnector.convertToDocx(htmlPage, template, options, params);
     }
 
     @VisibleForTesting

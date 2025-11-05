@@ -13,7 +13,6 @@ import ch.sbb.polarion.extension.generic.test_extensions.PlatformContextMockExte
 import ch.sbb.polarion.extension.generic.test_extensions.TransactionalExecutorExtension;
 import ch.sbb.polarion.extension.docx_exporter.util.velocity.VelocityEvaluator;
 import com.polarion.alm.tracker.model.IModule;
-import com.polarion.alm.tracker.model.baselinecollection.IBaselineCollection;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;

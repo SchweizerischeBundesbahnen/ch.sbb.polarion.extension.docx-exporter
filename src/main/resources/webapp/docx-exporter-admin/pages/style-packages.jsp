@@ -153,6 +153,30 @@
             </div>
         </div>
 
+        <div class="flex-container">
+            <div class="flex-column">
+                <div class='checkbox input-group'>
+                    <label for='orientation' id='orientation-label'>
+                        <input id="orientation" onchange='document.getElementById("orientation-select").style.visibility = this.checked ? "visible" : "hidden"' type='checkbox'/>
+                        Custom orientation
+                    </label>
+                    <div id="orientation-select" style="visibility: hidden; margin-left: 10px; width: 200px"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="flex-container">
+            <div class="flex-column">
+                <div class='checkbox input-group'>
+                    <label for='paper-size' id='paper-size-label'>
+                        <input id="paper-size" onchange='document.getElementById("paper-size-select").style.visibility = this.checked ? "visible" : "hidden"' type='checkbox'/>
+                        Custom paper size
+                    </label>
+                    <div id="paper-size-select" style="visibility: hidden; margin-left: 10px; width: 200px"></div>
+                </div>
+            </div>
+        </div>
+
         <div class="flex-container" style="border-top: 1px solid #ccc; margin-top: 20px; padding-top: 15px; display: <%= webhooksEnabled ? "flex" : "none" %>;">
             <div class="flex-column">
                 <div class="input-group">

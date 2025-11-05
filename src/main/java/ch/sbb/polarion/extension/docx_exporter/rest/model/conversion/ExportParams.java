@@ -30,6 +30,12 @@ public class ExportParams {
     @Schema(description = "Localization settings name")
     private String localization;
 
+    @Schema(description = "Page orientation")
+    private String orientation;
+
+    @Schema(description = "Paper size")
+    private String paperSize;
+
     @Schema(description = "Webhooks settings name")
     private String webhooks;
 

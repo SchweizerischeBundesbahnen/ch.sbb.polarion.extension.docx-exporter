@@ -73,8 +73,8 @@ public class ConverterApiController extends ConverterInternalController {
     }
 
     @Override
-    public Response convertHtmlToPdf(FormDataBodyPart html, FormDataBodyPart template, String fileName, FormDataBodyPart options) {
-        return polarionService.callPrivileged(() -> super.convertHtmlToPdf(html, template, fileName, options));
+    public Response convertHtmlToPdf(FormDataBodyPart html, FormDataBodyPart template, String fileName, FormDataBodyPart options, FormDataBodyPart params) {
+        return polarionService.callPrivileged(() -> super.convertHtmlToPdf(html, template, fileName, options, params));
     }
 
     @Override

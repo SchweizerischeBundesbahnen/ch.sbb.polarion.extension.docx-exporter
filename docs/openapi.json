@@ -254,6 +254,10 @@
                     "format": "binary",
                     "type": "string"
                   },
+                  "params": {
+                    "description": "Optional params json object",
+                    "type": "string"
+                  },
                   "template": {
                     "description": "Optional template file",
                     "format": "binary",
@@ -1600,6 +1604,14 @@
           "locationPath": {
             "description": "Document path for export",
             "example": "Specification/Product Specification",
+            "type": "string"
+          },
+          "orientation": {
+            "description": "Page orientation",
+            "type": "string"
+          },
+          "paperSize": {
+            "description": "Paper size",
             "type": "string"
           },
           "projectId": {

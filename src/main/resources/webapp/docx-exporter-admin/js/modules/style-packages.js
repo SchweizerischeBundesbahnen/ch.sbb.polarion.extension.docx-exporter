@@ -2,6 +2,7 @@ import ExtensionContext from '../../ui/generic/js/modules/ExtensionContext.js';
 import ConfigurationsPane from '../../ui/generic/js/modules/ConfigurationsPane.js';
 import CustomSelect from '../../ui/generic/js/modules/CustomSelect.js';
 import StylePackageUtils from './style-package-utils.js';
+import ExportParams from "../../../docx-exporter/js/modules/ExportParams.js";
 
 const DEFAULT_SETTING_NAME = "Default";
 
@@ -127,6 +128,32 @@ const RenderComments = {
     }
 }
 
+const Orientation = {
+    orientationSelect: new CustomSelect({
+        selectContainer: ctx.getElementById("orientation-select")
+    }),
+
+    init: function () {
+        this.orientationSelect.addOption('PORTRAIT', 'Portrait');
+        this.orientationSelect.addOption('LANDSCAPE', 'Landscape');
+    }
+}
+
+const PaperSize = {
+    paperSizeSelect: new CustomSelect({
+        selectContainer: ctx.getElementById("paper-size-select")
+    }),
+
+    init: function () {
+        for (let key in ExportParams.PaperSize) {
+            if (ExportParams.PaperSize.hasOwnProperty(key)) {
+                const value = ExportParams.PaperSize[key];
+                this.paperSizeSelect.addOption(value, key);
+            }
+        }
+    }
+}
+
 const Languages = {
     languageSelect: new CustomSelect({
         selectContainer: ctx.getElementById("language-select")
@@ -154,6 +181,8 @@ function saveStylePackage() {
             'template': ChildConfigurations.templateSelect.getSelectedValue(),
             'webhooks': ctx.getCheckboxValueById('webhooks-checkbox') ? ChildConfigurations.webhooksSelect.getSelectedValue() : null,
             'renderComments': ctx.getCheckboxValueById('render-comments') ? RenderComments.renderCommentsSelect.getSelectedValue() : null,
+            'orientation': ctx.getCheckboxValueById('orientation') ? Orientation.orientationSelect.getSelectedValue() : null,
+            'paperSize': ctx.getCheckboxValueById('paper-size') ? PaperSize.paperSizeSelect.getSelectedValue() : null,
             'cutEmptyChapters': ctx.getCheckboxValueById('cut-empty-chapters'),
             'cutEmptyWorkitemAttributes': ctx.getCheckboxValueById('cut-empty-wi-attributes'),
             'cutLocalURLs': ctx.getCheckboxValueById('cut-urls'),
@@ -200,11 +229,21 @@ function setStylePackage(content) {
     ctx.setCheckboxValueById('exposeSettings', stylePackage.exposeSettings);
     ChildConfigurations.localizationSelect.selectValue(ChildConfigurations.localizationSelect.containsOption(stylePackage.localization) ? stylePackage.localization : DEFAULT_SETTING_NAME);
     ChildConfigurations.templateSelect.selectValue(ChildConfigurations.templateSelect.containsOption(stylePackage.template) ? stylePackage.template : DEFAULT_SETTING_NAME);
+
+    ctx.setCheckboxValueById('orientation', !!stylePackage.orientation);
+    ctx.getElementById('orientation').dispatchEvent(new Event('change'));
+    Orientation.orientationSelect.selectValue(stylePackage.orientation || ExportParams.Orientation.PORTRAIT);
+
+    ctx.setCheckboxValueById('paper-size', !!stylePackage.paperSize);
+    ctx.getElementById('paper-size').dispatchEvent(new Event('change'));
+    PaperSize.paperSizeSelect.selectValue(stylePackage.paperSize || ExportParams.PaperSize.A4);
+
     ctx.setCheckboxValueById('webhooks-checkbox', !!stylePackage.webhooks);
     ctx.getElementById('webhooks-checkbox').dispatchEvent(new Event('change'));
     ChildConfigurations.webhooksSelect.selectValue(ChildConfigurations.webhooksSelect.containsOption(stylePackage.webhooks) ? stylePackage.webhooks : DEFAULT_SETTING_NAME);
 
     ctx.setValueById('removal-selector-input', stylePackage.removalSelector || "");
+
     ctx.setCheckboxValueById('render-comments', !!stylePackage.renderComments);
     ctx.getElementById('render-comments').dispatchEvent(new Event('change'));
     RenderComments.renderCommentsSelect.selectValue(stylePackage.renderComments || 'OPEN');
@@ -238,6 +277,8 @@ function newConfigurationCreated() {
 }
 
 RenderComments.init();
+Orientation.init();
+PaperSize.init();
 Languages.init();
 Promise.all([
     LinkRoles.load(),

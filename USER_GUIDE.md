@@ -3,6 +3,8 @@
 * [Options](#options)
     * [Localization](#localization)
     * [Webhooks](#webhooks)
+    * [Custom page orientation](#custom-page-orientation)
+    * [Custom paper size](#custom-paper-size)
     * [Comments rendering](#comments-rendering)
     * [Cut empty chapters](#cut-empty-chapters)
     * [Cut empty Workitem attributes](#cut-empty-workitem-attributes)
@@ -36,7 +38,7 @@ A template (also "reference doc" in terms of Pandoc) is a file which is used as 
 
 ![Template](docs/user_guide/img/template.png)
 
-The contents of the template docx are ignored, but its stylesheets and document properties (including margins, page size, header, and footer) are used in the new docx.
+The contents of the template docx are ignored, but its stylesheets and document properties (including margins, paper size, header, and footer) are used in the new docx.
 Please refer official <a href="https://pandoc.org/MANUAL.html#option--reference-doc" target="_blank">pandoc manual</a> for more information.
 
 ### Localization
@@ -48,6 +50,18 @@ The same relates to localization settings, which one to use during DOCX generati
 In this section you can choose specific webhook for custom HTML processing before sending it to Pandoc:
 
 ![Webhooks](docs/user_guide/img/webhooks.png)
+
+Note that webhooks should be pre-configured by the admin otherwise this option is unavailable.
+
+### Custom page orientation
+You can specify page orientation for generated document:
+
+![Page orientation](docs/user_guide/img/orientation.png)
+
+### Custom paper size
+Allows to set specific paper size for generated document:
+
+![Paper size](docs/user_guide/img/paper_size.png)
 
 ### Comments rendering
 This option which is on by default tells DOCX Exporter to include Polarion document's comments into generated DOCX document (REMARK: please take into account that this relates only to LiveDoc comments, WorkItem comments regardless the fact

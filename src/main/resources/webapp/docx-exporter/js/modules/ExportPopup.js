@@ -225,6 +225,14 @@ export default class ExportPopup {
         this.ctx.setSelector("popup-docx-localization-selector", stylePackage.localization);
         this.ctx.setValue("popup-docx-removal-selector", stylePackage.removalSelector);
 
+        this.ctx.setCheckbox("popup-docx-orientation", !!stylePackage.orientation);
+        this.ctx.setValue("popup-docx-orientation-selector", stylePackage.orientation || ExportParams.Orientation.PORTRAIT);
+        this.ctx.displayIf("popup-docx-orientation-selector", !!stylePackage.orientation);
+
+        this.ctx.setCheckbox("popup-docx-paper-size", !!stylePackage.paperSize);
+        this.ctx.setValue("popup-docx-paper-size-selector", stylePackage.paperSize || ExportParams.PaperSize.A4);
+        this.ctx.displayIf("popup-docx-paper-size-selector", !!stylePackage.paperSize);
+
         this.ctx.setCheckbox("popup-docx-webhooks-checkbox", !!stylePackage.webhooks);
         this.ctx.setSelector("popup-docx-webhooks-selector", stylePackage.webhooks);
         this.ctx.visibleIf("popup-docx-webhooks-selector", !!stylePackage.webhooks)
@@ -338,6 +346,8 @@ export default class ExportPopup {
             .setRevision(this.ctx.getRevision())
             .setTemplate(this.ctx.getElementById("popup-docx-template-selector").value)
             .setLocalization(this.ctx.getElementById("popup-docx-localization-selector").value)
+            .setOrientation(this.ctx.getElementById("popup-docx-orientation").checked ? this.ctx.getElementById("popup-docx-orientation-selector").value : null)
+            .setPaperSize(this.ctx.getElementById("popup-docx-paper-size").checked ? this.ctx.getElementById("popup-docx-paper-size-selector").value : null)
             .setWebhooks(this.ctx.getElementById("popup-docx-webhooks-checkbox").checked ? this.ctx.getElementById("popup-docx-webhooks-selector").value : null)
             .setRemovalSelector(this.ctx.getValueById("popup-docx-removal-selector"))
             .setRenderComments(this.ctx.getElementById('popup-docx-render-comments').checked ? this.ctx.getElementById("popup-docx-render-comments-selector").value : null)

@@ -51,6 +51,20 @@
 
         <div class="flex-container">
             <div class="flex-column">
+                <div class="flex-container">
+                    <div class="flex-column">
+                        <div class='property-wrapper'>
+                            <label for='popup-docx-orientation'>
+                                <input id='popup-docx-orientation' onchange='document.querySelector("#popup-docx-orientation-selector").style.display = this.checked ? "block" : "none"' type='checkbox'/>
+                                Custom orientation
+                            </label>
+                            <select id='popup-docx-orientation-selector' style="display: none;width: 165px;">
+                                <option value='PORTRAIT'>Portrait</option>
+                                <option value='LANDSCAPE'>Landscape</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
                 <div class='property-wrapper'>
                     <label for='popup-docx-render-comments'>
                         <input id='popup-docx-render-comments' onchange='document.getElementById("popup-docx-render-comments-selector").style.visibility = this.checked ? "visible" : "hidden"' type='checkbox'/>
@@ -88,6 +102,28 @@
                 </div>
             </div>
             <div class="flex-column">
+                <div class="flex-container">
+                    <div class="flex-column">
+                        <div class='property-wrapper'>
+                            <label for='popup-docx-paper-size'>
+                                <input id='popup-docx-paper-size' onchange='document.querySelector("#popup-docx-paper-size-selector").style.display = this.checked ? "block" : "none"' type='checkbox'/>
+                                Custom paper size
+                            </label>
+                            <select id='popup-docx-paper-size-selector' style="display: none;width: 170px;">
+                                <option value='A5'>A5</option>
+                                <option value='A4'>A4</option>
+                                <option value='A3'>A3</option>
+                                <option value='B5'>B5</option>
+                                <option value='B4'>B4</option>
+                                <option value='JIS_B5'>JIS-B5</option>
+                                <option value='JIS_B4'>JIS-B4</option>
+                                <option value='LETTER'>Letter</option>
+                                <option value='LEGAL'>Legal</option>
+                                <option value='LEDGER'>Ledger</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
                 <div class='property-wrapper'>
                     <label for='popup-docx-specific-chapters'>
                         <input id='popup-docx-specific-chapters' onchange='document.getElementById("popup-docx-chapters").style.visibility = this.checked ? "visible" : "hidden"' type='checkbox'/>

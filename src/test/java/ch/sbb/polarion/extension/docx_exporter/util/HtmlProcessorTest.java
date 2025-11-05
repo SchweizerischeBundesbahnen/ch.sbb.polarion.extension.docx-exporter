@@ -636,28 +636,28 @@ class HtmlProcessorTest {
     }
 
     @Test
-    public void ignoreAbsoluteLinkTest() {
+    void ignoreAbsoluteLinkTest() {
         String html = "<a href=\"https://external.com/page\">External</a>";
         String result = processor.replaceLinks(html);
         assertEquals(html, result);
     }
 
     @Test
-    public void ignoreMailtoLinkTest() {
+    void ignoreMailtoLinkTest() {
         String html = "<a href=\"mailto:someone@example.com\">Email</a>";
         String result = processor.replaceLinks(html);
         assertEquals(html, result);
     }
 
     @Test
-    public void ignoreDleCaptionAnchorTest() {
+    void ignoreDleCaptionAnchorTest() {
         String html = "<a href=\"#dlecaption_123\">Caption</a>";
         String result = processor.replaceLinks(html);
         assertEquals(html, result);
     }
 
     @Test
-    public void malformedHrefIsSafeTest() {
+    void malformedHrefIsSafeTest() {
         String baseUrl = "http://example.com/base/";
         System.setProperty(PolarionProperties.BASE_URL, baseUrl);
         try {
@@ -670,7 +670,7 @@ class HtmlProcessorTest {
     }
 
     @Test
-    public void testIsRelativeLink() {
+    void testIsRelativeLink() {
         assertTrue(processor.isRelativeLink("about.html"));
         assertFalse(processor.isRelativeLink("http://foo.com"));
         assertFalse(processor.isRelativeLink("mailto:someone"));
@@ -678,7 +678,7 @@ class HtmlProcessorTest {
     }
 
     @Test
-    public void testResolveUrl() {
+    void testResolveUrl() {
         String baseUrl = "http://example.com/base/";
         String rel = "foo/bar.html";
         String result = processor.resolveUrl(baseUrl, rel);

@@ -12,6 +12,8 @@ describe('ExportParams', function () {
             .setBaselineRevision(10)
             .setRevision(20)
             .setLocalization('en-US')
+            .setPaperSize('A3')
+            .setOrientation('Landscape')
             .setWebhooks(['webhook1', 'webhook2'])
             .setRenderComments('ALL')
             .setCutEmptyChapters(false)
@@ -29,6 +31,8 @@ describe('ExportParams', function () {
         expect(params.baselineRevision).to.equal(10);
         expect(params.revision).to.equal(20);
         expect(params.localization).to.equal('en-US');
+        expect(params.paperSize).to.equal('A3');
+        expect(params.orientation).to.equal('Landscape');
         expect(params.webhooks).to.deep.equal(['webhook1', 'webhook2']);
         expect(params.renderComments).to.equal('ALL');
         expect(params.cutEmptyChapters).to.be.false;

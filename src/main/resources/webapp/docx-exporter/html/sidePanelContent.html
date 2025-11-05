@@ -40,11 +40,39 @@
             </select>
         </div>
         <div class='property-wrapper'>
+            <label for='docx-orientation'>
+                <input id='docx-orientation' onchange='document.querySelector("#docx-exporter-panel #docx-orientation-selector").style.display = this.checked ? "block" : "none"' type='checkbox'/>
+                Custom orientation
+            </label>
+            <select id='docx-orientation-selector' style='display: none'>
+                <option value='PORTRAIT'>Portrait</option>
+                <option value='LANDSCAPE'>Landscape</option>
+            </select>
+        </div>
+        <div class='property-wrapper'>
+            <label for='docx-paper-size'>
+                <input id='docx-paper-size' onchange='document.querySelector("#docx-exporter-panel #docx-paper-size-selector").style.display = this.checked ? "block" : "none"' type='checkbox'/>
+                Custom paper size
+            </label>
+            <select id='docx-paper-size-selector' style='display: none'>
+                <option value='A5'>A5</option>
+                <option value='A4'>A4</option>
+                <option value='A3'>A3</option>
+                <option value='B5'>B5</option>
+                <option value='B4'>B4</option>
+                <option value='JIS_B5'>JIS-B5</option>
+                <option value='JIS_B4'>JIS-B4</option>
+                <option value='LETTER'>Letter</option>
+                <option value='LEGAL'>Legal</option>
+                <option value='LEDGER'>Ledger</option>
+            </select>
+        </div>
+        <div class='property-wrapper'>
             <label for='render-comments'>
                 <input id='render-comments' onchange='document.querySelector("#docx-exporter-panel #render-comments-selector").style.display = this.checked ? "block" : "none"' type='checkbox'/>
                 Comments rendering
             </label>
-            <select id='render-comments-selector'>
+            <select id='render-comments-selector' style='display: none'>
                 <option value='OPEN'>Open</option>
                 <option value='ALL'>All</option>
             </select>

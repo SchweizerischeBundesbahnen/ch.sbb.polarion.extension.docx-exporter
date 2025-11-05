@@ -1,6 +1,8 @@
 package ch.sbb.polarion.extension.docx_exporter.converter;
 
 import ch.sbb.polarion.extension.docx_exporter.configuration.DocxExporterExtensionConfigurationExtension;
+import ch.sbb.polarion.extension.docx_exporter.pandoc.service.PandocServiceConnector;
+import ch.sbb.polarion.extension.docx_exporter.pandoc.service.model.PandocParams;
 import ch.sbb.polarion.extension.docx_exporter.util.HtmlProcessor;
 import ch.sbb.polarion.extension.docx_exporter.util.DocxTemplateProcessor;
 import org.junit.jupiter.api.Test;
@@ -12,6 +14,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -23,6 +26,9 @@ class HtmlToDocxConverterTest {
 
     @Mock
     private HtmlProcessor htmlProcessor;
+
+    @Mock
+    private PandocServiceConnector serviceConnector;
 
     @InjectMocks
     private HtmlToDocxConverter htmlToDocxConverter;
@@ -117,10 +123,25 @@ class HtmlToDocxConverterTest {
     }
 
     @Test
+    void shouldCallConnector() {
+        String html = """
+                <html>
+                    <body>
+                        <span>example text</span>
+                    </body>
+                </html>""";
+        PandocParams params = PandocParams.builder().build();
+        HtmlToDocxConverter converter = new HtmlToDocxConverter(docxTemplateProcessor, htmlProcessor, serviceConnector);
+        assertDoesNotThrow(() -> converter.convert(html, null, null, params));
+        verify(serviceConnector).convertToDocx(html, null, null, params);
+    }
+
+    @Test
     void shouldThrowIllegalArgumentForMalformedHtml() {
         String html = "<span>example text</span>";
+        PandocParams params = PandocParams.builder().build();
 
-        assertThatThrownBy(() -> htmlToDocxConverter.convert(html, null, null))
+        assertThatThrownBy(() -> htmlToDocxConverter.convert(html, null, null, params))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("html is malformed");
     }

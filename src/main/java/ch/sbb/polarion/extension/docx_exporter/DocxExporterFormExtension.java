@@ -33,7 +33,6 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.VisibleForTesting;
 
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -83,6 +82,8 @@ public class DocxExporterFormExtension implements IFormExtension {
 
             form = adjustTemplate(scope, form, selectedStylePackage);
             form = adjustLocalization(scope, form, selectedStylePackage);
+            form = adjustOrientation(form, selectedStylePackage);
+            form = adjustPaperSize(form, selectedStylePackage);
             form = adjustWebhooks(scope, form, selectedStylePackage);
             form = adjustRenderComments(form, selectedStylePackage);
             form = adjustCutEmptyChapters(form, selectedStylePackage);
@@ -153,6 +154,7 @@ public class DocxExporterFormExtension implements IFormExtension {
     }
 
     @VisibleForTesting
+    @SuppressWarnings("unchecked")
     Collection<SettingName> getSettingNames(@NotNull String featureName, @NotNull String scope) {
         try {
             return NamedSettingsRegistry.INSTANCE.getByFeatureName(featureName).readNames(scope);
@@ -182,8 +184,26 @@ public class DocxExporterFormExtension implements IFormExtension {
     private String adjustRenderComments(String form, StylePackageModel stylePackage) {
         if (stylePackage.getRenderComments() != null) {
             form = form.replace("<input id='render-comments'", "<input id='render-comments' checked");
-            form = form.replace("id='render-comments' style='display: none'", "id='render-comments'");
+            form = form.replace("id='render-comments-selector' style='display: none'", "id='render-comments-selector'");
             form = form.replace(String.format(OPTION_VALUE, stylePackage.getRenderComments()), String.format(OPTION_SELECTED, stylePackage.getRenderComments()));
+        }
+        return form;
+    }
+
+    private String adjustOrientation(String form, StylePackageModel stylePackage) {
+        if (stylePackage.getOrientation() != null) {
+            form = form.replace("<input id='docx-orientation'", "<input id='docx-orientation' checked");
+            form = form.replace("id='docx-orientation-selector' style='display: none'", "id='docx-orientation-selector'");
+            form = form.replace(String.format(OPTION_VALUE, stylePackage.getOrientation()), String.format(OPTION_SELECTED, stylePackage.getOrientation()));
+        }
+        return form;
+    }
+
+    private String adjustPaperSize(String form, StylePackageModel stylePackage) {
+        if (stylePackage.getPaperSize() != null) {
+            form = form.replace("<input id='docx-paper-size'", "<input id='docx-paper-size' checked");
+            form = form.replace("id='docx-paper-size-selector' style='display: none'", "id='docx-paper-size-selector'");
+            form = form.replace(String.format(OPTION_VALUE, stylePackage.getPaperSize()), String.format(OPTION_SELECTED, stylePackage.getPaperSize()));
         }
         return form;
     }
@@ -289,7 +309,4 @@ public class DocxExporterFormExtension implements IFormExtension {
         return "DOCX Exporter";
     }
 
-    private String fillParams(String... params) {
-        return Arrays.stream(params).map(p -> p == null ? null : "\"" + p + "\"").collect(Collectors.joining(","));
-    }
 }

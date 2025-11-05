@@ -36,7 +36,7 @@ class PlaceholderProcessorTest {
     private PlaceholderValues placeholderValues;
 
     @BeforeEach
-    public void setup() {
+    void setup() {
         placeholderValues = PlaceholderValues.builder()
                 .documentId("testDocId")
                 .documentTitle("testDocTitle")
@@ -97,7 +97,7 @@ class PlaceholderProcessorTest {
     }
 
     @AfterEach
-    public void cleanup() {
+    void cleanup() {
         mockPlatformContext.close();
     }
 }

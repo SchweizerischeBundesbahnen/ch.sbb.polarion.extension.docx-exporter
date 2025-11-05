@@ -143,7 +143,7 @@
             </p>
             <h3>How it works</h3>
             <p>
-                The contents of the template docx are ignored, but its stylesheets and document properties (including margins, page size, header, and footer) are used in the new docx.
+                The contents of the template docx are ignored, but its stylesheets and document properties (including margins, paper size, header, and footer) are used in the new docx.
                 If no reference docx is provided then pandoc-service will use built-in template (which also can be downloaded from this page using 'download' link above).
                 Please refer official <a href="https://pandoc.org/MANUAL.html#option--reference-doc" target="_blank">pandoc manual</a> for more information.
             </p>
