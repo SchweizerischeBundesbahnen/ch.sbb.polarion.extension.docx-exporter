@@ -1,5 +1,6 @@
 package ch.sbb.polarion.extension.docx_exporter.pandoc;
 
+import ch.sbb.polarion.extension.docx_exporter.pandoc.service.model.PandocInfo;
 import ch.sbb.polarion.extension.docx_exporter.pandoc.service.model.PandocParams;
 import ch.sbb.polarion.extension.docx_exporter.util.MediaUtils;
 import jakarta.xml.bind.JAXBElement;
@@ -127,6 +128,23 @@ class BasicTest extends BasePandocTest {
         } catch (Exception e) {
             return 0;
         }
+    }
+
+    @Test
+    @SneakyThrows
+    void shouldDownloadTemplate() {
+        byte[] docBytes = downloadTemplate();
+        assertTrue(docBytes.length > 0);
+    }
+
+    @Test
+    @SneakyThrows
+    void shouldGetPandocInfo() {
+        PandocInfo pandocInfo = getPandocInfo();
+        assertNotNull(pandocInfo.getPandoc());
+        assertNotNull(pandocInfo.getPandocService());
+        assertNotNull(pandocInfo.getPython());
+        assertNotNull(pandocInfo.getTimestamp());
     }
 
     private byte[] exportToPDF(byte[] docBytes) throws Docx4JException {
