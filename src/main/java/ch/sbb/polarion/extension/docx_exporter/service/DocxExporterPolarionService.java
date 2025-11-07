@@ -155,20 +155,37 @@ public class DocxExporterPolarionService extends PolarionService {
         return testRun;
     }
 
-    public @NotNull List<TestRunAttachment> getTestRunAttachments(@NotNull String projectId, @NotNull String testRunId, @Nullable String revision, @Nullable String filter) {
+    public @NotNull List<TestRunAttachment> getTestRunAttachments(@NotNull String projectId, @NotNull String testRunId, @Nullable String revision, @Nullable String filter, @Nullable String testCaseFilterFieldId) {
         ITestRun testRun = getTestRun(projectId, testRunId, revision);
 
-        List<TestRunAttachment> result = new ArrayList<>();
-
-        IPObjectList<ITestRunAttachment> workItemAttachments = testRun.getAttachments();
-
-        for (ITestRunAttachment testRunAttachment : workItemAttachments) {
-            if (filter == null || WildcardUtils.matches(testRunAttachment.getFileName(), filter)) {
-                result.add(TestRunAttachment.fromAttachment(testRunAttachment));
-            }
+        boolean testRunFieldValue;
+        if (testCaseFilterFieldId != null) {
+            Object testRunFieldObj = testRun.getValue(testCaseFilterFieldId);
+            testRunFieldValue = testRunFieldObj instanceof Boolean b && b;
+        } else {
+            testRunFieldValue = false;
         }
 
-        return result;
+        List<ITestRunAttachment> attachments = new ArrayList<>(testRun.getAttachments()); // initially take all attachments
+        if (!StringUtils.isEmpty(testCaseFilterFieldId)) {
+            // filter out attachments from test records that do not match the test case filter
+            testRun.getAllRecords().stream()
+                    .filter(testRecord -> testRecord.getTestCase() != null)
+                    .filter(testRecord -> {
+                        Object value = testRecord.getTestCase().getValue(testCaseFilterFieldId);
+                        boolean testCaseValue = value instanceof Boolean b && b;
+                        return !Objects.equals(Boolean.TRUE, value != null ? testCaseValue : testRunFieldValue);
+                    })
+                    .forEach(testRecord -> {
+                        // attachments on the test record itself (the last summary step)
+                        attachments.removeAll(testRecord.getAttachments());
+                        // attachments on the test steps
+                        attachments.removeAll(testRecord.getTestStepResults().stream().flatMap(res -> res.getAttachments().stream()).toList());
+                    });
+        }
+        return attachments.stream().filter(a -> filter == null || WildcardUtils.matches(a.getFileName(), filter))
+                .map(TestRunAttachment::fromAttachment)
+                .toList();
     }
 
     public @NotNull ITestRunAttachment getTestRunAttachment(@NotNull String projectId, @NotNull String testRunId, @NotNull String attachmentId, @Nullable String revision) {

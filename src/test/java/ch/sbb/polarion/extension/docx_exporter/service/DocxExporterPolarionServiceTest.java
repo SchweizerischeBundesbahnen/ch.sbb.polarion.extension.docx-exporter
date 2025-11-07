@@ -1,5 +1,6 @@
 package ch.sbb.polarion.extension.docx_exporter.service;
 
+import ch.sbb.polarion.extension.docx_exporter.rest.model.attachments.TestRunAttachment;
 import ch.sbb.polarion.extension.generic.settings.NamedSettingsRegistry;
 import ch.sbb.polarion.extension.generic.settings.SettingId;
 import ch.sbb.polarion.extension.generic.settings.SettingName;
@@ -16,10 +17,16 @@ import com.polarion.alm.shared.api.transaction.ReadOnlyTransaction;
 import com.polarion.alm.tracker.ITestManagementService;
 import com.polarion.alm.tracker.ITrackerService;
 import com.polarion.alm.tracker.model.IModule;
+import com.polarion.alm.tracker.model.ITestRecord;
+import com.polarion.alm.tracker.model.ITestRun;
+import com.polarion.alm.tracker.model.ITestRunAttachment;
+import com.polarion.alm.tracker.model.ITestStepResult;
 import com.polarion.alm.tracker.model.ITrackerProject;
+import com.polarion.alm.tracker.model.IWorkItem;
 import com.polarion.alm.tracker.model.baselinecollection.IBaselineCollection;
 import com.polarion.alm.tracker.model.baselinecollection.IBaselineCollectionElement;
 import com.polarion.platform.IPlatformService;
+import com.polarion.platform.persistence.spi.PObjectList;
 import com.polarion.platform.security.ISecurityService;
 import com.polarion.platform.service.repository.IRepositoryService;
 import org.junit.jupiter.api.BeforeEach;
@@ -35,6 +42,7 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
+@SuppressWarnings("unused")
 class DocxExporterPolarionServiceTest {
 
     private final ITrackerService trackerService = mock(ITrackerService.class);
@@ -246,6 +254,160 @@ class DocxExporterPolarionServiceTest {
             assertEquals("2", resultWithRevision.get(1).getRevision());
 
         }
+    }
+
+    @Test
+    void testGetTestRun() {
+        when(testManagementService.getTestRun("testProjectId", "testTestRunId", null)).thenReturn(mock(ITestRun.class));
+        when(testManagementService.getTestRun("testProjectId", "testTestRunId", "1234")).thenReturn(mock(ITestRun.class));
+
+        ITestRun testRun = service.getTestRun("testProjectId", "testTestRunId", null);
+        assertNotNull(testRun);
+        ITestRun testRunWithRevision = service.getTestRun("testProjectId", "testTestRunId", "1234");
+        assertNotNull(testRunWithRevision);
+
+        ITestRun nonExistingTestRun = mock(ITestRun.class);
+        when(nonExistingTestRun.isUnresolvable()).thenReturn(true);
+        when(testManagementService.getTestRun("testProjectId", "nonExistingTestRun", null)).thenReturn(nonExistingTestRun);
+        assertThrows(IllegalArgumentException.class, () -> service.getTestRun("testProjectId", "nonExistingTestRun", null));
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void testGetTestRunAttachments() {
+
+        ITestRunAttachment rootAttachment = mock(ITestRunAttachment.class); // an attachment on the test run itself
+        when(rootAttachment.getFileName()).thenReturn("rootAttachment.txt");
+
+        ITestRecord record1 = mock(ITestRecord.class);
+        ITestRunAttachment record1Attachment = mock(ITestRunAttachment.class);
+        when(record1Attachment.getFileName()).thenReturn("record1.pdf");
+        when(record1.getAttachments()).thenReturn(List.of(record1Attachment));
+
+        ITestRecord record2 = mock(ITestRecord.class);
+        ITestRunAttachment record2Attachment = mock(ITestRunAttachment.class);
+        when(record2Attachment.getFileName()).thenReturn("record2.txt");
+        when(record2.getAttachments()).thenReturn(List.of(record2Attachment));
+
+        ITestRunAttachment record2step1Attachment1 = mock(ITestRunAttachment.class);
+        when(record2step1Attachment1.getFileName()).thenReturn("record2step1Attachment1.txt");
+        ITestRunAttachment record2step1Attachment2 = mock(ITestRunAttachment.class);
+        when(record2step1Attachment2.getFileName()).thenReturn("record2step1Attachment2.txt");
+        ITestRunAttachment record2step2Attachment1 = mock(ITestRunAttachment.class);
+        when(record2step2Attachment1.getFileName()).thenReturn("record2step2Attachment1.txt");
+
+        ITestStepResult record2step1 = mock(ITestStepResult.class);
+        when(record2step1.getAttachments()).thenReturn(List.of(record2step1Attachment1, record2step1Attachment2));
+        ITestStepResult record2step2 = mock(ITestStepResult.class);
+        when(record2step2.getAttachments()).thenReturn(List.of(record2step2Attachment1));
+        when(record2.getTestStepResults()).thenReturn(List.of(record2step1, record2step2));
+
+        ITestRun testRun = mock(ITestRun.class);
+        when(testRun.isUnresolvable()).thenReturn(false);
+        when(testRun.getAllRecords()).thenReturn(List.of(record1, record2));
+        when(testRun.getAttachments()).thenReturn(new PObjectList(null,
+                List.of(rootAttachment, record1Attachment, record2Attachment, record2step1Attachment1, record2step1Attachment2, record2step2Attachment1)));
+        when(testManagementService.getTestRun("testProjectId", "testTestRunId", null)).thenReturn(testRun);
+
+        List<TestRunAttachment> testRunAttachments = service.getTestRunAttachments("testProjectId", "testTestRunId", null, null, null);
+        assertNotNull(testRunAttachments);
+        assertEquals(6, testRunAttachments.size());
+
+        List<TestRunAttachment> testRunAttachmentsFilteredPdf = service.getTestRunAttachments("testProjectId", "testTestRunId", null, "*.pdf", null);
+        assertNotNull(testRunAttachmentsFilteredPdf);
+        assertEquals(1, testRunAttachmentsFilteredPdf.size());
+
+        List<TestRunAttachment> testRunAttachmentsFilteredTxt = service.getTestRunAttachments("testProjectId", "testTestRunId", null, "*.pdf", null);
+        assertNotNull(testRunAttachmentsFilteredTxt);
+        assertEquals(1, testRunAttachmentsFilteredTxt.size());
+
+        List<TestRunAttachment> testRunAttachmentsFilteredAll = service.getTestRunAttachments("testProjectId", "testTestRunId", null, "*.*", null);
+        assertNotNull(testRunAttachmentsFilteredAll);
+        assertEquals(6, testRunAttachmentsFilteredAll.size());
+
+        List<TestRunAttachment> testRunAttachmentsFilteredNone = service.getTestRunAttachments("testProjectId", "testTestRunId", null, "*.png", null);
+        assertNotNull(testRunAttachmentsFilteredNone);
+        assertEquals(0, testRunAttachmentsFilteredNone.size());
+
+        IWorkItem workItem1 = mock(IWorkItem.class);
+        IWorkItem workItem2 = mock(IWorkItem.class);
+        when(record1.getTestCase()).thenReturn(workItem1);
+        when(record2.getTestCase()).thenReturn(workItem2);
+
+        when(testRun.getValue("someBooleanField")).thenReturn(true);
+        when(workItem1.getValue("someBooleanField")).thenReturn(null);
+        when(workItem2.getValue("someBooleanField")).thenReturn(null);
+        List<TestRunAttachment> result = service.getTestRunAttachments("testProjectId", "testTestRunId", null, "*.*", "someBooleanField");
+        assertEquals(6, result.size());
+
+        List<TestRunAttachment> testRunAttachmentsFilteredWithNullValue = service.getTestRunAttachments("testProjectId", "testTestRunId", null, "*.*", "someBooleanField");
+        assertNotNull(testRunAttachmentsFilteredWithNullValue);
+        assertEquals(6, testRunAttachmentsFilteredWithNullValue.size());
+
+        when(workItem1.getValue("someBooleanField")).thenReturn("true");
+        List<TestRunAttachment> testRunAttachmentsFilteredWithWrongTypeValue = service.getTestRunAttachments("testProjectId", "testTestRunId", null, "*.*", "someBooleanField");
+        assertNotNull(testRunAttachmentsFilteredWithWrongTypeValue);
+        assertEquals(5, testRunAttachmentsFilteredWithWrongTypeValue.size());
+
+        when(workItem1.getValue("someBooleanField")).thenReturn(false);
+        List<TestRunAttachment> testRunAttachmentsFilteredWithFalseValue = service.getTestRunAttachments("testProjectId", "testTestRunId", null, "*.*", "someBooleanField");
+        assertNotNull(testRunAttachmentsFilteredWithFalseValue);
+        assertEquals(5, testRunAttachmentsFilteredWithFalseValue.size());
+
+        when(workItem1.getValue("someBooleanField")).thenReturn(true);
+        when(workItem2.getValue("someBooleanField")).thenReturn(false);
+        result = service.getTestRunAttachments("testProjectId", "testTestRunId", null, "*.*", "someBooleanField");
+        assertEquals(2, result.size());
+
+        when(testRun.getValue("someBooleanField")).thenReturn(false);
+        when(workItem1.getValue("someBooleanField")).thenReturn(true);
+        when(workItem2.getValue("someBooleanField")).thenReturn(true);
+        result = service.getTestRunAttachments("testProjectId", "testTestRunId", null, "*.*", "someBooleanField");
+        assertEquals(6, result.size());
+
+        when(workItem1.getValue("someBooleanField")).thenReturn(false);
+        when(workItem2.getValue("someBooleanField")).thenReturn(false);
+        result = service.getTestRunAttachments("testProjectId", "testTestRunId", null, "*.*", "someBooleanField");
+        assertEquals(1, result.size());
+
+        when(testRun.getValue("someBooleanField")).thenReturn(true);
+        when(workItem1.getValue("someBooleanField")).thenReturn(null);
+        when(workItem2.getValue("someBooleanField")).thenReturn(false);
+        result = service.getTestRunAttachments("testProjectId", "testTestRunId", null, "*.*", "someBooleanField");
+        assertEquals(2, result.size());
+
+        when(testRun.getValue("someBooleanField")).thenReturn(null);
+        when(workItem1.getValue("someBooleanField")).thenReturn(false);
+        when(workItem2.getValue("someBooleanField")).thenReturn(null);
+        result = service.getTestRunAttachments("testProjectId", "testTestRunId", null, "*.*", "someBooleanField");
+        assertEquals(1, result.size());
+
+        when(testRun.getValue("someBooleanField")).thenReturn(false);
+        when(workItem1.getValue("someBooleanField")).thenReturn("notBoolean");
+        when(workItem2.getValue("someBooleanField")).thenReturn(null);
+        result = service.getTestRunAttachments("testProjectId", "testTestRunId", null, "*.*", "someBooleanField");
+        assertEquals(1, result.size());
+
+        when(workItem1.getValue("someBooleanField")).thenReturn(true);
+        when(workItem2.getValue("someBooleanField")).thenReturn(true);
+        result = service.getTestRunAttachments("testProjectId", "testTestRunId", null, "*.*", null);
+        assertEquals(6, result.size());
+    }
+
+    @Test
+    void testGetTestRunAttachment() {
+        ITestRun testRun = mock(ITestRun.class);
+        when(testRun.isUnresolvable()).thenReturn(false);
+        when(testRun.getAttachment("testAttachmentId")).thenReturn(mock(ITestRunAttachment.class));
+        when(testManagementService.getTestRun("testProjectId", "testTestRunId", null)).thenReturn(testRun);
+        when(testManagementService.getTestRun("testProjectId", "testTestRunId", "1234")).thenReturn(testRun);
+
+        ITestRunAttachment testRunAttachment = service.getTestRunAttachment("testProjectId", "testTestRunId", "testAttachmentId", null);
+        assertNotNull(testRunAttachment);
+        ITestRunAttachment testRunAttachmentWithRevision = service.getTestRunAttachment("testProjectId", "testTestRunId", "testAttachmentId", "1234");
+        assertNotNull(testRunAttachmentWithRevision);
+
+        assertThrows(IllegalArgumentException.class, () -> service.getTestRunAttachment("testProjectId", "testTestRunId", "nonExistingAttachmentId", null));
     }
 
 }

@@ -10,6 +10,7 @@ import com.polarion.alm.shared.api.SharedContext;
 import com.polarion.alm.shared.api.utils.html.HtmlFragmentBuilder;
 import com.polarion.alm.tracker.model.IModule;
 import com.polarion.alm.tracker.model.ITrackerProject;
+import com.polarion.platform.persistence.IEnumOption;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.MockedStatic;
@@ -41,6 +42,10 @@ class DocxExporterFormExtensionTest {
         doReturn(List.of(settingName)).when(extension).getSettingNames(any(), any());
         doReturn("TestFileName.docx").when(extension).getFilename(any());
 
+        IEnumOption language = mock(IEnumOption.class);
+        when(language.getId()).thenReturn("Deutsch");
+        when(module.getCustomField("docLanguage")).thenReturn(language);
+
         try (MockedStatic<EnumValuesProvider> mockEnumValuesProvider = mockStatic(EnumValuesProvider.class)) {
             mockEnumValuesProvider.when(() -> EnumValuesProvider.getAllLinkRoleNames(any())).thenReturn(List.of("relates to", "blocks", "duplicates"));
             extension.renderForm(context, module);
@@ -51,6 +56,7 @@ class DocxExporterFormExtensionTest {
             stylePackage.setRenderComments(CommentsRenderType.ALL);
             stylePackage.setOrientation("LANDSCAPE");
             stylePackage.setPaperSize("A3");
+            stylePackage.setLanguage("de");
             extension.renderForm(context, module);
             verify(builder, times(1)).html(argThat(arg -> expectedEntries.stream().allMatch(arg::contains)));
         }

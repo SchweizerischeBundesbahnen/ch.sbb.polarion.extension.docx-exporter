@@ -56,7 +56,7 @@ public class TestRunAttachmentsInternalController {
             @Parameter(description = "TestRun revision") @QueryParam("revision") String revision,
             @Parameter(description = "Filename filter for attachment") @QueryParam("filter") String filter
     ) {
-        return docxExporterPolarionService.getTestRunAttachments(projectId, testRunId, revision, filter);
+        return docxExporterPolarionService.getTestRunAttachments(projectId, testRunId, revision, filter, null);
     }
 
     @GET

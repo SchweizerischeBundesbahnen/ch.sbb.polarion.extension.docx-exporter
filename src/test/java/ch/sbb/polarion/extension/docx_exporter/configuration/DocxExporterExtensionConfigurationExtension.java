@@ -1,6 +1,7 @@
 package ch.sbb.polarion.extension.docx_exporter.configuration;
 
 import ch.sbb.polarion.extension.docx_exporter.properties.DocxExporterExtensionConfiguration;
+import ch.sbb.polarion.extension.generic.test_extensions.CustomExtensionMockInjector;
 import org.junit.jupiter.api.extension.AfterEachCallback;
 import org.junit.jupiter.api.extension.BeforeEachCallback;
 import org.junit.jupiter.api.extension.ExtensionContext;
@@ -13,27 +14,16 @@ public class DocxExporterExtensionConfigurationExtension implements BeforeEachCa
 
     private MockedStatic<DocxExporterExtensionConfiguration> docxExporterExtensionConfigurationMockedStatic;
 
-    private static DocxExporterExtensionConfiguration docxExporterExtensionConfiguration;
-
-    public static void setDocxExporterExtensionConfigurationMock(DocxExporterExtensionConfiguration mock) {
-        docxExporterExtensionConfiguration = mock;
-    }
-
     @Override
     public void beforeEach(ExtensionContext extensionContext) throws Exception {
-        if (docxExporterExtensionConfiguration == null) {
-            docxExporterExtensionConfiguration = Mockito.mock(DocxExporterExtensionConfiguration.class);
-        }
-
+        DocxExporterExtensionConfiguration docxExporterExtensionConfiguration = Mockito.mock(DocxExporterExtensionConfiguration.class);
+        CustomExtensionMockInjector.inject(extensionContext, docxExporterExtensionConfiguration);
         docxExporterExtensionConfigurationMockedStatic = mockStatic(DocxExporterExtensionConfiguration.class);
         docxExporterExtensionConfigurationMockedStatic.when(DocxExporterExtensionConfiguration::getInstance).thenReturn(docxExporterExtensionConfiguration);
     }
 
     @Override
     public void afterEach(ExtensionContext extensionContext) throws Exception {
-        if (docxExporterExtensionConfigurationMockedStatic != null) {
-            docxExporterExtensionConfigurationMockedStatic.close();
-        }
-        docxExporterExtensionConfiguration = null;
+        docxExporterExtensionConfigurationMockedStatic.close();
     }
 }

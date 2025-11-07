@@ -1,6 +1,7 @@
 package ch.sbb.polarion.extension.docx_exporter.pandoc;
 
 import ch.sbb.polarion.extension.docx_exporter.pandoc.service.PandocServiceConnector;
+import ch.sbb.polarion.extension.docx_exporter.pandoc.service.model.PandocInfo;
 import ch.sbb.polarion.extension.docx_exporter.pandoc.service.model.PandocParams;
 import ch.sbb.polarion.extension.docx_exporter.util.MediaUtils;
 import com.polarion.core.util.StringUtils;
@@ -79,6 +80,38 @@ public abstract class BasePandocTest {
             String pandocServiceBaseUrl = "http://" + pandocService.getHost() + ":" + pandocService.getFirstMappedPort();
             PandocServiceConnector pandocServiceConnector = new PandocServiceConnector(pandocServiceBaseUrl);
             return pandocServiceConnector.convertToDocx(html, template, options, params);
+        }
+    }
+
+    protected byte[] downloadTemplate() {
+        try (GenericContainer<?> pandocService = new GenericContainer<>(DOCKER_IMAGE_NAME)) {
+            pandocService
+                    .withImagePullPolicy(PullPolicy.alwaysPull())
+                    .withExposedPorts(9082)
+                    .waitingFor(Wait.forHttp("/version").forPort(9082))
+                    .start();
+
+            assertTrue(pandocService.isRunning());
+
+            String pandocServiceBaseUrl = "http://" + pandocService.getHost() + ":" + pandocService.getFirstMappedPort();
+            PandocServiceConnector pandocServiceConnector = new PandocServiceConnector(pandocServiceBaseUrl);
+            return pandocServiceConnector.getTemplate();
+        }
+    }
+
+    protected PandocInfo getPandocInfo() {
+        try (GenericContainer<?> pandocService = new GenericContainer<>(DOCKER_IMAGE_NAME)) {
+            pandocService
+                    .withImagePullPolicy(PullPolicy.alwaysPull())
+                    .withExposedPorts(9082)
+                    .waitingFor(Wait.forHttp("/version").forPort(9082))
+                    .start();
+
+            assertTrue(pandocService.isRunning());
+
+            String pandocServiceBaseUrl = "http://" + pandocService.getHost() + ":" + pandocService.getFirstMappedPort();
+            PandocServiceConnector pandocServiceConnector = new PandocServiceConnector(pandocServiceBaseUrl);
+            return pandocServiceConnector.getPandocInfo();
         }
     }
 
