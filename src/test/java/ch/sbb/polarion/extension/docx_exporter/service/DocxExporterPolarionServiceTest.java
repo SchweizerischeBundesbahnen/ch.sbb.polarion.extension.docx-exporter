@@ -289,6 +289,8 @@ class DocxExporterPolarionServiceTest {
         when(record2Attachment.getFileName()).thenReturn("record2.txt");
         when(record2.getAttachments()).thenReturn(List.of(record2Attachment));
 
+        ITestRecord record3 = mock(ITestRecord.class);
+
         ITestRunAttachment record2step1Attachment1 = mock(ITestRunAttachment.class);
         when(record2step1Attachment1.getFileName()).thenReturn("record2step1Attachment1.txt");
         ITestRunAttachment record2step1Attachment2 = mock(ITestRunAttachment.class);
@@ -304,7 +306,7 @@ class DocxExporterPolarionServiceTest {
 
         ITestRun testRun = mock(ITestRun.class);
         when(testRun.isUnresolvable()).thenReturn(false);
-        when(testRun.getAllRecords()).thenReturn(List.of(record1, record2));
+        when(testRun.getAllRecords()).thenReturn(List.of(record1, record2, record3));
         when(testRun.getAttachments()).thenReturn(new PObjectList(null,
                 List.of(rootAttachment, record1Attachment, record2Attachment, record2step1Attachment1, record2step1Attachment2, record2step2Attachment1)));
         when(testManagementService.getTestRun("testProjectId", "testTestRunId", null)).thenReturn(testRun);
@@ -317,9 +319,9 @@ class DocxExporterPolarionServiceTest {
         assertNotNull(testRunAttachmentsFilteredPdf);
         assertEquals(1, testRunAttachmentsFilteredPdf.size());
 
-        List<TestRunAttachment> testRunAttachmentsFilteredTxt = service.getTestRunAttachments("testProjectId", "testTestRunId", null, "*.pdf", null);
+        List<TestRunAttachment> testRunAttachmentsFilteredTxt = service.getTestRunAttachments("testProjectId", "testTestRunId", null, "*.txt", null);
         assertNotNull(testRunAttachmentsFilteredTxt);
-        assertEquals(1, testRunAttachmentsFilteredTxt.size());
+        assertEquals(5, testRunAttachmentsFilteredTxt.size());
 
         List<TestRunAttachment> testRunAttachmentsFilteredAll = service.getTestRunAttachments("testProjectId", "testTestRunId", null, "*.*", null);
         assertNotNull(testRunAttachmentsFilteredAll);
