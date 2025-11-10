@@ -23,9 +23,9 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.VisibleForTesting;
 import org.jsoup.Jsoup;
+import org.jsoup.nodes.Comment;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
-import org.jsoup.nodes.Entities;
 import org.jsoup.nodes.Node;
 import org.jsoup.nodes.TextNode;
 import org.jsoup.select.Elements;
@@ -133,6 +133,11 @@ public class HtmlProcessor {
         // From Polarion perspective h1 - is a document title, h2 are h1 heading etc. We are making such headings' uplifting here
         adjustDocumentHeadings(document);
 
+        if (exportParams.isCutEmptyChapters()) {
+            // Cut empty chapters if explicitly requested by user
+            cutEmptyChapters(document);
+        }
+
 
         // Adjusts WorkItem attributes tables to stretch to full page width for better usage of page space and better readability.
         // Also changes absolute widths of normal table cells from absolute values to "auto" if "Fit tables and images to page" is on
@@ -151,9 +156,6 @@ public class HtmlProcessor {
         html = encodeDollarSigns(html);
 
         html = adjustImageAlignmentForPDF(html);
-        if (exportParams.isCutEmptyChapters()) {
-            html = cutEmptyChapters(html);
-        }
 
         html = html.replace(">\n ", "> ");
         html = html.replace("\n</", "</");
@@ -236,6 +238,43 @@ public class HtmlProcessor {
 
     @NotNull
     @VisibleForTesting
+    Document cutEmptyChapters(@NotNull Document document) {
+        // 'Empty chapter' is a heading tag which doesn't have any visible content "under it",
+        // i.e. there are only not visible or whitespace elements between itself and next heading of same/higher level or end of parent/document.
+
+        // Process from lowest to highest priority (h6 to h1), otherwise logic can be broken
+        for (int headingLevel = H_TAG_MIN_PRIORITY; headingLevel >= 1; headingLevel--) {
+            removeEmptyHeadings(document, headingLevel);
+        }
+
+        return document;
+    }
+
+    private void removeEmptyHeadings(@NotNull Document document, int headingLevel) {
+        List<Element> headingsToRemove = JSoupUtils.selectEmptyHeadings(document, headingLevel);
+        for (Element heading : headingsToRemove) {
+
+            // In addition to removing heading itself, remove all following empty siblings until next heading, but not comments as they can have special meaning
+            // We don't check additionally if sibling is empty, because if a heading was selected for removal there are only empty siblings under it
+            Node nextSibling = heading.nextSibling();
+            while (nextSibling != null) {
+                if (JSoupUtils.isHeading(nextSibling)) {
+                    break;
+                } else {
+                    Node siblingToRemove = nextSibling instanceof Comment ? null : nextSibling;
+                    nextSibling = nextSibling.nextSibling();
+                    if (siblingToRemove != null) {
+                        siblingToRemove.remove();
+                    }
+                }
+            }
+
+            heading.remove();
+        }
+    }
+
+    @NotNull
+    @VisibleForTesting
     @SuppressWarnings({"java:S5843", "java:S5852"})
     String cutLocalUrls(@NotNull String html) {
         // This regexp consists of 2 parts combined by OR-condition. In first part it looks for <a>-tags
@@ -298,22 +337,6 @@ public class HtmlProcessor {
             }
         }
         return resultBuf.toString();
-    }
-
-    @NotNull
-    @VisibleForTesting
-    String cutEmptyChapters(@NotNull String html) {
-        //We have to traverse all existing heading levels from the lowest priority to the highest and find corresponding 'empty chapters'.
-        //'Empty chapter' is the area which starts from heading tag and followed by any number of empty 'p', 'br' or page brake related tags.
-        //Area must be followed either by the next opening heading tag with the same or higher importance or any closing tag except 'p'.
-        for (int i = H_TAG_MIN_PRIORITY; i >= 1; i--) {
-            html = RegexMatcher.get(String.format("(?s)(?><h%1$d.*?</h%1$d>)(\\s|<p[^>]*?>|<br/>|</p>|%2$s)*?(?=<h[1-%1$d]|</[^p])",
-                    i, String.join("|", PAGE_BREAK_MARK, PORTRAIT_ABOVE_MARK, LANDSCAPE_ABOVE_MARK))).useJavaUtil().replace(html, regexEngine -> {
-                String areaToDelete = regexEngine.group();
-                return getTopPageBrake(areaToDelete);
-            });
-        }
-        return html;
     }
 
     @NotNull
