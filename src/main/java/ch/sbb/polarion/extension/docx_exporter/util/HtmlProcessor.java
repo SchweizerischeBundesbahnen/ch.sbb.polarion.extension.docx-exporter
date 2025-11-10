@@ -128,11 +128,11 @@ public class HtmlProcessor {
         // II. SECOND SECTION - manipulate HTML as a JSoup document. These changes are vice versa fulfilled easier with JSoup.
         // ----------------
 
-        Document document = Jsoup.parse(html);
-        document.outputSettings()
-                .syntax(Document.OutputSettings.Syntax.xml)
-                .escapeMode(Entities.EscapeMode.base)
-                .prettyPrint(false);
+        Document document = JSoupUtils.parseHtml(html);
+
+        // From Polarion perspective h1 - is a document title, h2 are h1 heading etc. We are making such headings' uplifting here
+        adjustDocumentHeadings(document);
+
 
         // Adjusts WorkItem attributes tables to stretch to full page width for better usage of page space and better readability.
         // Also changes absolute widths of normal table cells from absolute values to "auto" if "Fit tables and images to page" is on
@@ -151,7 +151,6 @@ public class HtmlProcessor {
         html = encodeDollarSigns(html);
 
         html = adjustImageAlignmentForPDF(html);
-        html = adjustHeadingsForPDF(html);
         if (exportParams.isCutEmptyChapters()) {
             html = cutEmptyChapters(html);
         }
@@ -219,6 +218,20 @@ public class HtmlProcessor {
     @NotNull
     private String removePd4mlPageTags(@NotNull String html) {
         return RegexMatcher.get("(<pd4ml:page.*>)(.)").replace(html, regexEngine -> regexEngine.group(2));
+    }
+
+    private void adjustDocumentHeadings(@NotNull Document document) {
+        Elements headings = document.select("h1, h2, h3, h4, h5, h6");
+
+        for (Element heading : headings) {
+            if (JSoupUtils.isH1(heading)) {
+                heading.tagName(HtmlTag.DIV);
+                heading.addClass("title");
+            } else {
+                int level = heading.tagName().charAt(1) - '0';
+                heading.tagName("h" + (level - 1));
+            }
+        }
     }
 
     @NotNull
@@ -825,19 +838,6 @@ public class HtmlProcessor {
         // Remove "float: left;" style definition from tables
         return RegexMatcher.get("(?<table><table[^>]*)style=\"float: left;\"")
                 .replace(html, regexEngine -> regexEngine.group("table"));
-    }
-
-    @NotNull
-    private String adjustHeadingsForPDF(@NotNull String html) {
-        html = RegexMatcher.get("<(h[1-6])").replace(html, regexEngine -> {
-            String tag = regexEngine.group(1);
-            return tag.equals("h1") ? "<div class=\"title\"" : ("<" + liftHeadingTag(tag));
-        });
-
-        return RegexMatcher.get("</(h[1-6])>").replace(html, regexEngine -> {
-            String tag = regexEngine.group(1);
-            return tag.equals("h1") ? DIV_END_TAG : ("</" + liftHeadingTag(tag) + ">");
-        });
     }
 
     @NotNull
