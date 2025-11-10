@@ -141,4 +141,9 @@ public class JSoupUtils {
         return false;
     }
 
+    public Element getSingleChildByTag(@NotNull Element element, @NotNull String tagName) {
+        Element child = element.firstElementChild();
+        return (child != null && child.tagName().equals(tagName) && element.children().size() == 1) ? child : null;
+    }
+
 }

@@ -144,6 +144,7 @@ public class HtmlProcessor {
             cutNotNeededChapters(document, exportParams.getChapters());
         }
 
+        removePageBreakAvoids(document);
 
         // Adjusts WorkItem attributes tables to stretch to full page width for better usage of page space and better readability.
         // Also changes absolute widths of normal table cells from absolute values to "auto" if "Fit tables and images to page" is on
@@ -168,8 +169,7 @@ public class HtmlProcessor {
         html = MediaUtils.removeSvgUnsupportedFeatureHint(html); //note that there is one more replacement attempt before replacing images with base64 representation
         html = properTableHeads(html);
 
-        String processingHtml = new PageBreakAvoidRemover().removePageBreakAvoids(html);
-        html = new NumberedListsSanitizer().fixNumberedLists(processingHtml);
+        html = new NumberedListsSanitizer().fixNumberedLists(html);
 
         // ----
         // This sequence is important! We need first filter out Linked WorkItems and only then cut empty attributes,
@@ -382,6 +382,53 @@ public class HtmlProcessor {
         }
 
         return nextChapterNode;
+    }
+
+    void removePageBreakAvoids(@NotNull Document document) {
+        // Polarion wraps content of a work item as it is into table's cell with table's styling "page-break-inside: avoid"
+        // if it's configured to avoid page breaks:
+        //
+        // <table style="page-break-inside:avoid;">
+        //   <tr>
+        //     <td>
+        //       <CONTENT>
+        //     </td>
+        //   </tr>
+        // </table>
+        //
+        // This styling "page-break-inside: avoid" doesn't influence rendering by pd4ml converter,
+        // but breaks rendering of tables with help of WeasyPrint. More over this configuration was initially introduced
+        // for pd4ml converter because table headers are not repeated at page start when table takes more than 1 page.
+        // Last drawback is not applied to WeasyPrint and thus such workaround can be safely removed.
+        //
+        // Taking into account that work item content can also contain tables this task should be done with cautious.
+        // Removing "page-break-inside:avoid;" from table's styling doesn't help, tables are still broken. So, solution
+        // is to remove that table wrapping at all. As a result above example should become just:
+        //
+        // <CONTENT>
+        //
+
+        Elements tables = document.select("table");
+        for (Element table : tables) {
+            String pageBreakInsideValue = getCssValue(table, CssProp.PAGE_BREAK_INSIDE);
+            if (!pageBreakInsideValue.equals(CssProp.PAGE_BREAK_INSIDE_AVOID_VALUE)) {
+                continue;
+            }
+
+            Element tbody = JSoupUtils.getSingleChildByTag(table, HtmlTag.TBODY);
+
+            Element tr = JSoupUtils.getSingleChildByTag(tbody != null ? tbody : table, HtmlTag.TR);
+            if (tr != null) {
+                Element td = JSoupUtils.getSingleChildByTag(tr, HtmlTag.TD);
+                if (td != null) {
+                    // Move td's children to replace the table
+                    for (Node contentNodes : td.childNodes()) {
+                        table.before(contentNodes.clone());
+                    }
+                    table.remove();
+                }
+            }
+        }
     }
 
     @NotNull
@@ -1222,8 +1269,21 @@ public class HtmlProcessor {
         return html.contains(PAGE_BREAK_MARK);
     }
 
+    private String getCssValue(@NotNull Element element, @NotNull String cssProperty) {
+        CSSStyleDeclaration cssStyle = getCssStyle(element);
+        return getCssValue(cssStyle, cssProperty);
+    }
+
     private String getCssValue(@NotNull CSSStyleDeclaration cssStyle, @NotNull String cssProperty) {
         return Optional.ofNullable(cssStyle.getPropertyValue(cssProperty)).orElse("").trim();
+    }
+
+    private CSSStyleDeclaration getCssStyle(@NotNull Element element) {
+        String style = "";
+        if (element.hasAttr(HtmlTagAttr.STYLE)) {
+            style = element.attr(HtmlTagAttr.STYLE);
+        }
+        return parseCss(style);
     }
 
     private CSSStyleDeclaration parseCss(@NotNull String style) {
