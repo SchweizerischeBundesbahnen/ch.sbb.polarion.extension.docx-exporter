@@ -78,7 +78,7 @@
         <swagger-maven-plugin.version>2.2.22</swagger-maven-plugin.version>
 
         <frontend-maven-plugin.version>1.15.4</frontend-maven-plugin.version>
-        <frontend-maven-plugin.nodeVersion>v20.17.0</frontend-maven-plugin.nodeVersion>
+        <frontend-maven-plugin.nodeVersion>v20.19.5</frontend-maven-plugin.nodeVersion>
         <frontend-maven-plugin.npmVersion>10.8.3</frontend-maven-plugin.npmVersion>
 
         <!--suppress UnresolvedMavenProperty -->
@@ -444,7 +444,7 @@
                             <goal>npm</goal>
                         </goals>
                         <configuration>
-                            <arguments>run test --loader node:module</arguments>
+                            <arguments>run test</arguments>
                             <skip>${skipJavaScriptTests}</skip>
                         </configuration>
                         <phase>test</phase>
