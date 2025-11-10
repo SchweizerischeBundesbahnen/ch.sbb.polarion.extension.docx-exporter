@@ -6,16 +6,11 @@ import ch.sbb.polarion.extension.docx_exporter.converter.DocxConverterJobsServic
 import ch.sbb.polarion.extension.docx_exporter.converter.DocxConverterJobsService.JobState;
 import ch.sbb.polarion.extension.docx_exporter.converter.PropertiesUtility;
 import ch.sbb.polarion.extension.docx_exporter.pandoc.service.model.PandocParams;
-import ch.sbb.polarion.extension.docx_exporter.rest.model.NestedListsCheck;
 import ch.sbb.polarion.extension.docx_exporter.rest.model.conversion.ExportParams;
-import ch.sbb.polarion.extension.docx_exporter.rest.model.documents.DocumentData;
 import ch.sbb.polarion.extension.docx_exporter.rest.model.jobs.ConverterJobDetails;
 import ch.sbb.polarion.extension.docx_exporter.rest.model.jobs.ConverterJobStatus;
-import ch.sbb.polarion.extension.docx_exporter.util.DocumentDataFactory;
 import ch.sbb.polarion.extension.docx_exporter.util.DocumentFileNameHelper;
 import ch.sbb.polarion.extension.docx_exporter.util.ExportContext;
-import ch.sbb.polarion.extension.docx_exporter.util.NumberedListsSanitizer;
-import com.polarion.alm.tracker.model.IModule;
 import com.polarion.core.util.StringUtils;
 import com.polarion.platform.core.PlatformContext;
 import com.polarion.platform.security.ISecurityService;
@@ -30,7 +25,6 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.glassfish.jersey.media.multipart.FormDataBodyPart;
 import org.glassfish.jersey.media.multipart.FormDataParam;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.VisibleForTesting;
 import org.springframework.http.HttpStatus;
@@ -373,35 +367,6 @@ public class ConverterInternalController {
         } catch (IOException e) {
             throw new BadRequestException("Error processing files", e);
         }
-    }
-
-    @POST
-    @Path("/checknestedlists")
-    @Consumes(MediaType.APPLICATION_JSON)
-    @Produces(MediaType.APPLICATION_JSON)
-    @Operation(
-            summary = "Checks whether document contains nested lists",
-            requestBody = @RequestBody(
-                    description = "Export parameters used to locate and check the document for nested lists",
-                    required = true,
-                    content = @Content(schema = @Schema(implementation = ExportParams.class)
-                    )
-            ),
-            responses = {
-                    @ApiResponse(
-                            responseCode = "200",
-                            description = "Check completed successfully, returning whether nested lists are present",
-                            content = @Content(mediaType = "application/json", schema = @Schema(implementation = NestedListsCheck.class))
-                    )
-            }
-    )
-    @SuppressWarnings("java:S1166")
-    public NestedListsCheck checkNestedLists(ExportParams exportParams) {
-        DocumentData<IModule> documentData = DocumentDataFactory.getDocumentData(exportParams, true);
-        @NotNull String content = Objects.requireNonNull(documentData.getContent());
-        boolean containsNestedLists = new NumberedListsSanitizer().containsNestedNumberedLists(content);
-
-        return NestedListsCheck.builder().containsNestedLists(containsNestedLists).build();
     }
 
     @GET

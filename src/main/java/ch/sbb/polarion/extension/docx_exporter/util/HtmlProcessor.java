@@ -23,9 +23,9 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.VisibleForTesting;
 import org.jsoup.Jsoup;
+import org.jsoup.nodes.Comment;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
-import org.jsoup.nodes.Entities;
 import org.jsoup.nodes.Node;
 import org.jsoup.nodes.TextNode;
 import org.jsoup.select.Elements;
@@ -33,12 +33,14 @@ import org.w3c.dom.css.CSSStyleDeclaration;
 
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -128,11 +130,25 @@ public class HtmlProcessor {
         // II. SECOND SECTION - manipulate HTML as a JSoup document. These changes are vice versa fulfilled easier with JSoup.
         // ----------------
 
-        Document document = Jsoup.parse(html);
-        document.outputSettings()
-                .syntax(Document.OutputSettings.Syntax.xml)
-                .escapeMode(Entities.EscapeMode.base)
-                .prettyPrint(false);
+        Document document = JSoupUtils.parseHtml(html);
+
+        // From Polarion perspective h1 - is a document title, h2 are h1 heading etc. We are making such headings' uplifting here
+        adjustDocumentHeadings(document);
+
+        if (exportParams.isCutEmptyChapters()) {
+            // Cut empty chapters if explicitly requested by user
+            cutEmptyChapters(document);
+        }
+        if (exportParams.getChapters() != null) {
+            // Leave only chapters explicitly selected by user
+            cutNotNeededChapters(document, exportParams.getChapters());
+        }
+
+        // Moves WorkItem content out of table wrapping it
+        removePageBreakAvoids(document);
+
+        // Fixes nested HTML lists structure
+        fixNestedLists(document);
 
         // Adjusts WorkItem attributes tables to stretch to full page width for better usage of page space and better readability.
         // Also changes absolute widths of normal table cells from absolute values to "auto" if "Fit tables and images to page" is on
@@ -151,24 +167,11 @@ public class HtmlProcessor {
         html = encodeDollarSigns(html);
 
         html = adjustImageAlignmentForPDF(html);
-        html = adjustHeadingsForPDF(html);
-        if (exportParams.isCutEmptyChapters()) {
-            html = cutEmptyChapters(html);
-        }
-
-        html = html.replace(">\n ", "> ");
-        html = html.replace("\n</", "</");
-        if (exportParams.getChapters() != null) {
-            html = cutNotNeededChapters(html, exportParams.getChapters());
-        }
 
         html = addTableOfFigures(addTableOfContent(html));
         html = replaceResourcesAsBase64Encoded(html);
         html = MediaUtils.removeSvgUnsupportedFeatureHint(html); //note that there is one more replacement attempt before replacing images with base64 representation
         html = properTableHeads(html);
-
-        String processingHtml = new PageBreakAvoidRemover().removePageBreakAvoids(html);
-        html = new NumberedListsSanitizer().fixNumberedLists(processingHtml);
 
         // ----
         // This sequence is important! We need first filter out Linked WorkItems and only then cut empty attributes,
@@ -219,6 +222,268 @@ public class HtmlProcessor {
     @NotNull
     private String removePd4mlPageTags(@NotNull String html) {
         return RegexMatcher.get("(<pd4ml:page.*>)(.)").replace(html, regexEngine -> regexEngine.group(2));
+    }
+
+    private void adjustDocumentHeadings(@NotNull Document document) {
+        Elements headings = document.select("h1, h2, h3, h4, h5, h6");
+
+        for (Element heading : headings) {
+            if (JSoupUtils.isH1(heading)) {
+                heading.tagName(HtmlTag.DIV);
+                heading.addClass("title");
+            } else {
+                int level = heading.tagName().charAt(1) - '0';
+                int newLevel = Math.max(1, Math.min(6, level - 1));
+                heading.tagName("h" + newLevel);
+            }
+        }
+    }
+
+    @NotNull
+    @VisibleForTesting
+    Document cutEmptyChapters(@NotNull Document document) {
+        // 'Empty chapter' is a heading tag which doesn't have any visible content "under it",
+        // i.e. there are only not visible or whitespace elements between itself and next heading of same/higher level or end of parent/document.
+
+        // Process from lowest to highest priority (h6 to h1), otherwise logic can be broken
+        for (int headingLevel = H_TAG_MIN_PRIORITY; headingLevel >= 1; headingLevel--) {
+            removeEmptyHeadings(document, headingLevel);
+        }
+
+        return document;
+    }
+
+    private void removeEmptyHeadings(@NotNull Document document, int headingLevel) {
+        List<Element> headingsToRemove = JSoupUtils.selectEmptyHeadings(document, headingLevel);
+        for (Element heading : headingsToRemove) {
+
+            // In addition to removing heading itself, remove all following empty siblings until next heading, but not comments as they can have special meaning
+            // We don't check additionally if sibling is empty, because if a heading was selected for removal there are only empty siblings under it
+            Node nextSibling = heading.nextSibling();
+            while (nextSibling != null) {
+                if (JSoupUtils.isHeading(nextSibling)) {
+                    break;
+                } else {
+                    Node siblingToRemove = nextSibling instanceof Comment ? null : nextSibling;
+                    nextSibling = nextSibling.nextSibling();
+                    if (siblingToRemove != null) {
+                        siblingToRemove.remove();
+                    }
+                }
+            }
+
+            heading.remove();
+        }
+    }
+
+    @VisibleForTesting
+    void cutNotNeededChapters(@NotNull Document document, @NotNull List<String> selectedChapters) {
+        List<ChapterInfo> chapters = getChaptersInfo(document, selectedChapters);
+
+        // Process chapters to remove unwanted ones
+        for (ChapterInfo currentChapter : chapters) {
+            if (!currentChapter.shouldKeep()) {
+                // Remember parent element for possible future usage
+                Element parent = currentChapter.heading().parent();
+
+                // Collect first 2 page break comments in the block to remove
+                List<Comment> topPageBreakComments = collectPageBreakComments(currentChapter);
+
+                Node nextChapterNode = removeChapter(currentChapter);
+
+                // Re-insert page break comments at the position where the block was removed
+                if (nextChapterNode != null) {
+                    // Insert before the next H1
+                    for (Comment pageBreak : topPageBreakComments) {
+                        nextChapterNode.before(pageBreak);
+                    }
+                } else if (parent != null) {
+                    // Otherwise insert at the end of parent
+                    for (Comment pageBreak : topPageBreakComments) {
+                        parent.appendChild(pageBreak);
+                    }
+                }
+            }
+        }
+    }
+
+    @NotNull
+    private List<ChapterInfo> getChaptersInfo(@NotNull Document document, @NotNull List<String> selectedChapters) {
+        List<ChapterInfo> chapters = new ArrayList<>();
+
+        for (Element h1 : document.select(HtmlTag.H1)) {
+            boolean shouldKeep = false;
+
+            // Extract chapter number from the h1 structure: <h1><span><span>NUMBER</span></span>...</h1>
+            Elements innerSpans = h1.select("span > span");
+            if (!innerSpans.isEmpty()) {
+                String chapterNumber = Objects.requireNonNull(innerSpans.first()).text();
+                shouldKeep = selectedChapters.contains(chapterNumber);
+            }
+            chapters.add(new ChapterInfo(h1, shouldKeep));
+        }
+        return chapters;
+    }
+
+    /**
+     * Collects top PAGE_BREAK related comments starting from current to next chapter (H1 elements)
+     */
+    @NotNull
+    private List<Comment> collectPageBreakComments(@NotNull ChapterInfo currentChapter) {
+        List<Comment> topPageBreakComments = new ArrayList<>();
+        Node current = currentChapter.heading().nextSibling();
+
+        // Traverse siblings until we reach the next h1 or end of siblings
+        while (current != null && !JSoupUtils.isH1(current) && !JSoupUtils.containsH1(current)) {
+            // Collect top PAGE_BREAK comments at current level
+            collectPageBreakComments(current, topPageBreakComments);
+            current = current.nextSibling();
+        }
+
+        return topPageBreakComments;
+    }
+
+    /**
+     * Recursively collects top PAGE_BREAK related comments from an element and its descendants,
+     * but only first 2 of them: <!--PAGE_BREAK--> and then either <!--PORTRAIT_ABOVE--> or <!--LANDSCAPE_ABOVE-->,
+     * the rest won't be relevant as they belong to removed content.
+     */
+    private void collectPageBreakComments(@NotNull Node node, @NotNull List<Comment> topPageBreakComments) {
+        if (topPageBreakComments.size() < 2) {
+            if (node instanceof Comment comment && isPageBreakComment(comment)) {
+                topPageBreakComments.add(new Comment(comment.getData()));
+            } else if (node instanceof Element element) {
+                for (Node child : element.childNodes()) {
+                    collectPageBreakComments(child, topPageBreakComments);
+                }
+            }
+        }
+    }
+
+    private boolean isPageBreakComment(@NotNull Comment comment) {
+        String commentData = comment.getData();
+        return commentData.equals(PAGE_BREAK) || commentData.equals(LANDSCAPE_ABOVE) || commentData.equals(PORTRAIT_ABOVE);
+    }
+
+    @Nullable
+    private Node removeChapter(@NotNull ChapterInfo currentChapter) {
+        Node current = currentChapter.heading();
+        Node nextChapterNode = null; // Can return null if no next chapter found
+
+        // Remove chapter itself and all siblings between it and next h1-tag
+        while (current != null) {
+            Node next = current.nextSibling();
+            current.remove();
+
+            // Check if next sibling is H1
+            if (next != null && (JSoupUtils.isH1(next) || JSoupUtils.containsH1(next))) {
+                nextChapterNode = next;
+                break;
+            }
+
+            current = next;
+        }
+
+        return nextChapterNode;
+    }
+
+    void removePageBreakAvoids(@NotNull Document document) {
+        // Polarion wraps content of a work item as it is into table's cell with table's styling "page-break-inside: avoid"
+        // if it's configured to avoid page breaks:
+        //
+        // <table style="page-break-inside:avoid;">
+        //   <tr>
+        //     <td>
+        //       <CONTENT>
+        //     </td>
+        //   </tr>
+        // </table>
+        //
+        // This styling "page-break-inside: avoid" doesn't influence rendering by pd4ml converter,
+        // but breaks rendering of tables with help of WeasyPrint. Moreover, this configuration was initially introduced
+        // for pd4ml converter because table headers are not repeated at page start when table takes more than 1 page.
+        // Last drawback is not applied to WeasyPrint and thus such workaround can be safely removed.
+        //
+        // Taking into account that work item content can also contain tables this task should be done with cautious.
+        // Removing "page-break-inside:avoid;" from table's styling doesn't help, tables are still broken. So, solution
+        // is to remove that table wrapping at all. As a result above example should become just:
+        //
+        // <CONTENT>
+        //
+
+        Elements tables = document.select("table");
+        for (Element table : tables) {
+            String pageBreakInsideValue = getCssValue(table, CssProp.PAGE_BREAK_INSIDE);
+            if (!pageBreakInsideValue.equals(CssProp.PAGE_BREAK_INSIDE_AVOID_VALUE)) {
+                continue;
+            }
+
+            Element tbody = JSoupUtils.getSingleChildByTag(table, HtmlTag.TBODY);
+
+            Element tr = JSoupUtils.getSingleChildByTag(tbody != null ? tbody : table, HtmlTag.TR);
+            if (tr != null) {
+                Element td = JSoupUtils.getSingleChildByTag(tr, HtmlTag.TD);
+                if (td != null) {
+                    // Move td's children to replace the table
+                    for (Node contentNodes : td.childNodes()) {
+                        table.before(contentNodes.clone());
+                    }
+                    table.remove();
+                }
+            }
+        }
+    }
+
+    public void fixNestedLists(Document doc) {
+        // Polarion generates not valid HTML for multi-level lists:
+        //
+        // <ol>
+        //   <li>first item</li>
+        //   <ol>
+        //     <li>sub-item</li
+        //   </ol>
+        // </ol>
+        //
+        // By HTML specification ol/ul elements can contain only li-elements as their direct children.
+        // So, valid HTML will be:
+        //
+        // <ol>
+        //   <li>first item
+        //     <ol>
+        //       <li>sub-item</li
+        //     </ol>
+        //   </li>
+        // </ol>
+        //
+        // This method fixes the problem described above.
+
+        boolean modified;
+        String listsSelector = String.format("%s, %s", HtmlTag.OL, HtmlTag.UL);
+        do {
+            modified = false;
+            Elements lists = doc.select(listsSelector);
+
+            for (Element list : lists) {
+                modified = fixNestedLists(list);
+                if (modified) {
+                    break; // Restart to avoid concurrent modification
+                }
+            }
+        } while (modified); // Repeat to cover all nesting levels, until the point when nothing was modified / fixed
+    }
+
+    private boolean fixNestedLists(@NotNull Element list) {
+        for (Element child : list.children()) {
+            if (child.tagName().equals(HtmlTag.OL) || child.tagName().equals(HtmlTag.UL)) {
+                Element previousSibling = child.previousElementSibling();
+                if (previousSibling != null && previousSibling.tagName().equals(HtmlTag.LI)) {
+                    child.remove();
+                    previousSibling.appendChild(child);
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     @NotNull
@@ -285,62 +550,6 @@ public class HtmlProcessor {
             }
         }
         return resultBuf.toString();
-    }
-
-    @NotNull
-    @VisibleForTesting
-    String cutEmptyChapters(@NotNull String html) {
-        //We have to traverse all existing heading levels from the lowest priority to the highest and find corresponding 'empty chapters'.
-        //'Empty chapter' is the area which starts from heading tag and followed by any number of empty 'p', 'br' or page brake related tags.
-        //Area must be followed either by the next opening heading tag with the same or higher importance or any closing tag except 'p'.
-        for (int i = H_TAG_MIN_PRIORITY; i >= 1; i--) {
-            html = RegexMatcher.get(String.format("(?s)(?><h%1$d.*?</h%1$d>)(\\s|<p[^>]*?>|<br/>|</p>|%2$s)*?(?=<h[1-%1$d]|</[^p])",
-                    i, String.join("|", PAGE_BREAK_MARK, PORTRAIT_ABOVE_MARK, LANDSCAPE_ABOVE_MARK))).useJavaUtil().replace(html, regexEngine -> {
-                String areaToDelete = regexEngine.group();
-                return getTopPageBrake(areaToDelete);
-            });
-        }
-        return html;
-    }
-
-    @NotNull
-    @VisibleForTesting
-    @SuppressWarnings("java:S5852")
-        //regex checked
-    String cutNotNeededChapters(@NotNull String html, List<String> selectedChapters) {
-        // LinkedHashMap is chosen intentionally to keep an order of insertion
-        Map<String, Boolean> chaptersMapping = new LinkedHashMap<>();
-
-        // This regexp searches for most high level chapters (<h1>-elements) extracting their numbers into
-        // named group "number" and extracting whole <h1>-element into named group "chapter"
-        RegexMatcher.get("(?<chapter><h1[^>]*?>.*?<span[^>]*?><span[^>]*?>(?<number>.+?)</span>.*?</span>.+?</h1>)").processEntry(html, regexEngine -> {
-            String number = regexEngine.group(NUMBER);
-            String chapter = regexEngine.group("chapter");
-            chaptersMapping.put(chapter, selectedChapters.contains(number));
-        });
-
-        StringBuilder buf = new StringBuilder(html);
-        Integer cutStart = null;
-        Integer cutEnd = null;
-        for (Map.Entry<String, Boolean> entry : chaptersMapping.entrySet()) {
-            Boolean entryValue = entry.getValue();
-            if (Boolean.FALSE.equals(entryValue) && cutStart == null) {
-                cutStart = buf.indexOf(entry.getKey());
-            } else if (Boolean.TRUE.equals(entryValue) && cutStart != null) {
-                cutEnd = buf.indexOf(entry.getKey());
-            }
-            if (cutStart != null && cutEnd != null) {
-                buf.replace(cutStart, cutEnd, getTopPageBrake(buf.substring(cutStart, cutEnd)));
-                cutStart = null;
-                cutEnd = null;
-            }
-        }
-        if (cutStart != null) {
-            cutEnd = buf.lastIndexOf(DIV_END_TAG);
-            buf.replace(cutStart, cutEnd, getTopPageBrake(buf.substring(cutStart, cutEnd)));
-        }
-
-        return buf.toString();
     }
 
     /**
@@ -828,19 +1037,6 @@ public class HtmlProcessor {
     }
 
     @NotNull
-    private String adjustHeadingsForPDF(@NotNull String html) {
-        html = RegexMatcher.get("<(h[1-6])").replace(html, regexEngine -> {
-            String tag = regexEngine.group(1);
-            return tag.equals("h1") ? "<div class=\"title\"" : ("<" + liftHeadingTag(tag));
-        });
-
-        return RegexMatcher.get("</(h[1-6])>").replace(html, regexEngine -> {
-            String tag = regexEngine.group(1);
-            return tag.equals("h1") ? DIV_END_TAG : ("</" + liftHeadingTag(tag) + ">");
-        });
-    }
-
-    @NotNull
     private static String liftHeadingTag(@NotNull String tag) {
         return switch (tag) {
             case "h2" -> "h1";
@@ -1128,12 +1324,30 @@ public class HtmlProcessor {
         return html.contains(PAGE_BREAK_MARK);
     }
 
+    private String getCssValue(@NotNull Element element, @NotNull String cssProperty) {
+        CSSStyleDeclaration cssStyle = getCssStyle(element);
+        return getCssValue(cssStyle, cssProperty);
+    }
+
     private String getCssValue(@NotNull CSSStyleDeclaration cssStyle, @NotNull String cssProperty) {
         return Optional.ofNullable(cssStyle.getPropertyValue(cssProperty)).orElse("").trim();
+    }
+
+    private CSSStyleDeclaration getCssStyle(@NotNull Element element) {
+        String style = "";
+        if (element.hasAttr(HtmlTagAttr.STYLE)) {
+            style = element.attr(HtmlTagAttr.STYLE);
+        }
+        return parseCss(style);
     }
 
     private CSSStyleDeclaration parseCss(@NotNull String style) {
         return CssUtils.parseCss(parser, style);
     }
 
+    /**
+     * Internal record to hold chapter information during processing.
+     */
+    private record ChapterInfo(@NotNull Element heading, boolean shouldKeep) {
+    }
 }
