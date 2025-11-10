@@ -77,11 +77,6 @@ public class ConverterApiController extends ConverterInternalController {
         return polarionService.callPrivileged(() -> super.convertHtmlToPdf(html, template, fileName, options, params));
     }
 
-    @Override
-    public NestedListsCheck checkNestedLists(ExportParams exportParams) {
-        return polarionService.callPrivileged(() -> super.checkNestedLists(exportParams));
-    }
-
     private void deactivateLogoutFilter() {
         RequestAttributes requestAttributes = RequestContextHolder.getRequestAttributes();
         if (requestAttributes != null) {

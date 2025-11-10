@@ -14,7 +14,6 @@ import ch.sbb.polarion.extension.docx_exporter.rest.model.jobs.ConverterJobStatu
 import ch.sbb.polarion.extension.docx_exporter.util.DocumentDataFactory;
 import ch.sbb.polarion.extension.docx_exporter.util.DocumentFileNameHelper;
 import ch.sbb.polarion.extension.docx_exporter.util.ExportContext;
-import ch.sbb.polarion.extension.docx_exporter.util.NumberedListsSanitizer;
 import com.polarion.alm.tracker.model.IModule;
 import com.polarion.core.util.StringUtils;
 import com.polarion.platform.core.PlatformContext;
@@ -373,35 +372,6 @@ public class ConverterInternalController {
         } catch (IOException e) {
             throw new BadRequestException("Error processing files", e);
         }
-    }
-
-    @POST
-    @Path("/checknestedlists")
-    @Consumes(MediaType.APPLICATION_JSON)
-    @Produces(MediaType.APPLICATION_JSON)
-    @Operation(
-            summary = "Checks whether document contains nested lists",
-            requestBody = @RequestBody(
-                    description = "Export parameters used to locate and check the document for nested lists",
-                    required = true,
-                    content = @Content(schema = @Schema(implementation = ExportParams.class)
-                    )
-            ),
-            responses = {
-                    @ApiResponse(
-                            responseCode = "200",
-                            description = "Check completed successfully, returning whether nested lists are present",
-                            content = @Content(mediaType = "application/json", schema = @Schema(implementation = NestedListsCheck.class))
-                    )
-            }
-    )
-    @SuppressWarnings("java:S1166")
-    public NestedListsCheck checkNestedLists(ExportParams exportParams) {
-        DocumentData<IModule> documentData = DocumentDataFactory.getDocumentData(exportParams, true);
-        @NotNull String content = Objects.requireNonNull(documentData.getContent());
-        boolean containsNestedLists = new NumberedListsSanitizer().containsNestedNumberedLists(content);
-
-        return NestedListsCheck.builder().containsNestedLists(containsNestedLists).build();
     }
 
     @GET

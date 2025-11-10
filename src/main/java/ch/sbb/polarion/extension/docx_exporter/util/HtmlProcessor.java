@@ -144,7 +144,11 @@ public class HtmlProcessor {
             cutNotNeededChapters(document, exportParams.getChapters());
         }
 
+        // Moves WorkItem content out of table wrapping it
         removePageBreakAvoids(document);
+
+        // Fixes nested HTML lists structure
+        fixNestedLists(document);
 
         // Adjusts WorkItem attributes tables to stretch to full page width for better usage of page space and better readability.
         // Also changes absolute widths of normal table cells from absolute values to "auto" if "Fit tables and images to page" is on
@@ -168,8 +172,6 @@ public class HtmlProcessor {
         html = replaceResourcesAsBase64Encoded(html);
         html = MediaUtils.removeSvgUnsupportedFeatureHint(html); //note that there is one more replacement attempt before replacing images with base64 representation
         html = properTableHeads(html);
-
-        html = new NumberedListsSanitizer().fixNumberedLists(html);
 
         // ----
         // This sequence is important! We need first filter out Linked WorkItems and only then cut empty attributes,
@@ -429,6 +431,58 @@ public class HtmlProcessor {
                 }
             }
         }
+    }
+
+    public void fixNestedLists(Document doc) {
+        // Polarion generates not valid HTML for multi-level lists:
+        //
+        // <ol>
+        //   <li>first item</li>
+        //   <ol>
+        //     <li>sub-item</li
+        //   </ol>
+        // </ol>
+        //
+        // By HTML specification ol/ul elements can contain only li-elements as their direct children.
+        // So, valid HTML will be:
+        //
+        // <ol>
+        //   <li>first item
+        //     <ol>
+        //       <li>sub-item</li
+        //     </ol>
+        //   </li>
+        // </ol>
+        //
+        // This method fixes the problem described above.
+
+        boolean modified;
+        String listsSelector = String.format("%s, %s", HtmlTag.OL, HtmlTag.UL);
+        do {
+            modified = false;
+            Elements lists = doc.select(listsSelector);
+
+            for (Element list : lists) {
+                modified = fixNestedLists(list);
+                if (modified) {
+                    break; // Restart to avoid concurrent modification
+                }
+            }
+        } while (modified); // Repeat to cover all nesting levels, until the point when nothing was modified / fixed
+    }
+
+    private boolean fixNestedLists(@NotNull Element list) {
+        for (Element child : list.children()) {
+            if (child.tagName().equals(HtmlTag.OL) || child.tagName().equals(HtmlTag.UL)) {
+                Element previousSibling = child.previousElementSibling();
+                if (previousSibling != null && previousSibling.tagName().equals(HtmlTag.LI)) {
+                    child.remove();
+                    previousSibling.appendChild(child);
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     @NotNull
