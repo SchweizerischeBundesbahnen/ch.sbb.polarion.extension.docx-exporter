@@ -1132,11 +1132,6 @@ public class HtmlProcessor {
         return Optional.ofNullable(cssStyle.getPropertyValue(cssProperty)).orElse("").trim();
     }
 
-    private CSSStyleDeclaration getCssStyle(@NotNull Element element) {
-        String style = element.hasAttr(HtmlTagAttr.STYLE) ? element.attr(HtmlTagAttr.STYLE) : "";
-        return parseCss(style);
-    }
-
     private CSSStyleDeclaration parseCss(@NotNull String style) {
         return CssUtils.parseCss(parser, style);
     }
