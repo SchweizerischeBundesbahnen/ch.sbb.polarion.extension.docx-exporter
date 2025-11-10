@@ -150,6 +150,9 @@ public class HtmlProcessor {
         // Fixes nested HTML lists structure
         fixNestedLists(document);
 
+        // Localize enumeration values
+        localizeEnums(document, exportParams);
+
         // Adjusts WorkItem attributes tables to stretch to full page width for better usage of page space and better readability.
         // Also changes absolute widths of normal table cells from absolute values to "auto" if "Fit tables and images to page" is on
         adjustCellWidth(document);
@@ -185,8 +188,6 @@ public class HtmlProcessor {
             html = cutLocalUrls(html);
         }
         // ----
-
-        html = localizeEnums(html, exportParams);
 
         if (hasCustomPageBreaks(html)) {
             //processPageBrakes contains its own adjustContentToFitPage() calls
@@ -486,6 +487,20 @@ public class HtmlProcessor {
         return false;
     }
 
+    @VisibleForTesting
+    void localizeEnums(@NotNull Document document, @NotNull ExportParams exportParams) {
+        String localizationSettingsName = exportParams.getLocalization() != null ? exportParams.getLocalization() : NamedSettings.DEFAULT_NAME;
+        Map<String, String> localizationMap = localizationSettings.load(exportParams.getProjectId(), SettingId.fromName(localizationSettingsName)).getLocalizationMap(exportParams.getLanguage());
+
+        Elements enums = document.select("span.polarion-JSEnumOption");
+        for (Element enumElement : enums) {
+            String replacementString = localizationMap.get(enumElement.text());
+            if (!StringUtils.isEmptyTrimmed(replacementString)) {
+                enumElement.text(replacementString);
+            }
+        }
+    }
+
     @NotNull
     @VisibleForTesting
     @SuppressWarnings({"java:S5843", "java:S5852"})
@@ -668,23 +683,6 @@ public class HtmlProcessor {
         }
 
         return polarionVersion.compareTo("2404") < 0 ? filterByRolesRegexBeforePolarion2404 : filterByRolesRegexAfterPolarion2404;
-    }
-
-    @NotNull
-    @VisibleForTesting
-    String localizeEnums(@NotNull String html, @NotNull ExportParams exportParams) {
-        String localizationSettingsName = exportParams.getLocalization() != null ? exportParams.getLocalization() : NamedSettings.DEFAULT_NAME;
-        final Map<String, String> localizationMap = localizationSettings.load(exportParams.getProjectId(), SettingId.fromName(localizationSettingsName)).getLocalizationMap(exportParams.getLanguage());
-
-        //Polarion document usually keeps enumerated text values inside of spans marked with class 'polarion-JSEnumOption'.
-        //Following expression retrieves such spans.
-        return RegexMatcher.get("(?s)<span class=\"polarion-JSEnumOption\".+?>(?<enum>[\\w\\s]+)</span>").replace(html, regexEngine -> {
-            String enumContainingSpan = regexEngine.group();
-            String enumName = regexEngine.group("enum");
-            String replacementString = localizationMap.get(enumName);
-            return StringUtils.isEmptyTrimmed(replacementString) ? null :
-                    enumContainingSpan.replace(enumName + SPAN_END_TAG, replacementString + SPAN_END_TAG);
-        });
     }
 
     @VisibleForTesting
