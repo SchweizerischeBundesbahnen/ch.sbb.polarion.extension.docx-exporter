@@ -3,7 +3,6 @@ package ch.sbb.polarion.extension.docx_exporter.rest.controller;
 import ch.sbb.polarion.extension.docx_exporter.converter.DocxConverter;
 import ch.sbb.polarion.extension.docx_exporter.converter.DocxConverterJobsService;
 import ch.sbb.polarion.extension.docx_exporter.converter.HtmlToDocxConverter;
-import ch.sbb.polarion.extension.docx_exporter.rest.model.NestedListsCheck;
 import ch.sbb.polarion.extension.docx_exporter.rest.model.conversion.ExportParams;
 import ch.sbb.polarion.extension.docx_exporter.service.DocxExporterPolarionService;
 import ch.sbb.polarion.extension.generic.rest.filter.LogoutFilter;

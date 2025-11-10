@@ -233,7 +233,8 @@ public class HtmlProcessor {
                 heading.addClass("title");
             } else {
                 int level = heading.tagName().charAt(1) - '0';
-                heading.tagName("h" + (level - 1));
+                int newLevel = Math.max(1, Math.min(6, level - 1));
+                heading.tagName("h" + newLevel);
             }
         }
     }
@@ -399,7 +400,7 @@ public class HtmlProcessor {
         // </table>
         //
         // This styling "page-break-inside: avoid" doesn't influence rendering by pd4ml converter,
-        // but breaks rendering of tables with help of WeasyPrint. More over this configuration was initially introduced
+        // but breaks rendering of tables with help of WeasyPrint. Moreover, this configuration was initially introduced
         // for pd4ml converter because table headers are not repeated at page start when table takes more than 1 page.
         // Last drawback is not applied to WeasyPrint and thus such workaround can be safely removed.
         //
