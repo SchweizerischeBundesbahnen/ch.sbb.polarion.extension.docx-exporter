@@ -1,5 +1,8 @@
 package ch.sbb.polarion.extension.docx_exporter.util;
 
+import ch.sbb.polarion.extension.docx_exporter.constants.CssProp;
+import ch.sbb.polarion.extension.docx_exporter.constants.HtmlTag;
+import ch.sbb.polarion.extension.docx_exporter.constants.HtmlTagAttr;
 import ch.sbb.polarion.extension.generic.regex.IRegexEngine;
 import ch.sbb.polarion.extension.generic.regex.RegexMatcher;
 import ch.sbb.polarion.extension.generic.settings.NamedSettings;
@@ -14,6 +17,7 @@ import com.polarion.alm.shared.util.StringUtils;
 import com.polarion.core.boot.PolarionProperties;
 import com.polarion.core.config.Configuration;
 import com.polarion.core.util.xml.CSSStyle;
+import com.steadystate.css.parser.CSSOMParser;
 import lombok.SneakyThrows;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -21,7 +25,11 @@ import org.jetbrains.annotations.VisibleForTesting;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
+import org.jsoup.nodes.Entities;
+import org.jsoup.nodes.Node;
+import org.jsoup.nodes.TextNode;
 import org.jsoup.select.Elements;
+import org.w3c.dom.css.CSSStyleDeclaration;
 
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -31,9 +39,8 @@ import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import static ch.sbb.polarion.extension.docx_exporter.util.exporter.Constants.*;
 
@@ -71,6 +78,9 @@ public class HtmlProcessor {
     private static final String AUTHOR = "author";
     private static final String DATE = "date";
     private static final String TEXT = "text";
+    private static final String DOLLAR_SIGN = "$";
+    private static final String DOLLAR_ENTITY = "&dollar;";
+    private static final String EMPTY_FIELD_TITLE = "This field is empty";
 
     private static final String LOCALHOST = "localhost";
     public static final String HTTP_PROTOCOL_PREFIX = "http://";
@@ -80,6 +90,7 @@ public class HtmlProcessor {
     private final LocalizationSettings localizationSettings;
     private final HtmlLinksHelper httpLinksHelper;
     private final DocxExporterPolarionService docxExporterPolarionService;
+    private final @NotNull CSSOMParser parser = new CSSOMParser();
 
     public HtmlProcessor(FileResourceProvider fileResourceProvider, LocalizationSettings localizationSettings, HtmlLinksHelper httpLinksHelper, DocxExporterPolarionService docxExporterPolarionService) {
         this.fileResourceProvider = fileResourceProvider;
@@ -89,21 +100,61 @@ public class HtmlProcessor {
     }
 
     public String processHtmlForPDF(@NotNull String html, @NotNull ExportParams exportParams, @NotNull List<String> selectedRoleEnumValues) {
-        // Replace all dollar-characters in HTML document before applying any regular expressions, as it has special meaning there
-        html = html.replace("$", "&dollar;");
+        // I. FIRST SECTION - manipulate HTML as a String. These changes are either not possible or not made easier with JSoup
+        // ----------------
 
-        html = removePd4mlTags(html);
+        // Replace all dollar-characters in HTML document before applying any regular expressions, as it has special meaning there
+        html = encodeDollarSigns(html);
+
+        // Remove all <pd4ml:page> tags which only have meaning for PD4ML library which we are not using.
+        html = removePd4mlPageTags(html);
+
+        // Change path of enum images from internal Polarion to publicly available
         html = html.replace("/ria/images/enums/", "/icons/default/enums/");
-        html = html.replace("<p><br></p>", "<br/>");
-        html = html.replace("vertical-align:middle;", "page-break-inside:avoid;");
+
+        //Was noticed that some externally imported/pasted elements (at this moment tables) contain strange extra block like
+        //<div style="clear:both;"> with the duplicated content inside.
+        //Potential fix below is simple: just hide these blocks.
+        html = html.replace("style=\"clear:both;\"", "style=\"clear:both;display:none;\"");
+
+        // fix HTML adding closing tag for <pd4ml:toc> - JSoup requires it
+        html = html.replaceAll("(<pd4ml:toc[^>]*)(>)", "$1></pd4ml:toc>");
+
+        if (exportParams.getRenderComments() != null) {
+            html = processComments(html);
+        }
+
+        // II. SECOND SECTION - manipulate HTML as a JSoup document. These changes are vice versa fulfilled easier with JSoup.
+        // ----------------
+
+        Document document = Jsoup.parse(html);
+        document.outputSettings()
+                .syntax(Document.OutputSettings.Syntax.xml)
+                .escapeMode(Entities.EscapeMode.base)
+                .prettyPrint(false);
+
+        // Adjusts WorkItem attributes tables to stretch to full page width for better usage of page space and better readability.
+        // Also changes absolute widths of normal table cells from absolute values to "auto" if "Fit tables and images to page" is on
+        adjustCellWidth(document);
+
+        if (exportParams.isCutEmptyWIAttributes()) {
+            cutEmptyWIAttributes(document);
+        }
+
+        html = document.body().html();
+
+        // III. THIRD SECTION - and finally again back to manipulating HTML as a String.
+        // ----------------
+
+        // Jsoup may convert &dollar; back to $ in some cases, so we need to replace it again
+        html = encodeDollarSigns(html);
+
         html = adjustImageAlignmentForPDF(html);
-        html = html.replaceAll("margin: *auto;", "align:center;");
         html = adjustHeadingsForPDF(html);
         if (exportParams.isCutEmptyChapters()) {
             html = cutEmptyChapters(html);
         }
 
-        html = adjustCellWidth(html, exportParams);
         html = html.replace(">\n ", "> ");
         html = html.replace("\n</", "</");
         if (exportParams.getChapters() != null) {
@@ -114,7 +165,6 @@ public class HtmlProcessor {
         html = replaceResourcesAsBase64Encoded(html);
         html = MediaUtils.removeSvgUnsupportedFeatureHint(html); //note that there is one more replacement attempt before replacing images with base64 representation
         html = properTableHeads(html);
-        html = cleanExtraTableContent(html);
 
         String processingHtml = new PageBreakAvoidRemover().removePageBreakAvoids(html);
         html = new NumberedListsSanitizer().fixNumberedLists(processingHtml);
@@ -127,9 +177,6 @@ public class HtmlProcessor {
             html = filterTabularLinkedWorkitems(html, selectedRoleEnumValues);
             html = filterNonTabularLinkedWorkitems(html, selectedRoleEnumValues);
         }
-        if (exportParams.isCutEmptyWIAttributes()) {
-            html = cutEmptyWIAttributes(html);
-        }
         if (exportParams.isCutLocalUrls()) {
             html = cutLocalUrls(html);
         }
@@ -137,9 +184,6 @@ public class HtmlProcessor {
 
         html = localizeEnums(html, exportParams);
 
-        if (exportParams.getRenderComments() != null) {
-            html = processComments(html);
-        }
         if (hasCustomPageBreaks(html)) {
             //processPageBrakes contains its own adjustContentToFitPage() calls
             html = processPageBrakes(html);
@@ -157,6 +201,23 @@ public class HtmlProcessor {
         // Do not change this entry order, '&nbsp;' can be used in the logic above, so we must cut them off as the last step
         html = cutExtraNbsp(html);
         return html;
+    }
+
+    /**
+     * Escapes dollar signs in HTML to prevent them from being interpreted as regex special characters.
+     * Should be called after Jsoup parsing operations that may convert &dollar; back to $.
+     *
+     * @param html HTML content to escape
+     * @return HTML with dollar signs replaced by &dollar; entity
+     */
+    @NotNull
+    private String encodeDollarSigns(@NotNull String html) {
+        return html.replace(DOLLAR_SIGN, DOLLAR_ENTITY);
+    }
+
+    @NotNull
+    private String removePd4mlPageTags(@NotNull String html) {
+        return RegexMatcher.get("(<pd4ml:page.*>)(.)").replace(html, regexEngine -> regexEngine.group(2));
     }
 
     @NotNull
@@ -416,41 +477,41 @@ public class HtmlProcessor {
         });
     }
 
-    @NotNull
-    String cutEmptyWIAttributes(@NotNull String html) {
-        // This is a sign of empty (no value) WorkItem attribute in case of tabular view - an empty <td>-element
-        // with class "polarion-dle-workitem-fields-end-table-value"
-        String emptyTableAttributeMarker = "class=\"polarion-dle-workitem-fields-end-table-value\" style=\"width: 80%;\" onmousedown=\"return false;\" contentEditable=\"false\"></td>";
-        String res = html;
-        while (res.contains(emptyTableAttributeMarker)) {
-            String[] parts = res.split(emptyTableAttributeMarker, 2);
-            int trStart = parts[0].lastIndexOf("<tr>");
-            int trEnd = res.indexOf(TABLE_ROW_END_TAG, trStart) + TABLE_ROW_END_TAG.length();
-
-            res = res.substring(0, trStart) + res.substring(trEnd);
-        }
-
-        // This is a sign of empty (no value) WorkItem attribute in case of non-tabular view - <span>-element
-        // with title "This field is empty"
-        String emptySpanAttributeMarker = "<span style=\"color: #7F7F7F;\" title=\"This field is empty\">";
-        while (res.contains(emptySpanAttributeMarker)) {
-            String[] parts = res.split(emptySpanAttributeMarker, 2);
-            int parentSpanStart = parts[0].lastIndexOf("<span");
-            int trEnd = res.indexOf("</span></span>", parentSpanStart) + "</span></span>".length();
-
-            String firstPart = res.substring(0, parentSpanStart);
-            if (firstPart.endsWith(",&nbsp;")) {
-                firstPart = firstPart.substring(0, firstPart.lastIndexOf(",&nbsp;"));
-            }
-
-            res = firstPart + res.substring(trEnd);
-        }
-        return res;
+    @VisibleForTesting
+    void cutEmptyWIAttributes(@NotNull Document document) {
+        cutEmptyWIAttributesInTables(document);
+        cutEmptyWIAttributesInText(document);
     }
 
-    @NotNull
-    private String removePd4mlTags(@NotNull String html) {
-        return RegexMatcher.get("(<pd4ml:page.*>)(.)").replace(html, regexEngine -> regexEngine.group(2));
+    private void cutEmptyWIAttributesInTables(@NotNull Document document) {
+        // Iterates through <td class="polarion-dle-workitem-fields-end-table-value"> elements and if they are empty (no value) removes enclosing them tr-elements
+        Elements attributeValueCells = document.select("td.polarion-dle-workitem-fields-end-table-value");
+        for (Element attributeValueCell : attributeValueCells) {
+            if (attributeValueCell.text().isEmpty()) {
+                Element parent = attributeValueCell.parent();
+                if (parent != null && parent.nodeName().equals(HtmlTag.TR)) {
+                    parent.remove();
+                }
+            }
+        }
+    }
+
+    private void cutEmptyWIAttributesInText(@NotNull Document document) {
+        // Iterates through sequential spans and if second one in this sequence has title="This field is empty", removes such sequence.
+        // Finally removes comma separator which and if precedes this sequence
+        Elements sequentialSpans = document.select("span > span");
+        for (Element span : sequentialSpans) {
+            if (EMPTY_FIELD_TITLE.equals(span.attr("title"))) {
+                Element parent = span.parent();
+                if (parent != null) {
+                    Node previousSibling = parent.previousSibling();
+                    if (previousSibling instanceof TextNode previousSiblingTextNode && ", ".equals(previousSiblingTextNode.text())) {
+                        previousSiblingTextNode.remove();
+                    }
+                    parent.remove();
+                }
+            }
+        }
     }
 
     @NotNull
@@ -470,29 +531,44 @@ public class HtmlProcessor {
         });
     }
 
-    @NotNull
     @VisibleForTesting
-    @SuppressWarnings("java:S5852")
-        //regex checked
-    String adjustCellWidth(@NotNull String html, @NotNull ExportParams exportParams) {
-        // This regexp searches for <td> or <th> elements of regular tables which width in styles specified in pixels ("px").
-        // <td> or <th> element till "width:" in styles matched into first unnamed group and width value - into second unnamed group.
-        // Then we replace matched content by first group content plus "auto" instead of value in pixels.
-        html = RegexMatcher.get("(<t[dh][^>]+?width:\\s*)(\\d+px)")
-                .replace(html, regexEngine -> regexEngine.group(1) + "auto");
+    void adjustCellWidth(@NotNull Document document) {
+        autoCellWidth(document);
 
-        // Next step we look for tables which represent WorkItem attributes and force them to take 100% of available width
-        html = RegexMatcher.get("(class=\"polarion-dle-workitem-fields-end-table\")")
-                .replace(html, regexEngine -> regexEngine.group() + " style=\"width: 100%;\"");
+        Elements wiAttrTables = document.select("table.polarion-dle-workitem-fields-end-table");
+        for (Element table : wiAttrTables) {
+            table.attr(HtmlTagAttr.STYLE, "width: 100%");
 
-        // Then for column with attribute name we specify to take 20% of table width
-        html = RegexMatcher.get("(class=\"polarion-dle-workitem-fields-end-table-label\")")
-                .replace(html, regexEngine -> regexEngine.group() + " style=\"width: 20%;\"");
+            Elements attrNameCells = table.select("td.polarion-dle-workitem-fields-end-table-label");
+            for (Element attrNameCell : attrNameCells) {
+                attrNameCell.attr(HtmlTagAttr.STYLE, "width: 20%");
+            }
 
-        // ...and for column with attribute value we specify to take 80% of table width
-        return RegexMatcher.get("(class=\"polarion-dle-workitem-fields-end-table-value\")")
-                .replace(html, regexEngine -> regexEngine.group() + " style=\"width: 80%;\"");
+            Elements attrNameValues = table.select("td.polarion-dle-workitem-fields-end-table-value");
+            for (Element attrNameValue : attrNameValues) {
+                attrNameValue.attr(HtmlTagAttr.STYLE, "width: 80%");
+            }
+        }
     }
+
+    private void autoCellWidth(@NotNull Document document) {
+        // Searches for <td> or <th> elements of regular tables whose width in styles specified not in percentage.
+        // If they contain absolute values we replace them with auto, otherwise tables containing them can easily go outside boundaries of a page.
+        Elements cells = document.select(String.format("%s, %s", HtmlTag.TH, HtmlTag.TD));
+        for (Element cell : cells) {
+            if (cell.hasAttr(HtmlTagAttr.STYLE)) {
+                String style = cell.attr(HtmlTagAttr.STYLE);
+                CSSStyleDeclaration cssStyle = parseCss(style);
+
+                String widthValue = getCssValue(cssStyle, CssProp.WIDTH);
+                if (!widthValue.isEmpty() && !widthValue.contains("%")) {
+                    cssStyle.setProperty(CssProp.WIDTH, CssProp.WIDTH_AUTO_VALUE, null);
+                    cell.attr(HtmlTagAttr.STYLE, cssStyle.getCssText());
+                }
+            }
+        }
+    }
+
 
     @NotNull
     @VisibleForTesting
@@ -500,14 +576,6 @@ public class HtmlProcessor {
         html = adjustImageSizeInTables(html);
         html = adjustImageSize(html);
         return adjustTableSize(html);
-    }
-
-    @NotNull
-    private String cleanExtraTableContent(@NotNull String html) {
-        //Was noticed that some externally imported/pasted elements (at this moment tables) contain strange extra block like
-        //<div style="clear:both;"> with the duplicated content inside.
-        //Potential fix below is simple: just hide these blocks.
-        return html.replace("style=\"clear:both;\"", "style=\"clear:both;display:none;\"");
     }
 
     @NotNull
@@ -1058,4 +1126,26 @@ public class HtmlProcessor {
     private boolean hasCustomPageBreaks(String html) {
         return html.contains(PAGE_BREAK_MARK);
     }
+
+    private String getCssValue(@NotNull Element element, @NotNull String cssProperty) {
+        CSSStyleDeclaration cssStyle = getCssStyle(element);
+        return getCssValue(cssStyle, cssProperty);
+    }
+
+    private String getCssValue(@NotNull CSSStyleDeclaration cssStyle, @NotNull String cssProperty) {
+        return Optional.ofNullable(cssStyle.getPropertyValue(cssProperty)).orElse("").trim();
+    }
+
+    private CSSStyleDeclaration getCssStyle(@NotNull Element element) {
+        String style = "";
+        if (element.hasAttr(HtmlTagAttr.STYLE)) {
+            style = element.attr(HtmlTagAttr.STYLE);
+        }
+        return parseCss(style);
+    }
+
+    private CSSStyleDeclaration parseCss(@NotNull String style) {
+        return CssUtils.parseCss(parser, style);
+    }
+
 }
