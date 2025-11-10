@@ -61,6 +61,7 @@
         <exec-maven-plugin.version>3.3.0</exec-maven-plugin.version>
         <awaitility.version>4.3.0</awaitility.version>
         <tika.version>1.28.5</tika.version>
+        <cssparser.version>0.9.30</cssparser.version>
 
         <maven-jar-plugin.Extension-Context>docx-exporter</maven-jar-plugin.Extension-Context>
         <maven-jar-plugin.Automatic-Module-Name>ch.sbb.polarion.extension.docx_exporter</maven-jar-plugin.Automatic-Module-Name>
@@ -228,6 +229,11 @@
             <groupId>org.docx4j</groupId>
             <artifactId>docx4j-diffx</artifactId>
             <version>${docx4j.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>net.sourceforge.cssparser</groupId>
+            <artifactId>cssparser</artifactId>
+            <version>${cssparser.version}</version>
         </dependency>
 
         <!--  Test dependencies  -->

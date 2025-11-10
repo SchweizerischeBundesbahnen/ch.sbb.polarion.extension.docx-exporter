@@ -10,6 +10,7 @@ import ch.sbb.polarion.extension.docx_exporter.util.html.HtmlLinksHelper;
 import ch.sbb.polarion.extension.generic.settings.SettingId;
 import com.polarion.core.boot.PolarionProperties;
 import lombok.SneakyThrows;
+import org.jsoup.nodes.Document;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -133,11 +134,13 @@ class HtmlProcessorTest {
         try (InputStream isInvalidHtml = this.getClass().getResourceAsStream("/emptyWIAttributesBeforeProcessing.html");
              InputStream isValidHtml = this.getClass().getResourceAsStream("/emptyWIAttributesAfterProcessing.html")) {
 
-            String invalidHtml = new String(isInvalidHtml.readAllBytes(), StandardCharsets.UTF_8);
+            Document document = JSoupUtils.parseHtml(new String(isInvalidHtml.readAllBytes(), StandardCharsets.UTF_8));
+
+            processor.cutEmptyWIAttributes(document);
+            String fixedHtml = document.body().html();
+            String validHtml = new String(isValidHtml.readAllBytes(), StandardCharsets.UTF_8);
 
             // Spaces and new lines are removed to exclude difference in space characters
-            String fixedHtml = processor.cutEmptyWIAttributes(invalidHtml);
-            String validHtml = new String(isValidHtml.readAllBytes(), StandardCharsets.UTF_8);
             assertEquals(TestStringUtils.removeNonsensicalSymbols(validHtml), TestStringUtils.removeNonsensicalSymbols(fixedHtml));
         }
     }
@@ -163,11 +166,13 @@ class HtmlProcessorTest {
         try (InputStream isInvalidHtml = this.getClass().getResourceAsStream("/cellWidthBeforeProcessing.html");
              InputStream isValidHtml = this.getClass().getResourceAsStream("/cellWidthAfterProcessing.html")) {
 
-            String invalidHtml = new String(isInvalidHtml.readAllBytes(), StandardCharsets.UTF_8);
+            Document document = JSoupUtils.parseHtml(new String(isInvalidHtml.readAllBytes(), StandardCharsets.UTF_8));
+
+            processor.adjustCellWidth(document);
+            String fixedHtml = document.body().html();
+            String validHtml = new String(isValidHtml.readAllBytes(), StandardCharsets.UTF_8);
 
             // Spaces and new lines are removed to exclude difference in space characters
-            String fixedHtml = processor.adjustCellWidth(invalidHtml, new ExportParams());
-            String validHtml = new String(isValidHtml.readAllBytes(), StandardCharsets.UTF_8);
             assertEquals(TestStringUtils.removeNonsensicalSymbols(validHtml), TestStringUtils.removeNonsensicalSymbols(fixedHtml));
         }
     }
@@ -291,12 +296,12 @@ class HtmlProcessorTest {
             HtmlProcessor spyHtmlProcessor = spy(processor);
             ExportParams exportParams = getExportParams();
             // to avoid changing input html and check with regular equals
-            when(spyHtmlProcessor.adjustCellWidth(html, exportParams)).thenReturn(html);
+            doNothing().when(spyHtmlProcessor).adjustCellWidth(any());
             exportParams.setCutEmptyChapters(false);
 
             // Spaces, new lines & nbsp symbols are removed to exclude difference in space characters
             String result = spyHtmlProcessor.processHtmlForPDF(html, exportParams, List.of());
-            assertEquals(TestStringUtils.removeNonsensicalSymbols(html.replaceAll("&nbsp;|\u00A0", " ").replaceAll(" ", "")), TestStringUtils.removeNonsensicalSymbols(result));
+            assertEquals(TestStringUtils.removeNonsensicalSymbols(html.replaceAll("&nbsp;|\u00A0", " ")), TestStringUtils.removeNonsensicalSymbols(result));
         }
     }
 
