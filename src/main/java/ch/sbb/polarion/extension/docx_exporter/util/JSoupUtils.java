@@ -132,4 +132,13 @@ public class JSoupUtils {
         return node instanceof Element element && element.tagName().equals(HtmlTag.H1);
     }
 
+    public boolean containsH1(@NotNull Node node) {
+        for (Node child : node.childNodes()) {
+            if (isH1(child) || containsH1(child)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
 }
