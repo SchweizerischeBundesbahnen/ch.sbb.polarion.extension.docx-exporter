@@ -81,6 +81,7 @@ public class HtmlProcessor {
     private static final String DOLLAR_SIGN = "$";
     private static final String DOLLAR_ENTITY = "&dollar;";
     private static final String EMPTY_FIELD_TITLE = "This field is empty";
+    private static final String COMMA_SEPARATOR = ", ";
 
     private static final String LOCALHOST = "localhost";
     public static final String HTTP_PROTOCOL_PREFIX = "http://";
@@ -505,7 +506,7 @@ public class HtmlProcessor {
                 Element parent = span.parent();
                 if (parent != null) {
                     Node previousSibling = parent.previousSibling();
-                    if (previousSibling instanceof TextNode previousSiblingTextNode && ", ".equals(previousSiblingTextNode.text())) {
+                    if (previousSibling instanceof TextNode previousSiblingTextNode && COMMA_SEPARATOR.equals(previousSiblingTextNode.text())) {
                         previousSiblingTextNode.remove();
                     }
                     parent.remove();
@@ -1127,20 +1128,12 @@ public class HtmlProcessor {
         return html.contains(PAGE_BREAK_MARK);
     }
 
-    private String getCssValue(@NotNull Element element, @NotNull String cssProperty) {
-        CSSStyleDeclaration cssStyle = getCssStyle(element);
-        return getCssValue(cssStyle, cssProperty);
-    }
-
     private String getCssValue(@NotNull CSSStyleDeclaration cssStyle, @NotNull String cssProperty) {
         return Optional.ofNullable(cssStyle.getPropertyValue(cssProperty)).orElse("").trim();
     }
 
     private CSSStyleDeclaration getCssStyle(@NotNull Element element) {
-        String style = "";
-        if (element.hasAttr(HtmlTagAttr.STYLE)) {
-            style = element.attr(HtmlTagAttr.STYLE);
-        }
+        String style = element.hasAttr(HtmlTagAttr.STYLE) ? element.attr(HtmlTagAttr.STYLE) : "";
         return parseCss(style);
     }
 
