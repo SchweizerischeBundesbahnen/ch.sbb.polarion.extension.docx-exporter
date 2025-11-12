@@ -1212,10 +1212,6 @@ public class HtmlProcessor {
         }
     }
 
-    private boolean hasCustomPageBreaks(String html) {
-        return html.contains(PAGE_BREAK_MARK);
-    }
-
     private String getCssValue(@NotNull Element element, @NotNull String cssProperty) {
         CSSStyleDeclaration cssStyle = getCssStyle(element);
         return getCssValue(cssStyle, cssProperty);

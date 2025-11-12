@@ -11,11 +11,6 @@ public final class Constants {
     public static final String PORTRAIT_ABOVE = "PORTRAIT_ABOVE";
     public static final String LANDSCAPE_ABOVE = "LANDSCAPE_ABOVE";
 
-    public static final String PAGE_BREAK_MARK = "<!--PAGE_BREAK-->";
-    public static final String PORTRAIT_ABOVE_MARK = "<!--PORTRAIT_ABOVE-->";
-    public static final String LANDSCAPE_ABOVE_MARK = "<!--LANDSCAPE_ABOVE-->";
-    public static final String PAGE_BREAK_PORTRAIT_ABOVE = PAGE_BREAK_MARK + PORTRAIT_ABOVE_MARK;
-    public static final String PAGE_BREAK_LANDSCAPE_ABOVE = PAGE_BREAK_MARK + LANDSCAPE_ABOVE_MARK;
     public static final String MIME_TYPE_SVG = "image/svg+xml";
 
     private Constants() {
