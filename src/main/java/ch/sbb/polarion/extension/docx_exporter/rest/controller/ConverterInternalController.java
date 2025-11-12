@@ -361,8 +361,8 @@ public class ConverterInternalController {
                     ? Stream.of(options.getValue().split(" ")).map(String::trim).filter(s -> !s.isEmpty()).toList()
                     : null;
 
-            String paramsJson = params.getValue();
-            PandocParams pandocParams = StringUtils.isEmpty(paramsJson) ? PandocParams.fromJson(paramsJson) : PandocParams.builder().build();
+            String paramsJson = params == null ? null : params.getValue();
+            PandocParams pandocParams = StringUtils.isEmpty(paramsJson) ? PandocParams.builder().build() : PandocParams.fromJson(paramsJson);
             byte[] docxBytes = htmlToDocxConverter.convert(new String(htmlBytes, StandardCharsets.UTF_8), templateBytes, optionsList, pandocParams);
 
             String headerFileName = (fileName != null) ? fileName : "document.docx";
