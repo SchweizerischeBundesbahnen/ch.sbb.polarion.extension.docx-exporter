@@ -64,7 +64,7 @@ public class DocxConverter {
         docxExporterPolarionService = new DocxExporterPolarionService();
         pandocServiceConnector = new PandocServiceConnector();
         DocxExporterFileResourceProvider fileResourceProvider = new DocxExporterFileResourceProvider();
-        htmlProcessor = new HtmlProcessor(fileResourceProvider, new LocalizationSettings(), new HtmlLinksHelper(fileResourceProvider), docxExporterPolarionService);
+        htmlProcessor = new HtmlProcessor(fileResourceProvider, new LocalizationSettings(), new HtmlLinksHelper(fileResourceProvider));
         docxTemplateProcessor = new DocxTemplateProcessor();
     }
 
