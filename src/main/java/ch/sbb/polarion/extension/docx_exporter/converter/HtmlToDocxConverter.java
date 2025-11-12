@@ -24,7 +24,7 @@ public class HtmlToDocxConverter {
     public HtmlToDocxConverter() {
         this.docxTemplateProcessor = new DocxTemplateProcessor();
         DocxExporterFileResourceProvider fileResourceProvider = new DocxExporterFileResourceProvider();
-        this.htmlProcessor = new HtmlProcessor(fileResourceProvider, new LocalizationSettings(), new HtmlLinksHelper(fileResourceProvider), null);
+        this.htmlProcessor = new HtmlProcessor(fileResourceProvider, new LocalizationSettings(), new HtmlLinksHelper(fileResourceProvider));
         this.pandocServiceConnector = new PandocServiceConnector();
     }
 

@@ -9,9 +9,7 @@ import ch.sbb.polarion.extension.generic.settings.NamedSettings;
 import ch.sbb.polarion.extension.generic.settings.SettingId;
 import ch.sbb.polarion.extension.generic.util.HtmlUtils;
 import ch.sbb.polarion.extension.docx_exporter.rest.model.conversion.ExportParams;
-import ch.sbb.polarion.extension.docx_exporter.service.DocxExporterPolarionService;
 import ch.sbb.polarion.extension.docx_exporter.settings.LocalizationSettings;
-import ch.sbb.polarion.extension.docx_exporter.util.exporter.CustomPageBreakPart;
 import ch.sbb.polarion.extension.docx_exporter.util.html.HtmlLinksHelper;
 import com.polarion.alm.shared.util.StringUtils;
 import com.polarion.core.boot.PolarionProperties;
@@ -34,15 +32,14 @@ import org.w3c.dom.css.CSSStyleDeclaration;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.concurrent.atomic.AtomicReference;
+import java.util.Set;
 
 import static ch.sbb.polarion.extension.docx_exporter.util.exporter.Constants.*;
 
@@ -60,7 +57,6 @@ public class HtmlProcessor {
     private static final String TABLE_ROW_OPEN_TAG = "<tr";
     private static final String TABLE_ROW_END_TAG = "</tr>";
     private static final String TABLE_COLUMN_OPEN_TAG = "<td";
-    private static final String TABLE_COLUMN_END_TAG = "</td>";
     private static final String DIV_START_TAG = "<div>";
     private static final String DIV_END_TAG = "</div>";
     private static final String SPAN = "span";
@@ -84,6 +80,9 @@ public class HtmlProcessor {
     private static final String DOLLAR_ENTITY = "&dollar;";
     private static final String EMPTY_FIELD_TITLE = "This field is empty";
     private static final String COMMA_SEPARATOR = ", ";
+    private static final String URL_PROJECT_ID_PREFIX = "/polarion/#/project/";
+    private static final String URL_WORK_ITEM_ID_PREFIX = "workitem?id=";
+    private static final String POLARION_URL_MARKER = "/polarion/#";
 
     private static final String LOCALHOST = "localhost";
     public static final String HTTP_PROTOCOL_PREFIX = "http://";
@@ -92,14 +91,12 @@ public class HtmlProcessor {
     private final FileResourceProvider fileResourceProvider;
     private final LocalizationSettings localizationSettings;
     private final HtmlLinksHelper httpLinksHelper;
-    private final DocxExporterPolarionService docxExporterPolarionService;
     private final @NotNull CSSOMParser parser = new CSSOMParser();
 
-    public HtmlProcessor(FileResourceProvider fileResourceProvider, LocalizationSettings localizationSettings, HtmlLinksHelper httpLinksHelper, DocxExporterPolarionService docxExporterPolarionService) {
+    public HtmlProcessor(FileResourceProvider fileResourceProvider, LocalizationSettings localizationSettings, HtmlLinksHelper httpLinksHelper) {
         this.fileResourceProvider = fileResourceProvider;
         this.localizationSettings = localizationSettings;
         this.httpLinksHelper = httpLinksHelper;
-        this.docxExporterPolarionService = docxExporterPolarionService;
     }
 
     public String processHtmlForPDF(@NotNull String html, @NotNull ExportParams exportParams, @NotNull List<String> selectedRoleEnumValues) {
@@ -157,9 +154,24 @@ public class HtmlProcessor {
         // Also changes absolute widths of normal table cells from absolute values to "auto" if "Fit tables and images to page" is on
         adjustCellWidth(document);
 
+        // ----
+        // This sequence is important! We need first filter out Linked WorkItems and only then cut empty attributes,
+        // cause after filtering Linked WorkItems can become empty. Also cutting local URLs should happen afterwards
+        // as filtering workitems relies among other on anchors.
+        if (!selectedRoleEnumValues.isEmpty()) {
+            filterTabularLinkedWorkItems(document, selectedRoleEnumValues);
+            filterNonTabularLinkedWorkItems(document, selectedRoleEnumValues);
+        }
         if (exportParams.isCutEmptyWIAttributes()) {
             cutEmptyWIAttributes(document);
         }
+        rewritePolarionUrls(document); // Rewrites Polarion Work Item hyperlinks so that they become intra-document anchor links. Should precede cutting local URLs.
+        if (exportParams.isCutLocalUrls()) {
+            cutLocalUrls(document);
+        }
+        // ----
+
+        new LiveDocTOCGenerator().addTableOfContent(document);
 
         html = document.body().html();
 
@@ -171,28 +183,11 @@ public class HtmlProcessor {
 
         html = adjustImageAlignmentForPDF(html);
 
-        html = addTableOfFigures(addTableOfContent(html));
+        html = addTableOfFigures(html);
         html = replaceResourcesAsBase64Encoded(html);
         html = MediaUtils.removeSvgUnsupportedFeatureHint(html); //note that there is one more replacement attempt before replacing images with base64 representation
         html = properTableHeads(html);
 
-        // ----
-        // This sequence is important! We need first filter out Linked WorkItems and only then cut empty attributes,
-        // cause after filtering Linked WorkItems can become empty. Also cutting local URLs should happen afterwards
-        // as filtering workitems relies among other on anchors.
-        if (!selectedRoleEnumValues.isEmpty()) {
-            html = filterTabularLinkedWorkitems(html, selectedRoleEnumValues);
-            html = filterNonTabularLinkedWorkitems(html, selectedRoleEnumValues);
-        }
-        if (exportParams.isCutLocalUrls()) {
-            html = cutLocalUrls(html);
-        }
-        // ----
-
-        if (hasCustomPageBreaks(html)) {
-            //processPageBrakes contains its own adjustContentToFitPage() calls
-            html = processPageBrakes(html);
-        }
         html = adjustContentToFitPage(html);
 
         html = replaceLinks(html);
@@ -501,188 +496,155 @@ public class HtmlProcessor {
         }
     }
 
-    @NotNull
     @VisibleForTesting
-    @SuppressWarnings({"java:S5843", "java:S5852"})
-    String cutLocalUrls(@NotNull String html) {
-        // This regexp consists of 2 parts combined by OR-condition. In first part it looks for <a>-tags
-        // containing "/polarion/#" in its href attribute and match a content inside of this <a> into named group "content".
-        // In second part of this regexp it looks for <a>-tags which href attribute starts with "http" and containing <img>-tag inside of it
-        // and matches a content inside of this <a> into named group "imgContent". The sense of this regexp is to find
-        // all links (as text-link or images) linking to local Polarion resources and to cut these links off, though leaving
-        // their content in text.
-        return RegexMatcher.get("<a[^>]+?href=[^>]*?/polarion/#[^>]*?>(?<content>[\\s\\S]+?)</a>|<a[^>]+?href=\"http[^>]+?>(?<imgContent><img[^>]+?src=\"data:[^>]+?>)</a>")
-                .replace(html, regexEngine -> {
-                    String content = regexEngine.group("content");
-                    return content != null ? content : regexEngine.group("imgContent");
-                });
+    void cutLocalUrls(@NotNull Document document) {
+        // Looks for <a>-tags containing "/polarion/#" in its href attribute or for <a>-tags which href attribute starts with "http" and containing <img>-tag inside of it.
+        // Then it moves content of such links outside it and removing links themselves.
+        for (Element link : document.select("a[href]")) {
+            String href = link.attr(HtmlTagAttr.HREF);
+            boolean cutUrl = href.contains(POLARION_URL_MARKER) || JSoupUtils.isImg(link.firstElementChild());
+            if (cutUrl) {
+                for (Node contentNodes : link.childNodes()) {
+                    link.before(contentNodes.clone());
+                }
+                link.remove();
+            }
+        }
     }
 
-    /**
-     * {@link CustomPageBreakPart} inserts specific 'marks' into positions where we must place page breaks.
-     * The solution below replaces marks with proper html tags and does additional processing.
-     */
-    @NotNull
     @VisibleForTesting
-    @SuppressWarnings("java:S3776")
-    String processPageBrakes(@NotNull String html) {
-        //remove repeated page breaks, leave just the first one
-        html = RegexMatcher.get(String.format("(%s|%s){2,}", PAGE_BREAK_PORTRAIT_ABOVE, PAGE_BREAK_LANDSCAPE_ABOVE)).replace(html, regexEngine -> {
-            String sequence = regexEngine.group();
-            return sequence.startsWith(PAGE_BREAK_PORTRAIT_ABOVE) ? PAGE_BREAK_PORTRAIT_ABOVE : PAGE_BREAK_LANDSCAPE_ABOVE;
-        });
+    void rewritePolarionUrls(@NotNull Document document) {
+        Set<String> workItemAnchors = new HashSet<>();
+        for (Element anchor : document.select("a[id^=work-item-anchor-]")) {
+            workItemAnchors.add(anchor.id());
+        }
 
-        StringBuilder resultBuf = new StringBuilder();
-        LinkedList<String> areas = new LinkedList<>(Arrays.asList(html.split(PAGE_BREAK_MARK))); //use linked list for processing list in backward order
+        for (Element link : document.select("a[href]")) {
+            String href = link.attr(HtmlTagAttr.HREF);
 
-        //the idea here is to wrap areas with different orientation into divs with correspondent class
-        while (!areas.isEmpty()) {
-            String area = areas.pollLast();
-            String orientationClass = "portA4";
-            String mark = null;
-            if (area.startsWith(LANDSCAPE_ABOVE_MARK)) {
-                mark = LANDSCAPE_ABOVE_MARK;
-            } else if (area.startsWith(PORTRAIT_ABOVE_MARK)) {
-                mark = PORTRAIT_ABOVE_MARK;
-            }
-            boolean firstArea = mark == null;
-            area = firstArea ? area : area.substring(mark.length());
+            String afterProject = substringAfter(href, URL_PROJECT_ID_PREFIX);
+            String projectId = substringBefore(afterProject, "/", false);
+            String workItemId = substringAfter(afterProject, URL_WORK_ITEM_ID_PREFIX);
 
-            if (!firstArea) { //see below why we don't wrap first area
-                resultBuf.insert(0, DIV_END_TAG);
+            if (afterProject == null || projectId == null || workItemId == null) {
+                continue;
             }
 
-            //here we can make additional areas processing
-            area = adjustContentToFitPage(area);
+            workItemId = substringBefore(workItemId, "&", true);
+            workItemId = workItemId != null ? substringBefore(workItemId, "#", true) : null;
+            if (!StringUtils.isEmpty(workItemId)) {
+                String expectedAnchorId = "work-item-anchor-" + projectId + "/" + workItemId;
+                if (workItemAnchors.contains(expectedAnchorId)) {
+                    link.attr(HtmlTagAttr.HREF, "#" + expectedAnchorId);
+                }
+            }
+        }
+    }
 
-            resultBuf.insert(0, area);
-            if (firstArea) {
-                //instead of wrapping  the first area into div we place on the body specific orientation (IMPORTANT: here we must use page identifiers but luckily in our case they are the same as the class names)
-                //this will prevent from creating leading empty page
-                resultBuf.insert(0, String.format("<style>body {page: %s;}</style>", orientationClass));
+    @Nullable
+    private String substringBefore(@Nullable String str, @NotNull String marker, boolean initialStringIfNotFound) {
+        if (str != null && str.contains(marker)) {
+            return str.substring(0, str.indexOf(marker));
+        } else {
+            return initialStringIfNotFound ? str : null;
+        }
+    }
+
+    @Nullable
+    private String substringAfter(@Nullable String str, @NotNull String marker) {
+        return str != null && str.contains(marker) ? str.substring(str.indexOf(marker) + marker.length()) : null;
+    }
+
+    private void filterTabularLinkedWorkItems(@NotNull Document document, @NotNull List<String> selectedRoleEnumValues) {
+        Elements linkedWorkItemsCells = document.select("td[id='polarion_editor_field=linkedWorkItems']");
+        for (Element linkedWorkItemsCell : linkedWorkItemsCells) {
+            filterByRoles(linkedWorkItemsCell, selectedRoleEnumValues);
+        }
+    }
+
+    @VisibleForTesting
+    void filterNonTabularLinkedWorkItems(@NotNull Document document, @NotNull List<String> selectedRoleEnumValues) {
+        Elements linkedWorkItemsContainers = document.select("span[id='polarion_editor_field=linkedWorkItems']");
+        for (Element linkedWorkItemsContainer : linkedWorkItemsContainers) {
+            filterByRoles(linkedWorkItemsContainer, selectedRoleEnumValues);
+        }
+    }
+
+    private void filterByRoles(@NotNull Element linkedWorkItemsContainer, @NotNull List<String> selectedRoleEnumValues) {
+        Element nextChild = linkedWorkItemsContainer.firstElementChild();
+
+        List<LinkedWorkitemNodes> linkedWorkitemNodesList = new LinkedList<>();
+        while (nextChild != null) {
+            LinkedWorkitemNodes linkedWorkitemNodes = extractLinkedWorkItemNodes(nextChild);
+            if (linkedWorkitemNodes != null) {
+                nextChild = linkedWorkitemNodes.getNextSibling();
+                if (!selectedRoleEnumValues.contains(linkedWorkitemNodes.role)) {
+                    linkedWorkitemNodes.removeAll();
+                } else {
+                    linkedWorkitemNodesList.add(linkedWorkitemNodes);
+                }
             } else {
-                resultBuf.insert(0, String.format("<div class=\"sbb_page_break %s\">", orientationClass));
+                nextChild = null;
             }
         }
-        return resultBuf.toString();
-    }
 
-    /**
-     * When we remove some area from html we have to copy the most top page break (if it exists) in order to preserve expected orientation.
-     */
-    @NotNull
-    private String getTopPageBrake(@NotNull String area) {
-        int brakePosition = area.indexOf(PAGE_BREAK_MARK);
-        if (brakePosition == -1) {
-            return "";
-        } else if (area.indexOf(PAGE_BREAK_LANDSCAPE_ABOVE) == brakePosition) {
-            return PAGE_BREAK_LANDSCAPE_ABOVE;
-        } else {
-            return PAGE_BREAK_PORTRAIT_ABOVE;
-        }
-    }
-
-    @NotNull
-    private String filterTabularLinkedWorkitems(@NotNull String html, @NotNull List<String> selectedRoleEnumValues) {
-        StringBuilder result = new StringBuilder();
-        int cellStart = getLinkedWorkItemsCellStart(html, 0);
-        int cellEnd = getLinkedWorkItemsCellEnd(html, cellStart);
-        if (cellStart > 0 && cellEnd > 0) {
-            result.append(html, 0, cellStart);
-        } else {
-            return html;
-        }
-
-        while (cellStart > 0 && cellEnd > 0) {
-            result.append(filterByRoles(html.substring(cellStart, cellEnd), selectedRoleEnumValues));
-
-            cellStart = getLinkedWorkItemsCellStart(html, cellEnd);
-            if (cellEnd < (html.length() - 1)) {
-                result.append(html, cellEnd + 1, cellStart < 0 ? html.length() : cellStart);
+        for (int i = 0; i < linkedWorkitemNodesList.size(); i++) {
+            if (i < linkedWorkitemNodesList.size() - 1) {
+                linkedWorkitemNodesList.get(i).appendComma(); // Separate each group by comma
+            } else {
+                linkedWorkitemNodesList.get(i).removeBr(); // Remove br-tag after last group
             }
-            cellEnd = getLinkedWorkItemsCellEnd(html, cellStart);
         }
-
-        return result.toString();
     }
 
-    private int getLinkedWorkItemsCellStart(@NotNull String html, int prevCellEnd) {
-        return html.indexOf("<td id=\"polarion_editor_field=linkedWorkItems\"", prevCellEnd);
-    }
-
-    private int getLinkedWorkItemsCellEnd(@NotNull String html, int cellStart) {
-        return cellStart > 0 ? html.indexOf(TABLE_COLUMN_END_TAG, cellStart) + TABLE_COLUMN_END_TAG.length() : -1;
-    }
-
-    @NotNull
-    private String filterNonTabularLinkedWorkitems(@NotNull String html, @NotNull List<String> selectedRoleEnumValues) {
-        StringBuilder result = new StringBuilder();
-        int spanStart = getLinkedWorkItemsSpanStart(html, 0);
-        int spanEnd = getLinkedWorkItemsSpanEnd(html, spanStart);
-        if (spanStart > 0 && spanEnd > 0) {
-            result.append(html, 0, spanStart);
-        } else {
-            return html;
-        }
-
-        while (spanStart > 0 && spanEnd > 0) {
-            String filtered = filterByRoles(html.substring(spanStart, spanEnd), selectedRoleEnumValues);
-            result.append(filtered);
-
-            spanStart = getLinkedWorkItemsSpanStart(html, spanEnd);
-            if (spanEnd < (html.length() - 1)) {
-                result.append(html, spanEnd, spanStart < 0 ? html.length() : spanStart);
+    private LinkedWorkitemNodes extractLinkedWorkItemNodes(@NotNull Element nextChild) {
+        Element roleElement = null;
+        String role = null;
+        if (nextChild.tagName().equals(HtmlTag.DIV)) {
+            Element internalElement = nextChild.children().size() == 1 ? nextChild.firstElementChild() : null;
+            if (internalElement != null && internalElement.tagName().equals(HtmlTag.SPAN) && !internalElement.text().isBlank()) {
+                roleElement = nextChild;
+                role = internalElement.text();
             }
-            spanEnd = getLinkedWorkItemsSpanEnd(html, spanStart);
+        }
+        if (roleElement == null) {
+            return null; // Not expected elements structure, stop processing
         }
 
-        return result.toString();
-    }
-
-    private int getLinkedWorkItemsSpanStart(@NotNull String html, int prevCellEnd) {
-        return html.indexOf("<span id=\"polarion_editor_field=linkedWorkItems\"", prevCellEnd);
-    }
-
-    private int getLinkedWorkItemsSpanEnd(@NotNull String html, int cellStart) {
-        return cellStart > 0 ? html.indexOf("&nbsp;", cellStart) : -1;
-    }
-
-    @NotNull
-    @SuppressWarnings("squid:S5843")
-    private String filterByRoles(@NotNull String linkedWorkItems, @NotNull List<String> selectedRoleEnumValues) {
-        String polarionVersion = docxExporterPolarionService.getPolarionVersion();
-        // This regexp searches for spans (named group "row") containing linked WorkItem with its role (named group "role").
-        // If linked WorkItem role is not among ones selected by user we cut it from resulted HTML
-        String regex = getRegexp(polarionVersion);
-
-        StringBuilder filteredContent = new StringBuilder();
-
-        RegexMatcher.get(regex)
-                .processEntry(linkedWorkItems, regexEngine -> {
-                    String role = regexEngine.group("role");
-                    String row = regexEngine.group("row");
-                    if (selectedRoleEnumValues.contains(role)) {
-                        if (!filteredContent.isEmpty()) {
-                            filteredContent.append(",<br>");
-                        }
-                        filteredContent.append(row);
-                    }
-                });
-        // filteredContent - is literally content of td or span element, we need to prepend <td>/<span> with its attributes and append </td>/</span> to it
-        return linkedWorkItems.substring(0, linkedWorkItems.indexOf(">") + 1)
-                + filteredContent
-                + linkedWorkItems.substring(linkedWorkItems.lastIndexOf("</"));
-    }
-
-    private @NotNull String getRegexp(@Nullable String polarionVersion) {
-        String filterByRolesRegexBeforePolarion2404 = "(?<row><span>\\s*<span class=\"polarion-JSEnumOption\"[^>]*?>(?<role>[^<]*?)</span>:\\s*<a[^>]*?>\\s*<span[^>]*?>\\s*<img[^>]*?>\\s*<span[^>]*?>[^<]*?</span>\\s*-\\s*<span[^>]*?>[^<]*?</span>\\s*</span>\\s*</a>\\s*</span>)";
-        String filterByRolesRegexAfterPolarion2404 = "(?<row><div\\s*[^>]*?>\\s*<span\\s*[^>]*?>(?<role>[^<]*?)<\\/span>\\s*<\\/div>\\s*:\\s*.*?<\\/span><\\/a><\\/span>)";
-
-        if (polarionVersion == null) {
-            return filterByRolesRegexAfterPolarion2404;
+        TextNode colonNode = extractColonNode(roleElement.nextSibling());
+        if (colonNode == null) {
+            return null; // Not expected elements structure, stop processing
         }
 
-        return polarionVersion.compareTo("2404") < 0 ? filterByRolesRegexBeforePolarion2404 : filterByRolesRegexAfterPolarion2404;
+        Element linkedWorkItemElement = extractLinkedWorkItemElement(colonNode.nextSibling());
+        if (linkedWorkItemElement == null) {
+            return null; // Not expected elements structure, stop processing
+        }
+
+        // There will be no br-tag after last linked WorkItem, so not obligatory
+        Element brElement = extractBrElement(linkedWorkItemElement.nextElementSibling());
+
+        return new LinkedWorkitemNodes(role, roleElement, colonNode, linkedWorkItemElement, brElement);
+    }
+
+    private TextNode extractColonNode(@Nullable Node node) {
+        if (node instanceof TextNode textNode && textNode.text().contains(":")) {
+            return textNode;
+        } else {
+            return null;
+        }
+    }
+
+    private Element extractLinkedWorkItemElement(@Nullable Node node) {
+        if (node instanceof Element element) {
+            return element.select("> a.polarion-Hyperlink").isEmpty() ? null : element;
+        } else {
+            return null;
+        }
+    }
+
+    private Element extractBrElement(@Nullable Element element) {
+        return element != null && element.tagName().equals(HtmlTag.BR) ? element : null;
     }
 
     @VisibleForTesting
@@ -888,74 +850,6 @@ public class HtmlProcessor {
         Elements elementsToRemove = doc.select(clearSelector);
         elementsToRemove.remove();
         return doc.outerHtml();
-    }
-
-    @NotNull
-    String addTableOfContent(@NotNull String html) {
-        final int MAX_DEFAULT_NODE_NESTING = 6;
-
-        int startIndex = html.indexOf("<pd4ml:toc");
-        RegexMatcher tocInitMatcher = RegexMatcher.get("tocInit=\"(?<startLevel>\\d+)\"");
-        RegexMatcher tocMaxMatcher = RegexMatcher.get("tocMax=\"(?<maxLevel>\\d+)\"");
-        while (startIndex >= 0) {
-            int endIndex = html.indexOf(">", startIndex);
-            String tocMacro = html.substring(startIndex, endIndex);
-
-            int startLevel = tocInitMatcher.findFirst(tocMacro, regexEngine -> regexEngine.group("startLevel"))
-                    .map(Integer::parseInt).orElse(1);
-
-            int maxLevel = tocMaxMatcher.findFirst(tocMacro, regexEngine -> regexEngine.group("maxLevel"))
-                    .map(Integer::parseInt).orElse(MAX_DEFAULT_NODE_NESTING);
-
-            String toc = generateTableOfContent(html, startLevel, maxLevel);
-
-            html = html.substring(0, startIndex) + toc + html.substring(endIndex + 1);
-
-
-            startIndex = html.indexOf("<pd4ml:toc", endIndex);
-        }
-
-        return html;
-    }
-
-    @NotNull
-    @SuppressWarnings("java:S5852") //regex checked
-    private String generateTableOfContent(@NotNull String html, int startLevel, int maxLevel) {
-        TocLeaf root = new TocLeaf(null, 0, null, null, null);
-        AtomicReference<TocLeaf> current = new AtomicReference<>(root);
-
-        // This regexp searches for headers of any level (elements <h1>, <h2> etc.). Level of chapter is extracted into
-        // named group "level", id of <a> element inside of it (to reference from TOC) - into named group "id",
-        // number of this chapter - into named group "number" and text of this header - into named group "text"
-        // Also we search for wiki headers, they have slightly different structure + don't have numbers
-        RegexMatcher.get("<h(?<level>[1-6])[^>]*?>[^<]*(<a id=\"(?<id>[^\"]+?)\"[^>]*?></a>[^<]*<span[^>]*>\\s*<span[^>]*>(?<number>.+?)</span>[^<]*</span>\\s*(?<text>.+?)\\s*" +
-                "|<span id=\"(?<wikiHeaderId>[^\"]+?)\"[^>]*?>(?<wikiHeaderText>.+?)</span>)</h[1-6]>").processEntry(html, regexEngine -> {
-            // Then we take all these named groups of certain chapter and generate appropriate element of table of content
-            int level = Integer.parseInt(regexEngine.group("level"));
-            String id = regexEngine.group("id");
-            String number = regexEngine.group(NUMBER);
-            String text = regexEngine.group("text");
-            String wikiHeaderId = regexEngine.group("wikiHeaderId");
-            String wikiHeaderText = regexEngine.group("wikiHeaderText");
-
-            TocLeaf parent;
-            TocLeaf newLeaf;
-            if (current.get().getLevel() < level) {
-                parent = current.get();
-            } else {
-                parent = current.get().getParent();
-                while (parent.getLevel() >= level) {
-                    parent = parent.getParent();
-                }
-            }
-
-            newLeaf = new TocLeaf(parent, level, id != null ? id : wikiHeaderId, number, text != null ? text : wikiHeaderText);
-            parent.getChildren().add(newLeaf);
-
-            current.set(newLeaf);
-        });
-
-        return root.asString(startLevel, maxLevel);
     }
 
     @NotNull
@@ -1347,5 +1241,32 @@ public class HtmlProcessor {
      * Internal record to hold chapter information during processing.
      */
     private record ChapterInfo(@NotNull Element heading, boolean shouldKeep) {
+    }
+
+    private record LinkedWorkitemNodes(@NotNull String role, @NotNull Element roleElement, @NotNull TextNode colonNode,
+                                       @NotNull Element linkedWorkItemElement, @Nullable Element brElement) {
+        Element getNextSibling() {
+            return brElement != null ? brElement.nextElementSibling() : linkedWorkItemElement.nextElementSibling();
+        }
+
+        void removeAll() {
+            roleElement.remove();
+            colonNode.remove();
+            linkedWorkItemElement.remove();
+            if (brElement != null) {
+                brElement.remove();
+            }
+        }
+
+        void removeBr() {
+            if (brElement != null) {
+                brElement.remove();
+            }
+        }
+
+        void appendComma() {
+            linkedWorkItemElement.after(",");
+        }
+
     }
 }
