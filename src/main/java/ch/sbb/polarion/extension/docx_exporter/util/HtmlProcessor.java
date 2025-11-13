@@ -56,7 +56,6 @@ public class HtmlProcessor {
     private static final String TABLE_ROW_OPEN_TAG = "<tr";
     private static final String TABLE_ROW_END_TAG = "</tr>";
     private static final String TABLE_COLUMN_OPEN_TAG = "<td";
-    private static final String DIV_END_TAG = "</div>";
     private static final String SPAN = "span";
     private static final String SPAN_END_TAG = "</span>";
     private static final String COMMENT_START = "[span";
