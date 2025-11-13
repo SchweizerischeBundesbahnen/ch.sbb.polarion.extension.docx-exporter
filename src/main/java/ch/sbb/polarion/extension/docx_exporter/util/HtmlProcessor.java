@@ -32,7 +32,6 @@ import org.w3c.dom.css.CSSStyleDeclaration;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
@@ -57,7 +56,6 @@ public class HtmlProcessor {
     private static final String TABLE_ROW_OPEN_TAG = "<tr";
     private static final String TABLE_ROW_END_TAG = "</tr>";
     private static final String TABLE_COLUMN_OPEN_TAG = "<td";
-    private static final String DIV_START_TAG = "<div>";
     private static final String DIV_END_TAG = "</div>";
     private static final String SPAN = "span";
     private static final String SPAN_END_TAG = "</span>";
@@ -68,7 +66,6 @@ public class HtmlProcessor {
     private static final String MEASURE_WIDTH = "measureWidth";
     private static final String HEIGHT = "height";
     private static final String MEASURE_HEIGHT = "measureHeight";
-    private static final String NUMBER = "number";
     private static final String CLASS = "class";
     private static final String COMMENT_START_CLASS = "comment-start";
     private static final String COMMENT_END_CLASS = "comment-end";
@@ -83,6 +80,9 @@ public class HtmlProcessor {
     private static final String URL_PROJECT_ID_PREFIX = "/polarion/#/project/";
     private static final String URL_WORK_ITEM_ID_PREFIX = "workitem?id=";
     private static final String POLARION_URL_MARKER = "/polarion/#";
+    private static final String ROWSPAN_ATTR = "rowspan";
+    private static final String RIGHT_ALIGNMENT_MARGIN = "auto 0px auto auto";
+    private static final String TABLE_OF_FIGURES_ANCHOR_ID_PREFIX = "dlecaption_";
 
     private static final String LOCALHOST = "localhost";
     public static final String HTTP_PROTOCOL_PREFIX = "http://";
@@ -141,6 +141,8 @@ public class HtmlProcessor {
             cutNotNeededChapters(document, exportParams.getChapters());
         }
 
+        addTableOfFigures(document);
+
         // Moves WorkItem content out of table wrapping it
         removePageBreakAvoids(document);
 
@@ -149,6 +151,18 @@ public class HtmlProcessor {
 
         // Localize enumeration values
         localizeEnums(document, exportParams);
+
+        // Polarion doesn't place table rows with th-tags into thead, placing them in table's tbody, which is wrong as table header won't
+        // repeat on each next page if table is split across multiple pages. We are fixing this moving such rows into thead.
+        fixTableHeads(document);
+
+        // If on next step we placed into thead rows which contain rowspan > 1 and this "covers" rows which are still in tbody, we are fixing
+        // this here, moving such rows also in thead
+        fixTableHeadRowspan(document);
+
+        // Images with styles and "display: block" are searched here. For such images we do following: wrap them into div with text-align style
+        // and value "right" if image margin is "auto 0px auto auto" or "center" otherwise.
+        adjustImageAlignment(document);
 
         // Adjusts WorkItem attributes tables to stretch to full page width for better usage of page space and better readability.
         // Also changes absolute widths of normal table cells from absolute values to "auto" if "Fit tables and images to page" is on
@@ -183,10 +197,8 @@ public class HtmlProcessor {
 
         html = adjustImageAlignmentForPDF(html);
 
-        html = addTableOfFigures(html);
         html = replaceResourcesAsBase64Encoded(html);
         html = MediaUtils.removeSvgUnsupportedFeatureHint(html); //note that there is one more replacement attempt before replacing images with base64 representation
-        html = properTableHeads(html);
 
         html = adjustContentToFitPage(html);
 
@@ -497,6 +509,94 @@ public class HtmlProcessor {
     }
 
     @VisibleForTesting
+    void fixTableHeads(@NotNull Document document) {
+        Elements tables = document.select(HtmlTag.TABLE);
+        for (Element table : tables) {
+            List<Element> headerRows = JSoupUtils.getRowsWithHeaders(table);
+            if (headerRows.isEmpty()) {
+                continue;
+            }
+
+            Element header = table.selectFirst(HtmlTag.THEAD);
+            if (header == null) {
+                header = new Element(HtmlTag.THEAD);
+                table.prependChild(header);
+            }
+
+            for (Element headerRow : headerRows) {
+                // Parent of each header row can't be null as we got them as child nodes of a table
+                if (!Objects.requireNonNull(headerRow.parent()).tagName().equals(HtmlTag.THEAD)) {
+                    // Header row is located not in thead - moving it there
+                    headerRow.remove();
+                    header.appendChild(headerRow);
+                }
+            }
+        }
+    }
+
+    /**
+     * Fixes malformed tables where thead contains single one row which cells has rowspan attribute greater than 1.
+     * Such cells semantically extend beyond the thead boundary, which causes incorrect table rendering.
+     * This method extends thead by moving rows from tbody into thead to match the rowspan values.
+     */
+    @VisibleForTesting
+    public void fixTableHeadRowspan(@NotNull Document document) {
+        Elements tables = document.select(HtmlTag.TABLE);
+
+        for (Element table : tables) {
+            Element thead = table.selectFirst(HtmlTag.THEAD);
+            if (thead != null) {
+                Element headRow = getHeadRow(thead);
+                if (headRow != null) {
+                    int maxRowspan = getMaxRowspan(headRow);
+                    // If all cells have rowspan=1 or no rowspan, nothing to fix
+                    if (maxRowspan <= 1) {
+                        continue;
+                    }
+
+                    List<Element> tbodyRows = JSoupUtils.getBodyRows(table);
+
+                    // Move (maxRowspan - 1) rows from tbody to thead
+                    int rowsToMove = Math.min(maxRowspan - 1, tbodyRows.size());
+                    for (int i = 0; i < rowsToMove; i++) {
+                        Element rowToMove = tbodyRows.get(i);
+                        rowToMove.remove();
+                        thead.appendChild(rowToMove);
+                    }
+                }
+            }
+        }
+    }
+
+    private Element getHeadRow(@NotNull Element thead) {
+        Elements theadRows = thead.select("> tr");
+        if (theadRows.size() != 1) {
+            return null;
+        }
+        return theadRows.first();
+    }
+
+    private int getMaxRowspan(@NotNull Element headRow) {
+        Elements cells = headRow.select("> th, > td");
+        int maxRowspan = 1;
+
+        // Find the maximum rowspan value
+        for (Element cell : cells) {
+            if (cell.hasAttr(ROWSPAN_ATTR)) {
+                try {
+                    int rowspan = Integer.parseInt(cell.attr(ROWSPAN_ATTR));
+                    if (rowspan > maxRowspan) {
+                        maxRowspan = rowspan;
+                    }
+                } catch (NumberFormatException e) {
+                    // Ignore invalid rowspan values
+                }
+            }
+        }
+        return maxRowspan;
+    }
+
+    @VisibleForTesting
     void cutLocalUrls(@NotNull Document document) {
         // Looks for <a>-tags containing "/polarion/#" in its href attribute or for <a>-tags which href attribute starts with "http" and containing <img>-tag inside of it.
         // Then it moves content of such links outside it and removing links themselves.
@@ -684,21 +784,39 @@ public class HtmlProcessor {
         }
     }
 
-    @NotNull
     @VisibleForTesting
-    @SuppressWarnings({"java:S5869", "java:S6019"})
-    String properTableHeads(@NotNull String html) {
-        // Searches for all subsequent table rows (<tr>-tags) inside <tbody> which contain <th>-tags
-        // followed by a row which doesn't contain <th> (or closing </tbody> tag).
-        // There are 2 groups in this regexp, first one is unnamed, containing <tbody> and <tr>-tags containing <th>-tags,
-        // second one is named ("header") and contains those <tr>-tags which include <th>-tags. The regexp is ending
-        // by positive lookahead "(?=<tr)" which doesn't take part in replacement.
-        // The sense in this regexp is to find <tr>-tags containing <th>-tags and move it from <tbody> into <thead>,
-        // for table headers to repeat on each page.
-        return RegexMatcher.get("(<tbody>[^<]*(?<header><tr>[^<]*<th[\\s|\\S]*?))(?=(<tr|</tbody))").useJavaUtil().replace(html, regexEngine -> {
-            String header = regexEngine.group("header");
-            return "<thead>" + header + "</thead><tbody>";
-        });
+    void adjustImageAlignment(@NotNull Document document) {
+        Elements images = document.select(HtmlTag.IMG);
+        for (Element image : images) {
+            if (image.hasAttr(HtmlTagAttr.STYLE)) {
+                String style = image.attr(HtmlTagAttr.STYLE);
+                CSSStyleDeclaration cssStyle = parseCss(style);
+
+                String displayValue = getCssValue(cssStyle, CssProp.DISPLAY);
+                if (!CssProp.DISPLAY_BLOCK_VALUE.equals(displayValue)) {
+                    continue;
+                }
+
+                Element wrapper = new Element(HtmlTag.DIV);
+
+                String marginValue = Optional.ofNullable(cssStyle.getPropertyValue(CssProp.MARGIN)).orElse("").trim();
+                if (RIGHT_ALIGNMENT_MARGIN.equals(marginValue)) {
+                    wrapper.attr(HtmlTagAttr.STYLE, String.format("%s: %s;", CssProp.TEXT_ALIGN, CssProp.TEXT_ALIGN_RIGHT_VALUE));
+                } else {
+                    wrapper.attr(HtmlTagAttr.STYLE, String.format("%s: %s;", CssProp.TEXT_ALIGN, CssProp.TEXT_ALIGN_CENTER_VALUE));
+                }
+
+                Element previousSibling = image.previousElementSibling();
+                if (previousSibling != null) {
+                    previousSibling.after(wrapper);
+                } else {
+                    Element parent = image.parent();
+                    Objects.requireNonNullElse(parent, document.body()).prependChild(wrapper);
+                }
+                image.remove();
+                wrapper.appendChild(image);
+            }
+        }
     }
 
     @VisibleForTesting
@@ -852,30 +970,34 @@ public class HtmlProcessor {
         return doc.outerHtml();
     }
 
-    @NotNull
-    String addTableOfFigures(@NotNull final String html) {
-        Map<String, String> tofByLabel = new HashMap<>();
-        return RegexMatcher.get("<div data-sequence=\"(?<label>[^\"]+)\" id=\"polarion_wiki macro name=tof[^>]*></div>").replace(html, regexEngine -> {
-            String label = regexEngine.group("label");
-            return tofByLabel.computeIfAbsent(label, notYetGeneratedLabel -> generateTableOfFigures(html, notYetGeneratedLabel));
-        });
+    @VisibleForTesting
+    void addTableOfFigures(@NotNull Document document) {
+        for (Element tofPlaceholder : document.select("div[id*=macro name=tof][data-sequence]")) {
+            String label = tofPlaceholder.dataset().get("sequence");
+            Element tof = generateTableOfFigures(document, label);
+            tofPlaceholder.before(tof);
+            tofPlaceholder.remove();
+        }
     }
 
-    @NotNull
-    private String generateTableOfFigures(@NotNull String html, @NotNull String label) {
-        StringBuilder buf = new StringBuilder(DIV_START_TAG);
+    private Element generateTableOfFigures(@NotNull Document document, @NotNull String label) {
+        Element tof = new Element(HtmlTag.DIV);
+        for (Element captionAnchor : document.select(String.format("p.polarion-rte-caption-paragraph span.polarion-rte-caption[data-sequence=%s] a[name^=%s]",
+                escapeCssSelectorValue(label), TABLE_OF_FIGURES_ANCHOR_ID_PREFIX))) {
+            // CSS selector above guarantees that parent below won't be null
+            Element captionNumber = Objects.requireNonNull(captionAnchor.parent());
 
-        // This regexp searches for paragraphs with class 'polarion-rte-caption-paragraph'
-        // with text contained in 'label' parameter in it followed by span-element with class 'polarion-rte-caption' and number inside it (number of figure),
-        // which in its turn followed by a-element with name 'dlecaption_<N>' (where <N> - is figure number), which in its turn is followed by figure caption
-        RegexMatcher.get(String.format("<p[^>]+?class=\"polarion-rte-caption-paragraph\"[^>]*>\\s*?.*?%s[^<]*<span data-sequence=\"%s\" " +
-                "class=\"polarion-rte-caption\">(?<number>\\d+)<a name=\"dlecaption_(?<id>\\d+)\"></a></span>(?<caption>[^<]+)", label, label)).processEntry(html, regexEngine -> {
-            String number = regexEngine.group(NUMBER);
-            String id = regexEngine.group("id");
-            String caption = regexEngine.group("caption");
-            if (caption.contains(SPAN_END_TAG)) {
-                caption = caption.substring(0, caption.indexOf(SPAN_END_TAG));
+            // CSS selector above guarantees that 'name' attribute of anchor below won't be null and will have length at least of TABLE_OF_FIGURES_ANCHOR_ID_PREFIX constant length
+            String anchorId = captionAnchor.attr("name").substring(TABLE_OF_FIGURES_ANCHOR_ID_PREFIX.length());
+            Node numberNode = captionNumber.childNodes().stream().filter(TextNode.class::isInstance).findFirst().orElse(null);
+            String number = numberNode instanceof TextNode numberTextNode ? numberTextNode.text() : null;
+            Node captionNode = captionNumber.nextSibling();
+            String caption = captionNode instanceof TextNode captionTextNode ? captionTextNode.text() : null;
+
+            if (StringUtils.isEmpty(anchorId) || number == null || caption == null) {
+                continue;
             }
+
             while (caption.contains(COMMENT_START)) {
                 StringBuilder captionBuf = new StringBuilder(caption);
                 int start = caption.indexOf(COMMENT_START);
@@ -883,61 +1005,29 @@ public class HtmlProcessor {
                 captionBuf.replace(start, ending, "");
                 caption = captionBuf.toString();
             }
-            buf.append(String.format("<a href=\"#dlecaption_%s\">%s %s. %s</a><br>", id, label, number, caption.trim()));
-        });
-        buf.append(DIV_END_TAG);
-        return buf.toString();
+
+            Element tofItem = new Element(HtmlTag.A);
+            tofItem.attr(HtmlTagAttr.HREF, String.format("#dlecaption_%s", anchorId));
+            tofItem.text(String.format("%s %s. %s", label, number, caption.trim()));
+
+            tof.appendChild(tofItem);
+            tof.appendChild(new Element(HtmlTag.BR));
+        }
+
+        return tof;
     }
 
-    @NotNull
-    @VisibleForTesting
-    String adjustReportedBy(@NotNull String html) {
-        // This regexp searches for div containing 'Reported by' text and adjusts its styles
-        return RegexMatcher.get("<div style=\"(?<style>[^\"]*)\">Reported by").replace(html, regexEngine -> {
-            String initialStyle = regexEngine.group("style");
-            String styleAdjustment = "top: 0; font-size: 8px;";
-            return String.format("<div style=\"%s;%s\">Reported by", initialStyle, styleAdjustment);
-        });
-    }
+    private String escapeCssSelectorValue(String value) {
+        if (value == null) {
+            return "";
+        }
 
-    @NotNull
-    @VisibleForTesting
-    @SuppressWarnings({"java:S5852", "java:S5869"})
-        //regex checked
-    String cutExportToPdfButton(@NotNull String html) {
-        // This regexp searches for 'Export to PDF' button enclosed into table-element with class 'polarion-TestsExecutionButton-buttons-content',
-        // which in its turn enclosed into div-element with class 'polarion-TestsExecutionButton-buttons-pdf'
-        return RegexMatcher.get("<div[^>]*class=\"polarion-TestsExecutionButton-buttons-pdf\">" +
-                        "[\\w|\\W]*<table class=\"polarion-TestsExecutionButton-buttons-content\">[\\w|\\W]*<div[^>]*>Export to PDF</div>[\\w|\\W]*?</div>")
-                .removeAll(html);
-    }
-
-    @NotNull
-    @VisibleForTesting
-    String adjustColumnWidthInReports(@NotNull String html) {
-        // Replace fixed width value by relative one
-        return html.replace("<table class=\"polarion-rp-column-layout\" style=\"width: 1000px;\">",
-                "<table class=\"polarion-rp-column-layout\" style=\"width: 100%;\">");
-    }
-
-    @NotNull
-    @VisibleForTesting
-    String removeFloatLeftFromReports(@NotNull String html) {
-        // Remove "float: left;" style definition from tables
-        return RegexMatcher.get("(?<table><table[^>]*)style=\"float: left;\"")
-                .replace(html, regexEngine -> regexEngine.group("table"));
-    }
-
-    @NotNull
-    private static String liftHeadingTag(@NotNull String tag) {
-        return switch (tag) {
-            case "h2" -> "h1";
-            case "h3" -> "h2";
-            case "h4" -> "h3";
-            case "h5" -> "h4";
-            case "h6" -> "h5";
-            default -> "h6";
-        };
+        return "'"
+                + value
+                .replace("\\", "\\\\") // Escape backslash (must be first!)
+                .replace("\"", "\\\"") // Escape double quotes
+                .replace("'", "\\'")   // Escape single quotes
+                + "'";
     }
 
     @NotNull
