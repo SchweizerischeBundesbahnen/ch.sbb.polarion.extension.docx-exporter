@@ -195,8 +195,6 @@ public class HtmlProcessor {
         // Jsoup may convert &dollar; back to $ in some cases, so we need to replace it again
         html = encodeDollarSigns(html);
 
-        html = adjustImageAlignmentForPDF(html);
-
         html = replaceResourcesAsBase64Encoded(html);
         html = MediaUtils.removeSvgUnsupportedFeatureHint(html); //note that there is one more replacement attempt before replacing images with base64 representation
 
@@ -1028,44 +1026,6 @@ public class HtmlProcessor {
                 .replace("\"", "\\\"") // Escape double quotes
                 .replace("'", "\\'")   // Escape single quotes
                 + "'";
-    }
-
-    @NotNull
-    @SuppressWarnings({"java:S5852", "java:S5857"}) //need by design
-    private String adjustImageAlignmentForPDF(@NotNull String html) {
-        String startImgPattern = "<img [^>]*style=\"([^>]*)\".*?>";
-        IRegexEngine regexEngine = RegexMatcher.get(startImgPattern).createEngine(html);
-        StringBuilder sb = new StringBuilder();
-
-        while (true) {
-            String group;
-            CSSStyle css;
-            CSSStyle.Rule displayRule;
-            do {
-                do {
-                    if (!regexEngine.find()) {
-                        regexEngine.appendTail(sb);
-                        return sb.toString();
-                    }
-
-                    group = regexEngine.group();
-                    String style = regexEngine.group(1);
-                    css = CSSStyle.parse(style);
-                    displayRule = css.getRule("display");
-                } while (displayRule == null);
-            } while (!"block".equals(displayRule.getValue()));
-
-            final String align;
-            CSSStyle.Rule marginRule = css.getRule("margin");
-            if (marginRule != null && "auto 0px auto auto".equals(marginRule.getValue())) {
-                align = "right";
-            } else {
-                align = "center";
-            }
-
-            group = "<div style=\"text-align: " + align + "\">" + group + DIV_END_TAG;
-            regexEngine.appendReplacement(sb, group);
-        }
     }
 
     @NotNull
