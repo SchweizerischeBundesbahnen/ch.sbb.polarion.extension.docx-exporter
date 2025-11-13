@@ -12,6 +12,7 @@ import org.jsoup.nodes.Node;
 import org.jsoup.nodes.TextNode;
 import org.jsoup.select.Elements;
 
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -124,6 +125,25 @@ public class JSoupUtils {
         return node instanceof TextNode textNode && !textNode.text().trim().isEmpty();
     }
 
+    /**
+     * Returns table rows (direct descendants of table itself or its direct tbody) which contain th-tags
+     */
+    public List<Element> getRowsWithHeaders(@NotNull Element table) {
+        List<Element> headerRows = new ArrayList<>();
+
+        Element body = table.selectFirst("> " + HtmlTag.TBODY);
+        Element container = body == null ? table : body;
+
+        Elements rows = container.select("> " + HtmlTag.TR);
+        for (Element row : rows) {
+            if (containsTH(row)) {
+                headerRows.add(row);
+            }
+        }
+
+        return headerRows;
+    }
+
     public boolean isHeading(@NotNull Node node) {
         // <h1>, <h2>, <h3> etc. - are headings, but <hr> is not
         return node instanceof Element element && element.tagName().length() == 2 && element.tagName().startsWith("h") && !element.tagName().endsWith("r");
@@ -140,6 +160,33 @@ public class JSoupUtils {
             }
         }
         return false;
+    }
+
+    /**
+     * Returns table rows (direct descendants of table itself or its direct tbody)
+     */
+    public List<Element> getBodyRows(@NotNull Element table) {
+        List<Element> bodyRows = new ArrayList<>();
+
+        Element body = table.selectFirst("> " + HtmlTag.TBODY);
+        Element container = body == null ? table : body;
+
+        Elements rows = container.select("> " + HtmlTag.TR);
+        for (Element row : rows) {
+            if (!containsTH(row)) {
+                bodyRows.add(row);
+            }
+        }
+
+        return bodyRows;
+    }
+
+    public boolean containsTH(@NotNull Node row) {
+        return row.childNodes().stream().anyMatch(JSoupUtils::isTH);
+    }
+
+    public boolean isTH(@NotNull Node node) {
+        return node instanceof Element element && element.tagName().equals(HtmlTag.TH);
     }
 
     public boolean isImg(@Nullable Node node) {

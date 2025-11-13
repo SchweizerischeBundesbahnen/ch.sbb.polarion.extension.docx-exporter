@@ -163,11 +163,30 @@ class HtmlProcessorTest {
         try (InputStream isInvalidHtml = this.getClass().getResourceAsStream("/invalidTableHeads.html");
              InputStream isValidHtml = this.getClass().getResourceAsStream("/validTableHeads.html")) {
 
-            String invalidHtml = new String(isInvalidHtml.readAllBytes(), StandardCharsets.UTF_8);
+            Document document = JSoupUtils.parseHtml(new String(isInvalidHtml.readAllBytes(), StandardCharsets.UTF_8));
+
+            processor.fixTableHeads(document);
+            String fixedHtml = document.body().html();
+            String validHtml = new String(isValidHtml.readAllBytes(), StandardCharsets.UTF_8);
 
             // Spaces and new lines are removed to exclude difference in space characters
-            String fixedHtml = processor.properTableHeads(invalidHtml);
+            assertEquals(TestStringUtils.removeNonsensicalSymbols(validHtml), TestStringUtils.removeNonsensicalSymbols(fixedHtml));
+        }
+    }
+
+    @Test
+    @SneakyThrows
+    void adjustImageAlignmentTest() {
+        try (InputStream isInvalidHtml = this.getClass().getResourceAsStream("/imageAlignmentBeforeProcessing.html");
+             InputStream isValidHtml = this.getClass().getResourceAsStream("/imageAlignmentAfterProcessing.html")) {
+
+            Document document = JSoupUtils.parseHtml(new String(isInvalidHtml.readAllBytes(), StandardCharsets.UTF_8));
+
+            processor.adjustImageAlignment(document);
+            String fixedHtml = document.body().html();
             String validHtml = new String(isValidHtml.readAllBytes(), StandardCharsets.UTF_8);
+
+            // Spaces and new lines are removed to exclude difference in space characters
             assertEquals(TestStringUtils.removeNonsensicalSymbols(validHtml), TestStringUtils.removeNonsensicalSymbols(fixedHtml));
         }
     }
@@ -472,11 +491,13 @@ class HtmlProcessorTest {
         try (InputStream isInvalidHtml = this.getClass().getResourceAsStream("/tableOfTablesBeforeProcessing.html");
              InputStream isValidHtml = this.getClass().getResourceAsStream("/tableOfTablesAfterProcessing.html")) {
 
-            String invalidHtml = new String(isInvalidHtml.readAllBytes(), StandardCharsets.UTF_8);
+            Document document = JSoupUtils.parseHtml(new String(isInvalidHtml.readAllBytes(), StandardCharsets.UTF_8));
+
+            processor.addTableOfFigures(document);
+            String fixedHtml = document.body().html();
+            String validHtml = new String(isValidHtml.readAllBytes(), StandardCharsets.UTF_8);
 
             // Spaces and new lines are removed to exclude difference in space characters
-            String fixedHtml = processor.addTableOfFigures(invalidHtml);
-            String validHtml = new String(isValidHtml.readAllBytes(), StandardCharsets.UTF_8);
             assertEquals(TestStringUtils.removeNonsensicalSymbols(validHtml), TestStringUtils.removeNonsensicalSymbols(fixedHtml));
         }
     }
@@ -487,162 +508,15 @@ class HtmlProcessorTest {
         try (InputStream isInvalidHtml = this.getClass().getResourceAsStream("/tableOfFiguresBeforeProcessing.html");
              InputStream isValidHtml = this.getClass().getResourceAsStream("/tableOfFiguresAfterProcessing.html")) {
 
-            String invalidHtml = new String(isInvalidHtml.readAllBytes(), StandardCharsets.UTF_8);
+            Document document = JSoupUtils.parseHtml(new String(isInvalidHtml.readAllBytes(), StandardCharsets.UTF_8));
+
+            processor.addTableOfFigures(document);
+            String fixedHtml = document.body().html();
+            String validHtml = new String(isValidHtml.readAllBytes(), StandardCharsets.UTF_8);
 
             // Spaces and new lines are removed to exclude difference in space characters
-            String fixedHtml = processor.addTableOfFigures(invalidHtml);
-            String validHtml = new String(isValidHtml.readAllBytes(), StandardCharsets.UTF_8);
             assertEquals(TestStringUtils.removeNonsensicalSymbols(validHtml), TestStringUtils.removeNonsensicalSymbols(fixedHtml));
         }
-    }
-
-    @Test
-    @SneakyThrows
-    void adjustReportedByTest() {
-        String initialHtml = """
-                    <p id="polarion_1">
-                      <span class="polarion-rp-inline-widget" data-widget="com.polarion.scriptInline" id="polarion_1_iw_1">
-                        <span id="polarion-rp-widget-content">
-                          <div style="color: grey; text-align: right; position: absolute; top: 22px; right: 10px">Reported by
-                            <span class="polarion-no-style-cleanup">System Administrator</span>
-                            <br/>
-                            January 12, 2024 at 4:19:27 PM UTC
-                          </div>
-                        </span>
-                      </span>
-                    </p>
-                """;
-        String processedHtml = processor.adjustReportedBy(initialHtml);
-
-        String expectedHtml = """
-                    <p id="polarion_1">
-                      <span class="polarion-rp-inline-widget" data-widget="com.polarion.scriptInline" id="polarion_1_iw_1">
-                        <span id="polarion-rp-widget-content">
-                          <div style="color: grey; text-align: right; position: absolute; top: 22px; right: 10px; top: 0; font-size: 8px;">Reported by
-                            <span class="polarion-no-style-cleanup">System Administrator</span>
-                            <br/>
-                            January 12, 2024 at 4:19:27 PM UTC
-                          </div>
-                        </span>
-                      </span>
-                    </p>
-                """;
-        assertEquals(TestStringUtils.removeNonsensicalSymbols(expectedHtml), TestStringUtils.removeNonsensicalSymbols(processedHtml.replaceAll(" ", "")));
-    }
-
-    @Test
-    @SneakyThrows
-    void cutExportToPdfButtonTest() {
-        String initialHtml = """
-                    <p id="polarion_client33">
-                      <span class="polarion-rp-inline-widget" data-widget="ch.sbb.polarion.extension.pdf.exporter.widgets.exportToPdfButton" id="polarion_client33_iw_1">
-                        <span id="polarion-rp-widget-content">
-                          <span class="polarion-TestsExecutionButton-link">
-                            <a onclick="PdfExporter.openPopup({context: &#39;report&#39;})">
-                              <div style="color:#5E5E5E; text-shadow:#FCFCFC 1px 1px; border-color:#C2C2C2; background-color:#F0F0F0; " class="polarion-TestsExecutionButton-buttons-pdf">
-                                <div style="height: 10px;"></div>
-                                <table class="polarion-TestsExecutionButton-buttons-content">
-                                  <tr>
-                                    <td class="polarion-TestsExecutionButton-buttons-content-labelCell polarion-TestsExecutionButton-buttons-content-labelCell-noSumText">
-                                      <div class="polarion-TestsExecutionButton-labelTextNew">Export to PDF</div>
-                                    </td>
-                                  </tr>
-                                  <tr>
-                                    <td style="color:#5E5E5E; text-shadow:#FCFCFC 1px 1px; " class="polarion-TestsExecutionButton-sumText"></td>
-                                  </tr>
-                                </table>
-                              </div>
-                            </a>
-                          </span>
-                        </span>
-                      </span>
-                    </p>
-                """;
-        String processedHtml = processor.cutExportToPdfButton(initialHtml);
-
-        String expectedHtml = """
-                    <p id="polarion_client33">
-                      <span class="polarion-rp-inline-widget" data-widget="ch.sbb.polarion.extension.pdf.exporter.widgets.exportToPdfButton" id="polarion_client33_iw_1">
-                        <span id="polarion-rp-widget-content">
-                          <span class="polarion-TestsExecutionButton-link">
-                            <a onclick="PdfExporter.openPopup({context: &#39;report&#39;})">
-                            </a>
-                          </span>
-                        </span>
-                      </span>
-                    </p>
-                """;
-        assertEquals(TestStringUtils.removeNonsensicalSymbols(expectedHtml), TestStringUtils.removeNonsensicalSymbols(processedHtml.replaceAll(" ", "")));
-    }
-
-    @Test
-    @SneakyThrows
-    void adjustColumnWidthInReportsTest() {
-        String initialHtml = """
-                    <table class="polarion-rp-column-layout" style="width: 1000px;">
-                      <tbody>
-                        <tr>
-                          <td class="polarion-rp-column-layout-cell" style="width: 100%;">
-                            <h1 id="polarion_hardcoded_0">PDF Tests</h1>
-                            <p id="polarion_hardcoded_1">This Page has no content yet</p>
-                          </td>
-                        </tr>
-                      </tbody>
-                    </table>
-                """;
-        String processedHtml = processor.adjustColumnWidthInReports(initialHtml);
-
-        String expectedHtml = """
-                    <table class="polarion-rp-column-layout" style="width: 100%;">
-                      <tbody>
-                        <tr>
-                          <td class="polarion-rp-column-layout-cell" style="width: 100%;">
-                            <h1 id="polarion_hardcoded_0">PDF Tests</h1>
-                            <p id="polarion_hardcoded_1">This Page has no content yet</p>
-                          </td>
-                        </tr>
-                      </tbody>
-                    </table>
-                """;
-        assertEquals(TestStringUtils.removeNonsensicalSymbols(expectedHtml), TestStringUtils.removeNonsensicalSymbols(processedHtml.replaceAll(" ", "")));
-    }
-
-    @Test
-    @SneakyThrows
-    void removeFloatLeftFromReportsTest() {
-        String initialHtml = """
-                    <table id="polarion_client20" style="float: left;">
-                      <tbody>
-                        <tr>
-                          <td>Status</td>
-                          <td><span title="Accepted">Accepted</span></td>
-                        </tr>
-                        <tr>
-                          <td>Severity</td>
-                          <td><span title="Nice to Have">Nice to Have</span></td>
-                        </tr>
-                      </tbody>
-                    </table>
-                    <div style="clear: both;"></div>
-                """;
-        String processedHtml = processor.removeFloatLeftFromReports(initialHtml);
-
-        String expectedHtml = """
-                    <table id="polarion_client20" >
-                      <tbody>
-                        <tr>
-                          <td>Status</td>
-                          <td><span title="Accepted">Accepted</span></td>
-                        </tr>
-                        <tr>
-                          <td>Severity</td>
-                          <td><span title="Nice to Have">Nice to Have</span></td>
-                        </tr>
-                      </tbody>
-                    </table>
-                    <div style="clear: both;"></div>
-                """;
-        assertEquals(TestStringUtils.removeNonsensicalSymbols(expectedHtml), TestStringUtils.removeNonsensicalSymbols(processedHtml.replaceAll(" ", "")));
     }
 
     @Test
@@ -848,6 +722,211 @@ class HtmlProcessorTest {
         assertFalse(result.contains("Remove 2"));
         assertFalse(result.contains("Remove 3"));
         assertTrue(result.contains("Keep this"));
+    }
+
+    @Test
+    void fixTableHeadRowspanSimpleTest() {
+        String html = """
+                <table>
+                    <thead>
+                        <tr>
+                            <th rowspan="3">Column 1</th>
+                            <th rowspan="2">Column 2</th>
+                            <th>Column 3</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Data 1</td>
+                            <td>Data 2</td>
+                        </tr>
+                        <tr>
+                            <td>Data 3</td>
+                            <td>Data 4</td>
+                        </tr>
+                        <tr>
+                            <td>Data 5</td>
+                            <td>Data 6</td>
+                        </tr>
+                    </tbody>
+                </table>
+                """;
+
+        Document document = Jsoup.parse(html);
+        processor.fixTableHeadRowspan(document);
+
+        // After fixing: thead should have 3 rows (1 original + 2 moved from tbody)
+        assertEquals(3, document.select("thead tr").size());
+        // tbody should have 1 row left
+        assertEquals(1, document.select("tbody tr").size());
+    }
+
+    @Test
+    void fixTableHeadRowspanNoRowspanTest() {
+        String html = """
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Column 1</th>
+                            <th>Column 2</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Data 1</td>
+                            <td>Data 2</td>
+                        </tr>
+                    </tbody>
+                </table>
+                """;
+
+        Document document = Jsoup.parse(html);
+        processor.fixTableHeadRowspan(document);
+
+        // Should remain unchanged
+        assertEquals(1, document.select("thead tr").size());
+        assertEquals(1, document.select("tbody tr").size());
+    }
+
+    @Test
+    void fixTableHeadRowspanNoTheadTest() {
+        String html = """
+                <table>
+                    <tbody>
+                        <tr>
+                            <td rowspan="2">Data 1</td>
+                            <td>Data 2</td>
+                        </tr>
+                        <tr>
+                            <td>Data 3</td>
+                        </tr>
+                    </tbody>
+                </table>
+                """;
+
+        Document document = Jsoup.parse(html);
+        processor.fixTableHeadRowspan(document);
+
+        // Should remain unchanged (no thead)
+        assertEquals(0, document.select("thead").size());
+        assertEquals(2, document.select("tbody tr").size());
+    }
+
+    @Test
+    void fixTableHeadRowspanWithColspanTest() {
+        String html = """
+                <table>
+                    <thead>
+                        <tr>
+                            <th rowspan="2" colspan="2">Header 1</th>
+                            <th>Header 2</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Data 1</td>
+                            <td>Data 2</td>
+                        </tr>
+                        <tr>
+                            <td>Data 3</td>
+                            <td>Data 4</td>
+                        </tr>
+                    </tbody>
+                </table>
+                """;
+
+        Document document = Jsoup.parse(html);
+        processor.fixTableHeadRowspan(document);
+
+        // After fixing: thead should have 2 rows (1 original + 1 moved from tbody)
+        assertEquals(2, document.select("thead tr").size());
+        // tbody should have 1 row left
+        assertEquals(1, document.select("tbody tr").size());
+    }
+
+    @Test
+    void fixTableHeadRowspanMultipleTablesTest() {
+        String html = """
+                <table>
+                    <thead>
+                        <tr>
+                            <th rowspan="2">Header 1</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr><td>Data 1</td></tr>
+                        <tr><td>Data 2</td></tr>
+                    </tbody>
+                </table>
+                <table>
+                    <thead>
+                        <tr>
+                            <th rowspan="3">Header 2</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr><td>Data 3</td></tr>
+                        <tr><td>Data 4</td></tr>
+                        <tr><td>Data 5</td></tr>
+                    </tbody>
+                </table>
+                """;
+
+        Document document = Jsoup.parse(html);
+        processor.fixTableHeadRowspan(document);
+
+        // Both tables should be processed
+        assertEquals(2, document.select("table").size());
+        // First table thead should have 2 rows, tbody should have 1 row
+        assertEquals(2, document.select("table").get(0).select("thead tr").size());
+        assertEquals(1, document.select("table").get(0).select("tbody tr").size());
+        // Second table thead should have 3 rows, tbody should have 1 row
+        assertEquals(3, document.select("table").get(1).select("thead tr").size());
+        assertEquals(1, document.select("table").get(1).select("tbody tr").size());
+    }
+
+    @Test
+    void fixTableHeadRowspanNoTbodyTest() {
+        String html = """
+                <table>
+                    <thead>
+                        <tr>
+                            <th rowspan="2">Header 1</th>
+                            <th>Header 2</th>
+                        </tr>
+                    </thead>
+                </table>
+                """;
+
+        Document document = Jsoup.parse(html);
+        processor.fixTableHeadRowspan(document);
+
+        // Should remain unchanged (no tbody to move rows from)
+        assertEquals(1, document.select("thead tr").size());
+    }
+
+    @Test
+    void fixTableHeadRowspanInsufficientRowsTest() {
+        String html = """
+                <table>
+                    <thead>
+                        <tr>
+                            <th rowspan="5">Header 1</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr><td>Data 1</td></tr>
+                        <tr><td>Data 2</td></tr>
+                    </tbody>
+                </table>
+                """;
+
+        Document document = Jsoup.parse(html);
+        processor.fixTableHeadRowspan(document);
+
+        // Should move only available rows (2 rows) even though rowspan is 5
+        assertEquals(3, document.select("thead tr").size()); // 1 original + 2 moved
+        assertEquals(0, document.select("tbody tr").size()); // all rows moved
     }
 
     private ExportParams getExportParams() {
