@@ -82,18 +82,4 @@ public class HtmlToDocxConverter {
         return processedHtml;
     }
 
-    private String extractTagContent(String html, String tag) {
-        return RegexMatcher.get("<" + tag + ">(.*?)</" + tag + ">", RegexMatcher.DOTALL)
-                .findFirst(html, regexEngine -> regexEngine.group(1)).orElse("");
-    }
-
-    private String replaceTagContent(String container, String tag, String newContent) {
-        return RegexMatcher.get("<" + tag + ">(.*?)</" + tag + ">", RegexMatcher.DOTALL)
-                .replaceAll(container, "<" + tag + ">" + newContent + "</" + tag + ">");
-    }
-
-    private String addHeadTag(String html, String headContent) {
-        String pattern = "(<html[^<>]*>)";
-        return html.replaceAll(pattern, "$1<head>" + headContent + "</head>");
-    }
 }

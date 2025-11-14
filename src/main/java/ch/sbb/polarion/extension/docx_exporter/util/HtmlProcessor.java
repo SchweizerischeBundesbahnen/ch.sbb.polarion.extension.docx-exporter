@@ -63,6 +63,7 @@ public class HtmlProcessor {
     private static final String ROWSPAN_ATTR = "rowspan";
     private static final String RIGHT_ALIGNMENT_MARGIN = "auto 0px auto auto";
     private static final String TABLE_OF_FIGURES_ANCHOR_ID_PREFIX = "dlecaption_";
+    private static final String ANCHORS_WITH_HREF_SELECTOR = "a[href]";
 
     private static final String LOCALHOST = "localhost";
     public static final String HTTP_PROTOCOL_PREFIX = "http://";
@@ -574,7 +575,7 @@ public class HtmlProcessor {
     void cutLocalUrls(@NotNull Document document) {
         // Looks for <a>-tags containing "/polarion/#" in its href attribute or for <a>-tags which href attribute starts with "http" and containing <img>-tag inside of it.
         // Then it moves content of such links outside it and removing links themselves.
-        for (Element link : document.select("a[href]")) {
+        for (Element link : document.select(ANCHORS_WITH_HREF_SELECTOR)) {
             String href = link.attr(HtmlTagAttr.HREF);
             boolean cutUrl = href.contains(POLARION_URL_MARKER) || JSoupUtils.isImg(link.firstElementChild());
             if (cutUrl) {
@@ -593,7 +594,7 @@ public class HtmlProcessor {
             workItemAnchors.add(anchor.id());
         }
 
-        for (Element link : document.select("a[href]")) {
+        for (Element link : document.select(ANCHORS_WITH_HREF_SELECTOR)) {
             String href = link.attr(HtmlTagAttr.HREF);
 
             String afterProject = substringAfter(href, URL_PROJECT_ID_PREFIX);
@@ -1005,12 +1006,12 @@ public class HtmlProcessor {
 
     public void replaceLinks(@NotNull Document document) {
         String baseUrl = getBaseUrl();
-        Elements links = document.select("a[href]");
+        Elements links = document.select(ANCHORS_WITH_HREF_SELECTOR);
         for (Element link : links) {
             String originalHref = link.attr(HtmlTagAttr.HREF);
             if (isRelativeLink(originalHref)) {
                 String absoluteUrl = resolveUrl(baseUrl, originalHref);
-                link.attr(HtmlTagAttr.HREF,  absoluteUrl);
+                link.attr(HtmlTagAttr.HREF, absoluteUrl);
             }
         }
     }
