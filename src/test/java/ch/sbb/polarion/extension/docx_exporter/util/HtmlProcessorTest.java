@@ -11,7 +11,6 @@ import com.polarion.core.boot.PolarionProperties;
 import lombok.SneakyThrows;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
-import org.jsoup.nodes.Entities;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -322,11 +321,7 @@ class HtmlProcessorTest {
         try (InputStream isInvalidHtml = this.getClass().getResourceAsStream("/malformedLinkedWorkItemsBeforeProcessing.html");
              InputStream isValidHtml = this.getClass().getResourceAsStream("/malformedLinkedWorkItemsAfterProcessing.html")) {
 
-            Document document = Jsoup.parse(new String(isInvalidHtml.readAllBytes(), StandardCharsets.UTF_8));
-            document.outputSettings()
-                    .syntax(Document.OutputSettings.Syntax.xml)
-                    .escapeMode(Entities.EscapeMode.base)
-                    .prettyPrint(false);
+            Document document = JSoupUtils.parseHtml(new String(isInvalidHtml.readAllBytes(), StandardCharsets.UTF_8));
 
             List<String> selectedRoleEnumValues = Arrays.asList("has parent", "is parent of");
 
@@ -412,41 +407,6 @@ class HtmlProcessorTest {
         String html = "<div>100$</div>";
         String result = processor.processHtmlForPDF(html, getExportParams(), List.of());
         assertEquals("<div>100&dollar;</div>", result);
-    }
-
-    @Test
-    @SneakyThrows
-    void adjustContentToFitPageTest() {
-        try (InputStream isInvalidHtml = this.getClass().getResourceAsStream("/fitToPageBeforeProcessing.html");
-             InputStream isValidPortraitHtml = this.getClass().getResourceAsStream("/fitToPortraitPageAfterProcessing.html");
-             InputStream isValidLandscapeHtml = this.getClass().getResourceAsStream("/fitToLandscapePageAfterProcessing.html")) {
-
-            String invalidHtml = new String(isInvalidHtml.readAllBytes(), StandardCharsets.UTF_8);
-
-            // Spaces and new lines are removed to exclude difference in space characters
-            String fixedHtml = processor.adjustContentToFitPage(invalidHtml);
-            String validHtml = new String(isValidPortraitHtml.readAllBytes(), StandardCharsets.UTF_8);
-            assertEquals(TestStringUtils.removeNonsensicalSymbols(validHtml), TestStringUtils.removeNonsensicalSymbols(fixedHtml));
-
-            fixedHtml = processor.adjustContentToFitPage(invalidHtml);
-            validHtml = new String(isValidLandscapeHtml.readAllBytes(), StandardCharsets.UTF_8);
-            assertEquals(TestStringUtils.removeNonsensicalSymbols(validHtml), TestStringUtils.removeNonsensicalSymbols(fixedHtml));
-        }
-    }
-
-    @Test
-    @SneakyThrows
-    void adjustImagesInTablesTest() {
-        try (InputStream isInvalidHtml = this.getClass().getResourceAsStream("/fitImagesWidthBeforeProcessing.html");
-             InputStream isValidHtml = this.getClass().getResourceAsStream("/fitImagesWidthAfterProcessing.html")) {
-
-            String invalidHtml = new String(isInvalidHtml.readAllBytes(), StandardCharsets.UTF_8);
-
-            // Spaces and new lines are removed to exclude difference in space characters
-            String fixedHtml = processor.adjustContentToFitPage(invalidHtml);
-            String validHtml = new String(isValidHtml.readAllBytes(), StandardCharsets.UTF_8);
-            assertEquals(TestStringUtils.removeNonsensicalSymbols(validHtml), TestStringUtils.removeNonsensicalSymbols(fixedHtml));
-        }
     }
 
     @Test

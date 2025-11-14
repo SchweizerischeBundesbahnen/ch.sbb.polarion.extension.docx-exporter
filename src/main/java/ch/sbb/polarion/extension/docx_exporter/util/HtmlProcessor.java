@@ -14,7 +14,6 @@ import ch.sbb.polarion.extension.docx_exporter.util.html.HtmlLinksHelper;
 import com.polarion.alm.shared.util.StringUtils;
 import com.polarion.core.boot.PolarionProperties;
 import com.polarion.core.config.Configuration;
-import com.polarion.core.util.xml.CSSStyle;
 import com.steadystate.css.parser.CSSOMParser;
 import lombok.SneakyThrows;
 import org.jetbrains.annotations.NotNull;
@@ -140,8 +139,6 @@ public class HtmlProcessor {
             cutNotNeededChapters(document, exportParams.getChapters());
         }
 
-        addTableOfFigures(document);
-
         // Moves WorkItem content out of table wrapping it
         removePageBreakAvoids(document);
 
@@ -185,6 +182,7 @@ public class HtmlProcessor {
         // ----
 
         new LiveDocTOCGenerator().addTableOfContent(document);
+        addTableOfFigures(document);
 
         html = document.body().html();
 
@@ -196,8 +194,6 @@ public class HtmlProcessor {
 
         html = replaceResourcesAsBase64Encoded(html);
         html = MediaUtils.removeSvgUnsupportedFeatureHint(html); //note that there is one more replacement attempt before replacing images with base64 representation
-
-        html = adjustContentToFitPage(html);
 
         html = replaceLinks(html);
 
@@ -852,15 +848,6 @@ public class HtmlProcessor {
                 }
             }
         }
-    }
-
-
-    @NotNull
-    @VisibleForTesting
-    String adjustContentToFitPage(@NotNull String html) {
-        html = adjustImageSizeInTables(html);
-        html = adjustImageSize(html);
-        return adjustTableSize(html);
     }
 
     @NotNull
