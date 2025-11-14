@@ -356,16 +356,16 @@ class HtmlProcessorTest {
     void replaceSvgImagesAsBase64EncodedTest() {
         String html = "<div><img id=\"image1\" src=\"http://localhost/some-path/img1.svg\"/> <img id='image2' src='http://localhost/some-path/img2.svg'/> <img id='image1' src='http://localhost/some-path/img1.svg'/></div>";
         byte[] imgBytes;
-        try (InputStream is = new ByteArrayInputStream("<svg><switch><g requiredFeatures=\"http://www.w3.org/TR/SVG11/feature#Extensibility\"/></switch></svg>".getBytes(StandardCharsets.UTF_8))) {
+        try (InputStream is = new ByteArrayInputStream("<?xml version=\"1.0\" encoding=\"UTF-8\"?><svg xmlns=\"http://www.w3.org/2000/svg\"><switch><g requiredFeatures=\"http://www.w3.org/TR/SVG11/feature#Extensibility\"/></switch></svg>".getBytes(StandardCharsets.UTF_8))) {
             imgBytes = is.readAllBytes();
         }
         when(fileResourceProvider.getResourceAsBytes(any())).thenReturn(imgBytes);
         when(fileResourceProvider.getResourceAsBase64String(any())).thenCallRealMethod();
-        when(fileResourceProvider.processPossibleSvgImage(any())).thenCallRealMethod();
         String result = processor.replaceResourcesAsBase64Encoded(html);
-        String expected = "<div><img id=\"image1\" src=\"data:image/svg+xml;base64," + Base64.getEncoder().encodeToString("<svg></svg>".getBytes(StandardCharsets.UTF_8)) + "\"/> " +
-                "<img id='image2' src='data:image/svg+xml;base64," + Base64.getEncoder().encodeToString("<svg></svg>".getBytes(StandardCharsets.UTF_8)) + "'/> " +
-                "<img id='image1' src='data:image/svg+xml;base64," + Base64.getEncoder().encodeToString("<svg></svg>".getBytes(StandardCharsets.UTF_8)) + "'/></div>";
+        String base64SvgImage = Base64.getEncoder().encodeToString("<?xml version=\"1.0\" encoding=\"UTF-8\"?><svg xmlns=\"http://www.w3.org/2000/svg\"><switch><g requiredFeatures=\"http://www.w3.org/TR/SVG11/feature#Extensibility\"/></switch></svg>".getBytes(StandardCharsets.UTF_8));
+        String expected = "<div><img id=\"image1\" src=\"data:image/svg+xml;base64," + base64SvgImage + "\"/> " +
+                "<img id='image2' src='data:image/svg+xml;base64," + base64SvgImage + "'/> " +
+                "<img id='image1' src='data:image/svg+xml;base64," + base64SvgImage + "'/></div>";
         assertEquals(expected, result);
     }
 
@@ -480,21 +480,6 @@ class HtmlProcessorTest {
     }
 
     @Test
-    void getImageWidthBasedOnColumnsCountTest() {
-        assertEquals(-1, processor.getImageWidthBasedOnColumnsCount("<tr><img/></tr>", "<img/>"));
-        assertEquals(-1, processor.getImageWidthBasedOnColumnsCount("<tr><td></td><td><img/></td><td></td>", "<img/>"));
-        assertEquals(197, processor.getImageWidthBasedOnColumnsCount("<tr><td></td><td><img/></td><td></td></tr>", "<img/>"));
-    }
-
-
-    @Test
-    void columnsCountTest() {
-        assertEquals(0, processor.columnsCount(""));
-        assertEquals(0, processor.columnsCount("<div></div>"));
-        assertEquals(3, processor.columnsCount("<div><td></td><td><span/></td><td></div>"));
-    }
-
-    @Test
     void commentsTest() {
         String initialHtml = """
                     <html>
@@ -538,7 +523,9 @@ class HtmlProcessorTest {
         System.setProperty(PolarionProperties.BASE_URL, baseUrl);
         try {
             String html = "<a href=\"page.html\">Page</a>";
-            String result = processor.replaceLinks(html);
+            Document document = JSoupUtils.parseHtml(html);
+            processor.replaceLinks(document);
+            String result = document.body().html();
             assertTrue(result.contains("href=\"http://example.com/base/page.html\""));
         } finally {
             System.setProperty(PolarionProperties.BASE_URL, "");
@@ -548,21 +535,27 @@ class HtmlProcessorTest {
     @Test
     void ignoreAbsoluteLinkTest() {
         String html = "<a href=\"https://external.com/page\">External</a>";
-        String result = processor.replaceLinks(html);
+        Document document = JSoupUtils.parseHtml(html);
+        processor.replaceLinks(document);
+        String result = document.body().html();
         assertEquals(html, result);
     }
 
     @Test
     void ignoreMailtoLinkTest() {
         String html = "<a href=\"mailto:someone@example.com\">Email</a>";
-        String result = processor.replaceLinks(html);
+        Document document = JSoupUtils.parseHtml(html);
+        processor.replaceLinks(document);
+        String result = document.body().html();
         assertEquals(html, result);
     }
 
     @Test
     void ignoreDleCaptionAnchorTest() {
         String html = "<a href=\"#dlecaption_123\">Caption</a>";
-        String result = processor.replaceLinks(html);
+        Document document = JSoupUtils.parseHtml(html);
+        processor.replaceLinks(document);
+        String result = document.body().html();
         assertEquals(html, result);
     }
 
@@ -572,7 +565,9 @@ class HtmlProcessorTest {
         System.setProperty(PolarionProperties.BASE_URL, baseUrl);
         try {
             String html = "<a href=\"..//page\">Broken path</a>";
-            String result = processor.replaceLinks(html);
+            Document document = JSoupUtils.parseHtml(html);
+            processor.replaceLinks(document);
+            String result = document.body().html();
             assertTrue(result.contains("http://example.com/page"));
         } finally {
             System.setProperty(PolarionProperties.BASE_URL, "");
@@ -610,7 +605,9 @@ class HtmlProcessorTest {
     @Test
     void clearSelectorsRemovesMatchingElementsTest() {
         String html = "<html><body><div class='foo'>Content 1</div><div class='bar'>Content 2</div><div class='foo'>Content 3</div></body></html>";
-        String result = processor.clearSelectors(html, ".foo");
+        Document document = JSoupUtils.parseHtml(html);
+        processor.clearSelectors(document, ".foo");
+        String result = document.html();
         assertFalse(result.contains("Content 1"));
         assertFalse(result.contains("Content 3"));
         assertTrue(result.contains("Content 2"));
@@ -619,7 +616,9 @@ class HtmlProcessorTest {
     @Test
     void clearSelectorsRemovesElementsByIdTest() {
         String html = "<html><body><div id='remove-me'>Should be removed</div><div id='keep-me'>Should be kept</div></body></html>";
-        String result = processor.clearSelectors(html, "#remove-me");
+        Document document = JSoupUtils.parseHtml(html);
+        processor.clearSelectors(document, "#remove-me");
+        String result = document.html();
         assertFalse(result.contains("Should be removed"));
         assertTrue(result.contains("Should be kept"));
     }
@@ -627,7 +626,9 @@ class HtmlProcessorTest {
     @Test
     void clearSelectorsRemovesMultipleElementsTest() {
         String html = "<html><body><span class='test'>A</span><span class='test'>B</span><span class='test'>C</span></body></html>";
-        String result = processor.clearSelectors(html, ".test");
+        Document document = JSoupUtils.parseHtml(html);
+        processor.clearSelectors(document, ".test");
+        String result = document.html();
         assertFalse(result.contains(">A<"));
         assertFalse(result.contains(">B<"));
         assertFalse(result.contains(">C<"));
@@ -636,7 +637,9 @@ class HtmlProcessorTest {
     @Test
     void clearSelectorsWithComplexSelectorTest() {
         String html = "<html><body><div class='container'><p class='text'>Remove this</p><p>Keep this</p></div></body></html>";
-        String result = processor.clearSelectors(html, "div.container p.text");
+        Document document = JSoupUtils.parseHtml(html);
+        processor.clearSelectors(document, "div.container p.text");
+        String result = document.html();
         assertFalse(result.contains("Remove this"));
         assertTrue(result.contains("Keep this"));
     }
@@ -644,14 +647,18 @@ class HtmlProcessorTest {
     @Test
     void clearSelectorsWithNoMatchesTest() {
         String html = "<html><body><div>Content</div></body></html>";
-        String result = processor.clearSelectors(html, ".non-existent");
+        Document document = JSoupUtils.parseHtml(html);
+        processor.clearSelectors(document, ".non-existent");
+        String result = document.html();
         assertTrue(result.contains("Content"));
     }
 
     @Test
     void clearSelectorsRemovesNestedElementsTest() {
         String html = "<html><body><div class='outer'><div class='inner'>Nested content</div></div><div>Other content</div></body></html>";
-        String result = processor.clearSelectors(html, ".outer");
+        Document document = JSoupUtils.parseHtml(html);
+        processor.clearSelectors(document, ".outer");
+        String result = document.html();
         assertFalse(result.contains("Nested content"));
         assertTrue(result.contains("Other content"));
     }
@@ -659,7 +666,9 @@ class HtmlProcessorTest {
     @Test
     void clearSelectorsWithAttributeSelectorTest() {
         String html = "<html><body><a href='http://example.com'>Link 1</a><a href='http://other.com'>Link 2</a></body></html>";
-        String result = processor.clearSelectors(html, "a[href='http://example.com']");
+        Document document = JSoupUtils.parseHtml(html);
+        processor.clearSelectors(document, "a[href='http://example.com']");
+        String result = document.html();
         assertFalse(result.contains("Link 1"));
         assertTrue(result.contains("Link 2"));
     }
@@ -667,7 +676,9 @@ class HtmlProcessorTest {
     @Test
     void clearSelectorsPreservesDocumentStructureTest() {
         String html = "<html><head><title>Test</title></head><body><div class='remove'>Text</div></body></html>";
-        String result = processor.clearSelectors(html, ".remove");
+        Document document = JSoupUtils.parseHtml(html);
+        processor.clearSelectors(document, ".remove");
+        String result = document.html();
         assertTrue(result.contains("<html"));
         assertTrue(result.contains("<head"));
         assertTrue(result.contains("<title>Test</title>"));
@@ -677,7 +688,9 @@ class HtmlProcessorTest {
     @Test
     void clearSelectorsWithMultipleSelectorsCombinedTest() {
         String html = "<html><body><div class='foo'>Remove 1</div><span id='bar'>Remove 2</span><p class='baz'>Remove 3</p><div>Keep this</div></body></html>";
-        String result = processor.clearSelectors(html, ".foo, #bar, .baz");
+        Document document = JSoupUtils.parseHtml(html);
+        processor.clearSelectors(document, ".foo, #bar, .baz");
+        String result = document.body().html();
         assertFalse(result.contains("Remove 1"));
         assertFalse(result.contains("Remove 2"));
         assertFalse(result.contains("Remove 3"));

@@ -3,7 +3,6 @@ package ch.sbb.polarion.extension.docx_exporter.util;
 import ch.sbb.polarion.extension.docx_exporter.constants.CssProp;
 import ch.sbb.polarion.extension.docx_exporter.constants.HtmlTag;
 import ch.sbb.polarion.extension.docx_exporter.constants.HtmlTagAttr;
-import ch.sbb.polarion.extension.generic.regex.IRegexEngine;
 import ch.sbb.polarion.extension.generic.regex.RegexMatcher;
 import ch.sbb.polarion.extension.generic.settings.NamedSettings;
 import ch.sbb.polarion.extension.generic.settings.SettingId;
@@ -43,27 +42,10 @@ import static ch.sbb.polarion.extension.docx_exporter.util.exporter.Constants.*;
 
 public class HtmlProcessor {
 
-    private static final int A4_PORTRAIT_WIDTH = 592;
-    private static final int A4_PORTRAIT_HEIGHT = 874;
-    private static final int FULL_WIDTH_PERCENT = 100;
-    private static final float EX_TO_PX_RATIO = 6.5F;
-    private static final String MEASURE_PX = "px";
-    private static final String MEASURE_EX = "ex";
-    private static final String MEASURE_PERCENT = "%";
-    private static final String TABLE_OPEN_TAG = "<table";
-    private static final String TABLE_END_TAG = "</table>";
-    private static final String TABLE_ROW_OPEN_TAG = "<tr";
-    private static final String TABLE_ROW_END_TAG = "</tr>";
-    private static final String TABLE_COLUMN_OPEN_TAG = "<td";
     private static final String SPAN = "span";
     private static final String SPAN_END_TAG = "</span>";
     private static final String COMMENT_START = "[span";
     private static final String COMMENT_END = "[/span]";
-    private static final String WIDTH = "width";
-    private static final String MEASURE = "measure";
-    private static final String MEASURE_WIDTH = "measureWidth";
-    private static final String HEIGHT = "height";
-    private static final String MEASURE_HEIGHT = "measureHeight";
     private static final String CLASS = "class";
     private static final String COMMENT_START_CLASS = "comment-start";
     private static final String COMMENT_END_CLASS = "comment-end";
@@ -81,6 +63,7 @@ public class HtmlProcessor {
     private static final String ROWSPAN_ATTR = "rowspan";
     private static final String RIGHT_ALIGNMENT_MARGIN = "auto 0px auto auto";
     private static final String TABLE_OF_FIGURES_ANCHOR_ID_PREFIX = "dlecaption_";
+    private static final String ANCHORS_WITH_HREF_SELECTOR = "a[href]";
 
     private static final String LOCALHOST = "localhost";
     public static final String HTTP_PROTOCOL_PREFIX = "http://";
@@ -184,6 +167,12 @@ public class HtmlProcessor {
         new LiveDocTOCGenerator().addTableOfContent(document);
         addTableOfFigures(document);
 
+        replaceLinks(document);
+
+        if (!StringUtils.isEmptyTrimmed(exportParams.getRemovalSelector())) {
+            clearSelectors(document, exportParams.getRemovalSelector());
+        }
+
         html = document.body().html();
 
         // III. THIRD SECTION - and finally again back to manipulating HTML as a String.
@@ -193,15 +182,8 @@ public class HtmlProcessor {
         html = encodeDollarSigns(html);
 
         html = replaceResourcesAsBase64Encoded(html);
-        html = MediaUtils.removeSvgUnsupportedFeatureHint(html); //note that there is one more replacement attempt before replacing images with base64 representation
-
-        html = replaceLinks(html);
 
         html = html.replace("<p class=\"page_break\"></p>", "<p class=\"page_break\">&#12;</p>");
-
-        if (!StringUtils.isEmptyTrimmed(exportParams.getRemovalSelector())) {
-            html = clearSelectors(html, exportParams.getRemovalSelector());
-        }
 
         // Do not change this entry order, '&nbsp;' can be used in the logic above, so we must cut them off as the last step
         html = cutExtraNbsp(html);
@@ -593,7 +575,7 @@ public class HtmlProcessor {
     void cutLocalUrls(@NotNull Document document) {
         // Looks for <a>-tags containing "/polarion/#" in its href attribute or for <a>-tags which href attribute starts with "http" and containing <img>-tag inside of it.
         // Then it moves content of such links outside it and removing links themselves.
-        for (Element link : document.select("a[href]")) {
+        for (Element link : document.select(ANCHORS_WITH_HREF_SELECTOR)) {
             String href = link.attr(HtmlTagAttr.HREF);
             boolean cutUrl = href.contains(POLARION_URL_MARKER) || JSoupUtils.isImg(link.firstElementChild());
             if (cutUrl) {
@@ -612,7 +594,7 @@ public class HtmlProcessor {
             workItemAnchors.add(anchor.id());
         }
 
-        for (Element link : document.select("a[href]")) {
+        for (Element link : document.select(ANCHORS_WITH_HREF_SELECTOR)) {
             String href = link.attr(HtmlTagAttr.HREF);
 
             String afterProject = substringAfter(href, URL_PROJECT_ID_PREFIX);
@@ -947,11 +929,9 @@ public class HtmlProcessor {
         return html.replaceAll("&nbsp;|\u00A0", " ");
     }
 
-    public @NotNull String clearSelectors(@NotNull String html, @NotNull String clearSelector) {
-        Document doc = Jsoup.parse(html);
-        Elements elementsToRemove = doc.select(clearSelector);
+    public void clearSelectors(@NotNull Document document, @NotNull String clearSelector) {
+        Elements elementsToRemove = document.select(clearSelector);
         elementsToRemove.remove();
-        return doc.outerHtml();
     }
 
     @VisibleForTesting
@@ -1014,172 +994,6 @@ public class HtmlProcessor {
                 + "'";
     }
 
-    @NotNull
-    @VisibleForTesting
-    @SuppressWarnings("java:S5852") //regex checked
-    public String adjustImageSize(@NotNull String html) {
-        // We are looking here for images which widths and heights are explicitly specified.
-        // Named group "prepend" - is everything which stands before width/height and named group "append" - after.
-        // Then we check if width (named group "width") exceeds limit we override it by value "100%"
-        return RegexMatcher.get("(<img(?<prepend>[^>]+?)width:\\s*?(?<width>[\\d.]*?)(?<measureWidth>px|ex);\\s*?height:\\s*?(?<height>[\\d.]*?)(?<measureHeight>px|ex)(?<append>[^>]*?)>)")
-                .replace(html, regexEngine -> {
-                    float width = parseDimension(regexEngine, WIDTH, MEASURE_WIDTH);
-                    float height = parseDimension(regexEngine, HEIGHT, MEASURE_HEIGHT);
-
-                    String prepend = regexEngine.group("prepend");
-                    String append = regexEngine.group("append");
-
-                    return generateAdjustedImageTag(prepend, append, width, height, A4_PORTRAIT_WIDTH, A4_PORTRAIT_HEIGHT);
-                });
-    }
-
-    private float parseDimension(IRegexEngine regexEngine, String dimension, String measure) {
-        float value = Float.parseFloat(regexEngine.group(dimension));
-        if (MEASURE_EX.equals(regexEngine.group(measure))) {
-            value *= EX_TO_PX_RATIO;
-        }
-        return value;
-    }
-
-    private String generateAdjustedImageTag(String prepend, String append, float width, float height, float maxWidth, float maxHeight) {
-        float widthExceedingRatio = width / maxWidth;
-        float heightExceedingRatio = height / maxHeight;
-
-        if (widthExceedingRatio <= 1 && heightExceedingRatio <= 1) {
-            return null;
-        }
-
-        final float adjustedWidth;
-        final float adjustedHeight;
-
-        if (widthExceedingRatio > heightExceedingRatio) {
-            adjustedWidth = width / widthExceedingRatio;
-            adjustedHeight = height / widthExceedingRatio;
-        } else {
-            adjustedWidth = width / heightExceedingRatio;
-            adjustedHeight = height / heightExceedingRatio;
-        }
-
-        return "<img" + prepend + "width: " + ((int) adjustedWidth) + "px; height: " + ((int) adjustedHeight) + "px" + append + ">";
-    }
-
-    @NotNull
-    @VisibleForTesting
-    public String adjustTableSize(@NotNull String html) {
-        // We are looking here for tables which widths are explicitly specified.
-        // When width exceeds limit we override it by value "100%"
-        return RegexMatcher.get("<table[^>]+?width:\\s*?(?<width>[\\d.]+?)(?<measure>px|%)").replace(html, regexEngine -> {
-            String width = regexEngine.group(WIDTH);
-            String measure = regexEngine.group(MEASURE);
-            float widthParsed = Float.parseFloat(width);
-            if (MEASURE_PX.equals(measure) && widthParsed > A4_PORTRAIT_WIDTH || MEASURE_PERCENT.equals(measure) && widthParsed > FULL_WIDTH_PERCENT) {
-                return regexEngine.group().replace(width + measure, "100%");
-            } else {
-                return null;
-            }
-        });
-    }
-
-    @NotNull
-    @VisibleForTesting
-    @SuppressWarnings({"java:S3776", "java:S5852", "java:S5857", "java:S135"}) //regex checked
-    public String adjustImageSizeInTables(@NotNull String html) {
-        StringBuilder buf = new StringBuilder();
-        int pos = 0;
-
-        //The main idea below is:
-        // 1) find the most top-level tables
-        // 2) replace all suspicious img tags inside tables with reduced width
-
-        while (true) {
-            int tableStart = html.indexOf(TABLE_OPEN_TAG, pos);
-            if (tableStart == -1) {
-                buf.append(html.substring(pos));
-                break;
-            }
-            int tableEnd = findTableEnd(html, tableStart);
-            if (tableEnd == -1) {
-                buf.append(html.substring(pos));
-                break;
-            } else {
-                tableEnd = tableEnd + TABLE_END_TAG.length();
-            }
-            if (pos != tableStart) {
-                buf.append(html, pos, tableStart);
-            }
-            String tableHtml = html.substring(tableStart, tableEnd);
-
-            String modifiedTableContent = RegexMatcher.get("(<img[^>]+?width:\\s*?(?<widthValue>(?<width>[\\d.]*?)(?<measure>px|ex)|auto);[^>]+?>)").replace(tableHtml, regexEngine -> {
-                String widthValue = regexEngine.group("widthValue");
-                float width;
-                if (widthValue.equals("auto")) {
-                    width = Float.MAX_VALUE;
-                } else {
-                    width = Float.parseFloat(regexEngine.group(WIDTH));
-                    if (MEASURE_EX.equals(regexEngine.group(MEASURE))) {
-                        width = width * EX_TO_PX_RATIO;
-                    }
-                }
-                float columnCountBasedWidth = getImageWidthBasedOnColumnsCount(tableHtml, regexEngine.group());
-                float paramsBasedWidth = A4_PORTRAIT_WIDTH / 3f;
-                float maxWidth = columnCountBasedWidth != -1 && columnCountBasedWidth < paramsBasedWidth ? columnCountBasedWidth : paramsBasedWidth;
-                return width <= maxWidth ? null : regexEngine.group()
-                        .replaceAll("max-width:\\s*?([\\d.]*?(px|ex)|auto);", "") //it seems that max-width doesn't work in WP
-                        .replaceAll("width:\\s*?([\\d.]*?(px|ex)|auto);", "")     //remove width too, we will add it later
-                        .replaceAll("height:\\s*?[\\d.]*?(px|ex);", "")           //remove height completely in order to keep image ratio
-                        .replace("style=\"", "style=\"width: " + ((int) maxWidth) + "px;");
-            });
-
-            buf.append(modifiedTableContent);
-            pos = tableEnd;
-        }
-        return buf.toString();
-    }
-
-    @SuppressWarnings("java:S135")
-    private int findTableEnd(String html, int tableStart) {
-        int pos = tableStart;
-        int tableEnd = -1;
-        int depth = 0;
-        while (pos < html.length()) {
-            int nextTableStart = html.indexOf(TABLE_OPEN_TAG, pos);
-            int nextTableEnd = html.indexOf(TABLE_END_TAG, pos);
-            if (nextTableStart != -1 && nextTableStart < nextTableEnd) {
-                depth++;
-                pos = nextTableStart + TABLE_OPEN_TAG.length();
-            } else if (nextTableEnd != -1) {
-                depth--;
-                pos = nextTableEnd + TABLE_END_TAG.length();
-                if (depth == 0) {
-                    tableEnd = nextTableEnd;
-                    break;
-                }
-            } else {
-                break;
-            }
-        }
-        return tableEnd;
-    }
-
-    @VisibleForTesting
-    int getImageWidthBasedOnColumnsCount(String table, String imgTag) {
-        int imgPosition = table.indexOf(imgTag);
-        int trStartPosition = table.substring(0, imgPosition).lastIndexOf(TABLE_ROW_OPEN_TAG);
-        int trEndPosition = table.indexOf(TABLE_ROW_END_TAG, imgPosition);
-        if (trStartPosition != -1 && trEndPosition != -1) {
-            int columnsCount = columnsCount(table.substring(trStartPosition, trEndPosition));
-            if (columnsCount > 0) {
-                return A4_PORTRAIT_WIDTH / columnsCount;
-            }
-        }
-        return -1;
-    }
-
-    @VisibleForTesting
-    int columnsCount(String string) {
-        return (string.length() - string.replace(TABLE_COLUMN_OPEN_TAG, "").length()) / TABLE_COLUMN_OPEN_TAG.length();
-    }
-
     @SneakyThrows
     @SuppressWarnings({"java:S5852", "java:S5857"}) //need by design
     public String replaceResourcesAsBase64Encoded(String html) {
@@ -1190,27 +1004,16 @@ public class HtmlProcessor {
         return httpLinksHelper.internalizeLinks(html);
     }
 
-    public String replaceLinks(String html) {
+    public void replaceLinks(@NotNull Document document) {
         String baseUrl = getBaseUrl();
-        // Use RegexMatcher to process anchor tags with href
-        return RegexMatcher.get("<a\\s+[^>]*href=\\\"(?<href>[^\\\"]*)\\\"[^>]*>")
-            .replace(html, regexEngine -> {
-                String originalHref = regexEngine.group("href");
-                String anchorTag = regexEngine.group();
-                if (originalHref.matches("#dlecaption_\\d+") || isInTOC(anchorTag)) {
-                    return anchorTag;
-                }
-                if (isRelativeLink(originalHref)) {
-                    String absoluteUrl = resolveUrl(baseUrl, originalHref);
-                    return anchorTag.replace("href=\"" + originalHref + "\"", "href=\"" + absoluteUrl + "\"");
-                }
-                return anchorTag;
-            });
-    }
-
-    @VisibleForTesting
-    boolean isInTOC(String anchorTag) {
-        return anchorTag.contains("class=\"toc\"") || anchorTag.contains("class='toc'");
+        Elements links = document.select(ANCHORS_WITH_HREF_SELECTOR);
+        for (Element link : links) {
+            String originalHref = link.attr(HtmlTagAttr.HREF);
+            if (isRelativeLink(originalHref)) {
+                String absoluteUrl = resolveUrl(baseUrl, originalHref);
+                link.attr(HtmlTagAttr.HREF, absoluteUrl);
+            }
+        }
     }
 
     @VisibleForTesting

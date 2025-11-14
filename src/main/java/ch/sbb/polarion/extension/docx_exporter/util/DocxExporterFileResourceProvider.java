@@ -24,14 +24,11 @@ import java.io.InputStream;
 import java.lang.reflect.Field;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Base64;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
-import static ch.sbb.polarion.extension.docx_exporter.util.exporter.Constants.MIME_TYPE_SVG;
 
 /**
  * Initial code taken from {@link com.polarion.alm.tracker.web.internal.server.CustomFileResourceProvider}
@@ -61,9 +58,6 @@ public class DocxExporterFileResourceProvider implements FileResourceProvider {
         byte[] resourceBytes = getResourceAsBytes(resource);
         if (resourceBytes != null && resourceBytes.length != 0) { // Don't make any manipulations if resource wasn't resolved
             String mimeType = MediaUtils.guessMimeType(resource, resourceBytes);
-            if (MIME_TYPE_SVG.equals(mimeType)) {
-                resourceBytes = processPossibleSvgImage(resourceBytes);
-            }
             return String.format("data:%s;base64,%s", mimeType, Base64.getEncoder().encodeToString(resourceBytes));
         }
         return null;
@@ -149,18 +143,6 @@ public class DocxExporterFileResourceProvider implements FileResourceProvider {
             return "";
         }
         return null;
-    }
-
-    @VisibleForTesting
-    @SuppressWarnings("squid:S1166") // no need to log or rethrow exception by design
-    public byte[] processPossibleSvgImage(byte[] possibleSvgImageBytes) {
-        try {
-            String svgContent = new String(possibleSvgImageBytes, StandardCharsets.UTF_8);
-            return MediaUtils.removeSvgUnsupportedFeatureHint(svgContent).getBytes(StandardCharsets.UTF_8);
-        } catch (Exception e) {
-            // not a valid string, just nvm
-        }
-        return possibleSvgImageBytes;
     }
 
     /**

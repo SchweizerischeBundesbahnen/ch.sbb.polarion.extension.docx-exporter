@@ -20,7 +20,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.lang.reflect.Field;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
@@ -46,12 +45,6 @@ class DocxExporterFileResourceProviderTest {
     @BeforeEach
     void setUp() {
         resourceProvider = new DocxExporterFileResourceProvider(List.of(resolverMock));
-    }
-
-    @Test
-    void processPossibleSvgImageTest() {
-        byte[] basicString = "basic".getBytes(StandardCharsets.UTF_8);
-        assertArrayEquals(basicString, resourceProvider.processPossibleSvgImage(basicString));
     }
 
     @Test
