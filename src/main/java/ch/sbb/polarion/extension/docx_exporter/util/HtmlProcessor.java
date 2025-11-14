@@ -42,27 +42,10 @@ import static ch.sbb.polarion.extension.docx_exporter.util.exporter.Constants.*;
 
 public class HtmlProcessor {
 
-    private static final int A4_PORTRAIT_WIDTH = 592;
-    private static final int A4_PORTRAIT_HEIGHT = 874;
-    private static final int FULL_WIDTH_PERCENT = 100;
-    private static final float EX_TO_PX_RATIO = 6.5F;
-    private static final String MEASURE_PX = "px";
-    private static final String MEASURE_EX = "ex";
-    private static final String MEASURE_PERCENT = "%";
-    private static final String TABLE_OPEN_TAG = "<table";
-    private static final String TABLE_END_TAG = "</table>";
-    private static final String TABLE_ROW_OPEN_TAG = "<tr";
-    private static final String TABLE_ROW_END_TAG = "</tr>";
-    private static final String TABLE_COLUMN_OPEN_TAG = "<td";
     private static final String SPAN = "span";
     private static final String SPAN_END_TAG = "</span>";
     private static final String COMMENT_START = "[span";
     private static final String COMMENT_END = "[/span]";
-    private static final String WIDTH = "width";
-    private static final String MEASURE = "measure";
-    private static final String MEASURE_WIDTH = "measureWidth";
-    private static final String HEIGHT = "height";
-    private static final String MEASURE_HEIGHT = "measureHeight";
     private static final String CLASS = "class";
     private static final String COMMENT_START_CLASS = "comment-start";
     private static final String COMMENT_END_CLASS = "comment-end";
