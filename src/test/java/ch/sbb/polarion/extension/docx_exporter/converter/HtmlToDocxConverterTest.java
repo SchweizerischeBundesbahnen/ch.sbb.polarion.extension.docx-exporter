@@ -1,5 +1,6 @@
 package ch.sbb.polarion.extension.docx_exporter.converter;
 
+import ch.sbb.polarion.extension.docx_exporter.TestStringUtils;
 import ch.sbb.polarion.extension.docx_exporter.configuration.DocxExporterExtensionConfigurationExtension;
 import ch.sbb.polarion.extension.docx_exporter.pandoc.service.PandocServiceConnector;
 import ch.sbb.polarion.extension.docx_exporter.pandoc.service.model.PandocParams;
@@ -11,13 +12,11 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @ExtendWith({MockitoExtension.class, DocxExporterExtensionConfigurationExtension.class})
 class HtmlToDocxConverterTest {
@@ -45,15 +44,20 @@ class HtmlToDocxConverterTest {
         when(htmlProcessor.replaceResourcesAsBase64Encoded(anyString())).thenAnswer(invocation ->
                 invocation.getArgument(0));
         when(htmlProcessor.internalizeLinks(anyString())).thenAnswer(a -> a.getArgument(0));
-        when(htmlProcessor.replaceLinks(anyString())).thenCallRealMethod();
+        doCallRealMethod().when(htmlProcessor).replaceLinks(any());
         String resultHtml = htmlToDocxConverter.preprocessHtml(html);
 
-        assertThat(resultHtml).isEqualTo("""
-                <html><head><style>@page {size: test;}</style></head>
+        assertEquals(TestStringUtils.removeNonsensicalSymbols("""
+                <html>
+                    <head>
+                        <style>
+                            @page {size: test;}
+                        </style>
+                    </head>
                     <body>
                         <span>example text</span>
                     </body>
-                </html>""");
+                </html>"""), TestStringUtils.removeNonsensicalSymbols(resultHtml));
 
         verify(htmlProcessor).replaceResourcesAsBase64Encoded(resultHtml);
     }
@@ -63,8 +67,10 @@ class HtmlToDocxConverterTest {
         String html = """
                 <html>
                     <head>
-                        test head content before
-                        <style>style content</style>
+                        <meta charset="utf-8">
+                        <style>
+                            .some-class { margin: 10px }
+                        </style>
                     </head>
                     <body>
                         <span>example text</span>
@@ -74,19 +80,22 @@ class HtmlToDocxConverterTest {
         when(htmlProcessor.replaceResourcesAsBase64Encoded(anyString())).thenAnswer(invocation ->
                 invocation.getArgument(0));
         when(htmlProcessor.internalizeLinks(anyString())).thenAnswer(a -> a.getArgument(0));
-        when(htmlProcessor.replaceLinks(anyString())).thenCallRealMethod();
+        doCallRealMethod().when(htmlProcessor).replaceLinks(any());
         String resultHtml = htmlToDocxConverter.preprocessHtml(html);
 
-        assertThat(resultHtml).isEqualTo("""
+        assertEquals(TestStringUtils.removeNonsensicalSymbols("""
                 <html>
                     <head>
-                        test head content before
-                        <style>style content @page {size: test;}</style>
+                        <meta charset="utf-8">
+                        <style>
+                            .some-class { margin: 10px }
+                            @page {size: test;}
+                        </style>
                     </head>
                     <body>
                         <span>example text</span>
                     </body>
-                </html>""");
+                </html>"""), TestStringUtils.removeNonsensicalSymbols(resultHtml));
 
         verify(htmlProcessor).replaceResourcesAsBase64Encoded(resultHtml);
     }
@@ -96,28 +105,28 @@ class HtmlToDocxConverterTest {
         String html = """
                 <html>
                     <head>
-                        test head content before
+                        <meta charset="utf-8">
                     </head>
                     <body>
                         <span>example text</span>
                     </body>
                 </html>""";
         when(docxTemplateProcessor.buildSizeCss()).thenReturn(" @page {size: test;}");
-        when(htmlProcessor.replaceResourcesAsBase64Encoded(anyString())).thenAnswer(invocation ->
-                invocation.getArgument(0));
+        when(htmlProcessor.replaceResourcesAsBase64Encoded(anyString())).thenAnswer(a -> a.getArgument(0));
         when(htmlProcessor.internalizeLinks(anyString())).thenAnswer(a -> a.getArgument(0));
-        when(htmlProcessor.replaceLinks(anyString())).thenCallRealMethod();
+        doCallRealMethod().when(htmlProcessor).replaceLinks(any());
         String resultHtml = htmlToDocxConverter.preprocessHtml(html);
 
-        assertThat(resultHtml).isEqualTo("""
+        assertEquals(TestStringUtils.removeNonsensicalSymbols("""
                 <html>
                     <head>
-                        test head content before
-                    <style> @page {size: test;}</style></head>
+                        <meta charset="utf-8">
+                        <style> @page {size: test;}</style>
+                    </head>
                     <body>
                         <span>example text</span>
                     </body>
-                </html>""");
+                </html>"""), TestStringUtils.removeNonsensicalSymbols(resultHtml));
 
         verify(htmlProcessor).replaceResourcesAsBase64Encoded(resultHtml);
     }
@@ -131,6 +140,8 @@ class HtmlToDocxConverterTest {
                     </body>
                 </html>""";
         PandocParams params = PandocParams.builder().build();
+        when(htmlProcessor.internalizeLinks(anyString())).thenAnswer(a -> a.getArgument(0));
+        when(htmlProcessor.replaceResourcesAsBase64Encoded(anyString())).thenAnswer(a -> a.getArgument(0));
         HtmlToDocxConverter converter = new HtmlToDocxConverter(docxTemplateProcessor, htmlProcessor, serviceConnector);
         assertDoesNotThrow(() -> converter.convert(html, null, null, params));
         verify(serviceConnector).convertToDocx(html, null, null, params);
@@ -149,20 +160,23 @@ class HtmlToDocxConverterTest {
     @Test
     void shouldAcceptAttributesAndEmptyTags() {
         String html = """
-                <html myAttribute="test">
-                    <body/>
+                <html attribute="test">
+                    <body></body>
                 </html>""";
         when(docxTemplateProcessor.buildSizeCss()).thenReturn("@page {size: test;}");
         when(htmlProcessor.replaceResourcesAsBase64Encoded(anyString())).thenAnswer(invocation ->
                 invocation.getArgument(0));
         when(htmlProcessor.internalizeLinks(anyString())).thenAnswer(a -> a.getArgument(0));
-        when(htmlProcessor.replaceLinks(anyString())).thenCallRealMethod();
+        doCallRealMethod().when(htmlProcessor).replaceLinks(any());
         String resultHtml = htmlToDocxConverter.preprocessHtml(html);
 
-        assertThat(resultHtml).isEqualTo("""
-                <html myAttribute="test"><head><style>@page {size: test;}</style></head>
-                    <body/>
-                </html>""");
+        assertEquals(TestStringUtils.removeNonsensicalSymbols("""
+                <html attribute="test">
+                    <head>
+                        <style>@page {size: test;}</style>
+                    </head>
+                    <body></body>
+                </html>"""), TestStringUtils.removeNonsensicalSymbols(resultHtml));
 
         verify(htmlProcessor).replaceResourcesAsBase64Encoded(resultHtml);
     }

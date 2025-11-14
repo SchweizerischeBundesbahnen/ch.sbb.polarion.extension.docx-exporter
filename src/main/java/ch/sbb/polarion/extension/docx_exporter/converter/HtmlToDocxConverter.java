@@ -1,5 +1,6 @@
 package ch.sbb.polarion.extension.docx_exporter.converter;
 
+import ch.sbb.polarion.extension.docx_exporter.constants.HtmlTag;
 import ch.sbb.polarion.extension.docx_exporter.pandoc.service.PandocServiceConnector;
 import ch.sbb.polarion.extension.docx_exporter.pandoc.service.model.PandocParams;
 import ch.sbb.polarion.extension.generic.regex.RegexMatcher;
@@ -13,6 +14,9 @@ import ch.sbb.polarion.extension.docx_exporter.util.html.HtmlLinksHelper;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.VisibleForTesting;
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
 
 import java.util.List;
 
@@ -57,28 +61,25 @@ public class HtmlToDocxConverter {
     @NotNull
     @VisibleForTesting
     String preprocessHtml(String origHtml) {
-        String origHead = extractTagContent(origHtml, "head");
-        String origCss = extractTagContent(origHead, "style");
+        Document document = Jsoup.parse(origHtml);
+        Element head = document.head();
+        @Nullable Element styleTag = head.selectFirst(HtmlTag.STYLE);
 
-        String css = origCss + docxTemplateProcessor.buildSizeCss();
-        String head = origHead;
-        if (origCss.isBlank()) {
-            head = head + String.format("<style>%s</style>", css);
-        } else {
-            head = replaceTagContent(head, "style", css);
-        }
-        String html;
-        if (origHead.isBlank()) {
-            html = addHeadTag(origHtml, head);
-        } else {
-            html = replaceTagContent(origHtml, "head", head);
+        String additionalCss = docxTemplateProcessor.buildSizeCss();
+        if (additionalCss != null) {
+            if (styleTag != null) {
+                styleTag.appendText(additionalCss);
+            } else {
+                head.appendElement(HtmlTag.STYLE).text(additionalCss);
+            }
         }
 
-        html = htmlProcessor.internalizeLinks(html);
-        html = htmlProcessor.replaceLinks(html);
-        html = htmlProcessor.replaceResourcesAsBase64Encoded(html);
+        htmlProcessor.replaceLinks(document);
 
-        return html;
+        String processedHtml = htmlProcessor.internalizeLinks(document.html());
+        processedHtml = htmlProcessor.replaceResourcesAsBase64Encoded(processedHtml);
+
+        return processedHtml;
     }
 
     private String extractTagContent(String html, String tag) {
