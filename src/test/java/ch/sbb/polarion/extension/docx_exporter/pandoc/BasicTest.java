@@ -219,8 +219,38 @@ class BasicTest extends BasePandocTest {
     private boolean pageContainsTable(byte[] docBytes, int pageIndex) throws Exception {
         WordprocessingMLPackage wordMLPackage = WordprocessingMLPackage.load(new ByteArrayInputStream(docBytes));
         MainDocumentPart documentPart = wordMLPackage.getMainDocumentPart();
-        List<Object> tableNodes = documentPart.getJAXBNodesViaXPath("//w:tbl", true);
-        return !tableNodes.isEmpty();
+        // Get all section nodes to identify page boundaries
+        List<Object> sectPrNodes = documentPart.getJAXBNodesViaXPath("//w:sectPr", true);
+        if (sectPrNodes.isEmpty() || pageIndex < 0 || pageIndex >= sectPrNodes.size()) {
+            return false;
+        }
+        // Get all content elements
+        List<Object> contentElements = documentPart.getContent();
+        // Group content by section
+        int currentSection = 0;
+        boolean foundTable = false;
+        for (Object element : contentElements) {
+            // Check if this element is a section break
+            if (element instanceof JAXBElement) {
+                Object value = ((JAXBElement<?>) element).getValue();
+                if (value instanceof SectPr) {
+                    currentSection++;
+                    continue;
+                }
+                // Check for table in the correct section
+                if (currentSection == pageIndex && value instanceof org.docx4j.wml.Tbl) {
+                    foundTable = true;
+                    break;
+                }
+            } else {
+                // Check for table in the correct section
+                if (currentSection == pageIndex && element instanceof org.docx4j.wml.Tbl) {
+                    foundTable = true;
+                    break;
+                }
+            }
+        }
+        return foundTable;
     }
 
     private int getPageCount(byte[] docBytes) {
