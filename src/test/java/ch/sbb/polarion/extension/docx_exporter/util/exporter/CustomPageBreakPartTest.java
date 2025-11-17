@@ -43,7 +43,7 @@ public class CustomPageBreakPartTest {
     private CustomPageBreakPart customPageBreakPart;
 
     @BeforeEach
-    void setUp() throws Exception {
+    void setUp() {
         when(pageBreakPart.getElement()).thenReturn(element);
         customPageBreakPart = new CustomPageBreakPart(pageBreakPart);
         when(renderingContext.getRenderTarget()).thenReturn(renderTarget);
@@ -53,7 +53,7 @@ public class CustomPageBreakPartTest {
     }
 
     @Test
-    void testRenderPdfLandscapePageBreak() throws Exception {
+    void testRenderPdfLandscapePageBreak() {
         when(renderTarget.isPdf()).thenReturn(true);
         when(element.getAttribute()).thenReturn(attributesReader);
         when(attributesReader.byName("data-is-landscape")).thenReturn("true");
@@ -64,7 +64,7 @@ public class CustomPageBreakPartTest {
     }
 
     @Test
-    void testRenderPdfPortraitPageBreak() throws Exception {
+    void testRenderPdfPortraitPageBreak() {
         when(renderTarget.isPdf()).thenReturn(true);
         when(element.getAttribute()).thenReturn(attributesReader);
         when(attributesReader.byName("data-is-landscape")).thenReturn("false");
@@ -75,7 +75,7 @@ public class CustomPageBreakPartTest {
     }
 
     @Test
-    void testNullLandscapeAttributeDefaultsToFalse() throws Exception {
+    void testNullLandscapeAttributeDefaultsToFalse() {
         when(renderTarget.isPdf()).thenReturn(true);
         when(element.getAttribute()).thenReturn(attributesReader);
         when(attributesReader.byName("data-is-landscape")).thenReturn(null);
@@ -86,7 +86,7 @@ public class CustomPageBreakPartTest {
     }
 
     @Test
-    void testOrientationChangeFromPortraitToLandscape() throws Exception {
+    void testOrientationChangeFromPortraitToLandscape() {
         when(renderTarget.isPdf()).thenReturn(true);
         when(element.getAttribute()).thenReturn(attributesReader);
 
@@ -100,7 +100,7 @@ public class CustomPageBreakPartTest {
     }
 
     @Test
-    void testSameOrientationDoesNotGenerateOrientationChange() throws Exception {
+    void testSameOrientationDoesNotGenerateOrientationChange() {
         when(renderTarget.isPdf()).thenReturn(true);
         when(element.getAttribute()).thenReturn(attributesReader);
         when(attributesReader.byName("data-is-landscape")).thenReturn("true");
@@ -112,7 +112,7 @@ public class CustomPageBreakPartTest {
     }
 
     @Test
-    void testThreadLocalStateIsolation() throws Exception {
+    void testThreadLocalStateIsolation() {
         when(renderTarget.isPdf()).thenReturn(true);
         when(element.getAttribute()).thenReturn(attributesReader);
         when(attributesReader.byName("data-is-landscape")).thenReturn("true");
@@ -124,7 +124,7 @@ public class CustomPageBreakPartTest {
     }
 
     @Test
-    void testMultipleRenderCyclesPreserveState() throws Exception {
+    void testMultipleRenderCyclesPreserveState() {
         when(renderTarget.isPdf()).thenReturn(true);
         when(element.getAttribute()).thenReturn(attributesReader);
 

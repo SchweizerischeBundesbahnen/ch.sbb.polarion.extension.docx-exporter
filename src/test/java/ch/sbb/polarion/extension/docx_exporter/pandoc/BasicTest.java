@@ -227,7 +227,7 @@ class BasicTest extends BasePandocTest {
         // Get all content elements
         List<Object> contentElements = documentPart.getContent();
         // Group content by section
-        int currentSection = 0;
+        int currentSection = 1;
         boolean foundTable = false;
         for (Object element : contentElements) {
             // Check if this element is a section break
