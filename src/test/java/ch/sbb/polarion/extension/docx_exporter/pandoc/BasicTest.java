@@ -120,6 +120,139 @@ class BasicTest extends BasePandocTest {
         assertTrue(hasDimensions(docBytes, 16838, 23811));
     }
 
+    @Test
+    @SneakyThrows
+    void testPageOrientation() {
+        String html = readHtmlResource("testPageOrientation");
+        byte[] docBytes = exportToDOCX(html, readTemplate("reference_template"), null, PandocParams.builder().orientation("landscape").paperSize("B5").build());
+        writeReportDocx("testPageOrientation_generated", docBytes);
+
+        docBytes = exportToDOCX(html, readTemplate("reference_template"), null, PandocParams.builder().paperSize("A4").build());
+        assertTrue(hasOrientationOnPage(docBytes, 1, "landscape"));
+    }
+
+    @Test
+    @SneakyThrows
+    void testPageOrientationChanges() {
+        String html = readHtmlResource("testPageOrientation");
+        byte[] docBytes = exportToDOCX(html, readTemplate("reference_template"), null, PandocParams.builder().build());
+        writeReportDocx("testPageOrientationChanges_generated", docBytes);
+
+        // First page: portrait (default)
+        assertTrue(hasOrientationOnPage(docBytes, 0, "portrait"));
+
+        // Second page: landscape (after \pageLandscape)
+        assertTrue(hasOrientationOnPage(docBytes, 1, "landscape"));
+
+        // Third page: portrait (after \pagePortrait)
+        assertTrue(hasOrientationOnPage(docBytes, 2, "portrait"));
+    }
+
+    @Test
+    @SneakyThrows
+    void testMultipleOrientationSwitches() {
+        String html = readHtmlResource("testPageOrientation");
+        byte[] docBytes = exportToDOCX(html, readTemplate("reference_template"), null, PandocParams.builder().build());
+        writeReportDocx("testMultipleOrientationSwitches_generated", docBytes);
+
+        // Verify section count matches orientation changes
+        int sectionCount = getPageSectionCount(docBytes);
+        assertTrue(sectionCount >= 3, "Expected at least 3 sections for orientation changes");
+    }
+
+    @Test
+    @SneakyThrows
+    void testLandscapeOrientationWithTableContent() {
+        String html = readHtmlResource("testPageOrientation");
+        byte[] docBytes = exportToDOCX(html, readTemplate("reference_template"), null, PandocParams.builder().build());
+        writeReportDocx("testLandscapeOrientationWithTable_generated", docBytes);
+
+        // Second page should be landscape and contain table
+        assertTrue(hasOrientationOnPage(docBytes, 1, "landscape"));
+        assertTrue(pageContainsTable(docBytes, 1));
+    }
+
+    @Test
+    @SneakyThrows
+    void testStartingOrientationPreserved() {
+        String html = readHtmlResource("testPageOrientation");
+        byte[] docBytes = exportToDOCX(html, readTemplate("reference_template"), null, PandocParams.builder().orientation("landscape").build());
+        writeReportDocx("testStartingLandscapeOrientation_generated", docBytes);
+
+        // First page should start in landscape
+        assertTrue(hasOrientationOnPage(docBytes, 0, "landscape"));
+    }
+
+    @Test
+    @SneakyThrows
+    void testOrientationWithA4PaperSize() {
+        String html = readHtmlResource("testPageOrientation");
+        byte[] docBytes = exportToDOCX(html, readTemplate("reference_template"), null,
+                PandocParams.builder().paperSize("A4").build());
+        writeReportDocx("testOrientationA4_generated", docBytes);
+
+        assertTrue(hasDimensions(docBytes, 11906, 16838)); // A4 portrait dimensions
+        assertTrue(hasOrientationOnPage(docBytes, 0, "portrait"));
+    }
+
+    @Test
+    @SneakyThrows
+    void testConsecutiveLandscapePages() {
+        String html = "<p>Page 1 landscape</p><p>\\pageLandscape</p>" +
+                "<p>Page 2 landscape</p><p>\\pageLandscape</p>" +
+                "<p>Page 3 portrait</p><p>\\pagePortrait</p>";
+        byte[] docBytes = exportToDOCX(html, readTemplate("reference_template"), null, PandocParams.builder().build());
+        writeReportDocx("testConsecutiveLandscapePages_generated", docBytes);
+
+        assertTrue(hasOrientationOnPage(docBytes, 0, "landscape"));
+        assertTrue(hasOrientationOnPage(docBytes, 1, "landscape"));
+        assertTrue(hasOrientationOnPage(docBytes, 2, "portrait"));
+    }
+
+    private int getPageSectionCount(byte[] docBytes) throws Exception {
+        WordprocessingMLPackage wordMLPackage = WordprocessingMLPackage.load(new ByteArrayInputStream(docBytes));
+        MainDocumentPart documentPart = wordMLPackage.getMainDocumentPart();
+        List<Object> sectPrNodes = documentPart.getJAXBNodesViaXPath("//w:sectPr", true);
+        return sectPrNodes.size();
+    }
+
+    private boolean pageContainsTable(byte[] docBytes, int pageIndex) throws Exception {
+        WordprocessingMLPackage wordMLPackage = WordprocessingMLPackage.load(new ByteArrayInputStream(docBytes));
+        MainDocumentPart documentPart = wordMLPackage.getMainDocumentPart();
+        // Get all section nodes to identify page boundaries
+        List<Object> sectPrNodes = documentPart.getJAXBNodesViaXPath("//w:sectPr", true);
+        if (sectPrNodes.isEmpty() || pageIndex < 0 || pageIndex >= sectPrNodes.size()) {
+            return false;
+        }
+        // Get all content elements
+        List<Object> contentElements = documentPart.getContent();
+        // Group content by section
+        int currentSection = 1;
+        boolean foundTable = false;
+        for (Object element : contentElements) {
+            // Check if this element is a section break
+            if (element instanceof JAXBElement) {
+                Object value = ((JAXBElement<?>) element).getValue();
+                if (value instanceof SectPr) {
+                    currentSection++;
+                    continue;
+                }
+                // Check for table in the correct section
+                if (currentSection == pageIndex && value instanceof org.docx4j.wml.Tbl) {
+                    foundTable = true;
+                    break;
+                }
+            } else {
+                // Check for table in the correct section
+                if (currentSection == pageIndex && element instanceof org.docx4j.wml.Tbl) {
+                    foundTable = true;
+                    break;
+                }
+            }
+        }
+        return foundTable;
+    }
+
     private int getPageCount(byte[] docBytes) {
         try {
             try (PDDocument document = Loader.loadPDF(exportToPDF(docBytes))) {
@@ -227,6 +360,33 @@ class BasicTest extends BasePandocTest {
 
             return !sectPrNodes.isEmpty() && sectPrNodes.get(0) instanceof SectPr sectPr && sectPr.getPgSz() != null &&
                     sectPr.getPgSz().getW().intValue() == width && sectPr.getPgSz().getH().intValue() == height;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    private boolean hasOrientationOnPage(byte[] docBytes, int pageIndex, String expectedOrientation) {
+        try {
+            WordprocessingMLPackage wordMLPackage = WordprocessingMLPackage.load(new ByteArrayInputStream(docBytes));
+            MainDocumentPart documentPart = wordMLPackage.getMainDocumentPart();
+
+            // Get all section properties
+            List<Object> sectPrNodes = documentPart.getJAXBNodesViaXPath("//w:sectPr", true);
+
+            if (sectPrNodes.isEmpty() || pageIndex >= sectPrNodes.size()) {
+                return false;
+            }
+
+            SectPr sectPr = (SectPr) sectPrNodes.get(pageIndex);
+            if (sectPr.getPgSz() == null) {
+                return false;
+            }
+
+            boolean isLandscape = sectPr.getPgSz().getOrient() != null &&
+                    "landscape".equalsIgnoreCase(sectPr.getPgSz().getOrient().toString());
+            boolean expectedLandscape = "landscape".equalsIgnoreCase(expectedOrientation);
+
+            return isLandscape == expectedLandscape;
         } catch (Exception e) {
             return false;
         }

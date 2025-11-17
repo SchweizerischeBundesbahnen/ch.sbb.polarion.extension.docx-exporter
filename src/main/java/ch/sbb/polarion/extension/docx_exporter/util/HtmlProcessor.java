@@ -183,8 +183,6 @@ public class HtmlProcessor {
 
         html = replaceResourcesAsBase64Encoded(html);
 
-        html = html.replace("<p class=\"page_break\"></p>", "<p class=\"page_break\">&#12;</p>");
-
         // Do not change this entry order, '&nbsp;' can be used in the logic above, so we must cut them off as the last step
         html = cutExtraNbsp(html);
         return html;
