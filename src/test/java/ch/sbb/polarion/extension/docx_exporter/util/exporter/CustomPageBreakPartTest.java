@@ -17,7 +17,7 @@ import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-public class CustomPageBreakPartTest {
+class CustomPageBreakPartTest {
 
     @Mock
     private PageBreakPart pageBreakPart;
@@ -101,18 +101,6 @@ public class CustomPageBreakPartTest {
 
     @Test
     void testSameOrientationDoesNotGenerateOrientationChange() {
-        when(renderTarget.isPdf()).thenReturn(true);
-        when(element.getAttribute()).thenReturn(attributesReader);
-        when(attributesReader.byName("data-is-landscape")).thenReturn("true");
-
-        customPageBreakPart.render(htmlBuilder, renderingContext, 0);
-        customPageBreakPart.render(htmlBuilder, renderingContext, 1);
-
-        verify(htmlFragmentBuilder, times(2)).finished();
-    }
-
-    @Test
-    void testThreadLocalStateIsolation() {
         when(renderTarget.isPdf()).thenReturn(true);
         when(element.getAttribute()).thenReturn(attributesReader);
         when(attributesReader.byName("data-is-landscape")).thenReturn("true");
