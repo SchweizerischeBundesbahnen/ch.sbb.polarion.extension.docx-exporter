@@ -30,6 +30,8 @@ public class CustomPageBreakPart extends PageBreakPart {
     public void render(@NotNull HtmlBuilder builder, @NotNull RichTextRenderingContext context, int index) {
         RichTextRenderTarget target = context.getRenderTarget();
         if (target.isPdf()) {
+            boolean landscape = Boolean.parseBoolean(this.element.getAttribute().byName("data-is-landscape"));
+
             Method appendFragmentMethod = HtmlBuilder.class.getDeclaredMethod("appendFragment");
             appendFragmentMethod.setAccessible(true);
             HtmlFragmentBuilder fragment = (HtmlFragmentBuilder) appendFragmentMethod.invoke(builder);
@@ -37,9 +39,8 @@ public class CustomPageBreakPart extends PageBreakPart {
             Method htmlMethod = HtmlContentBuilder.class.getDeclaredMethod("html", String.class);
             htmlMethod.setAccessible(true);
 
-            // pandoc's pagebreak.lua will convert <p> tag with '\f' content into a page break
-            htmlMethod.invoke(fragment, "<p class=\"page_break\"></p>");
-
+            String pageBreak = "<p>\\newpage</p>" + (landscape ? "<p>\\pageLandscape</p>" : "<p>\\pagePortrait</p>");
+            htmlMethod.invoke(fragment, pageBreak);
             fragment.finished();
         } else {
             super.render(builder, context, index);
