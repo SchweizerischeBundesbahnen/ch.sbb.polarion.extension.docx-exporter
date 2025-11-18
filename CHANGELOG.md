@@ -1,5 +1,20 @@
 # Changelog
 
+## [2.4.0](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/compare/v2.3.0...v2.4.0) (2025-11-18)
+
+
+### Features
+
+* export landscape pages ([#124](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/issues/124)) ([9959156](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/commit/99591561e11ccdf0a4641739049d6327e0458ff3)), closes [#108](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/issues/108)
+
+
+### Bug Fixes
+
+* **deps:** update dependency net.bytebuddy:byte-buddy to v1.18.0 ([1f94cee](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/commit/1f94ceef510c1c0bf8ac03629e0895eeeb310e8f))
+* **deps:** update dependency net.bytebuddy:byte-buddy to v1.18.1 ([fa50948](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/commit/fa509487d42433ad05b7cfd5df3ed850c0712fe2))
+* **deps:** update dependency org.testcontainers:testcontainers-bom to v2.0.2 ([74965cf](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/commit/74965cfde7b2809bfb3adc0c496e2289066ce229))
+* **deps:** update docx4j.version to v11.5.7 ([e01ce62](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/commit/e01ce62017d5d12d7f6967f4da997c6015934084))
+
 ## [2.3.0](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/compare/v2.2.0...v2.3.0) (2025-11-05)
 
 
