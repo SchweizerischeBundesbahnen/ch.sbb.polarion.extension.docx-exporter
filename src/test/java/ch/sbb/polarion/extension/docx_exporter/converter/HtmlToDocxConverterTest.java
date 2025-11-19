@@ -1,6 +1,5 @@
 package ch.sbb.polarion.extension.docx_exporter.converter;
 
-import ch.sbb.polarion.extension.docx_exporter.TestStringUtils;
 import ch.sbb.polarion.extension.docx_exporter.configuration.DocxExporterExtensionConfigurationExtension;
 import ch.sbb.polarion.extension.docx_exporter.pandoc.service.PandocServiceConnector;
 import ch.sbb.polarion.extension.docx_exporter.pandoc.service.model.PandocParams;
@@ -14,7 +13,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
@@ -33,105 +31,6 @@ class HtmlToDocxConverterTest {
     private HtmlToDocxConverter htmlToDocxConverter;
 
     @Test
-    void shouldInjectHeadAndStyle() {
-        String html = """
-                <html>
-                    <body>
-                        <span>example text</span>
-                    </body>
-                </html>""";
-        when(docxTemplateProcessor.buildSizeCss()).thenReturn("@page {size: test;}");
-        when(htmlProcessor.replaceResourcesAsBase64Encoded(anyString())).thenAnswer(invocation ->
-                invocation.getArgument(0));
-        when(htmlProcessor.internalizeLinks(anyString())).thenAnswer(a -> a.getArgument(0));
-        doCallRealMethod().when(htmlProcessor).replaceLinks(any());
-        String resultHtml = htmlToDocxConverter.preprocessHtml(html);
-
-        assertEquals(TestStringUtils.removeNonsensicalSymbols("""
-                <html>
-                    <head>
-                        <style>
-                            @page {size: test;}
-                        </style>
-                    </head>
-                    <body>
-                        <span>example text</span>
-                    </body>
-                </html>"""), TestStringUtils.removeNonsensicalSymbols(resultHtml));
-
-        verify(htmlProcessor).replaceResourcesAsBase64Encoded(resultHtml);
-    }
-
-    @Test
-    void shouldExtendExistingHeadAndStyle() {
-        String html = """
-                <html>
-                    <head>
-                        <meta charset="utf-8">
-                        <style>
-                            .some-class { margin: 10px }
-                        </style>
-                    </head>
-                    <body>
-                        <span>example text</span>
-                    </body>
-                </html>""";
-        when(docxTemplateProcessor.buildSizeCss()).thenReturn(" @page {size: test;}");
-        when(htmlProcessor.replaceResourcesAsBase64Encoded(anyString())).thenAnswer(invocation ->
-                invocation.getArgument(0));
-        when(htmlProcessor.internalizeLinks(anyString())).thenAnswer(a -> a.getArgument(0));
-        doCallRealMethod().when(htmlProcessor).replaceLinks(any());
-        String resultHtml = htmlToDocxConverter.preprocessHtml(html);
-
-        assertEquals(TestStringUtils.removeNonsensicalSymbols("""
-                <html>
-                    <head>
-                        <meta charset="utf-8">
-                        <style>
-                            .some-class { margin: 10px }
-                            @page {size: test;}
-                        </style>
-                    </head>
-                    <body>
-                        <span>example text</span>
-                    </body>
-                </html>"""), TestStringUtils.removeNonsensicalSymbols(resultHtml));
-
-        verify(htmlProcessor).replaceResourcesAsBase64Encoded(resultHtml);
-    }
-
-    @Test
-    void shouldExtendHeadAndAddStyle() {
-        String html = """
-                <html>
-                    <head>
-                        <meta charset="utf-8">
-                    </head>
-                    <body>
-                        <span>example text</span>
-                    </body>
-                </html>""";
-        when(docxTemplateProcessor.buildSizeCss()).thenReturn(" @page {size: test;}");
-        when(htmlProcessor.replaceResourcesAsBase64Encoded(anyString())).thenAnswer(a -> a.getArgument(0));
-        when(htmlProcessor.internalizeLinks(anyString())).thenAnswer(a -> a.getArgument(0));
-        doCallRealMethod().when(htmlProcessor).replaceLinks(any());
-        String resultHtml = htmlToDocxConverter.preprocessHtml(html);
-
-        assertEquals(TestStringUtils.removeNonsensicalSymbols("""
-                <html>
-                    <head>
-                        <meta charset="utf-8">
-                        <style> @page {size: test;}</style>
-                    </head>
-                    <body>
-                        <span>example text</span>
-                    </body>
-                </html>"""), TestStringUtils.removeNonsensicalSymbols(resultHtml));
-
-        verify(htmlProcessor).replaceResourcesAsBase64Encoded(resultHtml);
-    }
-
-    @Test
     void shouldCallConnector() {
         String html = """
                 <html>
@@ -142,7 +41,7 @@ class HtmlToDocxConverterTest {
         PandocParams params = PandocParams.builder().build();
         when(htmlProcessor.internalizeLinks(anyString())).thenAnswer(a -> a.getArgument(0));
         when(htmlProcessor.replaceResourcesAsBase64Encoded(anyString())).thenAnswer(a -> a.getArgument(0));
-        HtmlToDocxConverter converter = new HtmlToDocxConverter(docxTemplateProcessor, htmlProcessor, serviceConnector);
+        HtmlToDocxConverter converter = new HtmlToDocxConverter(htmlProcessor, serviceConnector);
         assertDoesNotThrow(() -> converter.convert(html, null, null, params));
         verify(serviceConnector).convertToDocx(html, null, null, params);
     }
@@ -157,27 +56,4 @@ class HtmlToDocxConverterTest {
                 .hasMessageContaining("html is malformed");
     }
 
-    @Test
-    void shouldAcceptAttributesAndEmptyTags() {
-        String html = """
-                <html attribute="test">
-                    <body></body>
-                </html>""";
-        when(docxTemplateProcessor.buildSizeCss()).thenReturn("@page {size: test;}");
-        when(htmlProcessor.replaceResourcesAsBase64Encoded(anyString())).thenAnswer(invocation ->
-                invocation.getArgument(0));
-        when(htmlProcessor.internalizeLinks(anyString())).thenAnswer(a -> a.getArgument(0));
-        doCallRealMethod().when(htmlProcessor).replaceLinks(any());
-        String resultHtml = htmlToDocxConverter.preprocessHtml(html);
-
-        assertEquals(TestStringUtils.removeNonsensicalSymbols("""
-                <html attribute="test">
-                    <head>
-                        <style>@page {size: test;}</style>
-                    </head>
-                    <body></body>
-                </html>"""), TestStringUtils.removeNonsensicalSymbols(resultHtml));
-
-        verify(htmlProcessor).replaceResourcesAsBase64Encoded(resultHtml);
-    }
 }

@@ -38,10 +38,6 @@ public class DocxTemplateProcessor {
                 .replace("{DOC_CONTENT}", content);
     }
 
-    public String buildSizeCss() {
-        return " @page {size: A4 %portrait;}";
-    }
-
     public byte[] processDocxTemplate(byte[] template, DocumentData<? extends IUniqueObject> documentData, @NotNull ExportParams exportParams) {
         Map<String, Object> params = Map.of(
                 PARAM_PROCESS_TEMPLATE, template,
