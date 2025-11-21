@@ -13,6 +13,7 @@ public final class Constants {
 
     public static final String MIME_TYPE_SVG = "image/svg+xml";
 
+    public static final String VERSION_FILE = "versions.properties";
     private Constants() {
         // Constants class, not to be instantiated
     }
