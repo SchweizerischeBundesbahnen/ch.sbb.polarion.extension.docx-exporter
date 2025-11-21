@@ -1,5 +1,21 @@
 # Changelog
 
+## [3.0.0](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/compare/v2.4.0...v3.0.0) (2025-11-21)
+
+
+### ⚠ BREAKING CHANGES
+
+* Add Disclaimer page on admin ([#133](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/issues/133))
+
+### Features
+
+* Add Disclaimer page on admin ([#133](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/issues/133)) ([55d05a4](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/commit/55d05a433e5285b0e744870918a482cced06d8b6)), closes [#128](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/issues/128)
+
+
+### Bug Fixes
+
+* NPE when no webhooks declared ([#130](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/issues/130)) ([2496e45](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/commit/2496e45cce8b0d8ab31ec6a4f88dbb1f852e3bcd)), closes [#129](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/issues/129)
+
 ## [2.4.0](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/compare/v2.3.0...v2.4.0) (2025-11-18)
 
 
