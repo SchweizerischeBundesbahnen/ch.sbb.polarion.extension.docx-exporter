@@ -18,6 +18,9 @@ The extension uses [Pandoc](https://pandoc.org/) as a converter engine and requi
 > Only latest version of Polarion is supported.
 > Right now it is Polarion 2506.
 
+> [!IMPORTANT]
+> Please, read our [disclaimer](DISCLAIMER.md) before using this extension.
+
 ## Quick start
 
 Please see separate [quick start page](QUICK_START.md) where briefly summarized all most important and applicable steps and configurations.
