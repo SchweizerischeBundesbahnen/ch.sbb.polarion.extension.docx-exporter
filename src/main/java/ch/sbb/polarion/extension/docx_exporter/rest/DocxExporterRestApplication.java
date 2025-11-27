@@ -1,5 +1,7 @@
 package ch.sbb.polarion.extension.docx_exporter.rest;
 
+import ch.sbb.polarion.extension.docx_exporter.rest.controller.ConfigurationApiController;
+import ch.sbb.polarion.extension.docx_exporter.rest.controller.ConfigurationInternalController;
 import ch.sbb.polarion.extension.docx_exporter.settings.TemplatesSettings;
 import ch.sbb.polarion.extension.generic.rest.GenericRestApplication;
 import ch.sbb.polarion.extension.generic.settings.NamedSettingsRegistry;
@@ -61,14 +63,16 @@ public class DocxExporterRestApplication extends GenericRestApplication {
     @Override
     protected @NotNull Set<Object> getExtensionControllerSingletons() {
         return Set.of(
+                new CollectionApiController(),
+                new CollectionInternalController(),
+                new ConfigurationApiController(),
+                new ConfigurationInternalController(),
                 new ConverterApiController(),
                 new ConverterInternalController(),
                 new SettingsApiController(),
                 new SettingsInternalController(),
                 new TestRunAttachmentsApiController(),
                 new TestRunAttachmentsInternalController(),
-                new CollectionApiController(),
-                new CollectionInternalController(),
                 new UtilityResourcesApiController(),
                 new UtilityResourcesInternalController()
         );
