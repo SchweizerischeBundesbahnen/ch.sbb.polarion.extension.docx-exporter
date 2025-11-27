@@ -2,7 +2,7 @@ import { expect } from 'chai';
 import TestUtils from "./TestUtils.js";
 
 /** @type {typeof ExportContext} */
-const ExportContext = await TestUtils.importUsingGeneric('ExportContext.js');
+const ExportContext = await TestUtils.loadModule('ExportContext.js');
 
 describe('ExportContext Class', function () {
     it('URL: #/project/elibrary/wiki/BigDoc', function () {
