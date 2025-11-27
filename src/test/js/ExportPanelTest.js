@@ -18,8 +18,7 @@ describe('ExportPanel', function () {
         global.document = dom.window.document;
 
         // Create a stub instance with all methods stubbed
-        const realCtx = new ExportContext({ polarionLocationHash: window.location.hash });
-        ctxStub = sinon.stub(realCtx);
+        ctxStub = sinon.createStubInstance(ExportContext, { polarionLocationHash: window.location.hash });
 
         panel = new ExportPanel(ctxStub);
     });
