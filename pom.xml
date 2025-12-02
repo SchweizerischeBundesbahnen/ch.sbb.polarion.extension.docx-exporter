@@ -224,11 +224,6 @@
             <version>${jakarta.xml.bind.version}</version>
         </dependency>
         <dependency>
-            <groupId>jakarta.activation</groupId>
-            <artifactId>jakarta.activation-api</artifactId>
-            <version>${jakarta.activation.version}</version>
-        </dependency>
-        <dependency>
             <groupId>org.docx4j</groupId>
             <artifactId>docx4j-diffx</artifactId>
             <version>${docx4j.version}</version>
@@ -258,27 +253,9 @@
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>com.fasterxml.jackson.core</groupId>
-            <artifactId>jackson-databind</artifactId>
-            <version>${jackson.version}</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>com.fasterxml.jackson.core</groupId>
-            <artifactId>jackson-core</artifactId>
-            <version>${jackson.version}</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>com.fasterxml.jackson.core</groupId>
-            <artifactId>jackson-annotations</artifactId>
-            <version>${jackson-annotations.version}</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>javax.transaction</groupId>
-            <artifactId>javax.transaction-api</artifactId>
-            <version>${javax.transaction-api.version}</version>
+            <groupId>jakarta.activation</groupId>
+            <artifactId>jakarta.activation-api</artifactId>
+            <version>${jakarta.activation.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
