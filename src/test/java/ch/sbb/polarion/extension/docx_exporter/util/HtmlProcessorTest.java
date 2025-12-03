@@ -14,6 +14,8 @@ import org.jsoup.nodes.Document;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -93,7 +95,7 @@ class HtmlProcessorTest {
 
             List<String> selectedRoles = Arrays.asList("has parent", "is parent of", "depends on", "blocks", "verifies", "is verified by");
             // Spaces and new lines are removed to exclude difference in space characters
-            String fixedHtml = processor.processHtmlForPDF(invalidHtml, exportParams, selectedRoles);
+            String fixedHtml = processor.processHtmlForExport(invalidHtml, exportParams, selectedRoles);
             String validHtml = new String(isValidHtml.readAllBytes(), StandardCharsets.UTF_8);
             assertEquals(TestStringUtils.removeNonsensicalSymbols(validHtml), TestStringUtils.removeNonsensicalSymbols(fixedHtml));
         }
@@ -289,7 +291,7 @@ class HtmlProcessorTest {
             List<String> selectedRoleEnumValues = Arrays.asList("has parent", "is parent of");
 
             // Spaces and new lines are removed to exclude difference in space characters
-            String fixedHtml = processor.processHtmlForPDF(invalidHtml, exportParams, selectedRoleEnumValues);
+            String fixedHtml = processor.processHtmlForExport(invalidHtml, exportParams, selectedRoleEnumValues);
             String validHtml = new String(isValidHtml.readAllBytes(), StandardCharsets.UTF_8);
             assertEquals(TestStringUtils.removeNonsensicalSymbols(validHtml), TestStringUtils.removeNonsensicalSymbols(fixedHtml));
         }
@@ -309,7 +311,7 @@ class HtmlProcessorTest {
             List<String> selectedRoleEnumValues = Arrays.asList("has parent", "is parent of");
 
             // Spaces and new lines are removed to exclude difference in space characters
-            String fixedHtml = processor.processHtmlForPDF(invalidHtml, exportParams, selectedRoleEnumValues);
+            String fixedHtml = processor.processHtmlForExport(invalidHtml, exportParams, selectedRoleEnumValues);
             String validHtml = new String(isValidHtml.readAllBytes(), StandardCharsets.UTF_8);
             assertEquals(TestStringUtils.removeNonsensicalSymbols(validHtml), TestStringUtils.removeNonsensicalSymbols(fixedHtml));
         }
@@ -371,7 +373,7 @@ class HtmlProcessorTest {
 
     @Test
     @SneakyThrows
-    void processHtmlForPDFTestCutEmptyWorkItemAttributesDisabled() {
+    void processHtmlForExportTestCutEmptyWorkItemAttributesDisabled() {
         try (InputStream isHtml = this.getClass().getResourceAsStream("/emptyWIAttributesBeforeProcessing.html")) {
 
             String html = new String(isHtml.readAllBytes(), StandardCharsets.UTF_8);
@@ -383,29 +385,26 @@ class HtmlProcessorTest {
             exportParams.setCutEmptyChapters(false);
 
             // Spaces, new lines & nbsp symbols are removed to exclude difference in space characters
-            String result = spyHtmlProcessor.processHtmlForPDF(html, exportParams, List.of());
+            String result = spyHtmlProcessor.processHtmlForExport(html, exportParams, List.of());
             assertEquals(TestStringUtils.removeNonsensicalSymbols(html.replaceAll("&nbsp;|\u00A0", " ")), TestStringUtils.removeNonsensicalSymbols(result));
         }
     }
 
-    @Test
-    void adjustHeadingForPDFTestH1ReplacedWithDiv() {
-        String html = "<h1>First level heading</h1>";
-        String result = processor.processHtmlForPDF(html, getExportParams(), List.of());
-        assertEquals("<div class=\"title\">First level heading</div>", result);
-    }
-
-    @Test
-    void adjustHeadingForPDFTestLiftHeadingTag() {
-        String html = "<h2>First level heading</h2>";
-        String result = processor.processHtmlForPDF(html, getExportParams(), List.of());
-        assertEquals("<h1>First level heading</h1>", result);
+    @ParameterizedTest
+    @CsvSource({
+            "<h1>First level heading</h1>, <div class=\"title\">First level heading</div>",
+            "<h2>Second level heading</h2>, <h1>Second level heading</h1>",
+            "<h3>Third level heading</h3>, <h2>Third level heading</h2>"
+    })
+    void adjustHeadingForExportTest(String inputHtml, String expectedHtml) {
+        String result = processor.processHtmlForExport(inputHtml, getExportParams(), List.of());
+        assertEquals(expectedHtml, result);
     }
 
     @Test
     void replaceDollars() {
         String html = "<div>100$</div>";
-        String result = processor.processHtmlForPDF(html, getExportParams(), List.of());
+        String result = processor.processHtmlForExport(html, getExportParams(), List.of());
         assertEquals("<div>100&dollar;</div>", result);
     }
 
@@ -532,27 +531,13 @@ class HtmlProcessorTest {
         }
     }
 
-    @Test
-    void ignoreAbsoluteLinkTest() {
-        String html = "<a href=\"https://external.com/page\">External</a>";
-        Document document = JSoupUtils.parseHtml(html);
-        processor.replaceLinks(document);
-        String result = document.body().html();
-        assertEquals(html, result);
-    }
-
-    @Test
-    void ignoreMailtoLinkTest() {
-        String html = "<a href=\"mailto:someone@example.com\">Email</a>";
-        Document document = JSoupUtils.parseHtml(html);
-        processor.replaceLinks(document);
-        String result = document.body().html();
-        assertEquals(html, result);
-    }
-
-    @Test
-    void ignoreDleCaptionAnchorTest() {
-        String html = "<a href=\"#dlecaption_123\">Caption</a>";
+    @ParameterizedTest
+    @CsvSource({
+            "<a href=\"https://external.com/page\">External</a>",
+            "<a href=\"mailto:someone@example.com\">Email</a>",
+            "<a href=\"#dlecaption_123\">Caption</a>"
+    })
+    void ignoreNonRelativeLinksTest(String html) {
         Document document = JSoupUtils.parseHtml(html);
         processor.replaceLinks(document);
         String result = document.body().html();
@@ -582,21 +567,34 @@ class HtmlProcessorTest {
         assertFalse(processor.isRelativeLink("#section1"));
     }
 
-    @Test
-    void testResolveUrl() {
-        String baseUrl = "http://example.com/base/";
-        String rel = "foo/bar.html";
-        String result = processor.resolveUrl(baseUrl, rel);
-        assertEquals("http://example.com/base/foo/bar.html", result);
+    @ParameterizedTest
+    @CsvSource({
+            "http://example.com/base/, foo/bar.html, http://example.com/base/foo/bar.html",
+            "http://example.com, /polarion/#/project/MyProject/wiki/Common/My Document Title, http://example.com/polarion/#/project/MyProject/wiki/Common/My%20Document%20Title",
+            "http://example.com, /path/to/page?query=value, http://example.com/path/to/page?query=value"
+    })
+    void testResolveUrl(String baseUrl, String relativeUrl, String expectedUrl) {
+        String result = processor.resolveUrl(baseUrl, relativeUrl);
+        assertEquals(expectedUrl, result);
     }
 
     @Test
-    void processHtmlForPDFWithRemovalSelectorTest() {
+    void testResolveUrlWithInvalidBaseUrlReturnsOriginal() {
+        // Invalid base URL with unescaped characters triggers URISyntaxException
+        String invalidBaseUrl = "http://example.com/path with spaces/";
+        String relativeUrl = "page.html";
+        String result = processor.resolveUrl(invalidBaseUrl, relativeUrl);
+        // When URISyntaxException is caught, the original relativeUrl is returned
+        assertEquals(relativeUrl, result);
+    }
+
+    @Test
+    void processHtmlForExportWithRemovalSelectorTest() {
         String html = "<html><body><div class='remove-me'>Should be removed</div><div class='keep-me'>Should be kept</div></body></html>";
         ExportParams exportParams = getExportParams();
         exportParams.setRemovalSelector(".remove-me");
 
-        String result = processor.processHtmlForPDF(html, exportParams, List.of());
+        String result = processor.processHtmlForExport(html, exportParams, List.of());
 
         assertFalse(result.contains("Should be removed"));
         assertTrue(result.contains("Should be kept"));

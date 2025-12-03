@@ -80,7 +80,7 @@ public class HtmlProcessor {
         this.httpLinksHelper = httpLinksHelper;
     }
 
-    public String processHtmlForPDF(@NotNull String html, @NotNull ExportParams exportParams, @NotNull List<String> selectedRoleEnumValues) {
+    public String processHtmlForExport(@NotNull String html, @NotNull ExportParams exportParams, @NotNull List<String> selectedRoleEnumValues) {
         // I. FIRST SECTION - manipulate HTML as a String. These changes are either not possible or not made easier with JSoup
         // ----------------
 
@@ -1023,7 +1023,9 @@ public class HtmlProcessor {
     String resolveUrl(String baseUrl, String relativeUrl) {
         try {
             URI base = new URI(baseUrl);
-            URI resolved = base.resolve(relativeUrl);
+            // Encode invalid characters in relative URL before resolving
+            String encodedRelativeUrl = UrlUtils.normalizeUrl(relativeUrl);
+            URI resolved = base.resolve(encodedRelativeUrl);
             return resolved.toString();
         } catch (URISyntaxException e) {
             return relativeUrl;
