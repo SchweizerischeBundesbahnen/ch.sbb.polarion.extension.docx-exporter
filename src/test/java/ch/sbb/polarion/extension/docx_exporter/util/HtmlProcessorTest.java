@@ -396,7 +396,7 @@ class HtmlProcessorTest {
             "<h2>Second level heading</h2>, <h1>Second level heading</h1>",
             "<h3>Third level heading</h3>, <h2>Third level heading</h2>"
     })
-    void adjustHeadingForPDFTest(String inputHtml, String expectedHtml) {
+    void adjustHeadingForExportTest(String inputHtml, String expectedHtml) {
         String result = processor.processHtmlForExport(inputHtml, getExportParams(), List.of());
         assertEquals(expectedHtml, result);
     }
