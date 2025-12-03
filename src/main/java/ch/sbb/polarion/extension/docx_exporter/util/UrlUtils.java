@@ -7,13 +7,13 @@ import org.jetbrains.annotations.Nullable;
 public class UrlUtils {
 
     /**
-     * Encodes characters that are invalid in URIs (like spaces) while preserving already encoded sequences
-     * and valid URI structure characters (like /, ?, #, =, &amp;).
+     * Normalizes a URL by encoding invalid characters (like spaces) while preserving
+     * already encoded sequences and valid URI structure characters (like /, ?, #, =, &amp;).
      *
-     * @param url the URL string to encode
-     * @return the URL with invalid characters encoded, or null/empty if input was null/empty
+     * @param url the URL string to normalize
+     * @return the normalized URL, or null/empty if input was null/empty
      */
-    public static @Nullable String encodeInvalidUriCharacters(@Nullable String url) {
+    public static @Nullable String normalizeUrl(@Nullable String url) {
         if (url == null || url.isEmpty()) {
             return url;
         }

@@ -1024,7 +1024,7 @@ public class HtmlProcessor {
         try {
             URI base = new URI(baseUrl);
             // Encode invalid characters in relative URL before resolving
-            String encodedRelativeUrl = UrlUtils.encodeInvalidUriCharacters(relativeUrl);
+            String encodedRelativeUrl = UrlUtils.normalizeUrl(relativeUrl);
             URI resolved = base.resolve(encodedRelativeUrl);
             return resolved.toString();
         } catch (URISyntaxException e) {
