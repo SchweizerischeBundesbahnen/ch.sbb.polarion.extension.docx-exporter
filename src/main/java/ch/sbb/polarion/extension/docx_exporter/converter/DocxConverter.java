@@ -225,7 +225,7 @@ public class DocxConverter {
     String postProcessDocumentContent(@NotNull ExportParams exportParams, @Nullable ITrackerProject project, @Nullable String documentContent) {
         if (documentContent != null) {
             List<String> selectedRoleEnumValues = project == null ? Collections.emptyList() : EnumValuesProvider.getBidirectionalLinkRoleNames(project, exportParams.getLinkedWorkitemRoles());
-            return htmlProcessor.processHtmlForPDF(documentContent, exportParams, selectedRoleEnumValues);
+            return htmlProcessor.processHtmlForExport(documentContent, exportParams, selectedRoleEnumValues);
         } else {
             return "";
         }
