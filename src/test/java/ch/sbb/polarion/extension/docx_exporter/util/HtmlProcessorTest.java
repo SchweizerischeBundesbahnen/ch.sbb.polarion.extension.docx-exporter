@@ -579,6 +579,16 @@ class HtmlProcessorTest {
     }
 
     @Test
+    void testResolveUrlWithInvalidBaseUrlReturnsOriginal() {
+        // Invalid base URL with unescaped characters triggers URISyntaxException
+        String invalidBaseUrl = "http://example.com/path with spaces/";
+        String relativeUrl = "page.html";
+        String result = processor.resolveUrl(invalidBaseUrl, relativeUrl);
+        // When URISyntaxException is caught, the original relativeUrl is returned
+        assertEquals(relativeUrl, result);
+    }
+
+    @Test
     void processHtmlForExportWithRemovalSelectorTest() {
         String html = "<html><body><div class='remove-me'>Should be removed</div><div class='keep-me'>Should be kept</div></body></html>";
         ExportParams exportParams = getExportParams();
