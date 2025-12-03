@@ -38,8 +38,12 @@ class UrlUtilsTest {
                 UrlUtils.normalizeUrl("/polarion/#/project/MyProject/wiki/Common/My Document Title")
         );
         assertEquals(
-                "/polarion/wiki/xwiki/edit?%20parent=project/page/01%20Concept",
-                UrlUtils.normalizeUrl("/polarion/wiki/xwiki/edit? parent=project/page/01 Concept")
+                "/polarion/wiki/xwiki/edit?parent=project/page/01%20Concept",
+                UrlUtils.normalizeUrl("/polarion/wiki/xwiki/edit?parent=project/page/01 Concept")
+        );
+        assertEquals(
+                "/polarion/wiki/xwiki/edit/project/MegaProject/page/01%20Ultimate%20Concept/46?parent=project/MegaProject/page/01%20Ultimate%20Concept/ID%20with%20Spaces",
+                UrlUtils.normalizeUrl("/polarion/wiki/xwiki/edit/project/MegaProject/page/01%20Ultimate%20Concept/46?parent=project/MegaProject/page/01 Ultimate Concept/ID with Spaces")
         );
     }
 
