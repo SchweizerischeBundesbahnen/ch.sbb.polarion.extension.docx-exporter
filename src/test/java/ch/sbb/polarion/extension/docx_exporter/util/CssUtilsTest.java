@@ -36,8 +36,9 @@ class CssUtilsTest {
 
     @Test
     void overwritePropertyValueTest() {
-        CSSDeclarationList cssStyles = Optional.ofNullable(CSSReaderDeclarationList.readFromString("width: auto")).orElse(new CSSDeclarationList());
+        CSSDeclarationList cssStyles = Optional.ofNullable(CSSReaderDeclarationList.readFromString("width: auto; margin: 4px")).orElse(new CSSDeclarationList());
         CssUtils.setPropertyValue(cssStyles, CssProp.WIDTH, "100px");
         assertEquals("100px", CssUtils.getPropertyValue(cssStyles, CssProp.WIDTH));
+        assertEquals("4px", CssUtils.getPropertyValue(cssStyles, CssProp.MARGIN));
     }
 }
