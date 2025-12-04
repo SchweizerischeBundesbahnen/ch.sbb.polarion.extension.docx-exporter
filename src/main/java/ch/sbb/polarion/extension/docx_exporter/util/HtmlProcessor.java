@@ -10,10 +10,11 @@ import ch.sbb.polarion.extension.generic.util.HtmlUtils;
 import ch.sbb.polarion.extension.docx_exporter.rest.model.conversion.ExportParams;
 import ch.sbb.polarion.extension.docx_exporter.settings.LocalizationSettings;
 import ch.sbb.polarion.extension.docx_exporter.util.html.HtmlLinksHelper;
+import com.helger.css.decl.CSSDeclarationList;
+import com.helger.css.reader.CSSReaderDeclarationList;
 import com.polarion.alm.shared.util.StringUtils;
 import com.polarion.core.boot.PolarionProperties;
 import com.polarion.core.config.Configuration;
-import com.steadystate.css.parser.CSSOMParser;
 import lombok.SneakyThrows;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -72,7 +73,6 @@ public class HtmlProcessor {
     private final FileResourceProvider fileResourceProvider;
     private final LocalizationSettings localizationSettings;
     private final HtmlLinksHelper httpLinksHelper;
-    private final @NotNull CSSOMParser parser = new CSSOMParser();
 
     public HtmlProcessor(FileResourceProvider fileResourceProvider, LocalizationSettings localizationSettings, HtmlLinksHelper httpLinksHelper) {
         this.fileResourceProvider = fileResourceProvider;
@@ -763,16 +763,16 @@ public class HtmlProcessor {
         for (Element image : images) {
             if (image.hasAttr(HtmlTagAttr.STYLE)) {
                 String style = image.attr(HtmlTagAttr.STYLE);
-                CSSStyleDeclaration cssStyle = parseCss(style);
+                CSSDeclarationList cssStyles = parseCss(style);
 
-                String displayValue = getCssValue(cssStyle, CssProp.DISPLAY);
+                String displayValue = CssUtils.getPropertyValue(cssStyles, CssProp.DISPLAY);
                 if (!CssProp.DISPLAY_BLOCK_VALUE.equals(displayValue)) {
                     continue;
                 }
 
                 Element wrapper = new Element(HtmlTag.DIV);
 
-                String marginValue = Optional.ofNullable(cssStyle.getPropertyValue(CssProp.MARGIN)).orElse("").trim();
+                String marginValue = CssUtils.getPropertyValue(cssStyles, CssProp.MARGIN);
                 if (RIGHT_ALIGNMENT_MARGIN.equals(marginValue)) {
                     wrapper.attr(HtmlTagAttr.STYLE, String.format("%s: %s;", CssProp.TEXT_ALIGN, CssProp.TEXT_ALIGN_RIGHT_VALUE));
                 } else {
@@ -819,12 +819,12 @@ public class HtmlProcessor {
         for (Element cell : cells) {
             if (cell.hasAttr(HtmlTagAttr.STYLE)) {
                 String style = cell.attr(HtmlTagAttr.STYLE);
-                CSSStyleDeclaration cssStyle = parseCss(style);
+                CSSDeclarationList cssStyles = parseCss(style);
 
-                String widthValue = getCssValue(cssStyle, CssProp.WIDTH);
+                String widthValue = CssUtils.getPropertyValue(cssStyles, CssProp.WIDTH);
                 if (!widthValue.isEmpty() && !widthValue.contains("%")) {
-                    cssStyle.setProperty(CssProp.WIDTH, CssProp.WIDTH_AUTO_VALUE, null);
-                    cell.attr(HtmlTagAttr.STYLE, cssStyle.getCssText());
+                    CssUtils.setPropertyValue(cssStyles, CssProp.WIDTH, CssProp.WIDTH_AUTO_VALUE);
+                    cell.attr(HtmlTagAttr.STYLE, cssStyles.getAsCSSString());
                 }
             }
         }
@@ -1052,15 +1052,11 @@ public class HtmlProcessor {
     }
 
     private String getCssValue(@NotNull Element element, @NotNull String cssProperty) {
-        CSSStyleDeclaration cssStyle = getCssStyle(element);
-        return getCssValue(cssStyle, cssProperty);
+        CSSDeclarationList cssStyles = getCssStyles(element);
+        return CssUtils.getPropertyValue(cssStyles, cssProperty);
     }
 
-    private String getCssValue(@NotNull CSSStyleDeclaration cssStyle, @NotNull String cssProperty) {
-        return Optional.ofNullable(cssStyle.getPropertyValue(cssProperty)).orElse("").trim();
-    }
-
-    private CSSStyleDeclaration getCssStyle(@NotNull Element element) {
+    private CSSDeclarationList getCssStyles(@NotNull Element element) {
         String style = "";
         if (element.hasAttr(HtmlTagAttr.STYLE)) {
             style = element.attr(HtmlTagAttr.STYLE);
@@ -1068,8 +1064,8 @@ public class HtmlProcessor {
         return parseCss(style);
     }
 
-    private CSSStyleDeclaration parseCss(@NotNull String style) {
-        return CssUtils.parseCss(parser, style);
+    private CSSDeclarationList parseCss(@NotNull String styleAttributeValue) {
+        return Optional.ofNullable(CSSReaderDeclarationList.readFromString(styleAttributeValue)).orElse(new CSSDeclarationList());
     }
 
     /**
