@@ -57,7 +57,7 @@
 
         <exec-maven-plugin.version>3.3.0</exec-maven-plugin.version>
         <awaitility.version>4.3.0</awaitility.version>
-        <tika.version>1.28.5</tika.version>
+        <tika.version>3.2.2</tika.version>
         <ph-css.version>8.1.0</ph-css.version>
 
         <maven-jar-plugin.Extension-Context>docx-exporter</maven-jar-plugin.Extension-Context>
@@ -163,13 +163,6 @@
             <scope>provided</scope>
         </dependency>
 
-        <dependency>
-            <groupId>org.apache.tika</groupId>
-            <artifactId>tika-core</artifactId>
-            <version>${tika.version}</version>
-            <scope>provided</scope>
-        </dependency>
-
         <!--  3rd-party libraries to be packaged into resulting jar  -->
         <dependency>
             <groupId>org.apache.pdfbox</groupId>
@@ -229,6 +222,12 @@
             <groupId>com.helger</groupId>
             <artifactId>ph-css</artifactId>
             <version>${ph-css.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.tika</groupId>
+            <artifactId>tika-core</artifactId>
+            <version>${tika.version}</version>
         </dependency>
 
         <!--  Test dependencies  -->
