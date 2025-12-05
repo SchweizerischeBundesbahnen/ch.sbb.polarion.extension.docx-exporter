@@ -1,5 +1,16 @@
 # Changelog
 
+## [3.0.1](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/compare/v3.0.0...v3.0.1) (2025-12-05)
+
+
+### Bug Fixes
+
+* add ConfigurationApiController and ConfigurationInternalController to rest api application ([#138](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/issues/138)) ([4cc711b](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/commit/4cc711bb71b126aad82ad81eb5d256639024cb5c))
+* **deps:** update dependency net.bytebuddy:byte-buddy to v1.18.2 ([b11d7dc](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/commit/b11d7dcbe64c91632d2faf68b997a2162f13440d))
+* **deps:** update dependency org.apache.tika:tika-core to v3.2.3 ([912c763](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/commit/912c763727aaf06a5e79d0a9764bb5118ba93589))
+* implement URL encoding for invalid URI characters and add utility tests ([#147](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/issues/147)) ([b393d4a](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/commit/b393d4a48c39754e7e52c873290abea6615416fe)), closes [#145](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/issues/145)
+* use actual Apache Tika library version ([#153](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/issues/153)) ([6dd761e](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/commit/6dd761e0a0270e14a0198b4ccaf699162faede82)), closes [#152](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/issues/152)
+
 ## [3.0.0](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/compare/v2.4.0...v3.0.0) (2025-11-21)
 
 
