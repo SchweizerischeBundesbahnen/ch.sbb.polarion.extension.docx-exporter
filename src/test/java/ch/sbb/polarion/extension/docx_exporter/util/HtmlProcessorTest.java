@@ -7,6 +7,7 @@ import ch.sbb.polarion.extension.docx_exporter.rest.model.settings.localization.
 import ch.sbb.polarion.extension.docx_exporter.settings.LocalizationSettings;
 import ch.sbb.polarion.extension.docx_exporter.util.html.HtmlLinksHelper;
 import ch.sbb.polarion.extension.generic.settings.SettingId;
+import ch.sbb.polarion.extension.generic.test_extensions.BundleJarsPrioritizingRunnableMockExtension;
 import com.polarion.core.boot.PolarionProperties;
 import lombok.SneakyThrows;
 import org.jsoup.Jsoup;
@@ -32,7 +33,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
-@ExtendWith(MockitoExtension.class)
+@ExtendWith({MockitoExtension.class, BundleJarsPrioritizingRunnableMockExtension.class})
 @SuppressWarnings("ConstantConditions")
 class HtmlProcessorTest {
 

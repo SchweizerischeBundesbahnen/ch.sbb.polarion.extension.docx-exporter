@@ -1,14 +1,13 @@
 package ch.sbb.polarion.extension.docx_exporter.util;
 
 import ch.sbb.polarion.extension.generic.regex.RegexMatcher;
+import ch.sbb.polarion.extension.generic.util.BundleJarsPrioritizingRunnable;
 import com.polarion.core.util.StringUtils;
 import com.polarion.core.util.logging.Logger;
 import lombok.SneakyThrows;
 import lombok.experimental.UtilityClass;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.rendering.PDFRenderer;
-import org.apache.tika.Tika;
-import org.apache.tika.mime.MimeTypes;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -26,7 +25,11 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.function.BiFunction;
+
+import static ch.sbb.polarion.extension.docx_exporter.util.TikaMimeTypeResolver.PARAM_RESULT;
+import static ch.sbb.polarion.extension.docx_exporter.util.TikaMimeTypeResolver.PARAM_VALUE;
 
 @UtilityClass
 public class MediaUtils {
@@ -37,7 +40,6 @@ public class MediaUtils {
     private static final Logger logger = Logger.getLogger(MediaUtils.class);
     private static final int PDF_TO_PNG_DPI = 300;
     private static final String IMG_FORMAT_PNG = "png";
-    private static final Tika tika = new Tika();
 
     private static final Map<String, String> CUSTOM_MIME_TYPES_MAP = Map.of(
             "cur", "image/x-icon",
@@ -174,14 +176,14 @@ public class MediaUtils {
         return Files.probeContentType(Paths.get(resource));
     }
 
+    @SuppressWarnings("unchecked")
     public String getMimeTypeUsingTikaByResourceName(@NotNull String resource, byte[] resourceBytes) {
-        String detected = tika.detect(resource);
-        return MimeTypes.OCTET_STREAM.equals(detected) ? null : detected; // ignore 'application/octet-stream' fallback
+        return ((Optional<String>) BundleJarsPrioritizingRunnable.execute(TikaMimeTypeResolver.class, Map.of(PARAM_VALUE, resource), true).get(PARAM_RESULT)).orElse(null);
     }
 
+    @SuppressWarnings("unchecked")
     public String getMimeTypeUsingTikaByContent(@NotNull String resource, byte[] resourceBytes) {
-        String detected = tika.detect(resourceBytes);
-        return MimeTypes.OCTET_STREAM.equals(detected) ? null : detected; // ignore 'application/octet-stream' fallback
+        return ((Optional<String>) BundleJarsPrioritizingRunnable.execute(TikaMimeTypeResolver.class, Map.of(PARAM_VALUE, resourceBytes), true).get(PARAM_RESULT)).orElse(null);
     }
 
     @SneakyThrows
