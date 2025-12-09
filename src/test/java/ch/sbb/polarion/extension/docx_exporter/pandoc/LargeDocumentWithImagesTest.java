@@ -34,6 +34,8 @@ class LargeDocumentWithImagesTest extends BasePandocTest {
 
     private static final int TARGET_HTML_SIZE_MB = 20;
     private static final int TARGET_HTML_SIZE_BYTES = TARGET_HTML_SIZE_MB * 1024 * 1024;
+    private static final int MIN_DOCX_SIZE_MB = 20;
+    private static final int MIN_DOCX_SIZE_BYTES = MIN_DOCX_SIZE_MB * 1024 * 1024;
     private static final int IMAGE_WIDTH = 400;
     private static final int IMAGE_HEIGHT = 300;
     private static final int IMAGES_PER_SECTION = 3;
@@ -51,7 +53,8 @@ class LargeDocumentWithImagesTest extends BasePandocTest {
         byte[] docBytes = exportToDOCX(html, readTemplate("reference_template"), null, PandocParams.builder().build());
 
         assertNotNull(docBytes, "Generated DOCX should not be null");
-        assertTrue(docBytes.length > 0, "Generated DOCX should have content");
+        assertTrue(docBytes.length >= MIN_DOCX_SIZE_BYTES,
+                String.format("Generated DOCX should be at least %d MB, but was %.2f MB", MIN_DOCX_SIZE_MB, bytesToMB(docBytes.length)));
 
         writeReportDocx("testLargeDocumentWithImages_generated", docBytes);
 
@@ -76,6 +79,8 @@ class LargeDocumentWithImagesTest extends BasePandocTest {
 
         byte[] docBytes = exportToDOCX(html, readTemplate("reference_template"), null, PandocParams.builder().build());
         assertNotNull(docBytes, "Generated DOCX should not be null");
+        assertTrue(docBytes.length >= MIN_DOCX_SIZE_BYTES,
+                String.format("Generated DOCX should be at least %d MB, but was %.2f MB", MIN_DOCX_SIZE_MB, bytesToMB(docBytes.length)));
         writeReportDocx("testLargeDocumentWithImages_for_pdf_generated", docBytes);
 
         File tempFile = createTempDocxFile(docBytes);
@@ -103,6 +108,8 @@ class LargeDocumentWithImagesTest extends BasePandocTest {
                 PandocParams.builder().orientation("landscape").build());
 
         assertNotNull(docBytes, "Generated DOCX should not be null");
+        assertTrue(docBytes.length >= MIN_DOCX_SIZE_BYTES,
+                String.format("Generated DOCX should be at least %d MB, but was %.2f MB", MIN_DOCX_SIZE_MB, bytesToMB(docBytes.length)));
         writeReportDocx("testLargeDocumentWithImages_landscape_generated", docBytes);
 
         WordprocessingMLPackage wordMLPackage = WordprocessingMLPackage.load(new ByteArrayInputStream(docBytes));
@@ -124,6 +131,8 @@ class LargeDocumentWithImagesTest extends BasePandocTest {
                 List.of("--toc"), PandocParams.builder().build());
 
         assertNotNull(docBytes, "Generated DOCX with ToC should not be null");
+        assertTrue(docBytes.length >= MIN_DOCX_SIZE_BYTES,
+                String.format("Generated DOCX should be at least %d MB, but was %.2f MB", MIN_DOCX_SIZE_MB, bytesToMB(docBytes.length)));
         writeReportDocx("testLargeDocumentWithImages_with_toc_generated", docBytes);
 
         WordprocessingMLPackage wordMLPackage = WordprocessingMLPackage.load(new ByteArrayInputStream(docBytes));
@@ -145,6 +154,8 @@ class LargeDocumentWithImagesTest extends BasePandocTest {
                 PandocParams.builder().paperSize("A3").build());
 
         assertNotNull(docBytes, "Generated DOCX with A3 paper should not be null");
+        assertTrue(docBytes.length >= MIN_DOCX_SIZE_BYTES,
+                String.format("Generated DOCX should be at least %d MB, but was %.2f MB", MIN_DOCX_SIZE_MB, bytesToMB(docBytes.length)));
         writeReportDocx("testLargeDocumentWithImages_a3_paper_generated", docBytes);
 
         WordprocessingMLPackage wordMLPackage = WordprocessingMLPackage.load(new ByteArrayInputStream(docBytes));
