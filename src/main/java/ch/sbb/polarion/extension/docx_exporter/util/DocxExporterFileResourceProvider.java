@@ -17,6 +17,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.VisibleForTesting;
 
+import javax.ws.rs.core.MediaType;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -29,6 +30,8 @@ import java.util.Base64;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import static ch.sbb.polarion.extension.docx_exporter.util.exporter.Constants.MIME_TYPE_SVG;
 
 /**
  * Initial code taken from {@link com.polarion.alm.tracker.web.internal.server.CustomFileResourceProvider}
@@ -58,6 +61,10 @@ public class DocxExporterFileResourceProvider implements FileResourceProvider {
         byte[] resourceBytes = getResourceAsBytes(resource);
         if (resourceBytes != null && resourceBytes.length != 0) { // Don't make any manipulations if resource wasn't resolved
             String mimeType = MediaUtils.guessMimeType(resource, resourceBytes);
+            if (MIME_TYPE_SVG.equals(mimeType)) {
+                // Additional check to verify that the content is indeed an SVG
+                mimeType = MediaUtils.getMimeTypeUsingTikaByContent(resource, resourceBytes);
+            }
             return String.format("data:%s;base64,%s", mimeType, Base64.getEncoder().encodeToString(resourceBytes));
         }
         return null;
@@ -84,7 +91,8 @@ public class DocxExporterFileResourceProvider implements FileResourceProvider {
                 InputStream stream = resolver.resolve(resource);
                 if (stream != null) {
                     byte[] result = StreamUtils.suckStreamThenClose(stream);
-                    if (result.length > 0 && WorkItemAttachmentUrlResolver.isWorkItemAttachmentUrl(resource) && isMediaTypeMismatch(resource, result)) {
+                    if (result.length > 0 && WorkItemAttachmentUrlResolver.isWorkItemAttachmentUrl(resource) &&
+                            (!WorkItemAttachmentUrlResolver.isSvg(resource) && isUnexpectedlyResolvedAsHtml(resource, result))) {
                         ExportContext.addWorkItemIDsWithMissingAttachment(getWorkItemIdsWithUnavailableAttachments(resource));
                         return getDefaultContent(resource);
                     }
@@ -99,10 +107,22 @@ public class DocxExporterFileResourceProvider implements FileResourceProvider {
     }
 
     @VisibleForTesting
-    boolean isMediaTypeMismatch(String resource, byte[] content) {
+    boolean isUnexpectedlyResolvedAsHtml(String resource, byte[] content) {
         String detectedMimeType = MediaUtils.getMimeTypeUsingTikaByContent(resource, content);
         String expectedMimeType = MediaUtils.getMimeTypeUsingTikaByResourceName(resource, null);
-        return expectedMimeType != null && !expectedMimeType.equals(detectedMimeType);
+
+        if (detectedMimeType == null || expectedMimeType == null) {
+            return false;
+        }
+
+        // if application/xhtml+xml response received, we should check whether this is what we expected
+        // because it can be a redirect to Login Page in case of missing resource!
+        if (detectedMimeType.equals(MediaType.APPLICATION_XHTML_XML)) {
+            return !expectedMimeType.equals(detectedMimeType);
+        }
+
+        // in all other cases we are just assuming that everything is ok
+        return false;
     }
 
     @VisibleForTesting
