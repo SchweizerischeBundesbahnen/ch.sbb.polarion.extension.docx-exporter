@@ -32,17 +32,21 @@ import static org.junit.jupiter.api.Assertions.*;
 @SuppressWarnings("ResultOfMethodCallIgnored")
 class LargeDocumentWithImagesTest extends BasePandocTest {
 
-    private static final int MIN_HTML_SIZE_MB = 10;
-    private static final int MIN_HTML_SIZE_BYTES = MIN_HTML_SIZE_MB * 1024 * 1024;
+    private static final int TARGET_HTML_SIZE_MB = 20;
+    private static final int TARGET_HTML_SIZE_BYTES = TARGET_HTML_SIZE_MB * 1024 * 1024;
     private static final int IMAGE_WIDTH = 400;
     private static final int IMAGE_HEIGHT = 300;
     private static final int IMAGES_PER_SECTION = 3;
+
+    private static double bytesToMB(long bytes) {
+        return bytes / (1024.0 * 1024.0);
+    }
 
     @Test
     @SneakyThrows
     void shouldConvertLargeDocumentWithMultiplePngImages() {
         String html = generateLargeHtmlWithImages();
-        assertTrue(html.length() >= MIN_HTML_SIZE_BYTES, String.format("Generated HTML should be at least %d MB, but was %.2f MB", MIN_HTML_SIZE_MB, html.length() / (1024.0 * 1024.0)));
+        assertTrue(html.length() >= TARGET_HTML_SIZE_BYTES, String.format("Generated HTML should be at least %d MB, but was %.2f MB", TARGET_HTML_SIZE_MB, bytesToMB(html.length())));
 
         byte[] docBytes = exportToDOCX(html, readTemplate("reference_template"), null, PandocParams.builder().build());
 
@@ -67,8 +71,8 @@ class LargeDocumentWithImagesTest extends BasePandocTest {
     @SneakyThrows
     void shouldConvertLargeDocumentWithImagesToValidPdf() {
         String html = generateLargeHtmlWithImages();
-        assertTrue(html.length() >= MIN_HTML_SIZE_BYTES,
-                String.format("Generated HTML should be at least %d MB", MIN_HTML_SIZE_MB));
+        assertTrue(html.length() >= TARGET_HTML_SIZE_BYTES,
+                String.format("Generated HTML should be at least %d MB", TARGET_HTML_SIZE_MB));
 
         byte[] docBytes = exportToDOCX(html, readTemplate("reference_template"), null, PandocParams.builder().build());
         assertNotNull(docBytes, "Generated DOCX should not be null");
@@ -109,7 +113,7 @@ class LargeDocumentWithImagesTest extends BasePandocTest {
                 .filter(BinaryPartAbstractImage.class::isInstance)
                 .toList();
 
-        assertTrue(imageParts.size() > 0, "Document in landscape mode should contain images");
+        assertFalse(imageParts.isEmpty(), "Document in landscape mode should contain images");
     }
 
     @Test
@@ -130,7 +134,7 @@ class LargeDocumentWithImagesTest extends BasePandocTest {
                 .filter(BinaryPartAbstractImage.class::isInstance)
                 .toList();
 
-        assertTrue(imageParts.size() > 0, "Document with ToC should contain images");
+        assertFalse(imageParts.isEmpty(), "Document with ToC should contain images");
     }
 
     @Test
@@ -151,7 +155,7 @@ class LargeDocumentWithImagesTest extends BasePandocTest {
                 .filter(BinaryPartAbstractImage.class::isInstance)
                 .toList();
 
-        assertTrue(imageParts.size() > 0, "Document with A3 paper size should contain images");
+        assertFalse(imageParts.isEmpty(), "Document with A3 paper size should contain images");
     }
 
     /**
@@ -174,14 +178,14 @@ class LargeDocumentWithImagesTest extends BasePandocTest {
         int sectionNumber = 0;
 
         // Generate sections until we reach the target size
-        while (html.length() < MIN_HTML_SIZE_BYTES) {
+        while (html.length() < TARGET_HTML_SIZE_BYTES) {
             sectionNumber++;
             html.append(generateSection(sectionNumber, random));
         }
 
         html.append("<h2>Conclusion</h2>\n");
         html.append("<p>This document contains ").append(sectionNumber).append(" sections with embedded PNG images.</p>\n");
-        html.append("<p>Total HTML size: ").append(String.format("%.2f", html.length() / (1024.0 * 1024.0))).append(" MB</p>\n");
+        html.append("<p>Total HTML size: ").append(String.format("%.2f", bytesToMB(html.length()))).append(" MB</p>\n");
         html.append("</body>\n");
         html.append("</html>");
 
