@@ -8,9 +8,6 @@ import com.polarion.core.util.StringUtils;
 import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.jetbrains.annotations.NotNull;
-import org.testcontainers.containers.GenericContainer;
-import org.testcontainers.containers.wait.strategy.Wait;
-import org.testcontainers.images.PullPolicy;
 
 import java.awt.image.BufferedImage;
 import java.io.File;
@@ -24,7 +21,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @SkipTestWhenParamNotSet
 public abstract class BasePandocTest {
-    public static final String DOCKER_IMAGE_NAME = "ghcr.io/schweizerischebundesbahnen/pandoc-service:latest";
 
     public static final String IMPL_NAME_PARAM = "docxExporterImpl";
 
@@ -40,6 +36,14 @@ public abstract class BasePandocTest {
     protected static final String EXT_DOCX = ".docx";
     protected static final String EXT_PDF = ".pdf";
 
+    /**
+     * Returns the PandocServiceConnector using the shared container.
+     */
+    protected PandocServiceConnector getPandocServiceConnector() {
+        assertTrue(SharedPandocContainer.getInstance().isRunning(), "Shared Pandoc container should be running");
+        return new PandocServiceConnector(SharedPandocContainer.getBaseUrl());
+    }
+
     public static String readHtmlResource(String resourceName) throws IOException {
         try (InputStream inputStream = BasePandocTest.class.getResourceAsStream(PANDOC_TEST_RESOURCES_FOLDER + resourceName + EXT_HTML)) {
             if (inputStream == null) {
@@ -50,12 +54,11 @@ public abstract class BasePandocTest {
     }
 
     public static byte[] readTemplate(String resourceName) throws IOException {
-        try (InputStream is = BasePandocTest.class.getResourceAsStream(
-                PANDOC_TEST_TEMPLATE_RESOURCES_FOLDER + resourceName + EXT_DOCX)) {
-            if (is == null) {
+        try (InputStream inputStream = BasePandocTest.class.getResourceAsStream(PANDOC_TEST_TEMPLATE_RESOURCES_FOLDER + resourceName + EXT_DOCX)) {
+            if (inputStream == null) {
                 throw new IOException("Template not found: " + resourceName);
             }
-            return is.readAllBytes();
+            return inputStream.readAllBytes();
         }
     }
 
@@ -68,51 +71,15 @@ public abstract class BasePandocTest {
     }
 
     protected byte[] exportToDOCX(String html, byte[] template, List<String> options, @NotNull PandocParams params) {
-        try (GenericContainer<?> pandocService = new GenericContainer<>(DOCKER_IMAGE_NAME)) {
-            pandocService
-                    .withImagePullPolicy(PullPolicy.alwaysPull())
-                    .withExposedPorts(9082)
-                    .waitingFor(Wait.forHttp("/version").forPort(9082))
-                    .start();
-
-            assertTrue(pandocService.isRunning());
-
-            String pandocServiceBaseUrl = "http://" + pandocService.getHost() + ":" + pandocService.getFirstMappedPort();
-            PandocServiceConnector pandocServiceConnector = new PandocServiceConnector(pandocServiceBaseUrl);
-            return pandocServiceConnector.convertToDocx(html, template, options, params);
-        }
+        return getPandocServiceConnector().convertToDocx(html, template, options, params);
     }
 
     protected byte[] downloadTemplate() {
-        try (GenericContainer<?> pandocService = new GenericContainer<>(DOCKER_IMAGE_NAME)) {
-            pandocService
-                    .withImagePullPolicy(PullPolicy.alwaysPull())
-                    .withExposedPorts(9082)
-                    .waitingFor(Wait.forHttp("/version").forPort(9082))
-                    .start();
-
-            assertTrue(pandocService.isRunning());
-
-            String pandocServiceBaseUrl = "http://" + pandocService.getHost() + ":" + pandocService.getFirstMappedPort();
-            PandocServiceConnector pandocServiceConnector = new PandocServiceConnector(pandocServiceBaseUrl);
-            return pandocServiceConnector.getTemplate();
-        }
+        return getPandocServiceConnector().getTemplate();
     }
 
     protected PandocInfo getPandocInfo() {
-        try (GenericContainer<?> pandocService = new GenericContainer<>(DOCKER_IMAGE_NAME)) {
-            pandocService
-                    .withImagePullPolicy(PullPolicy.alwaysPull())
-                    .withExposedPorts(9082)
-                    .waitingFor(Wait.forHttp("/version").forPort(9082))
-                    .start();
-
-            assertTrue(pandocService.isRunning());
-
-            String pandocServiceBaseUrl = "http://" + pandocService.getHost() + ":" + pandocService.getFirstMappedPort();
-            PandocServiceConnector pandocServiceConnector = new PandocServiceConnector(pandocServiceBaseUrl);
-            return pandocServiceConnector.getPandocInfo();
-        }
+        return getPandocServiceConnector().getPandocInfo();
     }
 
     protected List<BufferedImage> getAllPagesAsImagesAndLogAsReports(@NotNull String fileName, byte[] pdfBytes) throws IOException {
@@ -140,19 +107,7 @@ public abstract class BasePandocTest {
     }
 
     protected byte[] exportToPDF(File docx) {
-        try (GenericContainer<?> pandocService = new GenericContainer<>(DOCKER_IMAGE_NAME)) {
-            pandocService
-                    .withImagePullPolicy(PullPolicy.alwaysPull())
-                    .withExposedPorts(9082)
-                    .waitingFor(Wait.forHttp("/version").forPort(9082))
-                    .start();
-
-            assertTrue(pandocService.isRunning());
-
-            String pandocServiceBaseUrl = "http://" + pandocService.getHost() + ":" + pandocService.getFirstMappedPort();
-            PandocServiceConnector pandocServiceConnector = new PandocServiceConnector(pandocServiceBaseUrl);
-            return pandocServiceConnector.convertToPDF(docx);
-        }
+        return getPandocServiceConnector().convertToPDF(docx);
     }
 
     protected void writeReportPdf(String testName, String fileSuffix, byte[] bytes) throws IOException {
