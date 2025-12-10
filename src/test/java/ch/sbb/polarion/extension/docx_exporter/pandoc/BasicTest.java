@@ -41,6 +41,8 @@ class BasicTest extends BasePandocTest {
     static {
         // Workaround for docx4j font discovery issue with some OpenType fonts.
         // Must be set BEFORE IdentityPlusMapper class is loaded (which triggers PhysicalFonts.discoverPhysicalFonts()).
+        // If this is not set early enough, docx4j may discover problematic OpenType fonts,
+        // which can cause exceptions or incorrect font rendering in generated documents, leading to test failures.
         // Regex limits font discovery to common fonts, avoiding problematic OpenType fonts.
         PhysicalFonts.setRegex(".*(Courier New|Arial|Times New Roman|Georgia|Trebuchet|Verdana|Helvetica).*");
     }
