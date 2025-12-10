@@ -1,5 +1,6 @@
 package ch.sbb.polarion.extension.docx_exporter.util;
 
+import ch.sbb.polarion.extension.generic.util.PObjectListStub;
 import com.polarion.alm.projects.model.IProject;
 import com.polarion.alm.projects.model.IUser;
 import com.polarion.alm.server.api.model.document.ProxyDocument;
@@ -22,7 +23,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
-@SuppressWarnings({"rawtypes", "unchecked"})
+@SuppressWarnings({"unchecked"})
 class WorkItemCommentsProcessorTest {
     @Test
     void addWorkItemComments_withOneWorkItemAndOneCommentTest() {
@@ -68,9 +69,20 @@ class WorkItemCommentsProcessorTest {
         when(mockComment2.isResolved()).thenReturn(false);
         when(mockComment2.getChildComments()).thenReturn(IPObjectList.EMPTY_POBJECTLIST);
 
-        IPObjectList mockObjectList = mock(IPObjectList.class);
-        when(mockObjectList.iterator()).thenReturn(List.of(mockComment1, mockComment2).iterator());
-        when(mockWorkItem.getRootComments(false)).thenReturn(mockObjectList);
+        IUser mockUser3 = mock(IUser.class);
+        IComment mockComment3 = mock(IComment.class);
+        when(mockComment3.getId()).thenReturn("c3");
+        when(mockComment3.getTitle()).thenReturn("Title 3 visible");
+        when(mockComment3.getText()).thenReturn(null);
+        when(mockComment3.getProject()).thenReturn(mockProject);
+        when(mockComment3.getAuthor()).thenReturn(mockUser3);
+        when(mockUser3.getName()).thenReturn("Basic User 3");
+        when(mockComment3.getCreated()).thenReturn(new Date(0));
+        when(mockComment3.isResolved()).thenReturn(true);
+        when(mockComment3.getChildComments()).thenReturn(IPObjectList.EMPTY_POBJECTLIST);
+
+        when(mockWorkItem.getRootComments(true)).thenReturn(new PObjectListStub<>(List.of(mockComment1, mockComment2, mockComment3)));
+        when(mockWorkItem.getRootComments(false)).thenReturn(new PObjectListStub<>(List.of(mockComment1, mockComment2)));
 
         String inputHtml = "<div id=\"params=id=EL-219\">original content</div>";
 
@@ -87,5 +99,17 @@ class WorkItemCommentsProcessorTest {
         assertThat(updatedHtml).contains("original content");
         assertThat(updatedHtml).doesNotContain("Title 1");
         assertThat(updatedHtml).contains("Title 2 visible");
+        assertThat(updatedHtml).contains("Title 3 visible");
+
+        // Now test with onlyOpen = true, the resolved comment should be excluded
+        resultHtml = new WorkItemCommentsProcessor().addWorkItemComments(mockDocument, inputHtml, true);
+
+        // Assert
+        resultDoc = Jsoup.parse(resultHtml);
+        updatedHtml = resultDoc.body().html();
+
+        assertThat(updatedHtml).contains("This is a comment");
+        assertThat(updatedHtml).contains("Title 2 visible");
+        assertThat(updatedHtml).doesNotContain("Title 3 visible");
     }
 }
