@@ -5,10 +5,9 @@ import ch.sbb.polarion.extension.docx_exporter.pandoc.service.model.PandocParams
 import ch.sbb.polarion.extension.docx_exporter.util.MediaUtils;
 import jakarta.xml.bind.JAXBElement;
 import lombok.SneakyThrows;
-import org.apache.pdfbox.Loader;
-import org.apache.pdfbox.pdmodel.PDDocument;
 import org.docx4j.Docx4J;
 import org.docx4j.convert.out.FOSettings;
+import org.docx4j.fonts.PhysicalFonts;
 import org.docx4j.openpackaging.exceptions.Docx4JException;
 import org.docx4j.openpackaging.packages.WordprocessingMLPackage;
 import org.docx4j.openpackaging.parts.WordprocessingML.MainDocumentPart;
@@ -36,6 +35,13 @@ import static org.junit.jupiter.api.Assertions.*;
 @SkipTestWhenParamNotSet
 @SuppressWarnings("ResultOfMethodCallIgnored")
 class BasicTest extends BasePandocTest {
+
+    static {
+        // Workaround for docx4j font discovery issue with some OpenType fonts.
+        // Must be set BEFORE IdentityPlusMapper class is loaded (which triggers PhysicalFonts.discoverPhysicalFonts()).
+        // Regex limits font discovery to common fonts, avoiding problematic OpenType fonts.
+        PhysicalFonts.setRegex(".*(Courier New|Arial|Times New Roman|Georgia|Trebuchet|Verdana|Helvetica).*");
+    }
 
     @Test
     void testInvalidTemplate() {
