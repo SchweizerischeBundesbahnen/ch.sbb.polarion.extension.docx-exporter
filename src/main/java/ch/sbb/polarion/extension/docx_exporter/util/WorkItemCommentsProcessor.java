@@ -52,7 +52,7 @@ public class WorkItemCommentsProcessor {
                 continue;
             }
             Map<String, WorkItemComment> commentMap = new HashMap<>();
-            for (IComment comment : workItem.getRootComments(onlyOpen)) {
+            for (IComment comment : workItem.getRootComments(!onlyOpen)) {
                 WorkItemComment wiComment = getCommentFromWorkItem(comment);
                 commentMap.put(comment.getId(), wiComment);
             }

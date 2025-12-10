@@ -5,10 +5,10 @@ import ch.sbb.polarion.extension.docx_exporter.rest.model.conversion.ExportParam
 import ch.sbb.polarion.extension.docx_exporter.rest.model.documents.id.DocumentId;
 import ch.sbb.polarion.extension.docx_exporter.rest.model.documents.id.DocumentProject;
 import ch.sbb.polarion.extension.docx_exporter.rest.model.documents.id.LiveDocId;
-import ch.sbb.polarion.extension.docx_exporter.service.PolarionBaselineExecutor;
 import ch.sbb.polarion.extension.docx_exporter.util.LiveDocCommentsProcessor;
 import ch.sbb.polarion.extension.docx_exporter.util.WorkItemCommentsProcessor;
 import ch.sbb.polarion.extension.docx_exporter.util.exporter.ModifiedDocumentRenderer;
+import ch.sbb.polarion.extension.generic.service.PolarionBaselineExecutor;
 import com.polarion.alm.projects.model.IUniqueObject;
 import com.polarion.alm.server.api.model.document.ProxyDocument;
 import com.polarion.alm.shared.api.transaction.ReadOnlyTransaction;
@@ -16,6 +16,7 @@ import com.polarion.alm.shared.api.transaction.internal.InternalReadOnlyTransact
 import com.polarion.alm.shared.api.utils.html.RichTextRenderTarget;
 import com.polarion.alm.shared.dle.document.DocumentRendererParameters;
 import com.polarion.alm.tracker.model.IModule;
+import com.polarion.core.util.StringUtils;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Map;
@@ -61,17 +62,22 @@ public class LiveDocAdapter extends CommonUniqueObjectAdapter {
         return PolarionBaselineExecutor.executeInBaseline(exportParams.getBaselineRevision(), transaction, () -> {
             ProxyDocument document = new ProxyDocument(module, (InternalReadOnlyTransaction) transaction);
 
-            String internalContent = exportParams.getInternalContent() != null ? exportParams.getInternalContent() : document.getHomePageContentHtml();
-            if (internalContent != null && exportParams.getRenderComments() != null) {
+            String internalContent = StringUtils.getEmptyIfNull(exportParams.getInternalContent() != null ? exportParams.getInternalContent() : document.getHomePageContentHtml());
+            internalContent = processLiveDocComments(exportParams, document, internalContent);
+            if (exportParams.getRenderComments() != null) {
                 // Add inline comments into document content
-                internalContent = new LiveDocCommentsProcessor().addLiveDocComments(document, internalContent, CommentsRenderType.OPEN.equals(exportParams.getRenderComments()));
                 internalContent = new WorkItemCommentsProcessor().addWorkItemComments(document, internalContent, CommentsRenderType.OPEN.equals(exportParams.getRenderComments()));
             }
             Map<String, String> documentParameters = exportParams.getUrlQueryParameters() == null ? Map.of() : exportParams.getUrlQueryParameters();
             DocumentRendererParameters parameters = new DocumentRendererParameters(null, documentParameters.get(URL_QUERY_PARAM_LANGUAGE));
             ModifiedDocumentRenderer documentRenderer = new ModifiedDocumentRenderer((InternalReadOnlyTransaction) transaction, document, RichTextRenderTarget.PDF_EXPORT, parameters);
-            return documentRenderer.render(internalContent != null ? internalContent : "");
+            String rendered = documentRenderer.render(internalContent);
+            return processLiveDocComments(exportParams, document, rendered);
         });
+    }
+
+    private String processLiveDocComments(@NotNull ExportParams exportParams, @NotNull ProxyDocument document, @NotNull String content) {
+        return new LiveDocCommentsProcessor().addLiveDocComments(document, content, exportParams.getRenderComments());
     }
 
 }
