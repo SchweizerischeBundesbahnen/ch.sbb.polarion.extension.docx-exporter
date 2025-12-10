@@ -26,7 +26,6 @@ import org.jsoup.nodes.Element;
 import org.jsoup.nodes.Node;
 import org.jsoup.nodes.TextNode;
 import org.jsoup.select.Elements;
-import org.w3c.dom.css.CSSStyleDeclaration;
 
 import java.net.URI;
 import java.net.URISyntaxException;
