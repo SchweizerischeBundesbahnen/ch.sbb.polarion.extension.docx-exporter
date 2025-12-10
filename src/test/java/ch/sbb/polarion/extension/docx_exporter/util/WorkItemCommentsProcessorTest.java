@@ -108,8 +108,8 @@ class WorkItemCommentsProcessorTest {
         resultDoc = Jsoup.parse(resultHtml);
         updatedHtml = resultDoc.body().html();
 
-        assertThat(updatedHtml).contains("This is a comment");
-        assertThat(updatedHtml).contains("Title 2 visible");
-        assertThat(updatedHtml).doesNotContain("Title 3 visible");
+        assertThat(updatedHtml).contains("This is a comment")
+                .contains("Title 2 visible")
+                .doesNotContain("Title 3 visible");
     }
 }
