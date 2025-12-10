@@ -5,6 +5,8 @@ import ch.sbb.polarion.extension.docx_exporter.pandoc.service.model.PandocParams
 import ch.sbb.polarion.extension.docx_exporter.util.MediaUtils;
 import jakarta.xml.bind.JAXBElement;
 import lombok.SneakyThrows;
+import org.apache.pdfbox.Loader;
+import org.apache.pdfbox.pdmodel.PDDocument;
 import org.docx4j.Docx4J;
 import org.docx4j.convert.out.FOSettings;
 import org.docx4j.fonts.PhysicalFonts;
