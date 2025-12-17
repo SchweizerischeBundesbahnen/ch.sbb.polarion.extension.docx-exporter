@@ -43,7 +43,6 @@ import static ch.sbb.polarion.extension.docx_exporter.util.exporter.Constants.*;
 public class HtmlProcessor {
 
     private static final String SPAN = "span";
-    private static final String URL_GROUP = "url";
     private static final String SPAN_END_TAG = "</span>";
     private static final String COMMENT_START = "[span";
     private static final String COMMENT_END = "[/span]";

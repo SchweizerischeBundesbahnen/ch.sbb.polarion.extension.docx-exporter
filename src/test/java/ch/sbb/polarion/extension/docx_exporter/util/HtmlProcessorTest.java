@@ -907,6 +907,43 @@ class HtmlProcessorTest {
         assertEquals(0, document.select("tbody tr").size()); // all rows moved
     }
 
+    @Test
+    void processHtmlForExportWithGenerationLogShouldRecordTimings() {
+        when(localizationSettings.load(any(), any(SettingId.class)))
+                .thenReturn(new LocalizationModel(Collections.emptyMap(), Collections.emptyMap(), Collections.emptyMap()));
+
+        String html = "<html><body><h2>Test</h2><p>Content</p></body></html>";
+        ExportParams exportParams = getExportParams();
+        DocxGenerationLog generationLog = new DocxGenerationLog();
+
+        processor.processHtmlForExport(html, exportParams, Collections.emptyList(), generationLog);
+
+        // Verify that timings were recorded
+        List<DocxGenerationLog.TimingEntry> entries = generationLog.getTimingEntries();
+        assertFalse(entries.isEmpty(), "Timing entries should be recorded when generationLog is provided");
+
+        // Check that expected stages are recorded
+        List<String> stageNames = entries.stream()
+                .map(DocxGenerationLog.TimingEntry::stageName)
+                .toList();
+        assertTrue(stageNames.contains("Parse HTML with JSoup"), "Should record JSoup parsing");
+        assertTrue(stageNames.contains("Adjust document headings"), "Should record heading adjustment");
+    }
+
+    @Test
+    void processHtmlForExportWithoutGenerationLogShouldWork() {
+        when(localizationSettings.load(any(), any(SettingId.class)))
+                .thenReturn(new LocalizationModel(Collections.emptyMap(), Collections.emptyMap(), Collections.emptyMap()));
+
+        String html = "<html><body><h2>Test</h2><p>Content</p></body></html>";
+        ExportParams exportParams = getExportParams();
+
+        // Should work without throwing when generationLog is null
+        String result = processor.processHtmlForExport(html, exportParams, Collections.emptyList(), null);
+        assertNotNull(result);
+        assertFalse(result.isEmpty());
+    }
+
     private ExportParams getExportParams() {
         return ExportParams.builder()
                 .projectId("test_project")
