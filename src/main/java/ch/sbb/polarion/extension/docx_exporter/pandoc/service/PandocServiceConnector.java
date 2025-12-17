@@ -3,6 +3,7 @@ package ch.sbb.polarion.extension.docx_exporter.pandoc.service;
 import ch.sbb.polarion.extension.docx_exporter.pandoc.service.model.PandocInfo;
 import ch.sbb.polarion.extension.docx_exporter.pandoc.service.model.PandocParams;
 import ch.sbb.polarion.extension.docx_exporter.properties.DocxExporterExtensionConfiguration;
+import ch.sbb.polarion.extension.docx_exporter.util.DocxGenerationLog;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.polarion.core.util.exceptions.UserFriendlyRuntimeException;
@@ -14,6 +15,7 @@ import org.glassfish.jersey.media.multipart.FormDataMultiPart;
 import org.glassfish.jersey.media.multipart.MultiPartFeature;
 import org.glassfish.jersey.media.multipart.file.FileDataBodyPart;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
@@ -60,6 +62,10 @@ public class PandocServiceConnector {
     }
 
     public byte[] convertToDocx(String htmlPage, byte[] template, List<String> options, PandocParams params) {
+        return convertToDocx(htmlPage, template, options, params, null);
+    }
+
+    public byte[] convertToDocx(String htmlPage, byte[] template, List<String> options, PandocParams params, @Nullable DocxGenerationLog generationLog) {
         Client client = null;
         try {
             client = ClientBuilder.newClient();
@@ -86,12 +92,17 @@ public class PandocServiceConnector {
 
                 Invocation.Builder requestBuilder = webTarget.request(MEDIA_TYPE_DOCX);
 
+                long startTime = System.currentTimeMillis();
                 try (Response response = requestBuilder.post(Entity.entity(multipart, multipart.getMediaType()))) {
                     if (response.getStatus() == Response.Status.OK.getStatusCode()) {
                         InputStream inputStream = response.readEntity(InputStream.class);
                         try {
                             logPandocVersionFromHeader(response);
-                            return inputStream.readAllBytes();
+                            byte[] docxBytes = inputStream.readAllBytes();
+                            recordTiming(generationLog, "Pandoc service conversion", System.currentTimeMillis() - startTime,
+                                    String.format("html_size=%d bytes, docx_size=%d bytes, template=%s",
+                                            htmlPage.length(), docxBytes.length, template != null ? "yes" : "no"));
+                            return docxBytes;
                         } catch (IOException e) {
                             throw new IllegalStateException("Could not read response stream", e);
                         }
@@ -107,6 +118,12 @@ public class PandocServiceConnector {
             if (client != null) {
                 client.close();
             }
+        }
+    }
+
+    private void recordTiming(@Nullable DocxGenerationLog generationLog, String stageName, long durationMs, String details) {
+        if (generationLog != null) {
+            generationLog.recordTiming(stageName, durationMs, details);
         }
     }
 

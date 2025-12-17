@@ -43,6 +43,7 @@ import static ch.sbb.polarion.extension.docx_exporter.util.exporter.Constants.*;
 public class HtmlProcessor {
 
     private static final String SPAN = "span";
+    private static final String URL_GROUP = "url";
     private static final String SPAN_END_TAG = "</span>";
     private static final String COMMENT_START = "[span";
     private static final String COMMENT_END = "[/span]";
@@ -82,6 +83,10 @@ public class HtmlProcessor {
     }
 
     public String processHtmlForExport(@NotNull String html, @NotNull ExportParams exportParams, @NotNull List<String> selectedRoleEnumValues) {
+        return processHtmlForExport(html, exportParams, selectedRoleEnumValues, null);
+    }
+
+    public String processHtmlForExport(@NotNull String html, @NotNull ExportParams exportParams, @NotNull List<String> selectedRoleEnumValues, @Nullable DocxGenerationLog generationLog) {
         // I. FIRST SECTION - manipulate HTML as a String. These changes are either not possible or not made easier with JSoup
         // ----------------
 
@@ -109,69 +114,71 @@ public class HtmlProcessor {
         // II. SECOND SECTION - manipulate HTML as a JSoup document. These changes are vice versa fulfilled easier with JSoup.
         // ----------------
 
-        Document document = JSoupUtils.parseHtml(html);
+        String htmlForParsing = html;
+        Document document = timedIfNotNull(generationLog, "Parse HTML with JSoup", () -> JSoupUtils.parseHtml(htmlForParsing));
 
         // From Polarion perspective h1 - is a document title, h2 are h1 heading etc. We are making such headings' uplifting here
-        adjustDocumentHeadings(document);
+        timedIfNotNull(generationLog, "Adjust document headings", () -> adjustDocumentHeadings(document));
 
         if (exportParams.isCutEmptyChapters()) {
             // Cut empty chapters if explicitly requested by user
-            cutEmptyChapters(document);
+            timedIfNotNull(generationLog, "Cut empty chapters", () -> cutEmptyChapters(document));
         }
         if (exportParams.getChapters() != null) {
             // Leave only chapters explicitly selected by user
-            cutNotNeededChapters(document, exportParams.getChapters());
+            timedIfNotNull(generationLog, "Cut not needed chapters", () -> cutNotNeededChapters(document, exportParams.getChapters()));
         }
 
         // Moves WorkItem content out of table wrapping it
-        removePageBreakAvoids(document);
+        timedIfNotNull(generationLog, "Remove page break avoids", () -> removePageBreakAvoids(document));
 
         // Fixes nested HTML lists structure
-        fixNestedLists(document);
+        timedIfNotNull(generationLog, "Fix nested lists", () -> fixNestedLists(document));
 
         // Localize enumeration values
-        localizeEnums(document, exportParams);
+        timedIfNotNull(generationLog, "Localize enums", () -> localizeEnums(document, exportParams));
 
         // Polarion doesn't place table rows with th-tags into thead, placing them in table's tbody, which is wrong as table header won't
         // repeat on each next page if table is split across multiple pages. We are fixing this moving such rows into thead.
-        fixTableHeads(document);
+        timedIfNotNull(generationLog, "Fix table heads", () -> fixTableHeads(document));
 
         // If on next step we placed into thead rows which contain rowspan > 1 and this "covers" rows which are still in tbody, we are fixing
         // this here, moving such rows also in thead
-        fixTableHeadRowspan(document);
+        timedIfNotNull(generationLog, "Fix table head rowspan", () -> fixTableHeadRowspan(document));
 
         // Images with styles and "display: block" are searched here. For such images we do following: wrap them into div with text-align style
         // and value "right" if image margin is "auto 0px auto auto" or "center" otherwise.
-        adjustImageAlignment(document);
+        timedIfNotNull(generationLog, "Adjust image alignment", () -> adjustImageAlignment(document));
 
         // Adjusts WorkItem attributes tables to stretch to full page width for better usage of page space and better readability.
         // Also changes absolute widths of normal table cells from absolute values to "auto" if "Fit tables and images to page" is on
-        adjustCellWidth(document);
+        timedIfNotNull(generationLog, "Adjust cell width", () -> adjustCellWidth(document));
 
         // ----
         // This sequence is important! We need first filter out Linked WorkItems and only then cut empty attributes,
         // cause after filtering Linked WorkItems can become empty. Also cutting local URLs should happen afterwards
         // as filtering workitems relies among other on anchors.
         if (!selectedRoleEnumValues.isEmpty()) {
-            filterTabularLinkedWorkItems(document, selectedRoleEnumValues);
-            filterNonTabularLinkedWorkItems(document, selectedRoleEnumValues);
+            timedIfNotNull(generationLog, "Filter tabular linked work items", () -> filterTabularLinkedWorkItems(document, selectedRoleEnumValues));
+            timedIfNotNull(generationLog, "Filter non-tabular linked work items", () -> filterNonTabularLinkedWorkItems(document, selectedRoleEnumValues));
         }
         if (exportParams.isCutEmptyWIAttributes()) {
-            cutEmptyWIAttributes(document);
+            timedIfNotNull(generationLog, "Cut empty WI attributes", () -> cutEmptyWIAttributes(document));
         }
-        rewritePolarionUrls(document); // Rewrites Polarion Work Item hyperlinks so that they become intra-document anchor links. Should precede cutting local URLs.
+        // Rewrites Polarion Work Item hyperlinks so that they become intra-document anchor links. Should precede cutting local URLs.
+        timedIfNotNull(generationLog, "Rewrite Polarion URLs", () -> rewritePolarionUrls(document));
         if (exportParams.isCutLocalUrls()) {
-            cutLocalUrls(document);
+            timedIfNotNull(generationLog, "Cut local URLs", () -> cutLocalUrls(document));
         }
         // ----
 
-        new LiveDocTOCGenerator().addTableOfContent(document);
-        addTableOfFigures(document);
+        timedIfNotNull(generationLog, "Generate table of content", () -> new LiveDocTOCGenerator().addTableOfContent(document));
+        timedIfNotNull(generationLog, "Add table of figures", () -> addTableOfFigures(document));
 
-        replaceLinks(document);
+        timedIfNotNull(generationLog, "Replace links", () -> replaceLinks(document));
 
         if (!StringUtils.isEmptyTrimmed(exportParams.getRemovalSelector())) {
-            clearSelectors(document, exportParams.getRemovalSelector());
+            timedIfNotNull(generationLog, "Clear selectors", () -> clearSelectors(document, exportParams.getRemovalSelector()));
         }
 
         html = document.body().html();
@@ -182,11 +189,27 @@ public class HtmlProcessor {
         // Jsoup may convert &dollar; back to $ in some cases, so we need to replace it again
         html = encodeDollarSigns(html);
 
-        html = replaceResourcesAsBase64Encoded(html);
+        String htmlBeforeBase64 = html;
+        html = timedIfNotNull(generationLog, "Encode resources as Base64", () -> replaceResourcesAsBase64Encoded(htmlBeforeBase64));
 
         // Do not change this entry order, '&nbsp;' can be used in the logic above, so we must cut them off as the last step
         html = cutExtraNbsp(html);
         return html;
+    }
+
+    private <T> T timedIfNotNull(@Nullable DocxGenerationLog generationLog, @NotNull String stageName, @NotNull java.util.function.Supplier<T> supplier) {
+        if (generationLog != null) {
+            return generationLog.timed(stageName, supplier);
+        }
+        return supplier.get();
+    }
+
+    private void timedIfNotNull(@Nullable DocxGenerationLog generationLog, @NotNull String stageName, @NotNull Runnable runnable) {
+        if (generationLog != null) {
+            generationLog.timed(stageName, runnable);
+        } else {
+            runnable.run();
+        }
     }
 
     /**

@@ -14,6 +14,7 @@ import ch.sbb.polarion.extension.docx_exporter.rest.model.settings.webhooks.Webh
 import ch.sbb.polarion.extension.docx_exporter.service.DocxExporterPolarionService;
 import ch.sbb.polarion.extension.docx_exporter.settings.LocalizationSettings;
 import ch.sbb.polarion.extension.docx_exporter.settings.WebhooksSettings;
+import ch.sbb.polarion.extension.docx_exporter.util.DebugDataStorage;
 import ch.sbb.polarion.extension.docx_exporter.util.DocumentDataFactory;
 import ch.sbb.polarion.extension.docx_exporter.util.EnumValuesProvider;
 import ch.sbb.polarion.extension.docx_exporter.util.HtmlLogger;
@@ -69,49 +70,86 @@ public class DocxConverter {
     }
 
     public byte[] convertToDocx(@NotNull ExportParams exportParams) {
-        long startTime = System.currentTimeMillis();
-
         DocxGenerationLog generationLog = new DocxGenerationLog();
-        generationLog.log("Starting html generation");
+        generationLog.log("Starting DOCX generation");
 
-        @Nullable ITrackerProject project = getTrackerProject(exportParams);
-        @NotNull final DocumentData<? extends IUniqueObject> documentData = DocumentDataFactory.getDocumentData(exportParams, true);
-        @NotNull String htmlContent = prepareHtmlContent(exportParams, project, documentData);
+        try {
+            // Get tracker project and document data
+            @Nullable ITrackerProject project = getTrackerProject(exportParams);
+            @NotNull final DocumentData<? extends IUniqueObject> documentData = DocumentDataFactory.getDocumentData(exportParams, true);
 
-        generationLog.log("Html is ready, starting pdf generation");
-        if (DocxExporterExtensionConfiguration.getInstance().isDebug()) {
-            new HtmlLogger().log(documentData.getContent(), htmlContent, generationLog.getLog());
-        }
+            // Prepare HTML content
+            @NotNull String htmlContent = generationLog.timed("Prepare HTML content",
+                    () -> prepareHtmlContent(exportParams, project, documentData, generationLog),
+                    html -> String.format("html_size=%d bytes", html.length()));
 
-        byte[] template = null;
-        if (exportParams.getTemplate() != null) {
-            TemplatesModel templatesModel = new TemplatesSettings().load(exportParams.getProjectId(), SettingId.fromName(exportParams.getTemplate()));
-            if (templatesModel.getTemplate() != null) {
-                template = docxTemplateProcessor.processDocxTemplate(templatesModel.getTemplate(), documentData, exportParams);
+            // Set HTML size metric
+            generationLog.setHtmlSize(htmlContent.length());
+
+            generationLog.log("HTML is ready, starting DOCX generation");
+
+            // Process template if specified
+            byte[] template = null;
+            if (exportParams.getTemplate() != null) {
+                template = generationLog.timed("Process template", () -> {
+                    TemplatesModel templatesModel = new TemplatesSettings().load(exportParams.getProjectId(), SettingId.fromName(exportParams.getTemplate()));
+                    if (templatesModel.getTemplate() != null) {
+                        return docxTemplateProcessor.processDocxTemplate(templatesModel.getTemplate(), documentData, exportParams);
+                    }
+                    return null;
+                });
             }
+
+            List<String> options = null;
+            if (exportParams.isAddToC()) {
+                options = Collections.singletonList("--toc");
+            }
+
+            // Generate DOCX
+            final byte[] finalTemplate = template;
+            final List<String> finalOptions = options;
+            byte[] bytes = generationLog.timed("Pandoc conversion",
+                    () -> generateDocx(htmlContent, finalTemplate, finalOptions, PandocParams.builder().orientation(exportParams.getOrientation()).paperSize(exportParams.getPaperSize()).build()),
+                    docx -> String.format("docx_size=%d bytes", docx.length));
+
+            // Set DOCX metrics
+            generationLog.setDocxMetrics(bytes.length, 0);
+
+            // Finalize timing
+            generationLog.finish();
+
+            // Log debug information if enabled
+            if (exportParams.getInternalContent() == null) { //do not log time for internal parts processing
+                String finalMessage = "DOCX document '" + documentData.getTitle() + "' has been generated within " + generationLog.getTotalDurationMs() + " milliseconds";
+                logger.info(finalMessage);
+                generationLog.log(finalMessage);
+
+                if (DocxExporterExtensionConfiguration.getInstance().isDebug()) {
+                    String timingReport = generationLog.generateTimingReport(documentData.getTitle());
+                    // Save to file system
+                    new HtmlLogger().log(documentData.getContent(), htmlContent, timingReport);
+                    // Also save to storage for REST API access
+                    saveDebugDataToStorage(documentData.getContent(), htmlContent, timingReport, documentData.getTitle());
+                }
+            }
+
+            return bytes;
+        } catch (Exception e) {
+            generationLog.finish();
+            generationLog.log("DOCX generation failed: " + e.getMessage());
+            if (DocxExporterExtensionConfiguration.getInstance().isDebug()) {
+                String timingReport = generationLog.generateTimingReport("FAILED");
+                new HtmlLogger().log("", "", timingReport);
+                saveDebugDataToStorage("", "", timingReport, "FAILED");
+            }
+            throw e;
         }
-
-        List<String> options = null;
-        if (exportParams.isAddToC()) {
-            options = Collections.singletonList("--toc");
-        }
-
-
-
-        byte[] bytes = generateDocx(htmlContent, template, options, PandocParams.builder().orientation(exportParams.getOrientation()).paperSize(exportParams.getPaperSize()).build());
-
-        if (exportParams.getInternalContent() == null) { //do not log time for internal parts processing
-            String finalMessage = "DOCX document '" + documentData.getTitle() + "' has been generated within " + (System.currentTimeMillis() - startTime) + " milliseconds";
-            logger.info(finalMessage);
-            generationLog.log(finalMessage);
-        }
-        return bytes;
     }
 
     public @NotNull String prepareHtmlContent(@NotNull ExportParams exportParams) {
         @Nullable ITrackerProject project = getTrackerProject(exportParams);
         @NotNull final DocumentData<? extends IUniqueObject> documentData = DocumentDataFactory.getDocumentData(exportParams, true);
-        return prepareHtmlContent(exportParams, project, documentData);
+        return prepareHtmlContent(exportParams, project, documentData, null);
     }
 
     private @Nullable ITrackerProject getTrackerProject(@NotNull ExportParams exportParams) {
@@ -122,12 +160,18 @@ public class DocxConverter {
         return project;
     }
 
-    private @NotNull String prepareHtmlContent(@NotNull ExportParams exportParams, @Nullable ITrackerProject project, @NotNull DocumentData<? extends IUniqueObject> documentData) {
-        String preparedDocumentContent = postProcessDocumentContent(exportParams, project, documentData.getContent());
-        String htmlContent = composeHtml(documentData.getTitle(), preparedDocumentContent);
-        htmlContent = htmlProcessor.internalizeLinks(htmlContent);
-        htmlContent = applyWebhooks(exportParams, htmlContent);
-        return htmlContent;
+    private @NotNull String prepareHtmlContent(@NotNull ExportParams exportParams, @Nullable ITrackerProject project, @NotNull DocumentData<? extends IUniqueObject> documentData, @Nullable DocxGenerationLog generationLog) {
+        String preparedDocumentContent = postProcessDocumentContent(exportParams, project, documentData.getContent(), generationLog);
+        String composedHtml = timedIfNotNull(generationLog, "Compose HTML", () -> composeHtml(documentData.getTitle(), preparedDocumentContent));
+        String internalizedHtml = timedIfNotNull(generationLog, "Internalize links", () -> htmlProcessor.internalizeLinks(composedHtml));
+        return timedIfNotNull(generationLog, "Apply webhooks", () -> applyWebhooks(exportParams, internalizedHtml));
+    }
+
+    private <T> T timedIfNotNull(@Nullable DocxGenerationLog generationLog, String stageName, java.util.function.Supplier<T> supplier) {
+        if (generationLog != null) {
+            return generationLog.timed(stageName, supplier);
+        }
+        return supplier.get();
     }
 
     private @NotNull String applyWebhooks(@NotNull ExportParams exportParams, @NotNull String htmlContent) {
@@ -223,9 +267,13 @@ public class DocxConverter {
 
     @VisibleForTesting
     String postProcessDocumentContent(@NotNull ExportParams exportParams, @Nullable ITrackerProject project, @Nullable String documentContent) {
+        return postProcessDocumentContent(exportParams, project, documentContent, null);
+    }
+
+    String postProcessDocumentContent(@NotNull ExportParams exportParams, @Nullable ITrackerProject project, @Nullable String documentContent, @Nullable DocxGenerationLog generationLog) {
         if (documentContent != null) {
             List<String> selectedRoleEnumValues = project == null ? Collections.emptyList() : EnumValuesProvider.getBidirectionalLinkRoleNames(project, exportParams.getLinkedWorkitemRoles());
-            return htmlProcessor.processHtmlForExport(documentContent, exportParams, selectedRoleEnumValues);
+            return htmlProcessor.processHtmlForExport(documentContent, exportParams, selectedRoleEnumValues, generationLog);
         } else {
             return "";
         }
@@ -236,5 +284,23 @@ public class DocxConverter {
     String composeHtml(@NotNull String documentName, String documentContent) {
         String content = "<div class='content'>" + documentContent + "</div>";
         return docxTemplateProcessor.processUsing(documentName, content);
+    }
+
+    private void saveDebugDataToStorage(@Nullable String originalHtml,
+                                        @Nullable String processedHtml,
+                                        @Nullable String timingReport,
+                                        @Nullable String documentTitle) {
+        String jobId = DebugDataStorage.getCurrentJobId();
+        if (jobId == null) {
+            // Not running as async job, skip storage
+            return;
+        }
+
+        String currentUser = docxExporterPolarionService.getSecurityService().getCurrentUser();
+        if (currentUser == null) {
+            currentUser = "unknown";
+        }
+
+        DebugDataStorage.storeForCurrentJob(originalHtml, processedHtml, timingReport, currentUser, documentTitle);
     }
 }
