@@ -60,6 +60,8 @@ public class HtmlProcessor {
     private static final String URL_PROJECT_ID_PREFIX = "/polarion/#/project/";
     private static final String URL_WORK_ITEM_ID_PREFIX = "workitem?id=";
     private static final String POLARION_URL_MARKER = "/polarion/#";
+    private static final String WIKI_PATH_PREFIX = "wiki/";
+    private static final String WORK_ITEM_ID_IN_WIKI_PATH_PREFIX = "?selection=";
     private static final String ROWSPAN_ATTR = "rowspan";
     private static final String RIGHT_ALIGNMENT_MARGIN = "auto 0px auto auto";
     private static final String TABLE_OF_FIGURES_ANCHOR_ID_PREFIX = "dlecaption_";
@@ -596,7 +598,7 @@ public class HtmlProcessor {
 
             String afterProject = substringAfter(href, URL_PROJECT_ID_PREFIX);
             String projectId = substringBefore(afterProject, "/", false);
-            String workItemId = substringAfter(afterProject, URL_WORK_ITEM_ID_PREFIX);
+            String workItemId = extractWorkItemId(afterProject);
 
             if (afterProject == null || projectId == null || workItemId == null) {
                 continue;
@@ -610,6 +612,16 @@ public class HtmlProcessor {
                     link.attr(HtmlTagAttr.HREF, "#" + expectedAnchorId);
                 }
             }
+        }
+    }
+
+    private String extractWorkItemId(@Nullable String afterProject) {
+        String workItemId = substringAfter(afterProject, URL_WORK_ITEM_ID_PREFIX);
+        if (workItemId != null) {
+            return workItemId;
+        } else {
+            String wikiPath = substringAfter(afterProject, WIKI_PATH_PREFIX);
+            return substringAfter(wikiPath, WORK_ITEM_ID_IN_WIKI_PATH_PREFIX);
         }
     }
 
