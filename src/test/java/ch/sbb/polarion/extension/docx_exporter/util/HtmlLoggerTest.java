@@ -52,8 +52,8 @@ class HtmlLoggerTest {
         });
 
         await().atMost(5, TimeUnit.SECONDS).untilAsserted(() -> {
-            List<Path> logFiles = findFilesInDocxExporterDirs("gen-log-", ".log");
-            assertFalse(logFiles.isEmpty(), "Generation log file should be created");
+            List<Path> logFiles = findFilesInDocxExporterDirs("timing-report-", ".txt");
+            assertFalse(logFiles.isEmpty(), "Timing report file should be created");
 
             Path logFile = logFiles.get(0);
             String content = Files.readString(logFile);
@@ -73,12 +73,80 @@ class HtmlLoggerTest {
             assertFalse(htmlFiles.isEmpty(), "HTML files should be created");
         });
 
-        // Wait and ensure no log files were created in any docx-exporter directory
+        // Wait and ensure no timing report files were created in any docx-exporter directory
         await().pollDelay(1, TimeUnit.SECONDS)
                 .atMost(2, TimeUnit.SECONDS)
                 .untilAsserted(() -> {
-                    List<Path> logFiles = findFilesInDocxExporterDirs("gen-log-", ".log");
-                    assertTrue(logFiles.isEmpty(), "No generation log file should be created");
+                    List<Path> logFiles = findFilesInDocxExporterDirs("timing-report-", ".txt");
+                    assertTrue(logFiles.isEmpty(), "No timing report file should be created");
+                });
+    }
+
+    @Test
+    void shouldNotCreateOriginalHtmlFileWhenEmpty() {
+        String processedHtml = "<html><body>Processed</body></html>";
+        String timingReport = "Timing report content";
+
+        htmlLogger.log("", processedHtml, timingReport);
+
+        await().atMost(5, TimeUnit.SECONDS).untilAsserted(() -> {
+            List<Path> processedFiles = findFilesInDocxExporterDirs("processed-", ".html");
+            assertFalse(processedFiles.isEmpty(), "Processed HTML file should be created");
+        });
+
+        // Ensure no original HTML files were created
+        await().pollDelay(1, TimeUnit.SECONDS)
+                .atMost(2, TimeUnit.SECONDS)
+                .untilAsserted(() -> {
+                    List<Path> originalFiles = findFilesInDocxExporterDirs("original-", ".html");
+                    assertTrue(originalFiles.isEmpty(), "No original HTML file should be created");
+                });
+    }
+
+    @Test
+    void shouldNotCreateProcessedHtmlFileWhenEmpty() {
+        String originalHtml = "<div>Original</div>";
+        String timingReport = "Timing report content";
+
+        htmlLogger.log(originalHtml, "", timingReport);
+
+        await().atMost(5, TimeUnit.SECONDS).untilAsserted(() -> {
+            List<Path> originalFiles = findFilesInDocxExporterDirs("original-", ".html");
+            assertFalse(originalFiles.isEmpty(), "Original HTML file should be created");
+        });
+
+        // Ensure no processed HTML files were created
+        await().pollDelay(1, TimeUnit.SECONDS)
+                .atMost(2, TimeUnit.SECONDS)
+                .untilAsserted(() -> {
+                    List<Path> processedFiles = findFilesInDocxExporterDirs("processed-", ".html");
+                    assertTrue(processedFiles.isEmpty(), "No processed HTML file should be created");
+                });
+    }
+
+    @Test
+    void shouldNotCreateAnyFilesWhenAllEmpty() {
+        htmlLogger.log("", "", "");
+
+        // Wait and ensure no files were created in any docx-exporter directory
+        await().pollDelay(1, TimeUnit.SECONDS)
+                .atMost(2, TimeUnit.SECONDS)
+                .untilAsserted(() -> {
+                    List<Path> allFiles = findAllFilesInDocxExporterDirs();
+                    assertTrue(allFiles.isEmpty(), "No files should be created when all inputs are empty");
+                });
+    }
+
+    @Test
+    void shouldHandleNullValues() {
+        htmlLogger.log(null, null, null);
+
+        // Wait and ensure no files were created
+        await().pollDelay(1, TimeUnit.SECONDS)
+                .atMost(2, TimeUnit.SECONDS)
+                .untilAsserted(() -> {
+                    List<Path> allFiles = findAllFilesInDocxExporterDirs();
+                    assertTrue(allFiles.isEmpty(), "No files should be created when all inputs are null");
                 });
     }
 
@@ -126,6 +194,23 @@ class HtmlLoggerTest {
                         String fileName = p.getFileName().toString();
                         return fileName.startsWith(prefix) && fileName.endsWith(suffix);
                     })
+                    .toList();
+        }
+    }
+
+    private List<Path> findAllFilesInDocxExporterDirs() throws IOException {
+        try (Stream<Path> dirs = Files.list(TEMP_DIR)) {
+            return dirs
+                    .filter(Files::isDirectory)
+                    .filter(p -> p.getFileName().toString().startsWith("docx-exporter"))
+                    .flatMap(dir -> {
+                        try {
+                            return Files.list(dir);
+                        } catch (IOException e) {
+                            return Stream.empty();
+                        }
+                    })
+                    .filter(Files::isRegularFile)
                     .toList();
         }
     }
