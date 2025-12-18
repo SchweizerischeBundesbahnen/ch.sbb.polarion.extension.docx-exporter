@@ -2,7 +2,6 @@ package ch.sbb.polarion.extension.docx_exporter.pandoc;
 
 import ch.sbb.polarion.extension.docx_exporter.pandoc.service.model.PandocInfo;
 import ch.sbb.polarion.extension.docx_exporter.pandoc.service.model.PandocParams;
-import ch.sbb.polarion.extension.docx_exporter.util.MediaUtils;
 import jakarta.xml.bind.JAXBElement;
 import lombok.SneakyThrows;
 import org.apache.pdfbox.Loader;
@@ -15,21 +14,14 @@ import org.docx4j.openpackaging.packages.WordprocessingMLPackage;
 import org.docx4j.openpackaging.parts.WordprocessingML.MainDocumentPart;
 import org.docx4j.wml.SectPr;
 import org.docx4j.wml.Text;
-import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
-import javax.imageio.ImageIO;
-import java.awt.*;
-import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -90,13 +82,6 @@ class BasicTest extends BasePandocTest {
         } finally {
             newFile.delete();
         }
-    }
-
-    private static @NotNull File getTestFile() throws IOException {
-        Path tempPath = Files.createTempFile("test", ".docx");
-        File newFile = tempPath.toFile();
-        newFile.deleteOnExit();
-        return newFile;
     }
 
     @Test
@@ -296,25 +281,6 @@ class BasicTest extends BasePandocTest {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         Docx4J.toFO(foSettings, baos, Docx4J.FLAG_EXPORT_PREFER_XSL);
         return baos.toByteArray();
-    }
-
-    private void compareContentUsingReferenceImages(String testName, byte[] pdf) throws IOException {
-        writeReportPdf(testName, "generated", pdf);
-        List<BufferedImage> resultImages = getAllPagesAsImagesAndLogAsReports(testName, pdf);
-        boolean hasDiff = false;
-        for (int i = 0; i < resultImages.size(); i++) {
-            try (InputStream inputStream = readPngResource(testName + PAGE_SUFFIX + i)) {
-                BufferedImage expectedImage = ImageIO.read(inputStream);
-                BufferedImage resultImage = resultImages.get(i);
-                List<Point> diffPoints = MediaUtils.diffImages(expectedImage, resultImage);
-                if (!diffPoints.isEmpty()) {
-                    MediaUtils.fillImagePoints(resultImage, diffPoints, Color.BLUE.getRGB());
-                    writeReportImage(String.format("%s%s%d_diff", testName, PAGE_SUFFIX, i), resultImage);
-                    hasDiff = true;
-                }
-            }
-        }
-        assertFalse(hasDiff);
     }
 
     private String generateLargeHtmlContent() {
