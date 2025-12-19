@@ -52,7 +52,7 @@
         <byte-buddy.version>1.18.2</byte-buddy.version>
 
         <slf4j.version>1.7.36</slf4j.version>
-        <testcontainers.version>2.0.2</testcontainers.version>
+        <testcontainers.version>2.0.3</testcontainers.version>
         <jackson.version>2.20.1</jackson.version>
 
         <exec-maven-plugin.version>3.3.0</exec-maven-plugin.version>
