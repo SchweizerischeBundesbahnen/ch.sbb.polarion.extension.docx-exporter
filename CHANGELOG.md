@@ -1,5 +1,21 @@
 # Changelog
 
+## [3.1.0](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/compare/v3.0.1...v3.1.0) (2025-12-19)
+
+
+### Features
+
+* add debug data and detailed timing reports ([#166](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/issues/166)) ([682312b](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/commit/682312b29cd8223734529f7814577b21e5a0fb42)), closes [#165](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/issues/165)
+* generic v12.1.0 ([#162](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/issues/162)) ([a227f88](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/commit/a227f885d1bda927c7fd04f8d95beb890e0248f9))
+
+
+### Bug Fixes
+
+* **deps:** update dependency com.helger:ph-css to v8.1.1 ([bb41fa2](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/commit/bb41fa215ea3e7deabe9def022202c27f4efe0c7))
+* **deps:** update dependency org.testcontainers:testcontainers-bom to v2.0.3 ([803761f](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/commit/803761f0d3df31862bbef3d184604b3f4af48f84))
+* fix cross-reference links in body of WorkItems ([#164](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/issues/164)) ([9e57830](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/commit/9e57830d9a0760a772c21ba4c36d73711b7976f9)), closes [#163](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/issues/163)
+* include figures and tables from WIs in ToF and ToT ([#169](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/issues/169)) ([9fb74b1](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/commit/9fb74b11e9b5b9afbe1cceea22c0001d1e691bd9)), closes [#168](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/issues/168)
+
 ## [3.0.1](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/compare/v3.0.0...v3.0.1) (2025-12-10)
 
 
