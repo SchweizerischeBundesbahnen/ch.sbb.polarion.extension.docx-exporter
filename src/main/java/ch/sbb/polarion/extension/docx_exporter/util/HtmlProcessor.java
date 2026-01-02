@@ -26,7 +26,6 @@ import org.jsoup.nodes.Element;
 import org.jsoup.nodes.Node;
 import org.jsoup.nodes.TextNode;
 import org.jsoup.select.Elements;
-import org.w3c.dom.css.CSSStyleDeclaration;
 
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -61,6 +60,8 @@ public class HtmlProcessor {
     private static final String URL_PROJECT_ID_PREFIX = "/polarion/#/project/";
     private static final String URL_WORK_ITEM_ID_PREFIX = "workitem?id=";
     private static final String POLARION_URL_MARKER = "/polarion/#";
+    private static final String WIKI_PATH_PREFIX = "wiki/";
+    private static final String WORK_ITEM_ID_IN_WIKI_PATH_PREFIX = "?selection=";
     private static final String ROWSPAN_ATTR = "rowspan";
     private static final String RIGHT_ALIGNMENT_MARGIN = "auto 0px auto auto";
     private static final String TABLE_OF_FIGURES_ANCHOR_ID_PREFIX = "dlecaption_";
@@ -81,6 +82,10 @@ public class HtmlProcessor {
     }
 
     public String processHtmlForExport(@NotNull String html, @NotNull ExportParams exportParams, @NotNull List<String> selectedRoleEnumValues) {
+        return processHtmlForExport(html, exportParams, selectedRoleEnumValues, null);
+    }
+
+    public String processHtmlForExport(@NotNull String html, @NotNull ExportParams exportParams, @NotNull List<String> selectedRoleEnumValues, @Nullable DocxGenerationLog generationLog) {
         // I. FIRST SECTION - manipulate HTML as a String. These changes are either not possible or not made easier with JSoup
         // ----------------
 
@@ -108,69 +113,71 @@ public class HtmlProcessor {
         // II. SECOND SECTION - manipulate HTML as a JSoup document. These changes are vice versa fulfilled easier with JSoup.
         // ----------------
 
-        Document document = JSoupUtils.parseHtml(html);
+        String htmlForParsing = html;
+        Document document = timedIfNotNull(generationLog, "Parse HTML with JSoup", () -> JSoupUtils.parseHtml(htmlForParsing));
 
         // From Polarion perspective h1 - is a document title, h2 are h1 heading etc. We are making such headings' uplifting here
-        adjustDocumentHeadings(document);
+        timedIfNotNull(generationLog, "Adjust document headings", () -> adjustDocumentHeadings(document));
 
         if (exportParams.isCutEmptyChapters()) {
             // Cut empty chapters if explicitly requested by user
-            cutEmptyChapters(document);
+            timedIfNotNull(generationLog, "Cut empty chapters", () -> cutEmptyChapters(document));
         }
         if (exportParams.getChapters() != null) {
             // Leave only chapters explicitly selected by user
-            cutNotNeededChapters(document, exportParams.getChapters());
+            timedIfNotNull(generationLog, "Cut not needed chapters", () -> cutNotNeededChapters(document, exportParams.getChapters()));
         }
 
         // Moves WorkItem content out of table wrapping it
-        removePageBreakAvoids(document);
+        timedIfNotNull(generationLog, "Remove page break avoids", () -> removePageBreakAvoids(document));
 
         // Fixes nested HTML lists structure
-        fixNestedLists(document);
+        timedIfNotNull(generationLog, "Fix nested lists", () -> fixNestedLists(document));
 
         // Localize enumeration values
-        localizeEnums(document, exportParams);
+        timedIfNotNull(generationLog, "Localize enums", () -> localizeEnums(document, exportParams));
 
         // Polarion doesn't place table rows with th-tags into thead, placing them in table's tbody, which is wrong as table header won't
         // repeat on each next page if table is split across multiple pages. We are fixing this moving such rows into thead.
-        fixTableHeads(document);
+        timedIfNotNull(generationLog, "Fix table heads", () -> fixTableHeads(document));
 
         // If on next step we placed into thead rows which contain rowspan > 1 and this "covers" rows which are still in tbody, we are fixing
         // this here, moving such rows also in thead
-        fixTableHeadRowspan(document);
+        timedIfNotNull(generationLog, "Fix table head rowspan", () -> fixTableHeadRowspan(document));
 
         // Images with styles and "display: block" are searched here. For such images we do following: wrap them into div with text-align style
         // and value "right" if image margin is "auto 0px auto auto" or "center" otherwise.
-        adjustImageAlignment(document);
+        timedIfNotNull(generationLog, "Adjust image alignment", () -> adjustImageAlignment(document));
 
         // Adjusts WorkItem attributes tables to stretch to full page width for better usage of page space and better readability.
         // Also changes absolute widths of normal table cells from absolute values to "auto" if "Fit tables and images to page" is on
-        adjustCellWidth(document);
+        timedIfNotNull(generationLog, "Adjust cell width", () -> adjustCellWidth(document));
 
         // ----
         // This sequence is important! We need first filter out Linked WorkItems and only then cut empty attributes,
         // cause after filtering Linked WorkItems can become empty. Also cutting local URLs should happen afterwards
         // as filtering workitems relies among other on anchors.
         if (!selectedRoleEnumValues.isEmpty()) {
-            filterTabularLinkedWorkItems(document, selectedRoleEnumValues);
-            filterNonTabularLinkedWorkItems(document, selectedRoleEnumValues);
+            timedIfNotNull(generationLog, "Filter tabular linked work items", () -> filterTabularLinkedWorkItems(document, selectedRoleEnumValues));
+            timedIfNotNull(generationLog, "Filter non-tabular linked work items", () -> filterNonTabularLinkedWorkItems(document, selectedRoleEnumValues));
         }
         if (exportParams.isCutEmptyWIAttributes()) {
-            cutEmptyWIAttributes(document);
+            timedIfNotNull(generationLog, "Cut empty WI attributes", () -> cutEmptyWIAttributes(document));
         }
-        rewritePolarionUrls(document); // Rewrites Polarion Work Item hyperlinks so that they become intra-document anchor links. Should precede cutting local URLs.
+        // Rewrites Polarion Work Item hyperlinks so that they become intra-document anchor links. Should precede cutting local URLs.
+        timedIfNotNull(generationLog, "Rewrite Polarion URLs", () -> rewritePolarionUrls(document));
         if (exportParams.isCutLocalUrls()) {
-            cutLocalUrls(document);
+            timedIfNotNull(generationLog, "Cut local URLs", () -> cutLocalUrls(document));
         }
         // ----
 
-        new LiveDocTOCGenerator().addTableOfContent(document);
-        addTableOfFigures(document);
+        timedIfNotNull(generationLog, "Generate table of content", () -> new LiveDocTOCGenerator().addTableOfContent(document));
+        timedIfNotNull(generationLog, "Add table of figures", () -> addTableOfFigures(document));
 
-        replaceLinks(document);
+        timedIfNotNull(generationLog, "Replace links", () -> replaceLinks(document));
 
         if (!StringUtils.isEmptyTrimmed(exportParams.getRemovalSelector())) {
-            clearSelectors(document, exportParams.getRemovalSelector());
+            timedIfNotNull(generationLog, "Clear selectors", () -> clearSelectors(document, exportParams.getRemovalSelector()));
         }
 
         html = document.body().html();
@@ -181,11 +188,27 @@ public class HtmlProcessor {
         // Jsoup may convert &dollar; back to $ in some cases, so we need to replace it again
         html = encodeDollarSigns(html);
 
-        html = replaceResourcesAsBase64Encoded(html);
+        String htmlBeforeBase64 = html;
+        html = timedIfNotNull(generationLog, "Encode resources as Base64", () -> replaceResourcesAsBase64Encoded(htmlBeforeBase64));
 
         // Do not change this entry order, '&nbsp;' can be used in the logic above, so we must cut them off as the last step
         html = cutExtraNbsp(html);
         return html;
+    }
+
+    private <T> T timedIfNotNull(@Nullable DocxGenerationLog generationLog, @NotNull String stageName, @NotNull java.util.function.Supplier<T> supplier) {
+        if (generationLog != null) {
+            return generationLog.timed(stageName, supplier);
+        }
+        return supplier.get();
+    }
+
+    private void timedIfNotNull(@Nullable DocxGenerationLog generationLog, @NotNull String stageName, @NotNull Runnable runnable) {
+        if (generationLog != null) {
+            generationLog.timed(stageName, runnable);
+        } else {
+            runnable.run();
+        }
     }
 
     /**
@@ -597,7 +620,7 @@ public class HtmlProcessor {
 
             String afterProject = substringAfter(href, URL_PROJECT_ID_PREFIX);
             String projectId = substringBefore(afterProject, "/", false);
-            String workItemId = substringAfter(afterProject, URL_WORK_ITEM_ID_PREFIX);
+            String workItemId = extractWorkItemId(afterProject);
 
             if (afterProject == null || projectId == null || workItemId == null) {
                 continue;
@@ -611,6 +634,16 @@ public class HtmlProcessor {
                     link.attr(HtmlTagAttr.HREF, "#" + expectedAnchorId);
                 }
             }
+        }
+    }
+
+    private String extractWorkItemId(@Nullable String afterProject) {
+        String workItemId = substringAfter(afterProject, URL_WORK_ITEM_ID_PREFIX);
+        if (workItemId != null) {
+            return workItemId;
+        } else {
+            String wikiPath = substringAfter(afterProject, WIKI_PATH_PREFIX);
+            return substringAfter(wikiPath, WORK_ITEM_ID_IN_WIKI_PATH_PREFIX);
         }
     }
 
@@ -944,16 +977,31 @@ public class HtmlProcessor {
 
     private Element generateTableOfFigures(@NotNull Document document, @NotNull String label) {
         Element tof = new Element(HtmlTag.DIV);
-        for (Element captionAnchor : document.select(String.format("p.polarion-rte-caption-paragraph span.polarion-rte-caption[data-sequence=%s] a[name^=%s]",
-                escapeCssSelectorValue(label), TABLE_OF_FIGURES_ANCHOR_ID_PREFIX))) {
-            // CSS selector above guarantees that parent below won't be null
-            Element captionNumber = Objects.requireNonNull(captionAnchor.parent());
+        int generatedAnchorIndex = 0;
 
-            // CSS selector above guarantees that 'name' attribute of anchor below won't be null and will have length at least of TABLE_OF_FIGURES_ANCHOR_ID_PREFIX constant length
-            String anchorId = captionAnchor.attr("name").substring(TABLE_OF_FIGURES_ANCHOR_ID_PREFIX.length());
-            Node numberNode = captionNumber.childNodes().stream().filter(TextNode.class::isInstance).findFirst().orElse(null);
+        // Find all caption spans with the specified data-sequence, regardless of whether they have anchors
+        for (Element captionSpan : document.select(String.format("p.polarion-rte-caption-paragraph span.polarion-rte-caption[data-sequence=%s]",
+                escapeCssSelectorValue(label)))) {
+
+            // Check if anchor already exists inside the span
+            Element existingAnchor = captionSpan.selectFirst(String.format("a[name^=%s]", TABLE_OF_FIGURES_ANCHOR_ID_PREFIX));
+            String anchorId;
+
+            if (existingAnchor != null) {
+                // Use existing anchor id
+                anchorId = existingAnchor.attr("name").substring(TABLE_OF_FIGURES_ANCHOR_ID_PREFIX.length());
+            } else {
+                // Generate new anchor and insert it into the span
+                // Include label in anchor id to avoid conflicts between different sequences (Figure, Table, etc.)
+                anchorId = label.toLowerCase() + "_generated_" + generatedAnchorIndex++;
+                Element newAnchor = new Element(HtmlTag.A);
+                newAnchor.attr("name", TABLE_OF_FIGURES_ANCHOR_ID_PREFIX + anchorId);
+                captionSpan.appendChild(newAnchor);
+            }
+
+            Node numberNode = captionSpan.childNodes().stream().filter(TextNode.class::isInstance).findFirst().orElse(null);
             String number = numberNode instanceof TextNode numberTextNode ? numberTextNode.text() : null;
-            Node captionNode = captionNumber.nextSibling();
+            Node captionNode = captionSpan.nextSibling();
             String caption = captionNode instanceof TextNode captionTextNode ? captionTextNode.text() : null;
 
             if (StringUtils.isEmpty(anchorId) || number == null || caption == null) {
@@ -969,7 +1017,7 @@ public class HtmlProcessor {
             }
 
             Element tofItem = new Element(HtmlTag.A);
-            tofItem.attr(HtmlTagAttr.HREF, String.format("#dlecaption_%s", anchorId));
+            tofItem.attr(HtmlTagAttr.HREF, String.format("#%s%s", TABLE_OF_FIGURES_ANCHOR_ID_PREFIX, anchorId));
             tofItem.text(String.format("%s %s. %s", label, number, caption.trim()));
 
             tof.appendChild(tofItem);

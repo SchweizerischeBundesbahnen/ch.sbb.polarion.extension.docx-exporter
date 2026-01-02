@@ -129,7 +129,7 @@ class DocxConverterTest {
         when(typeEnum.getAllOptions()).thenReturn(List.of(typeOption));
         when(project.getWorkItemTypeEnum()).thenReturn(typeEnum);
         when(project.getWorkItemLinkRoleEnum()).thenReturn(roleEnum);
-        when(htmlProcessor.processHtmlForExport(anyString(), eq(exportParams), any(List.class))).thenReturn("result string");
+        when(htmlProcessor.processHtmlForExport(anyString(), eq(exportParams), any(List.class), any())).thenReturn("result string");
 
         // Act
         DocxConverter docxConverter = new DocxConverter(null, null, htmlProcessor, null);
@@ -138,7 +138,7 @@ class DocxConverterTest {
         // Assert
         assertThat(resultContent).isEqualTo("result string");
         ArgumentCaptor<List<String>> rolesCaptor = ArgumentCaptor.forClass(List.class);
-        verify(htmlProcessor).processHtmlForExport(eq("test content"), eq(exportParams), rolesCaptor.capture());
+        verify(htmlProcessor).processHtmlForExport(eq("test content"), eq(exportParams), rolesCaptor.capture(), any());
         assertThat(rolesCaptor.getValue()).containsExactly("role1", "testRole1OppositeName", "role2", "testRole2OppositeName");
     }
 

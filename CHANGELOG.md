@@ -1,5 +1,36 @@
 # Changelog
 
+## [3.1.0](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/compare/v3.0.1...v3.1.0) (2025-12-19)
+
+
+### Features
+
+* add debug data and detailed timing reports ([#166](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/issues/166)) ([682312b](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/commit/682312b29cd8223734529f7814577b21e5a0fb42)), closes [#165](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/issues/165)
+* generic v12.1.0 ([#162](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/issues/162)) ([a227f88](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/commit/a227f885d1bda927c7fd04f8d95beb890e0248f9))
+
+
+### Bug Fixes
+
+* **deps:** update dependency com.helger:ph-css to v8.1.1 ([bb41fa2](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/commit/bb41fa215ea3e7deabe9def022202c27f4efe0c7))
+* **deps:** update dependency org.testcontainers:testcontainers-bom to v2.0.3 ([803761f](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/commit/803761f0d3df31862bbef3d184604b3f4af48f84))
+* fix cross-reference links in body of WorkItems ([#164](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/issues/164)) ([9e57830](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/commit/9e57830d9a0760a772c21ba4c36d73711b7976f9)), closes [#163](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/issues/163)
+* include figures and tables from WIs in ToF and ToT ([#169](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/issues/169)) ([9fb74b1](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/commit/9fb74b11e9b5b9afbe1cceea22c0001d1e691bd9)), closes [#168](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/issues/168)
+
+## [3.0.1](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/compare/v3.0.0...v3.0.1) (2025-12-10)
+
+
+### Bug Fixes
+
+* add ConfigurationApiController and ConfigurationInternalController to rest api application ([#138](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/issues/138)) ([4cc711b](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/commit/4cc711bb71b126aad82ad81eb5d256639024cb5c))
+* bump pandoc-service to 1.5.2 ([#158](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/issues/158)) ([add3e79](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/commit/add3e793bd52489becd9ac28c747bb4d8507e9e3)), closes [#146](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/issues/146)
+* **deps:** update dependency net.bytebuddy:byte-buddy to v1.18.2 ([b11d7dc](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/commit/b11d7dcbe64c91632d2faf68b997a2162f13440d))
+* **deps:** update dependency org.apache.tika:tika-core to v3.2.3 ([912c763](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/commit/912c763727aaf06a5e79d0a9764bb5118ba93589))
+* **deps:** update docx4j.version to v11.5.8 ([e39d68a](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/commit/e39d68a8d10612e0cfd095559ea5da3076da9407))
+* image & comments processing ([#157](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/issues/157)) ([5ee5924](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/commit/5ee5924e3100743d181568717edb4a16993e0cd9)), closes [#146](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/issues/146)
+* implement URL encoding for invalid URI characters and add utility tests ([#147](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/issues/147)) ([b393d4a](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/commit/b393d4a48c39754e7e52c873290abea6615416fe)), closes [#145](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/issues/145)
+* resolved media type mismatch check with login-page redirect detection ([#154](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/issues/154)) ([49eed76](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/commit/49eed765d8cd96a7f12beaffd24b529010d38c68))
+* use actual Apache Tika library version ([#153](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/issues/153)) ([6dd761e](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/commit/6dd761e0a0270e14a0198b4ccaf699162faede82)), closes [#152](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/issues/152)
+
 ## [3.0.0](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/compare/v2.4.0...v3.0.0) (2025-11-21)
 
 

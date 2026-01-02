@@ -81,18 +81,19 @@ export default class ExportPanel {
         this.ctx.setValue("docx-paper-size-selector", stylePackage.paperSize || ExportParams.PaperSize.A4);
         this.ctx.displayIf("docx-paper-size-selector", !!stylePackage.paperSize);
 
-        this.ctx.setCheckbox("docx-selected-roles", stylePackage.linkedWorkitemRoles);
+        const rolesProvided = stylePackage.linkedWorkitemRoles && stylePackage.linkedWorkitemRoles.length > 0;
+        this.ctx.setCheckbox("docx-selected-roles", rolesProvided);
         this.ctx.querySelectorAll(`#docx-roles-selector option`).forEach(roleOption => {
             roleOption.selected = false;
         });
-        if (stylePackage.linkedWorkitemRoles) {
+        if (rolesProvided) {
             for (const role of stylePackage.linkedWorkitemRoles) {
                 this.ctx.querySelectorAll(`#docx-roles-selector option[value='${role}']`).forEach(roleOption => {
                     roleOption.selected = true;
                 });
             }
         }
-        this.ctx.displayIf("docx-roles-wrapper", stylePackage.linkedWorkitemRoles);
+        this.ctx.displayIf("docx-roles-wrapper", rolesProvided);
 
         this.ctx.displayIf("docx-style-package-content", stylePackage.exposeSettings);
     }

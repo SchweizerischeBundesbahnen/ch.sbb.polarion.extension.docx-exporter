@@ -9,7 +9,7 @@
     </parent>
 
     <artifactId>ch.sbb.polarion.extension.docx-exporter</artifactId>
-    <version>3.0.1-SNAPSHOT</version>
+    <version>3.1.1-SNAPSHOT</version>
     <packaging>jar</packaging>
 
     <name>Polarion ALM extension to convert Documents to DOCX files</name>
@@ -45,20 +45,20 @@
 
     <properties>
         <pdfbox.version>3.0.6</pdfbox.version>
-        <docx4j.version>11.5.8</docx4j.version>
+        <docx4j.version>11.5.9</docx4j.version>
         <jakarta.xml.bind.version>4.0.4</jakarta.xml.bind.version>
         <jakarta.activation.version>2.1.4</jakarta.activation.version>
         <okapi.xliff.version>1.47.0</okapi.xliff.version>
-        <byte-buddy.version>1.18.2</byte-buddy.version>
+        <byte-buddy.version>1.18.3</byte-buddy.version>
 
         <slf4j.version>1.7.36</slf4j.version>
-        <testcontainers.version>2.0.2</testcontainers.version>
+        <testcontainers.version>2.0.3</testcontainers.version>
         <jackson.version>2.20.1</jackson.version>
 
         <exec-maven-plugin.version>3.3.0</exec-maven-plugin.version>
         <awaitility.version>4.3.0</awaitility.version>
         <tika.version>3.2.3</tika.version>
-        <ph-css.version>8.1.0</ph-css.version>
+        <ph-css.version>8.1.1</ph-css.version>
 
         <maven-jar-plugin.Extension-Context>docx-exporter</maven-jar-plugin.Extension-Context>
         <maven-jar-plugin.Automatic-Module-Name>ch.sbb.polarion.extension.docx_exporter</maven-jar-plugin.Automatic-Module-Name>
@@ -404,6 +404,10 @@
                         <package>ch.sbb.polarion.extension.docx_exporter.rest.model</package>
                     </resourcePackages>
                 </configuration>
+            </plugin>
+            <plugin>
+                <groupId>io.github.grigoriev</groupId>
+                <artifactId>pre-commit-run-maven-plugin</artifactId>
             </plugin>
 
             <plugin>

@@ -114,6 +114,12 @@ class HtmlProcessorTest {
         processor.rewritePolarionUrls(document);
         assertEquals(expected, document.body().html());
 
+        String wikiLink = "<a href=\"http://localhost/polarion/#/project/testProject/wiki/Specification/LinkedWorkItems?selection=12345\">Work Item 12345</a>";
+        String htmlWithWikiAnchor = anchor + wikiLink;
+        document = JSoupUtils.parseHtml(htmlWithWikiAnchor);
+        processor.rewritePolarionUrls(document);
+        assertEquals(expected, document.body().html());
+
         document = JSoupUtils.parseHtml(link);
         processor.rewritePolarionUrls(document);
         assertEquals(link, document.body().html());
@@ -467,6 +473,23 @@ class HtmlProcessorTest {
     void tableOfFiguresTest() {
         try (InputStream isInvalidHtml = this.getClass().getResourceAsStream("/tableOfFiguresBeforeProcessing.html");
              InputStream isValidHtml = this.getClass().getResourceAsStream("/tableOfFiguresAfterProcessing.html")) {
+
+            Document document = JSoupUtils.parseHtml(new String(isInvalidHtml.readAllBytes(), StandardCharsets.UTF_8));
+
+            processor.addTableOfFigures(document);
+            String fixedHtml = document.body().html();
+            String validHtml = new String(isValidHtml.readAllBytes(), StandardCharsets.UTF_8);
+
+            // Spaces and new lines are removed to exclude difference in space characters
+            assertEquals(TestStringUtils.removeNonsensicalSymbols(validHtml), TestStringUtils.removeNonsensicalSymbols(fixedHtml));
+        }
+    }
+
+    @Test
+    @SneakyThrows
+    void replaceTableOfTablesAndTableOfFiguresTest() {
+        try (InputStream isInvalidHtml = this.getClass().getResourceAsStream("/tableOfTablesAndTableOfFiguresBeforeProcessing.html");
+             InputStream isValidHtml = this.getClass().getResourceAsStream("/tableOfTablesAndTableOfFiguresAfterProcessing.html")) {
 
             Document document = JSoupUtils.parseHtml(new String(isInvalidHtml.readAllBytes(), StandardCharsets.UTF_8));
 
@@ -899,6 +922,43 @@ class HtmlProcessorTest {
         // Should move only available rows (2 rows) even though rowspan is 5
         assertEquals(3, document.select("thead tr").size()); // 1 original + 2 moved
         assertEquals(0, document.select("tbody tr").size()); // all rows moved
+    }
+
+    @Test
+    void processHtmlForExportWithGenerationLogShouldRecordTimings() {
+        when(localizationSettings.load(any(), any(SettingId.class)))
+                .thenReturn(new LocalizationModel(Collections.emptyMap(), Collections.emptyMap(), Collections.emptyMap()));
+
+        String html = "<html><body><h2>Test</h2><p>Content</p></body></html>";
+        ExportParams exportParams = getExportParams();
+        DocxGenerationLog generationLog = new DocxGenerationLog();
+
+        processor.processHtmlForExport(html, exportParams, Collections.emptyList(), generationLog);
+
+        // Verify that timings were recorded
+        List<DocxGenerationLog.TimingEntry> entries = generationLog.getTimingEntries();
+        assertFalse(entries.isEmpty(), "Timing entries should be recorded when generationLog is provided");
+
+        // Check that expected stages are recorded
+        List<String> stageNames = entries.stream()
+                .map(DocxGenerationLog.TimingEntry::stageName)
+                .toList();
+        assertTrue(stageNames.contains("Parse HTML with JSoup"), "Should record JSoup parsing");
+        assertTrue(stageNames.contains("Adjust document headings"), "Should record heading adjustment");
+    }
+
+    @Test
+    void processHtmlForExportWithoutGenerationLogShouldWork() {
+        when(localizationSettings.load(any(), any(SettingId.class)))
+                .thenReturn(new LocalizationModel(Collections.emptyMap(), Collections.emptyMap(), Collections.emptyMap()));
+
+        String html = "<html><body><h2>Test</h2><p>Content</p></body></html>";
+        ExportParams exportParams = getExportParams();
+
+        // Should work without throwing when generationLog is null
+        String result = processor.processHtmlForExport(html, exportParams, Collections.emptyList(), null);
+        assertNotNull(result);
+        assertFalse(result.isEmpty());
     }
 
     private ExportParams getExportParams() {
