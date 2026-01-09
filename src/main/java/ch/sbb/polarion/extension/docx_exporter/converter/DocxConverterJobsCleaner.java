@@ -1,27 +1,33 @@
 package ch.sbb.polarion.extension.docx_exporter.converter;
 
 import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 public final class DocxConverterJobsCleaner {
-    private static Future<?> cleaningJob;
+    private static ScheduledExecutorService executorService;
 
     private DocxConverterJobsCleaner() {
     }
 
     public static synchronized void startCleaningJob() {
-        if (cleaningJob != null) {
+        if (executorService != null) {
             return;
         }
         PropertiesUtility propertiesUtility = new PropertiesUtility();
 
-        ScheduledExecutorService executorService = Executors.newSingleThreadScheduledExecutor();
-        cleaningJob = executorService.scheduleWithFixedDelay(
+        executorService = Executors.newSingleThreadScheduledExecutor();
+        executorService.scheduleWithFixedDelay(
                 () -> DocxConverterJobsService.cleanupExpiredJobs(propertiesUtility.getFinishedJobTimeout()),
                 0,
                 propertiesUtility.getFinishedJobTimeout(),
                 TimeUnit.MINUTES);
+    }
+
+    public static synchronized void stopCleaningJob() {
+        if (executorService != null) {
+            executorService.shutdown();
+            executorService = null;
+        }
     }
 }
