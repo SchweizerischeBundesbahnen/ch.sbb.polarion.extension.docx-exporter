@@ -1,5 +1,12 @@
 # Changelog
 
+## [4.0.1](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/compare/v4.0.0...v4.0.1) (2026-01-09)
+
+
+### Bug Fixes
+
+* **deps:** update dependency ch.sbb.polarion.extensions:ch.sbb.polarion.extension.generic to v13.1.0 ([b45d7bf](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/commit/b45d7bf10535413b9d5b9fe1cc7cb764080e6ec4))
+
 ## [4.0.0](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/compare/v3.1.0...v4.0.0) (2026-01-09)
 
 
