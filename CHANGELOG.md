@@ -1,5 +1,25 @@
 # Changelog
 
+## [4.0.0](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/compare/v3.1.0...v4.0.0) (2026-01-09)
+
+
+### ⚠ BREAKING CHANGES
+
+* polarion 2512 support ([#156](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/issues/156))
+
+### Features
+
+* polarion 2512 support ([#156](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/issues/156)) ([fde001d](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/commit/fde001dbdddccdc3168645bbc00a4f5c59064198))
+
+
+### Bug Fixes
+
+* 'Specific Workitem roles' checkbox is always checked on the side panel ([c14a9d3](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/commit/c14a9d3275cf920464fa10e67f0509c91f92da21)), closes [#171](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/issues/171)
+* 'Specific Workitem roles' checkbox is always checked on the side… ([#172](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/issues/172)) ([c14a9d3](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/commit/c14a9d3275cf920464fa10e67f0509c91f92da21))
+* **deps:** update dependency net.bytebuddy:byte-buddy to v1.18.3 ([2c135ed](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/commit/2c135edbbb55e3f63f3f790c09110f13705ca78c))
+* **deps:** update docx4j.version to v11.5.9 ([4675af3](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/commit/4675af384ad2f24b84f2821a2e91c72f113fa641))
+* improve URL handling and job cleaning management ([#177](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/issues/177)) ([96bbcab](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/commit/96bbcab9b75301c0b51a3e7e87145f8b89b1855f))
+
 ## [3.1.0](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/compare/v3.0.1...v3.1.0) (2025-12-19)
 
 
