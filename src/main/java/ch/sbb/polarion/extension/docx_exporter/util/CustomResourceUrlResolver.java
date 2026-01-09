@@ -9,6 +9,7 @@ import org.jetbrains.annotations.VisibleForTesting;
 
 import java.io.InputStream;
 import java.net.HttpURLConnection;
+import java.net.URI;
 import java.net.URL;
 import java.util.stream.Stream;
 
@@ -28,7 +29,7 @@ public class CustomResourceUrlResolver implements IUrlResolver {
 
     public InputStream resolve(@NotNull String urlStr) {
         try {
-            URL url = new URL(normalizeUrl(ensureAbsoluteUrl(urlStr)));
+            URL url = URI.create(normalizeUrl(ensureAbsoluteUrl(urlStr))).toURL();
             return resolveImpl(url);
         } catch (Exception e) {
             Logger.getLogger(this).warn("Failed to load resource: " + urlStr, e);
