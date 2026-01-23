@@ -13,7 +13,6 @@ import org.docx4j.openpackaging.exceptions.Docx4JException;
 import org.docx4j.openpackaging.packages.WordprocessingMLPackage;
 import org.docx4j.openpackaging.parts.WordprocessingML.MainDocumentPart;
 import org.docx4j.wml.SectPr;
-import org.docx4j.wml.Text;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
@@ -289,33 +288,6 @@ class BasicTest extends BasePandocTest {
         }
         htmlBuilder.append("</body></html>");
         return htmlBuilder.toString();
-    }
-
-    private boolean containsText(byte[] docBytes, String search) {
-        if (search == null || search.isEmpty()) {
-            return false;
-        }
-
-        try {
-            WordprocessingMLPackage wordMLPackage = WordprocessingMLPackage.load(new ByteArrayInputStream(docBytes));
-            MainDocumentPart documentPart = wordMLPackage.getMainDocumentPart();
-            List<Object> textNodes = documentPart.getJAXBNodesViaXPath("//w:t", true);
-
-            for (Object node : textNodes) {
-                if (node instanceof JAXBElement<?> jaxbElement) {
-                    Object value = jaxbElement.getValue();
-                    if (value instanceof Text textElement) {
-                        String textContent = textElement.getValue();
-                        if (textContent != null && textContent.contains(search)) {
-                            return true;
-                        }
-                    }
-                }
-            }
-            return false;
-        } catch (Exception e) {
-            return false;
-        }
     }
 
     private boolean hasDimensions(byte[] docBytes, int width, int height) {

@@ -2,20 +2,17 @@ package ch.sbb.polarion.extension.docx_exporter.converter;
 
 import ch.sbb.polarion.extension.docx_exporter.pandoc.service.PandocServiceConnector;
 import ch.sbb.polarion.extension.docx_exporter.pandoc.service.model.PandocParams;
-import ch.sbb.polarion.extension.generic.regex.RegexMatcher;
 import ch.sbb.polarion.extension.docx_exporter.properties.DocxExporterExtensionConfiguration;
 import ch.sbb.polarion.extension.docx_exporter.settings.LocalizationSettings;
+import ch.sbb.polarion.extension.docx_exporter.util.DocxExporterFileResourceProvider;
 import ch.sbb.polarion.extension.docx_exporter.util.HtmlLogger;
 import ch.sbb.polarion.extension.docx_exporter.util.HtmlProcessor;
-import ch.sbb.polarion.extension.docx_exporter.util.DocxExporterFileResourceProvider;
 import ch.sbb.polarion.extension.docx_exporter.util.html.HtmlLinksHelper;
+import ch.sbb.polarion.extension.generic.regex.RegexMatcher;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.VisibleForTesting;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
-
-import java.util.List;
 
 public class HtmlToDocxConverter {
     private final HtmlProcessor htmlProcessor;

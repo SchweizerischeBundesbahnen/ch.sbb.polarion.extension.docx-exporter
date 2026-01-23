@@ -9,7 +9,6 @@ import ch.sbb.polarion.extension.docx_exporter.util.html.HtmlLinksHelper;
 import ch.sbb.polarion.extension.generic.regex.RegexMatcher;
 import ch.sbb.polarion.extension.generic.settings.NamedSettings;
 import ch.sbb.polarion.extension.generic.settings.SettingId;
-import ch.sbb.polarion.extension.generic.util.HtmlUtils;
 import com.helger.css.decl.CSSDeclarationList;
 import com.helger.css.reader.CSSReaderDeclarationList;
 import com.polarion.alm.shared.util.StringUtils;
@@ -986,58 +985,6 @@ public class HtmlProcessor {
             tocElement.before(placeholder);
             tocElement.remove();
         }
-    }
-
-    private Element generateTableOfFigures(@NotNull Document document, @NotNull String label) {
-        Element tof = new Element(HtmlTag.DIV);
-        int generatedAnchorIndex = 0;
-
-        // Find all caption spans with the specified data-sequence, regardless of whether they have anchors
-        for (Element captionSpan : document.select(String.format("p.polarion-rte-caption-paragraph span.polarion-rte-caption[data-sequence=%s]",
-                escapeCssSelectorValue(label)))) {
-
-            // Check if anchor already exists inside the span
-            Element existingAnchor = captionSpan.selectFirst(String.format("a[name^=%s]", TABLE_OF_FIGURES_ANCHOR_ID_PREFIX));
-            String anchorId;
-
-            if (existingAnchor != null) {
-                // Use existing anchor id
-                anchorId = existingAnchor.attr("name").substring(TABLE_OF_FIGURES_ANCHOR_ID_PREFIX.length());
-            } else {
-                // Generate new anchor and insert it into the span
-                // Include label in anchor id to avoid conflicts between different sequences (Figure, Table, etc.)
-                anchorId = label.toLowerCase() + "_generated_" + generatedAnchorIndex++;
-                Element newAnchor = new Element(HtmlTag.A);
-                newAnchor.attr("name", TABLE_OF_FIGURES_ANCHOR_ID_PREFIX + anchorId);
-                captionSpan.appendChild(newAnchor);
-            }
-
-            Node numberNode = captionSpan.childNodes().stream().filter(TextNode.class::isInstance).findFirst().orElse(null);
-            String number = numberNode instanceof TextNode numberTextNode ? numberTextNode.text() : null;
-            Node captionNode = captionSpan.nextSibling();
-            String caption = captionNode instanceof TextNode captionTextNode ? captionTextNode.text() : null;
-
-            if (StringUtils.isEmpty(anchorId) || number == null || caption == null) {
-                continue;
-            }
-
-            while (caption.contains(COMMENT_START)) {
-                StringBuilder captionBuf = new StringBuilder(caption);
-                int start = caption.indexOf(COMMENT_START);
-                int ending = HtmlUtils.getEnding(caption, start, COMMENT_START, COMMENT_END);
-                captionBuf.replace(start, ending, "");
-                caption = captionBuf.toString();
-            }
-
-            Element tofItem = new Element(HtmlTag.A);
-            tofItem.attr(HtmlTagAttr.HREF, String.format("#%s%s", TABLE_OF_FIGURES_ANCHOR_ID_PREFIX, anchorId));
-            tofItem.text(String.format("%s %s. %s", label, number, caption.trim()));
-
-            tof.appendChild(tofItem);
-            tof.appendChild(new Element(HtmlTag.BR));
-        }
-
-        return tof;
     }
 
     private String escapeCssSelectorValue(String value) {
