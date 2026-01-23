@@ -3,13 +3,13 @@ package ch.sbb.polarion.extension.docx_exporter.util;
 import ch.sbb.polarion.extension.docx_exporter.constants.CssProp;
 import ch.sbb.polarion.extension.docx_exporter.constants.HtmlTag;
 import ch.sbb.polarion.extension.docx_exporter.constants.HtmlTagAttr;
+import ch.sbb.polarion.extension.docx_exporter.rest.model.conversion.ExportParams;
+import ch.sbb.polarion.extension.docx_exporter.settings.LocalizationSettings;
+import ch.sbb.polarion.extension.docx_exporter.util.html.HtmlLinksHelper;
 import ch.sbb.polarion.extension.generic.regex.RegexMatcher;
 import ch.sbb.polarion.extension.generic.settings.NamedSettings;
 import ch.sbb.polarion.extension.generic.settings.SettingId;
 import ch.sbb.polarion.extension.generic.util.HtmlUtils;
-import ch.sbb.polarion.extension.docx_exporter.rest.model.conversion.ExportParams;
-import ch.sbb.polarion.extension.docx_exporter.settings.LocalizationSettings;
-import ch.sbb.polarion.extension.docx_exporter.util.html.HtmlLinksHelper;
 import com.helger.css.decl.CSSDeclarationList;
 import com.helger.css.reader.CSSReaderDeclarationList;
 import com.polarion.alm.shared.util.StringUtils;
@@ -171,7 +171,7 @@ public class HtmlProcessor {
         }
         // ----
 
-        timedIfNotNull(generationLog, "Generate table of content", () -> new LiveDocTOCGenerator().addTableOfContent(document));
+        timedIfNotNull(generationLog, "Generate table of content", () -> addTableOfContent(document));
         timedIfNotNull(generationLog, "Add table of figures", () -> addTableOfFigures(document));
 
         timedIfNotNull(generationLog, "Replace links", () -> replaceLinks(document));
@@ -969,9 +969,22 @@ public class HtmlProcessor {
     void addTableOfFigures(@NotNull Document document) {
         for (Element tofPlaceholder : document.select("div[id*=macro name=tof][data-sequence]")) {
             String label = tofPlaceholder.dataset().get("sequence");
-            Element tof = generateTableOfFigures(document, label);
-            tofPlaceholder.before(tof);
+            Element placeholder = new Element("p");
+            placeholder.text(label.equals("Figure") ? "TOF_PLACEHOLDER" : "TOT_PLACEHOLDER");
+            tofPlaceholder.before(placeholder);
             tofPlaceholder.remove();
+        }
+    }
+
+    @VisibleForTesting
+    void addTableOfContent(@NotNull Document document) {
+        Elements tocElements = document.getElementsByTag("pd4ml:toc");
+
+        for (Element tocElement : tocElements) {
+            Element placeholder = new Element("p");
+            placeholder.text("TOC_PLACEHOLDER");
+            tocElement.before(placeholder);
+            tocElement.remove();
         }
     }
 

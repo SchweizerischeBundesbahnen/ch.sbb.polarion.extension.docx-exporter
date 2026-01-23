@@ -33,13 +33,13 @@ public class HtmlToDocxConverter {
         this.pandocServiceConnector = pandocServiceConnector;
     }
 
-    public byte[] convert(String origHtml, byte[] template, @Nullable List<String> options, @NotNull PandocParams params) {
+    public byte[] convert(String origHtml, byte[] template, @NotNull PandocParams params) {
         validateHtml(origHtml);
         String html = preprocessHtml(origHtml);
         if (DocxExporterExtensionConfiguration.getInstance().isDebug()) {
             new HtmlLogger().log(origHtml, html, "");
         }
-        return pandocServiceConnector.convertToDocx(origHtml, template, options, params);
+        return pandocServiceConnector.convertToDocx(origHtml, template, params);
     }
 
     private void validateHtml(String origHtml) {
