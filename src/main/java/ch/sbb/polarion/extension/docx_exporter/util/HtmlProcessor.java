@@ -43,7 +43,6 @@ public class HtmlProcessor {
 
     private static final String SPAN = "span";
     private static final String SPAN_END_TAG = "</span>";
-    private static final String COMMENT_START = "[span";
     private static final String COMMENT_END = "[/span]";
     private static final String CLASS = "class";
     private static final String COMMENT_START_CLASS = "comment-start";
@@ -63,7 +62,6 @@ public class HtmlProcessor {
     private static final String WORK_ITEM_ID_IN_WIKI_PATH_PREFIX = "?selection=";
     private static final String ROWSPAN_ATTR = "rowspan";
     private static final String RIGHT_ALIGNMENT_MARGIN = "auto 0px auto auto";
-    private static final String TABLE_OF_FIGURES_ANCHOR_ID_PREFIX = "dlecaption_";
     private static final String ANCHORS_WITH_HREF_SELECTOR = "a[href]";
 
     private static final String LOCALHOST = "localhost";
@@ -985,19 +983,6 @@ public class HtmlProcessor {
             tocElement.before(placeholder);
             tocElement.remove();
         }
-    }
-
-    private String escapeCssSelectorValue(String value) {
-        if (value == null) {
-            return "";
-        }
-
-        return "'"
-                + value
-                .replace("\\", "\\\\") // Escape backslash (must be first!)
-                .replace("\"", "\\\"") // Escape double quotes
-                .replace("'", "\\'")   // Escape single quotes
-                + "'";
     }
 
     @SneakyThrows
