@@ -49,7 +49,7 @@
         <jakarta.xml.bind.version>4.0.4</jakarta.xml.bind.version>
         <jakarta.activation.version>2.1.4</jakarta.activation.version>
         <okapi.xliff.version>1.47.0</okapi.xliff.version>
-        <byte-buddy.version>1.18.3</byte-buddy.version>
+        <byte-buddy.version>1.18.4</byte-buddy.version>
 
         <slf4j.version>1.7.36</slf4j.version>
         <testcontainers.version>2.0.3</testcontainers.version>
