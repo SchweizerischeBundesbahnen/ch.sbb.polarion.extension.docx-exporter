@@ -3,13 +3,12 @@ package ch.sbb.polarion.extension.docx_exporter.util;
 import ch.sbb.polarion.extension.docx_exporter.constants.CssProp;
 import ch.sbb.polarion.extension.docx_exporter.constants.HtmlTag;
 import ch.sbb.polarion.extension.docx_exporter.constants.HtmlTagAttr;
-import ch.sbb.polarion.extension.generic.regex.RegexMatcher;
-import ch.sbb.polarion.extension.generic.settings.NamedSettings;
-import ch.sbb.polarion.extension.generic.settings.SettingId;
-import ch.sbb.polarion.extension.generic.util.HtmlUtils;
 import ch.sbb.polarion.extension.docx_exporter.rest.model.conversion.ExportParams;
 import ch.sbb.polarion.extension.docx_exporter.settings.LocalizationSettings;
 import ch.sbb.polarion.extension.docx_exporter.util.html.HtmlLinksHelper;
+import ch.sbb.polarion.extension.generic.regex.RegexMatcher;
+import ch.sbb.polarion.extension.generic.settings.NamedSettings;
+import ch.sbb.polarion.extension.generic.settings.SettingId;
 import com.helger.css.decl.CSSDeclarationList;
 import com.helger.css.reader.CSSReaderDeclarationList;
 import com.polarion.alm.shared.util.StringUtils;
@@ -44,7 +43,6 @@ public class HtmlProcessor {
 
     private static final String SPAN = "span";
     private static final String SPAN_END_TAG = "</span>";
-    private static final String COMMENT_START = "[span";
     private static final String COMMENT_END = "[/span]";
     private static final String CLASS = "class";
     private static final String COMMENT_START_CLASS = "comment-start";
@@ -64,7 +62,6 @@ public class HtmlProcessor {
     private static final String WORK_ITEM_ID_IN_WIKI_PATH_PREFIX = "?selection=";
     private static final String ROWSPAN_ATTR = "rowspan";
     private static final String RIGHT_ALIGNMENT_MARGIN = "auto 0px auto auto";
-    private static final String TABLE_OF_FIGURES_ANCHOR_ID_PREFIX = "dlecaption_";
     private static final String ANCHORS_WITH_HREF_SELECTOR = "a[href]";
 
     private static final String LOCALHOST = "localhost";
@@ -171,7 +168,7 @@ public class HtmlProcessor {
         }
         // ----
 
-        timedIfNotNull(generationLog, "Generate table of content", () -> new LiveDocTOCGenerator().addTableOfContent(document));
+        timedIfNotNull(generationLog, "Generate table of content", () -> addTableOfContent(document));
         timedIfNotNull(generationLog, "Add table of figures", () -> addTableOfFigures(document));
 
         timedIfNotNull(generationLog, "Replace links", () -> replaceLinks(document));
@@ -969,75 +966,23 @@ public class HtmlProcessor {
     void addTableOfFigures(@NotNull Document document) {
         for (Element tofPlaceholder : document.select("div[id*=macro name=tof][data-sequence]")) {
             String label = tofPlaceholder.dataset().get("sequence");
-            Element tof = generateTableOfFigures(document, label);
-            tofPlaceholder.before(tof);
+            Element placeholder = new Element("p");
+            placeholder.text(label.equals("Figure") ? "TOF_PLACEHOLDER" : "TOT_PLACEHOLDER");
+            tofPlaceholder.before(placeholder);
             tofPlaceholder.remove();
         }
     }
 
-    private Element generateTableOfFigures(@NotNull Document document, @NotNull String label) {
-        Element tof = new Element(HtmlTag.DIV);
-        int generatedAnchorIndex = 0;
+    @VisibleForTesting
+    void addTableOfContent(@NotNull Document document) {
+        Elements tocElements = document.getElementsByTag("pd4ml:toc");
 
-        // Find all caption spans with the specified data-sequence, regardless of whether they have anchors
-        for (Element captionSpan : document.select(String.format("p.polarion-rte-caption-paragraph span.polarion-rte-caption[data-sequence=%s]",
-                escapeCssSelectorValue(label)))) {
-
-            // Check if anchor already exists inside the span
-            Element existingAnchor = captionSpan.selectFirst(String.format("a[name^=%s]", TABLE_OF_FIGURES_ANCHOR_ID_PREFIX));
-            String anchorId;
-
-            if (existingAnchor != null) {
-                // Use existing anchor id
-                anchorId = existingAnchor.attr("name").substring(TABLE_OF_FIGURES_ANCHOR_ID_PREFIX.length());
-            } else {
-                // Generate new anchor and insert it into the span
-                // Include label in anchor id to avoid conflicts between different sequences (Figure, Table, etc.)
-                anchorId = label.toLowerCase() + "_generated_" + generatedAnchorIndex++;
-                Element newAnchor = new Element(HtmlTag.A);
-                newAnchor.attr("name", TABLE_OF_FIGURES_ANCHOR_ID_PREFIX + anchorId);
-                captionSpan.appendChild(newAnchor);
-            }
-
-            Node numberNode = captionSpan.childNodes().stream().filter(TextNode.class::isInstance).findFirst().orElse(null);
-            String number = numberNode instanceof TextNode numberTextNode ? numberTextNode.text() : null;
-            Node captionNode = captionSpan.nextSibling();
-            String caption = captionNode instanceof TextNode captionTextNode ? captionTextNode.text() : null;
-
-            if (StringUtils.isEmpty(anchorId) || number == null || caption == null) {
-                continue;
-            }
-
-            while (caption.contains(COMMENT_START)) {
-                StringBuilder captionBuf = new StringBuilder(caption);
-                int start = caption.indexOf(COMMENT_START);
-                int ending = HtmlUtils.getEnding(caption, start, COMMENT_START, COMMENT_END);
-                captionBuf.replace(start, ending, "");
-                caption = captionBuf.toString();
-            }
-
-            Element tofItem = new Element(HtmlTag.A);
-            tofItem.attr(HtmlTagAttr.HREF, String.format("#%s%s", TABLE_OF_FIGURES_ANCHOR_ID_PREFIX, anchorId));
-            tofItem.text(String.format("%s %s. %s", label, number, caption.trim()));
-
-            tof.appendChild(tofItem);
-            tof.appendChild(new Element(HtmlTag.BR));
+        for (Element tocElement : tocElements) {
+            Element placeholder = new Element("p");
+            placeholder.text("TOC_PLACEHOLDER");
+            tocElement.before(placeholder);
+            tocElement.remove();
         }
-
-        return tof;
-    }
-
-    private String escapeCssSelectorValue(String value) {
-        if (value == null) {
-            return "";
-        }
-
-        return "'"
-                + value
-                .replace("\\", "\\\\") // Escape backslash (must be first!)
-                .replace("\"", "\\\"") // Escape double quotes
-                .replace("'", "\\'")   // Escape single quotes
-                + "'";
     }
 
     @SneakyThrows

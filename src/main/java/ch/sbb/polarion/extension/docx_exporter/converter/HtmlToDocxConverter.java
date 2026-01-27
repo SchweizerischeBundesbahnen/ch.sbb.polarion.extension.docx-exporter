@@ -2,20 +2,17 @@ package ch.sbb.polarion.extension.docx_exporter.converter;
 
 import ch.sbb.polarion.extension.docx_exporter.pandoc.service.PandocServiceConnector;
 import ch.sbb.polarion.extension.docx_exporter.pandoc.service.model.PandocParams;
-import ch.sbb.polarion.extension.generic.regex.RegexMatcher;
 import ch.sbb.polarion.extension.docx_exporter.properties.DocxExporterExtensionConfiguration;
 import ch.sbb.polarion.extension.docx_exporter.settings.LocalizationSettings;
+import ch.sbb.polarion.extension.docx_exporter.util.DocxExporterFileResourceProvider;
 import ch.sbb.polarion.extension.docx_exporter.util.HtmlLogger;
 import ch.sbb.polarion.extension.docx_exporter.util.HtmlProcessor;
-import ch.sbb.polarion.extension.docx_exporter.util.DocxExporterFileResourceProvider;
 import ch.sbb.polarion.extension.docx_exporter.util.html.HtmlLinksHelper;
+import ch.sbb.polarion.extension.generic.regex.RegexMatcher;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.VisibleForTesting;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
-
-import java.util.List;
 
 public class HtmlToDocxConverter {
     private final HtmlProcessor htmlProcessor;
@@ -33,13 +30,13 @@ public class HtmlToDocxConverter {
         this.pandocServiceConnector = pandocServiceConnector;
     }
 
-    public byte[] convert(String origHtml, byte[] template, @Nullable List<String> options, @NotNull PandocParams params) {
+    public byte[] convert(String origHtml, byte[] template, @NotNull PandocParams params) {
         validateHtml(origHtml);
         String html = preprocessHtml(origHtml);
         if (DocxExporterExtensionConfiguration.getInstance().isDebug()) {
             new HtmlLogger().log(origHtml, html, "");
         }
-        return pandocServiceConnector.convertToDocx(origHtml, template, options, params);
+        return pandocServiceConnector.convertToDocx(origHtml, template, params);
     }
 
     private void validateHtml(String origHtml) {

@@ -50,7 +50,7 @@ class LargeDocumentWithImagesTest extends BasePandocTest {
         String html = generateLargeHtmlWithImages();
         assertTrue(html.length() >= TARGET_HTML_SIZE_BYTES, String.format("Generated HTML should be at least %d MB, but was %.2f MB", TARGET_HTML_SIZE_MB, bytesToMB(html.length())));
 
-        byte[] docBytes = exportToDOCX(html, readTemplate("reference_template"), null, PandocParams.builder().build());
+        byte[] docBytes = exportToDOCX(html, readTemplate("reference_template"), PandocParams.builder().build());
 
         assertNotNull(docBytes, "Generated DOCX should not be null");
         assertTrue(docBytes.length >= MIN_DOCX_SIZE_BYTES,
@@ -77,7 +77,7 @@ class LargeDocumentWithImagesTest extends BasePandocTest {
         assertTrue(html.length() >= TARGET_HTML_SIZE_BYTES,
                 String.format("Generated HTML should be at least %d MB", TARGET_HTML_SIZE_MB));
 
-        byte[] docBytes = exportToDOCX(html, readTemplate("reference_template"), null, PandocParams.builder().build());
+        byte[] docBytes = exportToDOCX(html, readTemplate("reference_template"), PandocParams.builder().build());
         assertNotNull(docBytes, "Generated DOCX should not be null");
         assertTrue(docBytes.length >= MIN_DOCX_SIZE_BYTES,
                 String.format("Generated DOCX should be at least %d MB, but was %.2f MB", MIN_DOCX_SIZE_MB, bytesToMB(docBytes.length)));
@@ -104,7 +104,7 @@ class LargeDocumentWithImagesTest extends BasePandocTest {
     @SneakyThrows
     void shouldConvertLargeDocumentWithImagesAndLandscapeOrientation() {
         String html = generateLargeHtmlWithImages();
-        byte[] docBytes = exportToDOCX(html, readTemplate("reference_template"), null,
+        byte[] docBytes = exportToDOCX(html, readTemplate("reference_template"),
                 PandocParams.builder().orientation("landscape").build());
 
         assertNotNull(docBytes, "Generated DOCX should not be null");
@@ -125,32 +125,9 @@ class LargeDocumentWithImagesTest extends BasePandocTest {
 
     @Test
     @SneakyThrows
-    void shouldConvertLargeDocumentWithImagesAndTableOfContents() {
-        String html = generateLargeHtmlWithImages();
-        byte[] docBytes = exportToDOCX(html, readTemplate("reference_template"),
-                List.of("--toc"), PandocParams.builder().build());
-
-        assertNotNull(docBytes, "Generated DOCX with ToC should not be null");
-        assertTrue(docBytes.length >= MIN_DOCX_SIZE_BYTES,
-                String.format("Generated DOCX should be at least %d MB, but was %.2f MB", MIN_DOCX_SIZE_MB, bytesToMB(docBytes.length)));
-        writeReportDocx("testLargeDocumentWithImages_with_toc_generated", docBytes);
-
-        WordprocessingMLPackage wordMLPackage = WordprocessingMLPackage.load(new ByteArrayInputStream(docBytes));
-        assertNotNull(wordMLPackage, "WordprocessingMLPackage with ToC should be loadable");
-
-        // Verify images are present even with ToC option
-        List<Part> imageParts = wordMLPackage.getParts().getParts().values().stream()
-                .filter(BinaryPartAbstractImage.class::isInstance)
-                .toList();
-
-        assertFalse(imageParts.isEmpty(), "Document with ToC should contain images");
-    }
-
-    @Test
-    @SneakyThrows
     void shouldConvertLargeDocumentWithImagesAndA3PaperSize() {
         String html = generateLargeHtmlWithImages();
-        byte[] docBytes = exportToDOCX(html, readTemplate("reference_template"), null,
+        byte[] docBytes = exportToDOCX(html, readTemplate("reference_template"),
                 PandocParams.builder().paperSize("A3").build());
 
         assertNotNull(docBytes, "Generated DOCX with A3 paper should not be null");

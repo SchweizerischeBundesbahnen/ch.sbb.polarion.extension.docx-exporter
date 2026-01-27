@@ -350,13 +350,10 @@ public class ConverterInternalController {
         try {
             byte[] htmlBytes = html.getEntityAs(InputStream.class).readAllBytes();
             byte[] templateBytes = template != null ? template.getEntityAs(InputStream.class).readAllBytes() : null;
-            List<String> optionsList = options != null
-                    ? Stream.of(options.getValue().split(" ")).map(String::trim).filter(s -> !s.isEmpty()).toList()
-                    : null;
 
             String paramsJson = params == null ? null : params.getValue();
             PandocParams pandocParams = StringUtils.isEmpty(paramsJson) ? PandocParams.builder().build() : PandocParams.fromJson(paramsJson);
-            byte[] docxBytes = htmlToDocxConverter.convert(new String(htmlBytes, StandardCharsets.UTF_8), templateBytes, optionsList, pandocParams);
+            byte[] docxBytes = htmlToDocxConverter.convert(new String(htmlBytes, StandardCharsets.UTF_8), templateBytes, pandocParams);
 
             String headerFileName = (fileName != null) ? fileName : "document.docx";
             return Response.ok(docxBytes)

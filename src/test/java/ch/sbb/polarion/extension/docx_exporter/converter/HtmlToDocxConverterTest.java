@@ -42,8 +42,8 @@ class HtmlToDocxConverterTest {
         when(htmlProcessor.internalizeLinks(anyString())).thenAnswer(a -> a.getArgument(0));
         when(htmlProcessor.replaceResourcesAsBase64Encoded(anyString())).thenAnswer(a -> a.getArgument(0));
         HtmlToDocxConverter converter = new HtmlToDocxConverter(htmlProcessor, serviceConnector);
-        assertDoesNotThrow(() -> converter.convert(html, null, null, params));
-        verify(serviceConnector).convertToDocx(html, null, null, params);
+        assertDoesNotThrow(() -> converter.convert(html, null, params));
+        verify(serviceConnector).convertToDocx(html, null, params);
     }
 
     @Test
@@ -51,7 +51,7 @@ class HtmlToDocxConverterTest {
         String html = "<span>example text</span>";
         PandocParams params = PandocParams.builder().build();
 
-        assertThatThrownBy(() -> htmlToDocxConverter.convert(html, null, null, params))
+        assertThatThrownBy(() -> htmlToDocxConverter.convert(html, null, params))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("html is malformed");
     }

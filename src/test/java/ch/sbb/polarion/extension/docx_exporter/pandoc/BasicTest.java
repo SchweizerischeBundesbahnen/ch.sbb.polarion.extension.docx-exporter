@@ -13,7 +13,6 @@ import org.docx4j.openpackaging.exceptions.Docx4JException;
 import org.docx4j.openpackaging.packages.WordprocessingMLPackage;
 import org.docx4j.openpackaging.parts.WordprocessingML.MainDocumentPart;
 import org.docx4j.wml.SectPr;
-import org.docx4j.wml.Text;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
@@ -43,7 +42,7 @@ class BasicTest extends BasePandocTest {
     void testInvalidTemplate() {
         Exception exception = null;
         try {
-            exportToDOCX(readHtmlResource(getCurrentMethodName()), readTemplate("invalid_template"), null, PandocParams.builder().build());
+            exportToDOCX(readHtmlResource(getCurrentMethodName()), readTemplate("invalid_template"), PandocParams.builder().build());
         } catch (Exception e) {
             exception = e;
         }
@@ -53,7 +52,7 @@ class BasicTest extends BasePandocTest {
     @Test
     void testLargeDocument() throws Exception {
         String largeHtml = generateLargeHtmlContent();
-        byte[] doc = exportToDOCX(largeHtml, readTemplate("reference_template"), null, PandocParams.builder().build());
+        byte[] doc = exportToDOCX(largeHtml, readTemplate("reference_template"), PandocParams.builder().build());
         writeReportDocx("testLargeDocument_generated", doc);
         assertNotNull(doc);
         File newFile = getTestFile();
@@ -70,7 +69,7 @@ class BasicTest extends BasePandocTest {
     @ParameterizedTest
     @ValueSource(strings = {"testSimple", "testTable", "testLists", "testParagraphs"})
     void runTest(String testName) throws Exception {
-        byte[] doc = exportToDOCX(readHtmlResource(testName), readTemplate("reference_template"), null, PandocParams.builder().build());
+        byte[] doc = exportToDOCX(readHtmlResource(testName), readTemplate("reference_template"), PandocParams.builder().build());
         assertNotNull(doc);
         writeReportDocx("testName_generated", doc);
         File newFile = getTestFile();
@@ -88,29 +87,21 @@ class BasicTest extends BasePandocTest {
     @SneakyThrows
     void shouldConsiderPageBreaks() {
         String html = readHtmlResource("testPageBreak");
-        byte[] docBytes = exportToDOCX(html, readTemplate("reference_template"), null, PandocParams.builder().build());
+        byte[] docBytes = exportToDOCX(html, readTemplate("reference_template"), PandocParams.builder().build());
         writeReportDocx("shouldConsiderPageBreaks_generated", docBytes);
         assertEquals(3, getPageCount(docBytes));
     }
 
-    @Test
-    @SneakyThrows
-    void shouldContainsToC() {
-        String html = readHtmlResource("testToC");
-        byte[] docBytes = exportToDOCX(html, readTemplate("reference_template"), List.of("--toc"), PandocParams.builder().build());
-        writeReportDocx("shouldContainsToC_generated", docBytes);
-        assertTrue(containsText(docBytes, "Table of Contents"));
-    }
 
     @Test
     @SneakyThrows
     void testOrientationAndPaperSize() {
         String html = readHtmlResource("testSimple");
-        byte[] docBytes = exportToDOCX(html, readTemplate("reference_template"), null, PandocParams.builder().orientation("landscape").paperSize("B5").build());
+        byte[] docBytes = exportToDOCX(html, readTemplate("reference_template"), PandocParams.builder().orientation("landscape").paperSize("B5").build());
         writeReportDocx("testOrientationAndPaperSize_B5_landscape_generated", docBytes);
         assertTrue(hasDimensions(docBytes, 14144, 9979));
 
-        docBytes = exportToDOCX(html, readTemplate("reference_template"), null, PandocParams.builder().paperSize("A3").build());
+        docBytes = exportToDOCX(html, readTemplate("reference_template"), PandocParams.builder().paperSize("A3").build());
         writeReportDocx("testOrientationAndPaperSize_A3_portrait_generated", docBytes);
         assertTrue(hasDimensions(docBytes, 16838, 23811));
     }
@@ -119,10 +110,10 @@ class BasicTest extends BasePandocTest {
     @SneakyThrows
     void testPageOrientation() {
         String html = readHtmlResource("testPageOrientation");
-        byte[] docBytes = exportToDOCX(html, readTemplate("reference_template"), null, PandocParams.builder().orientation("landscape").paperSize("B5").build());
+        byte[] docBytes = exportToDOCX(html, readTemplate("reference_template"), PandocParams.builder().orientation("landscape").paperSize("B5").build());
         writeReportDocx("testPageOrientation_generated", docBytes);
 
-        docBytes = exportToDOCX(html, readTemplate("reference_template"), null, PandocParams.builder().paperSize("A4").build());
+        docBytes = exportToDOCX(html, readTemplate("reference_template"), PandocParams.builder().paperSize("A4").build());
         assertTrue(hasOrientationOnPage(docBytes, 1, "landscape"));
     }
 
@@ -130,7 +121,7 @@ class BasicTest extends BasePandocTest {
     @SneakyThrows
     void testPageOrientationChanges() {
         String html = readHtmlResource("testPageOrientation");
-        byte[] docBytes = exportToDOCX(html, readTemplate("reference_template"), null, PandocParams.builder().build());
+        byte[] docBytes = exportToDOCX(html, readTemplate("reference_template"), PandocParams.builder().build());
         writeReportDocx("testPageOrientationChanges_generated", docBytes);
 
         // First page: portrait (default)
@@ -147,7 +138,7 @@ class BasicTest extends BasePandocTest {
     @SneakyThrows
     void testMultipleOrientationSwitches() {
         String html = readHtmlResource("testPageOrientation");
-        byte[] docBytes = exportToDOCX(html, readTemplate("reference_template"), null, PandocParams.builder().build());
+        byte[] docBytes = exportToDOCX(html, readTemplate("reference_template"), PandocParams.builder().build());
         writeReportDocx("testMultipleOrientationSwitches_generated", docBytes);
 
         // Verify section count matches orientation changes
@@ -159,7 +150,7 @@ class BasicTest extends BasePandocTest {
     @SneakyThrows
     void testLandscapeOrientationWithTableContent() {
         String html = readHtmlResource("testPageOrientation");
-        byte[] docBytes = exportToDOCX(html, readTemplate("reference_template"), null, PandocParams.builder().build());
+        byte[] docBytes = exportToDOCX(html, readTemplate("reference_template"), PandocParams.builder().build());
         writeReportDocx("testLandscapeOrientationWithTable_generated", docBytes);
 
         // Second page should be landscape and contain table
@@ -171,7 +162,7 @@ class BasicTest extends BasePandocTest {
     @SneakyThrows
     void testStartingOrientationPreserved() {
         String html = readHtmlResource("testPageOrientation");
-        byte[] docBytes = exportToDOCX(html, readTemplate("reference_template"), null, PandocParams.builder().orientation("landscape").build());
+        byte[] docBytes = exportToDOCX(html, readTemplate("reference_template"), PandocParams.builder().orientation("landscape").build());
         writeReportDocx("testStartingLandscapeOrientation_generated", docBytes);
 
         // First page should start in landscape
@@ -182,7 +173,7 @@ class BasicTest extends BasePandocTest {
     @SneakyThrows
     void testOrientationWithA4PaperSize() {
         String html = readHtmlResource("testPageOrientation");
-        byte[] docBytes = exportToDOCX(html, readTemplate("reference_template"), null,
+        byte[] docBytes = exportToDOCX(html, readTemplate("reference_template"),
                 PandocParams.builder().paperSize("A4").build());
         writeReportDocx("testOrientationA4_generated", docBytes);
 
@@ -196,7 +187,7 @@ class BasicTest extends BasePandocTest {
         String html = "<p>Page 1 landscape</p><p>\\pageLandscape</p>" +
                 "<p>Page 2 landscape</p><p>\\pageLandscape</p>" +
                 "<p>Page 3 portrait</p><p>\\pagePortrait</p>";
-        byte[] docBytes = exportToDOCX(html, readTemplate("reference_template"), null, PandocParams.builder().build());
+        byte[] docBytes = exportToDOCX(html, readTemplate("reference_template"), PandocParams.builder().build());
         writeReportDocx("testConsecutiveLandscapePages_generated", docBytes);
 
         assertTrue(hasOrientationOnPage(docBytes, 0, "landscape"));
@@ -297,33 +288,6 @@ class BasicTest extends BasePandocTest {
         }
         htmlBuilder.append("</body></html>");
         return htmlBuilder.toString();
-    }
-
-    private boolean containsText(byte[] docBytes, String search) {
-        if (search == null || search.isEmpty()) {
-            return false;
-        }
-
-        try {
-            WordprocessingMLPackage wordMLPackage = WordprocessingMLPackage.load(new ByteArrayInputStream(docBytes));
-            MainDocumentPart documentPart = wordMLPackage.getMainDocumentPart();
-            List<Object> textNodes = documentPart.getJAXBNodesViaXPath("//w:t", true);
-
-            for (Object node : textNodes) {
-                if (node instanceof JAXBElement<?> jaxbElement) {
-                    Object value = jaxbElement.getValue();
-                    if (value instanceof Text textElement) {
-                        String textContent = textElement.getValue();
-                        if (textContent != null && textContent.contains(search)) {
-                            return true;
-                        }
-                    }
-                }
-            }
-            return false;
-        } catch (Exception e) {
-            return false;
-        }
     }
 
     private boolean hasDimensions(byte[] docBytes, int width, int height) {
