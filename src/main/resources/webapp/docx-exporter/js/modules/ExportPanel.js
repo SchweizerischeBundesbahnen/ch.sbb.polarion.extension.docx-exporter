@@ -63,7 +63,6 @@ export default class ExportPanel {
         this.ctx.setCheckbox("docx-cut-empty-chapters", stylePackage.cutEmptyChapters);
         this.ctx.setCheckbox("docx-cut-empty-wi-attributes", stylePackage.cutEmptyWorkitemAttributes);
         this.ctx.setCheckbox("docx-cut-urls", stylePackage.cutLocalURLs);
-        this.ctx.setCheckbox("docx-toc", stylePackage.addToC);
 
         this.ctx.setCheckbox("docx-specific-chapters", stylePackage.specificChapters);
         this.ctx.setValue("docx-chapters", stylePackage.specificChapters || "");
@@ -139,7 +138,6 @@ export default class ExportPanel {
             .setCutEmptyChapters(this.ctx.getElementById("docx-cut-empty-chapters").checked)
             .setCutEmptyWIAttributes(this.ctx.getElementById('docx-cut-empty-wi-attributes').checked)
             .setCutLocalUrls(this.ctx.getElementById("docx-cut-urls").checked)
-            .setToC(this.ctx.getElementById("docx-toc").checked)
             .setChapters(selectedChapters)
             .setLanguage(this.ctx.getElementById('docx-localization').checked ? this.ctx.getElementById("docx-language").value : null)
             .setLinkedWorkitemRoles(selectedRoles)

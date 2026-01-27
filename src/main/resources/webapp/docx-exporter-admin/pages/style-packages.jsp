@@ -245,12 +245,6 @@
                     </label>
                     <div id="language-select" style="visibility: hidden; margin-left: 10px; width: 200px"></div>
                 </div>
-                <div class='checkbox input-group'>
-                    <label for='toc'>
-                        <input id="toc" type='checkbox'/>
-                        ToC
-                    </label>
-                </div>
             </div>
         </div>
 

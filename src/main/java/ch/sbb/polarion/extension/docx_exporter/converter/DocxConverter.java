@@ -1,28 +1,28 @@
 package ch.sbb.polarion.extension.docx_exporter.converter;
 
-import ch.sbb.polarion.extension.docx_exporter.pandoc.service.model.PandocParams;
-import ch.sbb.polarion.extension.docx_exporter.rest.model.settings.templates.TemplatesModel;
-import ch.sbb.polarion.extension.docx_exporter.settings.TemplatesSettings;
-import ch.sbb.polarion.extension.generic.settings.SettingId;
 import ch.sbb.polarion.extension.docx_exporter.pandoc.service.PandocServiceConnector;
+import ch.sbb.polarion.extension.docx_exporter.pandoc.service.model.PandocParams;
 import ch.sbb.polarion.extension.docx_exporter.properties.DocxExporterExtensionConfiguration;
 import ch.sbb.polarion.extension.docx_exporter.rest.model.conversion.ExportParams;
 import ch.sbb.polarion.extension.docx_exporter.rest.model.documents.DocumentData;
+import ch.sbb.polarion.extension.docx_exporter.rest.model.settings.templates.TemplatesModel;
 import ch.sbb.polarion.extension.docx_exporter.rest.model.settings.webhooks.AuthType;
 import ch.sbb.polarion.extension.docx_exporter.rest.model.settings.webhooks.WebhookConfig;
 import ch.sbb.polarion.extension.docx_exporter.rest.model.settings.webhooks.WebhooksModel;
 import ch.sbb.polarion.extension.docx_exporter.service.DocxExporterPolarionService;
 import ch.sbb.polarion.extension.docx_exporter.settings.LocalizationSettings;
+import ch.sbb.polarion.extension.docx_exporter.settings.TemplatesSettings;
 import ch.sbb.polarion.extension.docx_exporter.settings.WebhooksSettings;
 import ch.sbb.polarion.extension.docx_exporter.util.DebugDataStorage;
 import ch.sbb.polarion.extension.docx_exporter.util.DocumentDataFactory;
-import ch.sbb.polarion.extension.docx_exporter.util.EnumValuesProvider;
-import ch.sbb.polarion.extension.docx_exporter.util.HtmlLogger;
-import ch.sbb.polarion.extension.docx_exporter.util.HtmlProcessor;
 import ch.sbb.polarion.extension.docx_exporter.util.DocxExporterFileResourceProvider;
 import ch.sbb.polarion.extension.docx_exporter.util.DocxGenerationLog;
 import ch.sbb.polarion.extension.docx_exporter.util.DocxTemplateProcessor;
+import ch.sbb.polarion.extension.docx_exporter.util.EnumValuesProvider;
+import ch.sbb.polarion.extension.docx_exporter.util.HtmlLogger;
+import ch.sbb.polarion.extension.docx_exporter.util.HtmlProcessor;
 import ch.sbb.polarion.extension.docx_exporter.util.html.HtmlLinksHelper;
+import ch.sbb.polarion.extension.generic.settings.SettingId;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.polarion.alm.projects.model.IUniqueObject;
 import com.polarion.alm.tracker.model.ITrackerProject;
@@ -100,16 +100,10 @@ public class DocxConverter {
                 });
             }
 
-            List<String> options = null;
-            if (exportParams.isAddToC()) {
-                options = Collections.singletonList("--toc");
-            }
-
             // Generate DOCX
             final byte[] finalTemplate = template;
-            final List<String> finalOptions = options;
             byte[] bytes = generationLog.timed("Pandoc conversion",
-                    () -> generateDocx(htmlContent, finalTemplate, finalOptions, PandocParams.builder().orientation(exportParams.getOrientation()).paperSize(exportParams.getPaperSize()).build()),
+                    () -> generateDocx(htmlContent, finalTemplate, PandocParams.builder().orientation(exportParams.getOrientation()).paperSize(exportParams.getPaperSize()).build()),
                     docx -> String.format("docx_size=%d bytes", docx.length));
 
             // Set DOCX metrics
@@ -255,14 +249,14 @@ public class DocxConverter {
     }
 
     @VisibleForTesting
-    byte[] generateDocx(String htmlPage, byte[] template, @Nullable List<String> options, @NotNull PandocParams params) {
+    byte[] generateDocx(String htmlPage, byte[] template, @NotNull PandocParams params) {
         int headerIndex = htmlPage.indexOf("<div class='header'>");
         if (headerIndex > -1) {
             int contentIndex = htmlPage.indexOf("<div class='content'>");
             htmlPage = htmlPage.substring(0, headerIndex) + htmlPage.substring(contentIndex);
         }
         htmlPage = htmlPage.replace("<div style='break-after:page'>page to be removed</div><?xml version='1.0' encoding='UTF-8'?>", "");
-        return pandocServiceConnector.convertToDocx(htmlPage, template, options, params);
+        return pandocServiceConnector.convertToDocx(htmlPage, template, params);
     }
 
     @VisibleForTesting
