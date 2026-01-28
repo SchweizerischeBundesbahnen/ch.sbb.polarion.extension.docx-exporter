@@ -4,7 +4,7 @@ on:
   push:
     branches: ['**']
   pull_request:
-    branches: [main]
+    branches: [main, release-v*]
     types: [opened, synchronize, reopened, ready_for_review]
   workflow_dispatch:
 env:
@@ -90,7 +90,7 @@ jobs:
           if-no-files-found: error
   deploy-maven-central:
     needs: build
-    if: ${{ needs.build.outputs.is_release == 'true' && github.ref == 'refs/heads/main' }}
+    if: ${{ needs.build.outputs.is_release == 'true' && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/heads/release-v')) }}
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -127,7 +127,7 @@ jobs:
             -Dmaven.wagon.http.readTimeout=3600000
   deploy-github-packages:
     needs: build
-    if: ${{ github.ref == 'refs/heads/main' }}
+    if: ${{ github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/heads/release-v') }}
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -156,8 +156,8 @@ jobs:
           cache: maven
       - name: 📦 Deploy to GitHub Packages
         # Releases should only be deployed to GitHub packages when the repo is private
-        # Only snapshots should always be deployed here
-        if: ${{ needs.build.outputs.is_release == 'false' }}
+        # Only snapshots from main branch should be deployed here
+        if: ${{ needs.build.outputs.is_release == 'false' && github.ref == 'refs/heads/main' }}
         run: |
           mvn --batch-mode -s "${SETTINGS_XML}" deploy \
             -Dmaven.test.skip=true \

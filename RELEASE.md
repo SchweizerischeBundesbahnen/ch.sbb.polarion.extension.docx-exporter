@@ -16,3 +16,41 @@ Releases within our project are exclusively overseen by designated code owners, 
 
 
 For comprehensive information, please consult the [Release Please documentation](https://github.com/googleapis/release-please).
+
+## LTS (Long-Term Support) Releases
+
+LTS branches allow releasing bug fixes and security patches for older major versions while development continues on `main`.
+
+### Branch Naming Convention
+
+LTS branches follow the pattern: `release-v{major}` (e.g., `release-v6`, `release-v7`)
+
+### Creating an LTS Branch
+
+Create the branch from the last tag of the major version:
+
+```bash
+git checkout v6.4.2          # Last tag of the major version
+git checkout -b release-v6
+git push origin release-v6
+```
+
+### Releasing from LTS Branches
+
+1. Cherry-pick or commit fixes to the LTS branch
+2. Push changes (Release Please automatically creates a release PR)
+3. Merge the release PR to trigger:
+   - Tag creation (e.g., `v6.4.3`)
+   - GitHub Release with artifacts
+   - Maven Central deployment
+
+### Deployment Matrix
+
+| Branch | Version Type | Maven Central | GitHub Packages | GitHub Release |
+|--------|--------------|---------------|-----------------|----------------|
+| `main` | SNAPSHOT | - | ✓ | - |
+| `main` | Release | ✓ | - | ✓ |
+| `release-v*` | SNAPSHOT | - | - | - |
+| `release-v*` | Release | ✓ | - | ✓ |
+
+Each LTS branch operates independently with its own release PR.
