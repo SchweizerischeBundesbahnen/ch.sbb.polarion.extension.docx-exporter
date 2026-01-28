@@ -84,7 +84,7 @@
         <!--suppress UnresolvedMavenProperty -->
         <skipJavaScriptTests>${skipTests}</skipJavaScriptTests>
 
-        <apache-poi.version>5.4.0</apache-poi.version>
+        <apache-poi.version>5.5.1</apache-poi.version>
     </properties>
 
     <profiles>
