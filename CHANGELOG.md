@@ -1,5 +1,18 @@
 # Changelog
 
+## [3.2.0](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/compare/v3.1.0...v3.2.0) (2026-01-29)
+
+
+### Features
+
+* add support for LTS bugfix releases ([0a709d8](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/commit/0a709d8e1d6d2d57c18969439fb6e40230f08dca)), closes [#184](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/issues/184)
+* replace generated hyperlinks for ToC, ToF, and ToT with macros … ([#189](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/issues/189)) ([eabc3ed](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/commit/eabc3ed7572f408b4d150ba2e86acfbd0d427ec4)), closes [#188](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/issues/188)
+
+
+### Bug Fixes
+
+* align maven-build.yml with diff-tool LTS workflow ([f0f88f3](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/commit/f0f88f3e174675ac01da8c8284703b2214ab7521))
+
 ## [3.1.0](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/compare/v3.0.1...v3.1.0) (2025-12-19)
 
 
