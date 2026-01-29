@@ -81,8 +81,8 @@ public abstract class BasePandocTest {
         return inputStream;
     }
 
-    protected byte[] exportToDOCX(String html, byte[] template, List<String> options, @NotNull PandocParams params) {
-        return getPandocServiceConnector().convertToDocx(html, template, options, params);
+    protected byte[] exportToDOCX(String html, byte[] template, @NotNull PandocParams params) {
+        return getPandocServiceConnector().convertToDocx(html, template, params);
     }
 
     protected byte[] downloadTemplate() {

@@ -75,7 +75,6 @@ class DocxConverterTest {
         // Arrange
         ExportParams exportParams = ExportParams.builder()
                 .projectId("testProjectId")
-                .addToC(true)
                 .orientation("LANDSCAPE")
                 .paperSize("A3")
                 .build();
@@ -94,7 +93,7 @@ class DocxConverterTest {
         documentDataFactoryMockedStatic.when(() -> DocumentDataFactory.getDocumentData(eq(exportParams), anyBoolean())).thenReturn(documentData);
         when(docxTemplateProcessor.processUsing(eq("testDocument"), anyString())).thenReturn("test html content");
         PandocParams params = PandocParams.builder().orientation("LANDSCAPE").paperSize("A3").build();
-        when(pandocServiceConnector.convertToDocx(eq("test html content"), isNull(), eq(List.of("--toc")), eq(params))).thenReturn("test document content".getBytes());
+        when(pandocServiceConnector.convertToDocx(eq("test html content"), isNull(), eq(params))).thenReturn("test document content".getBytes());
         when(htmlProcessor.internalizeLinks(anyString())).thenAnswer(a -> a.getArgument(0));
 
         exportParams.setTemplate("testTemplate");
@@ -104,7 +103,7 @@ class DocxConverterTest {
         byte[] result = docxConverter.convertToDocx(exportParams);
 
         // Assert
-        verify(pandocServiceConnector).convertToDocx(eq("test html content"), isNull(), eq(List.of("--toc")), eq(params));
+        verify(pandocServiceConnector).convertToDocx(eq("test html content"), isNull(), eq(params));
         assertThat(result).isEqualTo("test document content".getBytes());
     }
 

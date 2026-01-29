@@ -61,11 +61,11 @@ public class PandocServiceConnector {
         this.pandocServiceBaseUrl = pandocServiceBaseUrl;
     }
 
-    public byte[] convertToDocx(String htmlPage, byte[] template, List<String> options, PandocParams params) {
-        return convertToDocx(htmlPage, template, options, params, null);
+    public byte[] convertToDocx(String htmlPage, byte[] template, PandocParams params) {
+        return convertToDocx(htmlPage, template, params, null);
     }
 
-    public byte[] convertToDocx(String htmlPage, byte[] template, List<String> options, PandocParams params, @Nullable DocxGenerationLog generationLog) {
+    public byte[] convertToDocx(String htmlPage, byte[] template, PandocParams params, @Nullable DocxGenerationLog generationLog) {
         Client client = null;
         try {
             client = ClientBuilder.newClient();
@@ -83,11 +83,6 @@ public class PandocServiceConnector {
                             new ByteArrayInputStream(template),
                             MediaType.valueOf(MEDIA_TYPE_DOCX)
                     ));
-                }
-
-                if (options != null && !options.isEmpty()) {
-                    String optionsString = String.join(" ", options);
-                    multipart.bodyPart(new FormDataBodyPart("options", optionsString, MediaType.TEXT_PLAIN_TYPE));
                 }
 
                 Invocation.Builder requestBuilder = webTarget.request(MEDIA_TYPE_DOCX);

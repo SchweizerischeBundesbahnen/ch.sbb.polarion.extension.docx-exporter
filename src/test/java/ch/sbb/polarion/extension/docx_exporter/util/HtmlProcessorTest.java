@@ -439,11 +439,10 @@ class HtmlProcessorTest {
             String initialHtml = new String(isInitialHtml.readAllBytes(), StandardCharsets.UTF_8);
             String expectedHtml = new String(isExpectedHtml.readAllBytes(), StandardCharsets.UTF_8);
 
-            LiveDocTOCGenerator liveDocTOCGenerator = new LiveDocTOCGenerator();
 
             Document document = JSoupUtils.parseHtml(initialHtml);
 
-            liveDocTOCGenerator.addTableOfContent(document);
+            processor.addTableOfContent(document);
             String processedHtml = document.body().html();
 
             // Spaces and new lines are removed to exclude difference in space characters

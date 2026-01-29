@@ -83,6 +83,8 @@
 
         <!--suppress UnresolvedMavenProperty -->
         <skipJavaScriptTests>${skipTests}</skipJavaScriptTests>
+
+        <apache-poi.version>5.4.0</apache-poi.version>
     </properties>
 
     <profiles>
@@ -271,6 +273,12 @@
             <artifactId>ch.sbb.polarion.extension.generic.app</artifactId>
             <version>${project.parent.version}</version>
             <type>test-jar</type>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.poi</groupId>
+            <artifactId>poi-ooxml</artifactId>
+            <version>${apache-poi.version}</version>
             <scope>test</scope>
         </dependency>
     </dependencies>
