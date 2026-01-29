@@ -61,7 +61,7 @@ public class PandocServiceConnector {
         this.pandocServiceBaseUrl = pandocServiceBaseUrl;
     }
 
-    public byte[] convertToDocx(String htmlPage, byte[] template,PandocParams params) {
+    public byte[] convertToDocx(String htmlPage, byte[] template, PandocParams params) {
         return convertToDocx(htmlPage, template, params, null);
     }
 
