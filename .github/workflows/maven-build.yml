@@ -27,12 +27,12 @@ jobs:
       GITHUB_TOKEN: ${{ github.token }}  # Providing this prevents reaching the GitHub request limits
     steps:
       - name: 📄 Checkout the repository
-        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8  # v6.0.1
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
         with:
           fetch-depth: 0  # Sonar needs full history
           persist-credentials: false
       - name: 🧱 Set up JDK and Maven
-        uses: actions/setup-java@f2beeb24e141e01a676f977032f5a29d81c9e27e  # v5.1.0
+        uses: actions/setup-java@be666c2fcd27ec809703dec50e508c2fdc7f6654  # v5.2.0
         with:
           distribution: ${{ env.JAVA_DISTRIBUTION }}
           java-version: ${{ env.JAVA_VERSION }}
@@ -52,7 +52,7 @@ jobs:
             echo "is_release=${IS_RELEASE}"
           } >> "$GITHUB_OUTPUT"
       - name: 🔍 Cache SonarQube packages
-        uses: actions/cache@9255dc7a253b0ccc959486e2bca901246202afeb  # v5.0.1
+        uses: actions/cache@8b402f58fbc84540c8b491a91e594a4576fec3d7  # v5.0.2
         with:
           path: ~/.sonar/cache
           key: ${{ runner.os }}-sonar
@@ -88,9 +88,11 @@ jobs:
             target/*.pom
           retention-days: 1
           if-no-files-found: error
+  # Deploy releases to Maven Central from main and LTS branches (release-v*)
+  # See RELEASE.md for LTS branch documentation
   deploy-maven-central:
     needs: build
-    if: ${{ needs.build.outputs.is_release == 'true' && github.ref == 'refs/heads/main' }}
+    if: ${{ needs.build.outputs.is_release == 'true' && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/heads/release-v')) }}
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -102,12 +104,12 @@ jobs:
       GITHUB_TOKEN: ${{ github.token }}  # Providing this prevents reaching the GitHub request limits
     steps:
       - name: 📄 Checkout the repository
-        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8  # v6.0.1
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
         with:
           fetch-depth: 1
           persist-credentials: false
       - name: 🧱 Set up JDK and Maven with cache
-        uses: actions/setup-java@f2beeb24e141e01a676f977032f5a29d81c9e27e  # v5.1.0
+        uses: actions/setup-java@be666c2fcd27ec809703dec50e508c2fdc7f6654  # v5.2.0
         with:
           distribution: ${{ env.JAVA_DISTRIBUTION }}
           java-version: ${{ env.JAVA_VERSION }}
@@ -125,9 +127,11 @@ jobs:
             -Dcentral.timeout=3600 \
             -Dmaven.wagon.http.connectionTimeout=3600000 \
             -Dmaven.wagon.http.readTimeout=3600000
+  # Deploy to GitHub Packages (snapshots from main only) and upload release assets to GitHub Release
+  # LTS branches (release-v*) only upload release assets, no snapshot deployment
   deploy-github-packages:
     needs: build
-    if: ${{ github.ref == 'refs/heads/main' }}
+    if: ${{ github.ref == 'refs/heads/main' || (needs.build.outputs.is_release == 'true' && startsWith(github.ref, 'refs/heads/release-v')) }}
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -138,25 +142,25 @@ jobs:
       PROJECT_VERSION: ${{ needs.build.outputs.project_version }}
     steps:
       - name: 📄 Checkout the repository
-        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8  # v6.0.1
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
         with:
           fetch-depth: 1
           persist-credentials: false
       - name: 📥 Download build artifacts
-        # The artifacts are generated in the 'build' step
+        # needed for uploads to GitHub Releases
         uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131  # v7.0.0
         with:
           name: maven-artifacts
           path: target/
       - name: 🧱 Set up JDK and Maven
-        uses: actions/setup-java@f2beeb24e141e01a676f977032f5a29d81c9e27e  # v5.1.0
+        uses: actions/setup-java@be666c2fcd27ec809703dec50e508c2fdc7f6654  # v5.2.0
         with:
           distribution: ${{ env.JAVA_DISTRIBUTION }}
           java-version: ${{ env.JAVA_VERSION }}
           cache: maven
       - name: 📦 Deploy to GitHub Packages
-        # Releases should only be deployed to GitHub packages when the repo is private
-        # Only snapshots should always be deployed here
+        # Releases should be only deployed to GitHub packages when the repo is private
+        # only snapshots must be always deployed here
         if: ${{ needs.build.outputs.is_release == 'false' }}
         run: |
           mvn --batch-mode -s "${SETTINGS_XML}" deploy \
