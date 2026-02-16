@@ -61,20 +61,20 @@ public class DocxExporterRestApplication extends GenericRestApplication {
     }
 
     @Override
-    protected @NotNull Set<Object> getExtensionControllerSingletons() {
+    protected @NotNull Set<Class<?>> getExtensionControllerClasses() {
         return Set.of(
-                new CollectionApiController(),
-                new CollectionInternalController(),
-                new ConfigurationApiController(),
-                new ConfigurationInternalController(),
-                new ConverterApiController(),
-                new ConverterInternalController(),
-                new SettingsApiController(),
-                new SettingsInternalController(),
-                new TestRunAttachmentsApiController(),
-                new TestRunAttachmentsInternalController(),
-                new UtilityResourcesApiController(),
-                new UtilityResourcesInternalController()
+                CollectionApiController.class,
+                CollectionInternalController.class,
+                ConfigurationApiController.class,
+                ConfigurationInternalController.class,
+                ConverterApiController.class,
+                ConverterInternalController.class,
+                SettingsApiController.class,
+                SettingsInternalController.class,
+                TestRunAttachmentsApiController.class,
+                TestRunAttachmentsInternalController.class,
+                UtilityResourcesApiController.class,
+                UtilityResourcesInternalController.class
         );
     }
 

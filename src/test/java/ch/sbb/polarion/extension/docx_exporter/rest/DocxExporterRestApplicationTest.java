@@ -13,7 +13,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.mockito.Mockito.mockConstruction;
-import static org.mockito.Mockito.when;
 
 @ExtendWith({MockitoExtension.class, CurrentContextExtension.class, DocxExporterExtensionConfigurationExtension.class, PlatformContextMockExtension.class})
 class DocxExporterRestApplicationTest {
@@ -25,10 +24,9 @@ class DocxExporterRestApplicationTest {
     @Test
     @SuppressWarnings("unused")
     void testInitialization() {
-        when(docxExporterExtensionConfiguration.getPandocService()).thenReturn("https://test.url:8000");
         try (MockedConstruction<DocxExporterFileResourceProvider> resourceProviderMock = mockConstruction(DocxExporterFileResourceProvider.class)) {
             DocxExporterRestApplication application = new DocxExporterRestApplication();
-            assertDoesNotThrow(application::getExtensionControllerSingletons);
+            assertDoesNotThrow(application::getExtensionControllerClasses);
             assertDoesNotThrow(application::getExtensionExceptionMapperSingletons);
             assertDoesNotThrow(application::getExtensionFilterSingletons);
         }

@@ -29,6 +29,7 @@ import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.VisibleForTesting;
 import org.springframework.http.HttpStatus;
 
+import javax.inject.Singleton;
 import javax.ws.rs.BadRequestException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
@@ -53,6 +54,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+@Singleton
 @Hidden
 @Path("/internal")
 @Tag(name = "DOCX Processing")
