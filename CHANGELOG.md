@@ -1,5 +1,26 @@
 # Changelog
 
+## [4.1.0](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/compare/v4.0.0...v4.1.0) (2026-02-20)
+
+
+### Features
+
+* add support for LTS bugfix releases ([#185](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/issues/185)) ([c5d1aed](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/commit/c5d1aeddb595a9eaea38239898c50adaa3d8e44c)), closes [#184](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/issues/184)
+* replace generated hyperlinks for ToC, ToF, and ToT with macros ([#183](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/issues/183)) ([07befbf](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/commit/07befbf7ea80e2bc3224faa7ba0c7d814f0f898d)), closes [#182](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/issues/182)
+
+
+### Bug Fixes
+
+* **deps:** update dependency ch.sbb.polarion.extensions:ch.sbb.polarion.extension.generic to v13.1.0 ([b45d7bf](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/commit/b45d7bf10535413b9d5b9fe1cc7cb764080e6ec4))
+* **deps:** update dependency ch.sbb.polarion.extensions:ch.sbb.polarion.extension.generic to v13.2.0 ([3437976](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/commit/34379764a5b019bacb1772cebcc694f4f575d99e))
+* **deps:** update dependency ch.sbb.polarion.extensions:ch.sbb.polarion.extension.generic to v13.2.1 ([6902d51](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/commit/6902d51a1254f2ac05b2663527d3ccfd6df251b6))
+* **deps:** update dependency ch.sbb.polarion.extensions:ch.sbb.polarion.extension.generic to v14.1.0 ([#194](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/issues/194)) ([2343402](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/commit/2343402a1e924cf9c865d3b262007ecc4bed650b))
+* **deps:** update dependency jakarta.xml.bind:jakarta.xml.bind-api to v4.0.5 ([d62b5eb](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/commit/d62b5eb52548586852c05b97bb1215f7ce11bd1a))
+* **deps:** update dependency net.bytebuddy:byte-buddy to v1.18.4 ([0051db0](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/commit/0051db096d73aced116b19645f6d489f5e98f856))
+* **deps:** update dependency net.bytebuddy:byte-buddy to v1.18.5 ([343e957](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/commit/343e9572b06835d1a54accc5c3071a59b74fa877))
+* **deps:** update dependency net.sf.okapi.lib:okapi-lib-xliff2 to v1.48.0 ([0516d2c](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/commit/0516d2c3c097382d35c02162a20728e014a4be89))
+* document renderer now respects LiveDoc filter provided and adds placeholder ([#195](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/issues/195)) ([190531e](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/commit/190531e13d2aacdc930f424ce68547585d7a2a9d)), closes [#193](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/issues/193)
+
 ## [4.0.0](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/compare/v3.1.0...v4.0.0) (2026-01-09)
 
 
