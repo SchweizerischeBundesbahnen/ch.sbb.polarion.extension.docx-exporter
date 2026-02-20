@@ -15,6 +15,9 @@ import java.util.Map;
 @NoArgsConstructor
 @AllArgsConstructor
 public class ExportParams {
+    public static final String URL_QUERY_PARAM_QUERY = "query";
+    public static final String URL_QUERY_PARAM_LANGUAGE = "language";
+
     @Schema(description = "The unique identifier for the project", example = "elibrary")
     private @Nullable String projectId;
 

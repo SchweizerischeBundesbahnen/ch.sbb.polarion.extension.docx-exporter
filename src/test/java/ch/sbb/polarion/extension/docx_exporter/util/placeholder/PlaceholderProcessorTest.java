@@ -1,7 +1,12 @@
 package ch.sbb.polarion.extension.docx_exporter.util.placeholder;
 
+import ch.sbb.polarion.extension.docx_exporter.rest.model.conversion.ExportParams;
+import ch.sbb.polarion.extension.docx_exporter.rest.model.documents.DocumentData;
+import ch.sbb.polarion.extension.docx_exporter.rest.model.documents.id.DocumentId;
+import ch.sbb.polarion.extension.docx_exporter.rest.model.documents.id.DocumentProject;
 import ch.sbb.polarion.extension.docx_exporter.service.DocxExporterPolarionService;
 import com.polarion.alm.projects.IProjectService;
+import com.polarion.alm.projects.model.IUniqueObject;
 import com.polarion.alm.tracker.ITestManagementService;
 import com.polarion.alm.tracker.ITrackerService;
 import com.polarion.platform.IPlatformService;
@@ -21,10 +26,12 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class PlaceholderProcessorTest {
@@ -46,6 +53,7 @@ class PlaceholderProcessorTest {
                 .timestamp("testTimestamp")
                 .sbbCustomRevision("testCustomRevision")
                 .projectName("testProjectName")
+                .documentFilter("type:requirement")
                 .build();
 
         DocxExporterPolarionService docxExporterPolarionService = new DocxExporterPolarionService(
@@ -87,6 +95,63 @@ class PlaceholderProcessorTest {
         final String text = "test text with correct placeholder text TIMESTAMP but no curly braces";
         final String result = placeholderProcessor.processPlaceholders(text, placeholderValues);
         assertEquals(text, result);
+    }
+
+    @Test
+    void testDocumentFilterReplaced() {
+        final String text = "Filter: {{ DOCUMENT_FILTER }}";
+        final String result = placeholderProcessor.processPlaceholders(text, placeholderValues);
+        assertEquals("Filter: type:requirement", result);
+    }
+
+    @Test
+    void testPlaceholderValueWithSpecialRegexCharacters() {
+        PlaceholderValues valuesWithSpecialChars = PlaceholderValues.builder()
+                .documentFilter("$100 cost\\item")
+                .build();
+        final String text = "Filter: {{ DOCUMENT_FILTER }}";
+        final String result = placeholderProcessor.processPlaceholders(text, valuesWithSpecialChars);
+        assertEquals("Filter: $100 cost\\item", result);
+    }
+
+    @Test
+    void testGetPlaceholderValuesWithNullUrlQueryParameters() {
+        DocumentProject documentProject = mock(DocumentProject.class);
+        when(documentProject.getName()).thenReturn("testProject");
+        DocumentId documentId = mock(DocumentId.class);
+        when(documentId.getDocumentProject()).thenReturn(documentProject);
+        when(documentId.getDocumentId()).thenReturn("testDocId");
+        DocumentData<IUniqueObject> documentData = DocumentData.creator(mock(IUniqueObject.class))
+                .id(documentId)
+                .title("testTitle")
+                .lastRevision("123")
+                .revisionPlaceholder("123")
+                .build();
+        ExportParams exportParams = ExportParams.builder()
+                .urlQueryParameters(null)
+                .build();
+        PlaceholderValues result = placeholderProcessor.getPlaceholderValues(documentData, exportParams, "{{ DOCUMENT_FILTER }}");
+        assertEquals("", result.getAllVariables().get("DOCUMENT_FILTER"));
+    }
+
+    @Test
+    void testGetPlaceholderValuesWithQueryParameter() {
+        DocumentProject documentProject = mock(DocumentProject.class);
+        when(documentProject.getName()).thenReturn("testProject");
+        DocumentId documentId = mock(DocumentId.class);
+        when(documentId.getDocumentProject()).thenReturn(documentProject);
+        when(documentId.getDocumentId()).thenReturn("testDocId");
+        DocumentData<IUniqueObject> documentData = DocumentData.creator(mock(IUniqueObject.class))
+                .id(documentId)
+                .title("testTitle")
+                .lastRevision("123")
+                .revisionPlaceholder("123")
+                .build();
+        ExportParams exportParams = ExportParams.builder()
+                .urlQueryParameters(Map.of(ExportParams.URL_QUERY_PARAM_QUERY, "type:requirement"))
+                .build();
+        PlaceholderValues result = placeholderProcessor.getPlaceholderValues(documentData, exportParams, "{{ DOCUMENT_FILTER }}");
+        assertEquals("type:requirement", result.getAllVariables().get("DOCUMENT_FILTER"));
     }
 
     @ParameterizedTest
