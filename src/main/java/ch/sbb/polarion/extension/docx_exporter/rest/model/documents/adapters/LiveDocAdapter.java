@@ -23,8 +23,6 @@ import java.util.Map;
 
 public class LiveDocAdapter extends CommonUniqueObjectAdapter {
     public static final String DOC_REVISION_CUSTOM_FIELD = "docRevision";
-    public static final String URL_QUERY_PARAM_LANGUAGE = "language";
-    public static final String URL_QUERY_PARAM_QUERY = "query";
 
     private final @NotNull IModule module;
 
@@ -77,7 +75,7 @@ public class LiveDocAdapter extends CommonUniqueObjectAdapter {
 
     static @NotNull ModifiedDocumentRenderer getDocumentRenderer(@NotNull ExportParams exportParams, @NotNull InternalReadOnlyTransaction transaction, @NotNull ProxyDocument document) {
         Map<String, String> documentParameters = exportParams.getUrlQueryParameters() == null ? Map.of() : exportParams.getUrlQueryParameters();
-        DocumentRendererParameters parameters = new DocumentRendererParameters(documentParameters.get(URL_QUERY_PARAM_QUERY), documentParameters.get(URL_QUERY_PARAM_LANGUAGE));
+        DocumentRendererParameters parameters = new DocumentRendererParameters(documentParameters.get(ExportParams.URL_QUERY_PARAM_QUERY), documentParameters.get(ExportParams.URL_QUERY_PARAM_LANGUAGE));
         return new ModifiedDocumentRenderer(transaction, document, RichTextRenderTarget.PDF_EXPORT, parameters);
     }
 

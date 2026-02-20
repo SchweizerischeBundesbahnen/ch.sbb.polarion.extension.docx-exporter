@@ -2,7 +2,6 @@ package ch.sbb.polarion.extension.docx_exporter.util.placeholder;
 
 import ch.sbb.polarion.extension.docx_exporter.rest.model.conversion.ExportParams;
 import ch.sbb.polarion.extension.docx_exporter.rest.model.documents.DocumentData;
-import ch.sbb.polarion.extension.docx_exporter.rest.model.documents.adapters.LiveDocAdapter;
 import ch.sbb.polarion.extension.docx_exporter.service.DocxExporterPolarionService;
 import ch.sbb.polarion.extension.generic.regex.RegexMatcher;
 import com.polarion.alm.projects.model.IUniqueObject;
@@ -15,6 +14,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.regex.Matcher;
 
 public class PlaceholderProcessor {
 
@@ -46,7 +46,7 @@ public class PlaceholderProcessor {
     public @NotNull PlaceholderValues getPlaceholderValues(@NotNull DocumentData<? extends IUniqueObject> documentData, @NotNull ExportParams exportParams, @NotNull List<String> templates) {
         String revision = exportParams.getRevision() != null ? exportParams.getRevision() : documentData.getLastRevision();
         String baselineName = documentData.getBaseline() != null ? documentData.getBaseline().asPlaceholder() : "";
-        String documentFilter = exportParams.getUrlQueryParameters() != null ? exportParams.getUrlQueryParameters().get(LiveDocAdapter.URL_QUERY_PARAM_QUERY) : null;
+        String documentFilter = exportParams.getUrlQueryParameters() != null ? exportParams.getUrlQueryParameters().get(ExportParams.URL_QUERY_PARAM_QUERY) : null;
 
         PlaceholderValues placeholderValues = PlaceholderValues.builder()
                 .productName(docxExporterPolarionService.getPolarionProductName())
@@ -108,7 +108,8 @@ public class PlaceholderProcessor {
         String processedText = template;
         for (Map.Entry<String, String> entry : variables.entrySet()) {
             String regex = String.format("\\{\\{\\s*%s\\s*\\}\\}", entry.getKey());
-            processedText = processedText.replaceAll(regex, entry.getValue() != null ? entry.getValue() : "");
+            String replacement = entry.getValue() != null ? Matcher.quoteReplacement(entry.getValue()) : "";
+            processedText = processedText.replaceAll(regex, replacement);
         }
 
         return processedText;
