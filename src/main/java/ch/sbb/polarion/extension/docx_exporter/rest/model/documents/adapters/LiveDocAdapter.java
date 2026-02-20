@@ -18,6 +18,7 @@ import com.polarion.alm.shared.dle.document.DocumentRendererParameters;
 import com.polarion.alm.tracker.model.IModule;
 import com.polarion.core.util.StringUtils;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.VisibleForTesting;
 
 import java.util.Map;
 
@@ -73,6 +74,7 @@ public class LiveDocAdapter extends CommonUniqueObjectAdapter {
         });
     }
 
+    @VisibleForTesting
     static @NotNull ModifiedDocumentRenderer getDocumentRenderer(@NotNull ExportParams exportParams, @NotNull InternalReadOnlyTransaction transaction, @NotNull ProxyDocument document) {
         Map<String, String> documentParameters = exportParams.getUrlQueryParameters() == null ? Map.of() : exportParams.getUrlQueryParameters();
         DocumentRendererParameters parameters = new DocumentRendererParameters(documentParameters.get(ExportParams.URL_QUERY_PARAM_QUERY), documentParameters.get(ExportParams.URL_QUERY_PARAM_LANGUAGE));
