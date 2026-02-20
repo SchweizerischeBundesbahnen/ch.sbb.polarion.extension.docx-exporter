@@ -46,6 +46,7 @@ class PlaceholderProcessorTest {
                 .timestamp("testTimestamp")
                 .sbbCustomRevision("testCustomRevision")
                 .projectName("testProjectName")
+                .documentFilter("type:requirement")
                 .build();
 
         DocxExporterPolarionService docxExporterPolarionService = new DocxExporterPolarionService(
@@ -87,6 +88,13 @@ class PlaceholderProcessorTest {
         final String text = "test text with correct placeholder text TIMESTAMP but no curly braces";
         final String result = placeholderProcessor.processPlaceholders(text, placeholderValues);
         assertEquals(text, result);
+    }
+
+    @Test
+    void testDocumentFilterReplaced() {
+        final String text = "Filter: {{ DOCUMENT_FILTER }}";
+        final String result = placeholderProcessor.processPlaceholders(text, placeholderValues);
+        assertEquals("Filter: type:requirement", result);
     }
 
     @ParameterizedTest

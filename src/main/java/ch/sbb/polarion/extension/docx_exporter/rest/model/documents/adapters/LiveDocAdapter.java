@@ -24,6 +24,7 @@ import java.util.Map;
 public class LiveDocAdapter extends CommonUniqueObjectAdapter {
     public static final String DOC_REVISION_CUSTOM_FIELD = "docRevision";
     public static final String URL_QUERY_PARAM_LANGUAGE = "language";
+    public static final String URL_QUERY_PARAM_QUERY = "query";
 
     private final @NotNull IModule module;
 
@@ -68,12 +69,16 @@ public class LiveDocAdapter extends CommonUniqueObjectAdapter {
                 // Add inline comments into document content
                 internalContent = new WorkItemCommentsProcessor().addWorkItemComments(document, internalContent, CommentsRenderType.OPEN.equals(exportParams.getRenderComments()));
             }
-            Map<String, String> documentParameters = exportParams.getUrlQueryParameters() == null ? Map.of() : exportParams.getUrlQueryParameters();
-            DocumentRendererParameters parameters = new DocumentRendererParameters(null, documentParameters.get(URL_QUERY_PARAM_LANGUAGE));
-            ModifiedDocumentRenderer documentRenderer = new ModifiedDocumentRenderer((InternalReadOnlyTransaction) transaction, document, RichTextRenderTarget.PDF_EXPORT, parameters);
+            ModifiedDocumentRenderer documentRenderer = getDocumentRenderer(exportParams, (InternalReadOnlyTransaction) transaction, document);
             String rendered = documentRenderer.render(internalContent);
             return processLiveDocComments(exportParams, document, rendered);
         });
+    }
+
+    static @NotNull ModifiedDocumentRenderer getDocumentRenderer(@NotNull ExportParams exportParams, @NotNull InternalReadOnlyTransaction transaction, @NotNull ProxyDocument document) {
+        Map<String, String> documentParameters = exportParams.getUrlQueryParameters() == null ? Map.of() : exportParams.getUrlQueryParameters();
+        DocumentRendererParameters parameters = new DocumentRendererParameters(documentParameters.get(URL_QUERY_PARAM_QUERY), documentParameters.get(URL_QUERY_PARAM_LANGUAGE));
+        return new ModifiedDocumentRenderer(transaction, document, RichTextRenderTarget.PDF_EXPORT, parameters);
     }
 
     private String processLiveDocComments(@NotNull ExportParams exportParams, @NotNull ProxyDocument document, @NotNull String content) {
