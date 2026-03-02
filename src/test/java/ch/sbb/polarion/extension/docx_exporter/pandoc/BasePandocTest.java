@@ -50,7 +50,7 @@ public abstract class BasePandocTest {
 
     /**
      * Returns the PandocServiceConnector using either an externally configured Pandoc service
-     * (via {@code pandoc.service.url} system property, e.g. {@code http://localhost:9082})
+     * (via {@value #PANDOC_SERVICE_URL_PROPERTY} system property, e.g. {@code http://localhost:9082})
      * or the shared Testcontainers instance as a fallback.
      */
     protected PandocServiceConnector getPandocServiceConnector() {
