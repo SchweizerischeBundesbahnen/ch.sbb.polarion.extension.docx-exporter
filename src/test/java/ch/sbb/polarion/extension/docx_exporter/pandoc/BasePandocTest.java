@@ -49,11 +49,14 @@ public abstract class BasePandocTest {
     protected IModule module;
 
     /**
-     * Returns the PandocServiceConnector using the shared container.
+     * Returns the PandocServiceConnector using either an externally configured Pandoc service
+     * (via {@code pandoc.service.url} system property, e.g. {@code http://localhost:9082})
+     * or the shared Testcontainers instance as a fallback.
      */
     protected PandocServiceConnector getPandocServiceConnector() {
         String externalUrl = System.getProperty(PANDOC_SERVICE_URL_PROPERTY);
         if (externalUrl != null && !externalUrl.isBlank()) {
+            externalUrl = externalUrl.trim().replaceAll("/+$", "");
             return new PandocServiceConnector(externalUrl);
         }
 
