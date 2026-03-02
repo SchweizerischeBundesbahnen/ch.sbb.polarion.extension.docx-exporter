@@ -33,6 +33,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 public abstract class BasePandocTest {
 
     public static final String IMPL_NAME_PARAM = "docxExporterImpl";
+    public static final String PANDOC_SERVICE_URL_PROPERTY = "pandoc.service.url";
 
     protected static final String RESOURCE_BASE_PATH = "/pandoc/";
     protected static final String PANDOC_TEST_RESOURCES_FOLDER = RESOURCE_BASE_PATH + "html/";
@@ -48,9 +49,19 @@ public abstract class BasePandocTest {
     protected IModule module;
 
     /**
-     * Returns the PandocServiceConnector using the shared container.
+     * Returns the PandocServiceConnector using either an externally configured Pandoc service
+     * (via {@value #PANDOC_SERVICE_URL_PROPERTY} system property, e.g. {@code http://localhost:9082})
+     * or the shared Testcontainers instance as a fallback.
      */
     protected PandocServiceConnector getPandocServiceConnector() {
+        String externalUrl = System.getProperty(PANDOC_SERVICE_URL_PROPERTY);
+        if (externalUrl != null) {
+            externalUrl = externalUrl.trim().replaceAll("/+$", "");
+            if (!externalUrl.isBlank()) {
+                return new PandocServiceConnector(externalUrl);
+            }
+        }
+
         assertTrue(SharedPandocContainer.getInstance().isRunning(), "Shared Pandoc container should be running");
         return new PandocServiceConnector(SharedPandocContainer.getBaseUrl());
     }
