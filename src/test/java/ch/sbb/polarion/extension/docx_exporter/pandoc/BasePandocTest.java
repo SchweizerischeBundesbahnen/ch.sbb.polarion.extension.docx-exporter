@@ -55,9 +55,11 @@ public abstract class BasePandocTest {
      */
     protected PandocServiceConnector getPandocServiceConnector() {
         String externalUrl = System.getProperty(PANDOC_SERVICE_URL_PROPERTY);
-        if (externalUrl != null && !externalUrl.isBlank()) {
+        if (externalUrl != null) {
             externalUrl = externalUrl.trim().replaceAll("/+$", "");
-            return new PandocServiceConnector(externalUrl);
+            if (!externalUrl.isBlank()) {
+                return new PandocServiceConnector(externalUrl);
+            }
         }
 
         assertTrue(SharedPandocContainer.getInstance().isRunning(), "Shared Pandoc container should be running");
