@@ -21,7 +21,6 @@ jobs:
       pandoc:
         image: ghcr.io/schweizerischebundesbahnen/pandoc-service:latest  # zizmor: ignore[unpinned-images]
         ports: [9082:9082]
-        options: --health-cmd "curl -f http://localhost:9082/info || exit 1" --health-interval 5s --health-timeout 3s --health-retries 10
     outputs:
       project_version: ${{ steps.project_metadata.outputs.version }}
       is_release: ${{ steps.project_metadata.outputs.is_release }}
