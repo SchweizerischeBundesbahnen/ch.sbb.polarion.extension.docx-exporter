@@ -5,6 +5,9 @@
   },
   "type": "module",
   "version": "1.0.0",
+  "overrides": {
+    "serialize-javascript": "^7.0.3"
+  },
   "devDependencies": {
     "chai": "6.2.2",
     "cross-env": "10.1.0",
