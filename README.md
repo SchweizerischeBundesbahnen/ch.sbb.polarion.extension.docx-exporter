@@ -238,6 +238,6 @@ To use a custom table style, the Word template must be configured so that the Ta
 
 ### Heading levels beyond h6
 
-HTML supports heading elements only from h1 to h6, but Polarion documents can contain deeper nesting levels. Currently, a Lua filter is included that handles heading levels beyond h6. It converts `<div class="heading-N">` elements (where N > 6) into proper Pandoc header blocks, enabling correct processing of deeply nested document structures. Heading levels are capped at 9 for compatibility with Word documents, and the Table of Contents depth has been extended to support levels 1–9.
+HTML supports heading elements only from h1 to h6, but Polarion documents can contain deeper nesting levels. Added with [pandoc-service#152](https://github.com/SchweizerischeBundesbahnen/pandoc-service/pull/152), a Lua filter is included that handles heading levels beyond h6. It converts `<div class="heading-N">` elements (where N > 6) into proper Pandoc header blocks, enabling correct processing of deeply nested document structures. Heading levels are capped at 9 for compatibility with Word documents, and the Table of Contents depth has been extended to support levels 1–9.
 
 All good so far.
