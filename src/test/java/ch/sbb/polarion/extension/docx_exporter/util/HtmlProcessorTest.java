@@ -183,6 +183,47 @@ class HtmlProcessorTest {
     }
 
     @Test
+    void convertPolarionFormulasDisplayTest() {
+        String latex = "\\left(\\frac{a}{b+c}\\right)^{2}";
+        String html = "<p>before <img class=\"polarion-rte-formula\" src=\"data:image/svg+xml;base64,ZHVtbXk=\" data-inline=\"false\" data-source=\"" + latex + "\"> after</p>";
+
+        Document document = JSoupUtils.parseHtml(html);
+        processor.convertPolarionFormulas(document);
+
+        assertEquals(
+                "<p>before <script type=\"math/tex; mode=display\">" + latex + "</script> after</p>",
+                document.body().html()
+        );
+    }
+
+    @Test
+    void convertPolarionFormulasInlineTest() {
+        // Polarion omits data-inline for inline formulas; the attribute is only emitted (as "false") for display formulas.
+        String latex = "x^{2} + y^{2}";
+        String html = "<p>before <img class=\"polarion-rte-formula\" src=\"data:image/svg+xml;base64,ZHVtbXk=\" data-source=\"" + latex + "\"> after</p>";
+
+        Document document = JSoupUtils.parseHtml(html);
+        processor.convertPolarionFormulas(document);
+
+        // A zero-width space is prepended to the script tag so Word renders the formula as true inline math.
+        assertEquals(
+                "<p>before \u200B<script type=\"math/tex\">" + latex + "</script> after</p>",
+                document.body().html()
+        );
+    }
+
+    @Test
+    void convertPolarionFormulasKeepsOtherImagesAndFormulasWithoutSourceTest() {
+        String html = "<p><img src=\"data:image/png;base64,ZHVtbXk=\" />" +
+                "<img class=\"polarion-rte-formula\" src=\"data:image/svg+xml;base64,ZHVtbXk=\" /></p>";
+
+        Document document = JSoupUtils.parseHtml(html);
+        processor.convertPolarionFormulas(document);
+
+        assertEquals(html, document.body().html());
+    }
+
+    @Test
     @SneakyThrows
     void adjustImageAlignmentTest() {
         try (InputStream isInvalidHtml = this.getClass().getResourceAsStream("/imageAlignmentBeforeProcessing.html");
