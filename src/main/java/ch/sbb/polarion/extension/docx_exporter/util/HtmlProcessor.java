@@ -20,6 +20,7 @@ import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.VisibleForTesting;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Comment;
+import org.jsoup.nodes.DataNode;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.nodes.Node;
@@ -141,6 +142,11 @@ public class HtmlProcessor {
         // If on next step we placed into thead rows which contain rowspan > 1 and this "covers" rows which are still in tbody, we are fixing
         // this here, moving such rows also in thead
         timedIfNotNull(generationLog, "Fix table head rowspan", () -> fixTableHeadRowspan(document));
+
+        // Polarion renders LaTeX formulas as <img class="polarion-rte-formula" data-source="..."> with MathJax-rendered SVG in src.
+        // Pandoc's HTML reader doesn't understand that structure and drops the content. Convert the img into
+        // <script type="math/tex[; mode=display]">LATEX</script>, which Pandoc maps to native Word math (OMML).
+        timedIfNotNull(generationLog, "Convert Polarion formulas", () -> convertPolarionFormulas(document));
 
         // Images with styles and "display: block" are searched here. For such images we do following: wrap them into div with text-align style
         // and value "right" if image margin is "auto 0px auto auto" or "center" otherwise.
@@ -784,6 +790,29 @@ public class HtmlProcessor {
                     parent.remove();
                 }
             }
+        }
+    }
+
+    public void convertPolarionFormulas(@NotNull Document document) {
+        for (Element img : document.select("img.polarion-rte-formula[data-source]")) {
+            String latex = img.attr("data-source");
+            if (latex.isEmpty()) {
+                continue;
+            }
+            // Polarion marks block formulas with data-inline="false"; inline formulas have no data-inline attribute at all.
+            boolean display = "false".equals(img.attr("data-inline"));
+            Element script = new Element("script").attr("type", display ? "math/tex; mode=display" : "math/tex");
+            // DataNode keeps the LaTeX source unescaped when serialized. Using script.text(latex) would HTML-escape characters
+            // like '&' (used as the column separator in aligned/array environments) into '&amp;', which Pandoc then receives
+            // literally and fails to parse as LaTeX.
+            script.appendChild(new DataNode(latex));
+            // Word renders <m:oMath> as centered "display-style" whenever it is the only content in its <w:p>. For an inline
+            // formula we want it anchored to the baseline next to surrounding text, so prepend a zero-width space that
+            // becomes an empty <w:r> in the paragraph and forces Word's inline rendering path.
+            if (!display) {
+                img.before(new TextNode("\u200B"));
+            }
+            img.replaceWith(script);
         }
     }
 
