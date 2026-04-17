@@ -23,7 +23,8 @@ class FormulaTest extends BasePandocTest {
     void polarionFormulaImagesAreConvertedToNativeWordMath() throws Exception {
         String polarionHtml = readHtmlResource("testFormula");
 
-        // Run the Polarion-formula → Pandoc-math-span transformation exactly as the production pipeline does.
+        // Apply only the Polarion-formula → Pandoc-math-script conversion step. We intentionally bypass the rest of
+        // HtmlProcessor.processHtmlForExport here to keep this test focused on the formula conversion + Pandoc behaviour.
         Document document = JSoupUtils.parseHtml(polarionHtml);
         new HtmlProcessor(null, null, null).convertPolarionFormulas(document);
         String preparedHtml = document.outerHtml();

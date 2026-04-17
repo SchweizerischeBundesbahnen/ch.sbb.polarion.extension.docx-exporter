@@ -213,6 +213,25 @@ class HtmlProcessorTest {
     }
 
     @Test
+    void convertPolarionFormulasPreservesSpecialCharactersRawTest() {
+        // LaTeX uses '<' and '>' as comparison operators, and '&' as the column separator in aligned/array environments.
+        // All three must reach Pandoc raw; Pandoc reads <script type="math/tex"> as HTML raw text and does not decode entities,
+        // so the HTML-escaped forms '&lt;' / '&gt;' / '&amp;' would end up as literal characters and break the math.
+        String latex = "a < b \\text{ and } c > d \\text{ with } x &= y";
+        String attrValue = latex.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;");
+        String html = "<p><img class=\"polarion-rte-formula\" data-inline=\"false\" data-source=\"" + attrValue + "\"></p>";
+
+        Document document = JSoupUtils.parseHtml(html);
+        processor.convertPolarionFormulas(document);
+
+        String serialized = document.body().html();
+        int scriptStart = serialized.indexOf(">", serialized.indexOf("<script")) + 1;
+        int scriptEnd = serialized.indexOf("</script>");
+        String scriptBody = serialized.substring(scriptStart, scriptEnd);
+        assertEquals(latex, scriptBody, "Expected raw LaTeX (no HTML-escaped entities) inside the script body, got: " + scriptBody);
+    }
+
+    @Test
     void convertPolarionFormulasKeepsOtherImagesAndFormulasWithoutSourceTest() {
         String html = "<p><img src=\"data:image/png;base64,ZHVtbXk=\" />" +
                 "<img class=\"polarion-rte-formula\" src=\"data:image/svg+xml;base64,ZHVtbXk=\" /></p>";
