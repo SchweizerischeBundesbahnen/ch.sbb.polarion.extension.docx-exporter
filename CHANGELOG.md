@@ -1,5 +1,28 @@
 # Changelog
 
+## [4.1.1](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/compare/v4.1.0...v4.1.1) (2026-04-17)
+
+
+### Bug Fixes
+
+* **deps:** override and update serialize-javascript to v7.0.4 ([#202](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/issues/202)) ([0083936](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/commit/0083936c704569f431ad601166fb8a7db2bb4a3b))
+* **deps:** update dependency ch.sbb.polarion.extensions:ch.sbb.polarion.extension.generic to v14.1.1 ([5107e68](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/commit/5107e680b22ab419fee48cf9ed3e5a037125592b))
+* **deps:** update dependency ch.sbb.polarion.extensions:ch.sbb.polarion.extension.generic to v14.1.2 ([a57b6ea](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/commit/a57b6ea273be52d0b95da14c8f8c4ad2b9b694e2))
+* **deps:** update dependency net.bytebuddy:byte-buddy to v1.18.6-jdk6-jdk5 ([8d2e2f4](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/commit/8d2e2f4856c0de32a7c63d504a1eb35136812ed1))
+* **deps:** update dependency net.bytebuddy:byte-buddy to v1.18.7-jdk5 ([924ea89](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/commit/924ea89154cc29c5170abad4a81eb2f384cbad73))
+* **deps:** update dependency net.bytebuddy:byte-buddy to v1.18.8-jdk5 ([fba313b](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/commit/fba313b29924058f12555ed86b86edefca776c56))
+* **deps:** update dependency org.apache.pdfbox:pdfbox to v3.0.7 ([94c7f90](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/commit/94c7f90ecca1845dc87b720b89f4989aab5146d5))
+* **deps:** update dependency org.apache.tika:tika-core to v3.3.0 ([425dcda](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/commit/425dcda7a08dbc5c67d015172428ac2eabf0ce14))
+* **deps:** update dependency org.testcontainers:testcontainers-bom to v2.0.4 ([81ffdf3](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/commit/81ffdf3f8e764fd5c2f1e87ac314527a6f76112b))
+* **deps:** update docx4j.version to v11.5.11 ([6d8c66d](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/commit/6d8c66df374a4d0f2ebf077c3af4490b6004cfe8))
+* **deps:** update docx4j.version to v11.5.12 ([07d43de](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/commit/07d43de3ffc26532c915c643b84941a7889f3de8))
+* support for Polarion LaTeX formulas to native Word math ([#209](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/issues/209)) ([dd12fea](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/commit/dd12fea7c3dc753bb363fd2ea17a6280c61f4384)), closes [#208](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/issues/208)
+
+
+### Documentation
+
+* describe handling of headings beyond h6 via Lua filter ([#206](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/issues/206)) ([6d3f5ca](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/commit/6d3f5ca555aa2afd65547b60958050928fee682c)), closes [#203](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/issues/203)
+
 ## [4.1.0](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/compare/v4.0.0...v4.1.0) (2026-02-23)
 
 
