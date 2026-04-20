@@ -36,6 +36,7 @@ public class StylePackageModel extends SettingsModel {
     private static final String WEBHOOKS_ENTRY_NAME = "WEBHOOKS";
     private static final String REMOVAL_SELECTOR_ENTRY_NAME = "REMOVAL SELECTOR";
     private static final String RENDER_COMMENTS_ENTRY_NAME = "RENDER COMMENTS";
+    private static final String INCLUDE_UNREFERENCED_COMMENTS_ENTRY_NAME = "INCLUDE UNREFERENCED COMMENTS";
     private static final String CUT_EMPTY_CHAPTERS_ENTRY_NAME = "CUT EMPTY CHAPTERS";
     private static final String CUT_EMPTY_WORKITEM_ATTRIBUTES_ENTRY_NAME = "CUT EMPTY WORKITEM ATTRIBUTES";
     private static final String CUT_LOCAL_URLS_ENTRY_NAME= "CUT LOCAL URLS";
@@ -58,6 +59,7 @@ public class StylePackageModel extends SettingsModel {
     // Add a new style package settings - text input `Removal selector`. It expects expression like CSS (e.g. `.polarion-Hyperlink .polarion-Icons`) - html elements queried using this expression will be removed from source html.
     private String removalSelector;
     private CommentsRenderType renderComments;
+    private boolean includeUnreferencedComments;
     private boolean cutEmptyChapters;
     private boolean cutEmptyWorkitemAttributes;
     private boolean cutLocalURLs;
@@ -78,6 +80,7 @@ public class StylePackageModel extends SettingsModel {
                 serializeEntry(WEBHOOKS_ENTRY_NAME, webhooks) +
                 serializeEntry(REMOVAL_SELECTOR_ENTRY_NAME, removalSelector) +
                 serializeEntry(RENDER_COMMENTS_ENTRY_NAME, renderComments == null ? null : renderComments.name()) +
+                serializeEntry(INCLUDE_UNREFERENCED_COMMENTS_ENTRY_NAME, includeUnreferencedComments) +
                 serializeEntry(CUT_EMPTY_CHAPTERS_ENTRY_NAME, cutEmptyChapters) +
                 serializeEntry(CUT_EMPTY_WORKITEM_ATTRIBUTES_ENTRY_NAME, cutEmptyWorkitemAttributes) +
                 serializeEntry(CUT_LOCAL_URLS_ENTRY_NAME, cutLocalURLs) +
@@ -101,6 +104,7 @@ public class StylePackageModel extends SettingsModel {
         webhooks = deserializeEntry(WEBHOOKS_ENTRY_NAME, serializedString);
         removalSelector = deserializeEntry(REMOVAL_SELECTOR_ENTRY_NAME, serializedString);
         renderComments = parseRenderComments(deserializeEntry(RENDER_COMMENTS_ENTRY_NAME, serializedString));
+        includeUnreferencedComments = Boolean.parseBoolean(deserializeEntry(INCLUDE_UNREFERENCED_COMMENTS_ENTRY_NAME, serializedString));
         cutEmptyChapters = Boolean.parseBoolean(deserializeEntry(CUT_EMPTY_CHAPTERS_ENTRY_NAME, serializedString));
         cutEmptyWorkitemAttributes = Boolean.parseBoolean(deserializeEntry(CUT_EMPTY_WORKITEM_ATTRIBUTES_ENTRY_NAME, serializedString));
         cutLocalURLs = Boolean.parseBoolean(deserializeEntry(CUT_LOCAL_URLS_ENTRY_NAME, serializedString));

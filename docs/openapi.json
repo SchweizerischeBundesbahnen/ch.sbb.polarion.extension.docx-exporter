@@ -1595,6 +1595,10 @@
             "description": "Target file name of exported document",
             "type": "string"
           },
+          "includeUnreferencedComments": {
+            "description": "Include unreferenced comments",
+            "type": "boolean"
+          },
           "internalContent": {
             "description": "Internal content",
             "type": "string"

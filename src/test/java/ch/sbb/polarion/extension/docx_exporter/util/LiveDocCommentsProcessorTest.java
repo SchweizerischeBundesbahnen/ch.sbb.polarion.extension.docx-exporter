@@ -11,11 +11,14 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.text.SimpleDateFormat;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 import java.util.function.Consumer;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
@@ -61,7 +64,7 @@ class LiveDocCommentsProcessorTest {
                 <div>some content3</div>
                 [span class=comment level-0][span class=meta][span class=date]2025-03-13 16:23[/span][span class=author]author3[/span][/span][span class=text]text3[/span][/span]
                 <div>some content4</div>
-                """, new LiveDocCommentsProcessor().addLiveDocComments(document, html, CommentsRenderType.OPEN));
+                """, new LiveDocCommentsProcessor().addLiveDocComments(document, html, CommentsRenderType.OPEN, new HashSet<>()));
 
         when(comments.iterator()).thenReturn(commentBases.iterator());
 
@@ -74,7 +77,126 @@ class LiveDocCommentsProcessorTest {
                 <div>some content3</div>
                 [span class=comment level-0][span class=meta][span class=date]2025-03-13 16:23[/span][span class=author]author3[/span][/span][span class=text]text3[/span][/span]
                 <div>some content4</div>
-                """, new LiveDocCommentsProcessor().addLiveDocComments(document, html, CommentsRenderType.ALL));
+                """, new LiveDocCommentsProcessor().addLiveDocComments(document, html, CommentsRenderType.ALL, new HashSet<>()));
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void addLiveDocCommentsPopulatesUsedCommentIds() {
+        ProxyDocument document = mock(ProxyDocument.class, RETURNS_DEEP_STUBS);
+
+        UpdatableDocumentFields fields = mock(UpdatableDocumentFields.class);
+        CommentBasesTreeField<CommentBase> comments = mock(CommentBasesTreeField.class);
+        doCallRealMethod().when(comments).forEach(any(Consumer.class));
+        when(fields.comments()).thenReturn(comments);
+        when(document.fields()).thenReturn(fields);
+
+        String html = """
+                <div>content</div>
+                <span id="polarion-comment:1"></span>
+                <div>more</div>
+                <img id="polarion-comment:3" class="polarion-dle-comment-icon"/>
+                """;
+
+        List<CommentBase> commentBases = List.of(
+                mockComment("1", "text1", "author1", false),
+                mockComment("3", "text3", "author3", false)
+        );
+        when(comments.iterator()).thenReturn(commentBases.iterator());
+
+        Set<String> usedCommentIds = new HashSet<>();
+        new LiveDocCommentsProcessor().addLiveDocComments(document, html, CommentsRenderType.OPEN, usedCommentIds);
+
+        assertEquals(Set.of("1", "3"), usedCommentIds);
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void addUnreferencedCommentsAppendsWhenUnreferencedExist() {
+        ProxyDocument document = mock(ProxyDocument.class, RETURNS_DEEP_STUBS);
+
+        UpdatableDocumentFields fields = mock(UpdatableDocumentFields.class);
+        CommentBasesTreeField<CommentBase> comments = mock(CommentBasesTreeField.class);
+        doCallRealMethod().when(comments).forEach(any(Consumer.class));
+        when(fields.comments()).thenReturn(comments);
+        when(document.fields()).thenReturn(fields);
+
+        List<CommentBase> commentBases = List.of(
+                mockComment("1", "text1", "author1", false),
+                mockComment("2", "text2", "author2", false),
+                mockComment("3", "text3", "author3", false)
+        );
+        when(comments.iterator()).thenReturn(commentBases.iterator());
+
+        Set<String> usedCommentIds = new HashSet<>(Set.of("1"));
+        String html = "<div>content</div>";
+
+        String result = new LiveDocCommentsProcessor().addUnreferencedComments(document, html, CommentsRenderType.OPEN, usedCommentIds);
+
+        assertTrue(result.startsWith("<div>content</div>"));
+        assertTrue(result.contains("[span class=unreferenced-comments-delimiter][/span]"));
+        assertTrue(result.contains("text2"));
+        assertTrue(result.contains("text3"));
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void addUnreferencedCommentsReturnsOriginalWhenAllReferenced() {
+        ProxyDocument document = mock(ProxyDocument.class, RETURNS_DEEP_STUBS);
+
+        UpdatableDocumentFields fields = mock(UpdatableDocumentFields.class);
+        CommentBasesTreeField<CommentBase> comments = mock(CommentBasesTreeField.class);
+        doCallRealMethod().when(comments).forEach(any(Consumer.class));
+        when(fields.comments()).thenReturn(comments);
+        when(document.fields()).thenReturn(fields);
+
+        List<CommentBase> commentBases = List.of(
+                mockComment("1", "text1", "author1", false)
+        );
+        when(comments.iterator()).thenReturn(commentBases.iterator());
+
+        Set<String> usedCommentIds = new HashSet<>(Set.of("1"));
+        String html = "<div>content</div>";
+
+        String result = new LiveDocCommentsProcessor().addUnreferencedComments(document, html, CommentsRenderType.OPEN, usedCommentIds);
+
+        assertEquals(html, result);
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void addUnreferencedCommentsRespectsOpenPreference() {
+        ProxyDocument document = mock(ProxyDocument.class, RETURNS_DEEP_STUBS);
+
+        UpdatableDocumentFields fields = mock(UpdatableDocumentFields.class);
+        CommentBasesTreeField<CommentBase> comments = mock(CommentBasesTreeField.class);
+        doCallRealMethod().when(comments).forEach(any(Consumer.class));
+        when(fields.comments()).thenReturn(comments);
+        when(document.fields()).thenReturn(fields);
+
+        List<CommentBase> commentBases = List.of(
+                mockComment("1", "text1", "author1", false),
+                mockComment("2", "text2-resolved", "author2", true)
+        );
+        when(comments.iterator()).thenReturn(commentBases.iterator());
+
+        String result = new LiveDocCommentsProcessor().addUnreferencedComments(document, "<div>content</div>", CommentsRenderType.OPEN, new HashSet<>());
+
+        assertTrue(result.contains("text1"));
+        // OPEN preference must exclude the resolved unreferenced comment
+        org.junit.jupiter.api.Assertions.assertFalse(result.contains("text2-resolved"));
+    }
+
+    @Test
+    void addUnreferencedCommentsReturnsOriginalWhenNullRenderType() {
+        ProxyDocument document = mock(ProxyDocument.class, RETURNS_DEEP_STUBS);
+
+        Set<String> usedCommentIds = new HashSet<>();
+        String html = "<div>content</div>";
+
+        String result = new LiveDocCommentsProcessor().addUnreferencedComments(document, html, null, usedCommentIds);
+
+        assertEquals(html, result);
     }
 
     @SneakyThrows

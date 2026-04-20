@@ -902,6 +902,7 @@ public class HtmlProcessor {
         html = html.replace("[span class=status-resolved]", "<span class='status-resolved'>");
         html = html.replace("[span class=author]", "<span class='author'>");
         html = html.replace("[span class=text]", "<span class='text'>");
+        html = html.replace("[span class=unreferenced-comments-delimiter]", "<span class='unreferenced-comments-delimiter'>");
         html = html.replace(COMMENT_END, SPAN_END_TAG);
 
         Document parsedHtml = Jsoup.parse(html);

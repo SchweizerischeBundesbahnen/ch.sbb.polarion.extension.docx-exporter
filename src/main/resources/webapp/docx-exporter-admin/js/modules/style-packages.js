@@ -193,6 +193,7 @@ function saveStylePackage() {
             'template': ChildConfigurations.templateSelect.getSelectedValue(),
             'webhooks': ctx.getCheckboxValueById('webhooks-checkbox') ? ChildConfigurations.webhooksSelect.getSelectedValue() : null,
             'renderComments': ctx.getCheckboxValueById('render-comments') ? RenderComments.renderCommentsSelect.getSelectedValue() : null,
+            'includeUnreferencedComments': ctx.getCheckboxValueById('include-unreferenced-comments'),
             'orientation': ctx.getCheckboxValueById('orientation') ? Orientation.orientationSelect.getSelectedValue() : null,
             'paperSize': ctx.getCheckboxValueById('paper-size') ? PaperSize.paperSizeSelect.getSelectedValue() : null,
             'cutEmptyChapters': ctx.getCheckboxValueById('cut-empty-chapters'),
@@ -259,6 +260,8 @@ function setStylePackage(content) {
     ctx.setCheckboxValueById('render-comments', !!stylePackage.renderComments);
     ctx.getElementById('render-comments').dispatchEvent(new Event('change'));
     RenderComments.renderCommentsSelect.selectValue(stylePackage.renderComments || 'OPEN');
+
+    ctx.setCheckboxValueById('include-unreferenced-comments', !!stylePackage.includeUnreferencedComments);
 
     ctx.setCheckboxValueById('cut-empty-chapters', stylePackage.cutEmptyChapters);
     ctx.setCheckboxValueById('cut-empty-wi-attributes', stylePackage.cutEmptyWorkitemAttributes);

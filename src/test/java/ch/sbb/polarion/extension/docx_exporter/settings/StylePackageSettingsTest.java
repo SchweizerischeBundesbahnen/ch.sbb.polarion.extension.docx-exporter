@@ -88,6 +88,16 @@ class StylePackageSettingsTest {
 
             assertNull(loadedModel.getRenderComments());
             assertNull(loadedModel.getLinkRoleDirection());
+            assertFalse(loadedModel.isIncludeUnreferencedComments());
+
+            // check includeUnreferencedComments round-trip
+            customProjectModel.setIncludeUnreferencedComments(true);
+            when(mockedSettingsService.read(eq(mockProjectLocation), any())).thenReturn(customProjectModel.serialize());
+            assertTrue(stylePackageSettings.load(projectName, SettingId.fromName("Any setting name")).isIncludeUnreferencedComments());
+
+            customProjectModel.setIncludeUnreferencedComments(false);
+            when(mockedSettingsService.read(eq(mockProjectLocation), any())).thenReturn(customProjectModel.serialize());
+            assertFalse(stylePackageSettings.load(projectName, SettingId.fromName("Any setting name")).isIncludeUnreferencedComments());
         }
     }
 
