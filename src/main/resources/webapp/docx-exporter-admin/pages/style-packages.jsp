@@ -193,7 +193,7 @@
             <div class="flex-column">
                 <div class='checkbox input-group'>
                     <label for='render-comments' id='render-comments-label'>
-                        <input id="render-comments" onchange='document.getElementById("render-comments-select").style.visibility = this.checked ? "visible" : "hidden"; document.getElementById("render-comments-options").style.display = this.checked ? "block" : "none"' type='checkbox'/>
+                        <input id="render-comments" onchange='document.getElementById("render-comments-select").style.visibility = this.checked ? "visible" : "hidden"; document.getElementById("render-comments-options").style.display = this.checked ? "block" : "none"; if (!this.checked) { document.getElementById("include-unreferenced-comments").checked = false; }' type='checkbox'/>
                         Comments rendering
                     </label>
                     <div id="render-comments-select" style="visibility: hidden; margin-left: 10px; width: 200px"></div>

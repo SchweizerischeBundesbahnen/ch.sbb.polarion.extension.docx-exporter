@@ -193,7 +193,7 @@ function saveStylePackage() {
             'template': ChildConfigurations.templateSelect.getSelectedValue(),
             'webhooks': ctx.getCheckboxValueById('webhooks-checkbox') ? ChildConfigurations.webhooksSelect.getSelectedValue() : null,
             'renderComments': ctx.getCheckboxValueById('render-comments') ? RenderComments.renderCommentsSelect.getSelectedValue() : null,
-            'includeUnreferencedComments': ctx.getCheckboxValueById('include-unreferenced-comments'),
+            'includeUnreferencedComments': ctx.getCheckboxValueById('render-comments') && ctx.getCheckboxValueById('include-unreferenced-comments'),
             'orientation': ctx.getCheckboxValueById('orientation') ? Orientation.orientationSelect.getSelectedValue() : null,
             'paperSize': ctx.getCheckboxValueById('paper-size') ? PaperSize.paperSizeSelect.getSelectedValue() : null,
             'cutEmptyChapters': ctx.getCheckboxValueById('cut-empty-chapters'),

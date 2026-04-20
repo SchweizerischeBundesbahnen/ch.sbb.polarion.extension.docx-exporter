@@ -35,7 +35,7 @@ class LiveDocAdapterTest {
         workItemCommentsProcessorMockedConstruction = mockConstruction(WorkItemCommentsProcessor.class,
                 (mock, context) -> when(mock.addWorkItemComments(any(), anyString(), anyBoolean())).thenAnswer(invocation -> invocation.getArgument(1)));
         liveDocCommentsProcessorMockedConstruction = mockConstruction(LiveDocCommentsProcessor.class,
-                (mock, context) -> when(mock.addLiveDocComments(any(), anyString(), nullable(CommentsRenderType.class), any())).thenAnswer(invocation -> invocation.getArgument(1)));
+                (mock, context) -> when(mock.addLiveDocComments(anyString(), any(), any())).thenAnswer(invocation -> invocation.getArgument(0)));
         documentRendererMockedConstruction = mockConstruction(ModifiedDocumentRenderer.class,
                 (mock, context) -> when(mock.render(nullable(String.class))).thenAnswer(invocation -> renderedContent));
     }

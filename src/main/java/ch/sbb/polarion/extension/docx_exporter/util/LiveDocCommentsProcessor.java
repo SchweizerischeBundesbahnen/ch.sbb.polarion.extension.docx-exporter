@@ -32,9 +32,14 @@ import java.util.Set;
 @SuppressWarnings("java:S1200")
 public class LiveDocCommentsProcessor {
 
-    private Map<String, LiveDocComment> getCommentsFromDocument(ProxyDocument document, boolean onlyOpen) {
+    @NotNull
+    public Map<String, LiveDocComment> getLiveDocComments(@NotNull ProxyDocument document, @Nullable CommentsRenderType commentsRenderType) {
+        if (commentsRenderType == null) {
+            return Map.of();
+        }
         final UpdatableDocumentFields fields = document.fields();
         final CommentBasesTreeField<CommentBase> comments = fields.comments();
+        boolean onlyOpen = commentsRenderType == CommentsRenderType.OPEN;
         Map<String, LiveDocComment> liveDocCommentMap = new HashMap<>();
         comments.forEach(commentBase -> {
             LiveDocComment liveDocComment = getCommentFromCommentBase(commentBase);
@@ -81,23 +86,21 @@ public class LiveDocCommentsProcessor {
     }
 
     @NotNull
-    public String addLiveDocComments(ProxyDocument document, @NotNull String html, @Nullable CommentsRenderType commentsRenderType, @NotNull Set<String> usedCommentIds) {
+    public String addLiveDocComments(@NotNull String html, @NotNull Map<String, LiveDocComment> liveDocComments, @NotNull Set<String> renderedCommentIds) {
         //Polarion document keeps comments position in span/img marked with id 'polarion-comment:commentId'.
         //<span id="polarion-comment:1"></span> or <img id="polarion-comment:1" class="polarion-dle-comment-icon"/> (for comments inside workitem description)
         //Note that resolved comments have class 'polarion-dle-comment-resolved-icon' so we have to take care of them too.
-        final Map<String, LiveDocComment> liveDocComments = commentsRenderType == null ? Map.of() : getCommentsFromDocument(document, commentsRenderType.equals(CommentsRenderType.OPEN));
         return RegexMatcher.get("(?s)((<img id=\"polarion-comment:(?<imgCommentId>\\d+)\"[^>]*class=\"polarion-dle-comment(?:-resolved)?-icon\"/>)|(<span id=\"polarion-comment:(?<spanCommentId>\\d+)\"></span>))")
                 .replace(html, regexEngine -> {
                     String commentId = Optional.ofNullable(regexEngine.group("imgCommentId")).orElse(regexEngine.group("spanCommentId"));
-                    usedCommentIds.add(commentId);
+                    renderedCommentIds.add(commentId);
                     return renderComment(liveDocComments.get(commentId), 0);
                 });
     }
 
     @NotNull
-    public String addUnreferencedComments(ProxyDocument document, @NotNull String html, @Nullable CommentsRenderType commentsRenderType, @NotNull Set<String> usedCommentIds) {
-        final Map<String, LiveDocComment> liveDocComments = commentsRenderType == null ? Map.of() : getCommentsFromDocument(document, commentsRenderType.equals(CommentsRenderType.OPEN));
-        List<LiveDocComment> unreferencedComments = liveDocComments.entrySet().stream().filter(entry -> !usedCommentIds.contains(entry.getKey())).map(Map.Entry::getValue).toList();
+    public String addUnreferencedComments(@NotNull String html, @NotNull Map<String, LiveDocComment> liveDocComments, @NotNull Set<String> renderedCommentIds) {
+        List<LiveDocComment> unreferencedComments = liveDocComments.entrySet().stream().filter(entry -> !renderedCommentIds.contains(entry.getKey())).map(Map.Entry::getValue).toList();
         if (!unreferencedComments.isEmpty()) {
             StringBuilder modifiedContent = new StringBuilder(html);
             modifiedContent.append("[span class=unreferenced-comments-delimiter][/span]");

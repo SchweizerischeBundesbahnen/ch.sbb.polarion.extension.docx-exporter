@@ -69,7 +69,7 @@
         </div>
         <div class='property-wrapper'>
             <label for='render-comments'>
-                <input id='render-comments' onchange='document.querySelector("#docx-exporter-panel #render-comments-selector").style.display = this.checked ? "block" : "none"; document.querySelector("#docx-exporter-panel #render-comments-options").style.display = this.checked ? "flex" : "none"' type='checkbox'/>
+                <input id='render-comments' onchange='document.querySelector("#docx-exporter-panel #render-comments-selector").style.display = this.checked ? "block" : "none"; document.querySelector("#docx-exporter-panel #render-comments-options").style.display = this.checked ? "flex" : "none"; if (!this.checked) { document.querySelector("#docx-exporter-panel #include-unreferenced-comments").checked = false; }' type='checkbox'/>
                 Comments rendering
             </label>
             <select id='render-comments-selector' style='display: none'>

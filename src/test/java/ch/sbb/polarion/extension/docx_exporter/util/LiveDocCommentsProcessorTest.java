@@ -1,5 +1,6 @@
 package ch.sbb.polarion.extension.docx_exporter.util;
 
+import ch.sbb.polarion.extension.docx_exporter.model.LiveDocComment;
 import ch.sbb.polarion.extension.docx_exporter.rest.model.conversion.CommentsRenderType;
 import com.polarion.alm.server.api.model.document.ProxyDocument;
 import com.polarion.alm.shared.api.model.comment.CommentBase;
@@ -13,11 +14,13 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.text.SimpleDateFormat;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.function.Consumer;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
@@ -56,6 +59,8 @@ class LiveDocCommentsProcessorTest {
         when(comments.iterator()).thenReturn(commentBases.iterator());
 
         // resolved comment isn't rendered
+        LiveDocCommentsProcessor openProcessor = new LiveDocCommentsProcessor();
+        Map<String, LiveDocComment> openComments = openProcessor.getLiveDocComments(document, CommentsRenderType.OPEN);
         assertEquals("""
                 <div>some content1</div>
                 [span class=comment level-0][span class=meta][span class=date]2025-03-13 16:21[/span][span class=author]author1[/span][/span][span class=text]text1[/span][/span]
@@ -64,11 +69,13 @@ class LiveDocCommentsProcessorTest {
                 <div>some content3</div>
                 [span class=comment level-0][span class=meta][span class=date]2025-03-13 16:23[/span][span class=author]author3[/span][/span][span class=text]text3[/span][/span]
                 <div>some content4</div>
-                """, new LiveDocCommentsProcessor().addLiveDocComments(document, html, CommentsRenderType.OPEN, new HashSet<>()));
+                """, openProcessor.addLiveDocComments(html, openComments, new HashSet<>()));
 
         when(comments.iterator()).thenReturn(commentBases.iterator());
 
         // now resolved comment is here
+        LiveDocCommentsProcessor allProcessor = new LiveDocCommentsProcessor();
+        Map<String, LiveDocComment> allComments = allProcessor.getLiveDocComments(document, CommentsRenderType.ALL);
         assertEquals("""
                 <div>some content1</div>
                 [span class=comment level-0][span class=meta][span class=date]2025-03-13 16:21[/span][span class=author]author1[/span][/span][span class=text]text1[/span][/span]
@@ -77,12 +84,12 @@ class LiveDocCommentsProcessorTest {
                 <div>some content3</div>
                 [span class=comment level-0][span class=meta][span class=date]2025-03-13 16:23[/span][span class=author]author3[/span][/span][span class=text]text3[/span][/span]
                 <div>some content4</div>
-                """, new LiveDocCommentsProcessor().addLiveDocComments(document, html, CommentsRenderType.ALL, new HashSet<>()));
+                """, allProcessor.addLiveDocComments(html, allComments, new HashSet<>()));
     }
 
     @Test
     @SuppressWarnings("unchecked")
-    void addLiveDocCommentsPopulatesUsedCommentIds() {
+    void addLiveDocCommentsPopulatesRenderedCommentIds() {
         ProxyDocument document = mock(ProxyDocument.class, RETURNS_DEEP_STUBS);
 
         UpdatableDocumentFields fields = mock(UpdatableDocumentFields.class);
@@ -104,10 +111,12 @@ class LiveDocCommentsProcessorTest {
         );
         when(comments.iterator()).thenReturn(commentBases.iterator());
 
-        Set<String> usedCommentIds = new HashSet<>();
-        new LiveDocCommentsProcessor().addLiveDocComments(document, html, CommentsRenderType.OPEN, usedCommentIds);
+        Set<String> renderedCommentIds = new HashSet<>();
+        LiveDocCommentsProcessor processor = new LiveDocCommentsProcessor();
+        Map<String, LiveDocComment> liveDocComments = processor.getLiveDocComments(document, CommentsRenderType.OPEN);
+        processor.addLiveDocComments(html, liveDocComments, renderedCommentIds);
 
-        assertEquals(Set.of("1", "3"), usedCommentIds);
+        assertEquals(Set.of("1", "3"), renderedCommentIds);
     }
 
     @Test
@@ -128,10 +137,12 @@ class LiveDocCommentsProcessorTest {
         );
         when(comments.iterator()).thenReturn(commentBases.iterator());
 
-        Set<String> usedCommentIds = new HashSet<>(Set.of("1"));
+        Set<String> renderedCommentIds = new HashSet<>(Set.of("1"));
         String html = "<div>content</div>";
 
-        String result = new LiveDocCommentsProcessor().addUnreferencedComments(document, html, CommentsRenderType.OPEN, usedCommentIds);
+        LiveDocCommentsProcessor processor = new LiveDocCommentsProcessor();
+        Map<String, LiveDocComment> liveDocComments = processor.getLiveDocComments(document, CommentsRenderType.OPEN);
+        String result = processor.addUnreferencedComments(html, liveDocComments, renderedCommentIds);
 
         assertTrue(result.startsWith("<div>content</div>"));
         assertTrue(result.contains("[span class=unreferenced-comments-delimiter][/span]"));
@@ -155,10 +166,12 @@ class LiveDocCommentsProcessorTest {
         );
         when(comments.iterator()).thenReturn(commentBases.iterator());
 
-        Set<String> usedCommentIds = new HashSet<>(Set.of("1"));
+        Set<String> renderedCommentIds = new HashSet<>(Set.of("1"));
         String html = "<div>content</div>";
 
-        String result = new LiveDocCommentsProcessor().addUnreferencedComments(document, html, CommentsRenderType.OPEN, usedCommentIds);
+        LiveDocCommentsProcessor processor = new LiveDocCommentsProcessor();
+        Map<String, LiveDocComment> liveDocComments = processor.getLiveDocComments(document, CommentsRenderType.OPEN);
+        String result = processor.addUnreferencedComments(html, liveDocComments, renderedCommentIds);
 
         assertEquals(html, result);
     }
@@ -180,21 +193,25 @@ class LiveDocCommentsProcessorTest {
         );
         when(comments.iterator()).thenReturn(commentBases.iterator());
 
-        String result = new LiveDocCommentsProcessor().addUnreferencedComments(document, "<div>content</div>", CommentsRenderType.OPEN, new HashSet<>());
+        LiveDocCommentsProcessor processor = new LiveDocCommentsProcessor();
+        Map<String, LiveDocComment> liveDocComments = processor.getLiveDocComments(document, CommentsRenderType.OPEN);
+        String result = processor.addUnreferencedComments("<div>content</div>", liveDocComments, new HashSet<>());
 
         assertTrue(result.contains("text1"));
         // OPEN preference must exclude the resolved unreferenced comment
-        org.junit.jupiter.api.Assertions.assertFalse(result.contains("text2-resolved"));
+        assertFalse(result.contains("text2-resolved"));
     }
 
     @Test
     void addUnreferencedCommentsReturnsOriginalWhenNullRenderType() {
         ProxyDocument document = mock(ProxyDocument.class, RETURNS_DEEP_STUBS);
 
-        Set<String> usedCommentIds = new HashSet<>();
+        Set<String> renderedCommentIds = new HashSet<>();
         String html = "<div>content</div>";
 
-        String result = new LiveDocCommentsProcessor().addUnreferencedComments(document, html, null, usedCommentIds);
+        LiveDocCommentsProcessor processor = new LiveDocCommentsProcessor();
+        Map<String, LiveDocComment> liveDocComments = processor.getLiveDocComments(document, null);
+        String result = processor.addUnreferencedComments(html, liveDocComments, renderedCommentIds);
 
         assertEquals(html, result);
     }

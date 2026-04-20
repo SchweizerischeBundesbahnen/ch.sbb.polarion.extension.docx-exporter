@@ -2,6 +2,7 @@ package ch.sbb.polarion.extension.docx_exporter.rest.model.documents.adapters;
 
 import ch.sbb.polarion.extension.docx_exporter.rest.model.conversion.CommentsRenderType;
 import ch.sbb.polarion.extension.docx_exporter.rest.model.conversion.ExportParams;
+import ch.sbb.polarion.extension.docx_exporter.model.LiveDocComment;
 import ch.sbb.polarion.extension.docx_exporter.rest.model.documents.id.DocumentId;
 import ch.sbb.polarion.extension.docx_exporter.rest.model.documents.id.DocumentProject;
 import ch.sbb.polarion.extension.docx_exporter.rest.model.documents.id.LiveDocId;
@@ -20,7 +21,7 @@ import com.polarion.core.util.StringUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.VisibleForTesting;
 
-import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
 
@@ -65,17 +66,19 @@ public class LiveDocAdapter extends CommonUniqueObjectAdapter {
             ProxyDocument document = new ProxyDocument(module, (InternalReadOnlyTransaction) transaction);
 
             String internalContent = StringUtils.getEmptyIfNull(exportParams.getInternalContent() != null ? exportParams.getInternalContent() : document.getHomePageContentHtml());
-            Set<String> usedCommentIds = new HashSet<>();
-            internalContent = processLiveDocComments(exportParams, document, internalContent, usedCommentIds);
+            Set<String> renderedCommentIds = new LinkedHashSet<>();
+            LiveDocCommentsProcessor commentsProcessor = new LiveDocCommentsProcessor();
+            Map<String, LiveDocComment> liveDocComments = commentsProcessor.getLiveDocComments(document, exportParams.getRenderComments());
+            internalContent = commentsProcessor.addLiveDocComments(internalContent, liveDocComments, renderedCommentIds);
             if (exportParams.getRenderComments() != null) {
                 // Add inline comments into document content
                 internalContent = new WorkItemCommentsProcessor().addWorkItemComments(document, internalContent, CommentsRenderType.OPEN.equals(exportParams.getRenderComments()));
             }
             ModifiedDocumentRenderer documentRenderer = getDocumentRenderer(exportParams, (InternalReadOnlyTransaction) transaction, document);
             String rendered = documentRenderer.render(internalContent);
-            rendered = processLiveDocComments(exportParams, document, rendered, usedCommentIds);
+            rendered = commentsProcessor.addLiveDocComments(rendered, liveDocComments, renderedCommentIds);
             if (exportParams.isIncludeUnreferencedComments()) {
-                rendered = processUnreferencedComments(exportParams, document, rendered, usedCommentIds);
+                rendered = commentsProcessor.addUnreferencedComments(rendered, liveDocComments, renderedCommentIds);
             }
             return rendered;
         });
@@ -86,14 +89,6 @@ public class LiveDocAdapter extends CommonUniqueObjectAdapter {
         Map<String, String> documentParameters = exportParams.getUrlQueryParameters() == null ? Map.of() : exportParams.getUrlQueryParameters();
         DocumentRendererParameters parameters = new DocumentRendererParameters(documentParameters.get(ExportParams.URL_QUERY_PARAM_QUERY), documentParameters.get(ExportParams.URL_QUERY_PARAM_LANGUAGE));
         return new ModifiedDocumentRenderer(transaction, document, RichTextRenderTarget.PDF_EXPORT, parameters);
-    }
-
-    private String processLiveDocComments(@NotNull ExportParams exportParams, @NotNull ProxyDocument document, @NotNull String content, @NotNull Set<String> usedCommentIds) {
-        return new LiveDocCommentsProcessor().addLiveDocComments(document, content, exportParams.getRenderComments(), usedCommentIds);
-    }
-
-    private String processUnreferencedComments(@NotNull ExportParams exportParams, @NotNull ProxyDocument document, @NotNull String content, @NotNull Set<String> usedCommentIds) {
-        return new LiveDocCommentsProcessor().addUnreferencedComments(document, content, exportParams.getRenderComments(), usedCommentIds);
     }
 
 }

@@ -141,7 +141,7 @@ export default class ExportPanel {
             .setWebhooks(this.ctx.getElementById("docx-webhooks-checkbox").checked ? this.ctx.getElementById("docx-webhooks-selector").value : null)
             .setRemovalSelector(this.ctx.getValueById("docx-removal-selector"))
             .setRenderComments(this.ctx.getElementById('render-comments').checked ? this.ctx.getElementById("render-comments-selector").value : null)
-            .setIncludeUnreferencedComments(this.ctx.getElementById('include-unreferenced-comments').checked)
+            .setIncludeUnreferencedComments(this.ctx.getElementById('render-comments').checked && this.ctx.getElementById('include-unreferenced-comments').checked)
             .setCutEmptyChapters(this.ctx.getElementById("docx-cut-empty-chapters").checked)
             .setCutEmptyWIAttributes(this.ctx.getElementById('docx-cut-empty-wi-attributes').checked)
             .setCutLocalUrls(this.ctx.getElementById("docx-cut-urls").checked)

@@ -67,7 +67,7 @@
                 </div>
                 <div class='property-wrapper'>
                     <label for='popup-docx-render-comments'>
-                        <input id='popup-docx-render-comments' onchange='document.getElementById("popup-docx-render-comments-selector").style.visibility = this.checked ? "visible" : "hidden"; document.getElementById("popup-docx-render-comments-options").style.display = this.checked ? "flex" : "none"' type='checkbox'/>
+                        <input id='popup-docx-render-comments' onchange='document.getElementById("popup-docx-render-comments-selector").style.visibility = this.checked ? "visible" : "hidden"; document.getElementById("popup-docx-render-comments-options").style.display = this.checked ? "flex" : "none"; if (!this.checked) { document.getElementById("popup-docx-include-unreferenced-comments").checked = false; }' type='checkbox'/>
                         Comments rendering
                     </label>
                     <select id='popup-docx-render-comments-selector' style='width: 100px'>
