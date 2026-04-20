@@ -135,12 +135,17 @@
                         <option value='it'>Italiano</option>
                     </select>
                 </div>
-                <div class='property-wrapper'>
-                    <label for='popup-docx-selected-roles' style="align-self: flex-start;">
-                        <input id='popup-docx-selected-roles' onchange='document.getElementById("popup-docx-roles-selector").style.display = this.checked ? "inline-block" : "none"' type='checkbox'/>
+                <div class='property-wrapper' style="flex-direction: column; align-items: flex-start; row-gap: 4px;">
+                    <label for='popup-docx-selected-roles'>
+                        <input id='popup-docx-selected-roles' onchange='document.getElementById("popup-docx-roles-selector").style.display = this.checked ? "inline-block" : "none"; document.getElementById("popup-docx-link-role-direction").style.display = this.checked ? "inline-block" : "none"' type='checkbox'/>
                         Specific Workitem roles
                     </label>
-                    <select id='popup-docx-roles-selector' multiple style="width: 142px"></select>
+                    <select id='popup-docx-roles-selector' multiple style="width: 142px; margin-left: 24px"></select>
+                    <select id='popup-docx-link-role-direction' style="width: 142px; display: none; margin-left: 24px">
+                        <option value='BOTH'>Both directions</option>
+                        <option value='DIRECT'>Direct only</option>
+                        <option value='REVERSE'>Reverse only</option>
+                    </select>
                 </div>
             </div>
         </div>

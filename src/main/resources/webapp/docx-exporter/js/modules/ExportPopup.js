@@ -276,6 +276,9 @@ export default class ExportPopup {
         }
         this.ctx.displayIf("popup-docx-roles-selector", rolesProvided, "inline-block");
 
+        this.ctx.setValue("popup-docx-link-role-direction", stylePackage.linkRoleDirection || ExportParams.LinkRoleDirection.BOTH);
+        this.ctx.displayIf("popup-docx-link-role-direction", rolesProvided, "inline-block");
+
         this.ctx.displayIf("popup-docx-style-package-content", stylePackage.exposeSettings);
     }
 
@@ -329,15 +332,17 @@ export default class ExportPopup {
         }
 
         const selectedRoles = [];
+        let selectedLinkRoleDirection = null;
         if (this.ctx.getElementById("popup-docx-selected-roles").checked) {
             const selectedOptions = Array.from(this.ctx.getElementById("popup-docx-roles-selector").options).filter(opt => opt.selected);
             selectedRoles.push(...selectedOptions.map(opt => opt.value));
+            selectedLinkRoleDirection = this.ctx.getElementById("popup-docx-link-role-direction").value;
         }
 
-        return this.buildExportParams(selectedChapters, selectedRoles, fileName);
+        return this.buildExportParams(selectedChapters, selectedRoles, selectedLinkRoleDirection, fileName);
     }
 
-    buildExportParams(selectedChapters, selectedRoles, fileName) {
+    buildExportParams(selectedChapters, selectedRoles, selectedLinkRoleDirection, fileName) {
         return new ExportParams.Builder()
             .setProjectId(this.ctx.getProjectId())
             .setLocationPath(this.ctx.getLocationPath())
@@ -356,6 +361,7 @@ export default class ExportPopup {
             .setChapters(selectedChapters)
             .setLanguage(this.ctx.getElementById('popup-docx-localization').checked ? this.ctx.getElementById("popup-docx-language").value : null)
             .setLinkedWorkitemRoles(selectedRoles)
+            .setLinkRoleDirection(selectedLinkRoleDirection)
             .setFileName(fileName)
             .setUrlQueryParameters(this.ctx.getUrlQueryParameters())
             .build();

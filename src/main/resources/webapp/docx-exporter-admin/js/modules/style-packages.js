@@ -128,6 +128,18 @@ const RenderComments = {
     }
 }
 
+const LinkRoleDirection = {
+    linkRoleDirectionSelect: new CustomSelect({
+        selectContainer: ctx.getElementById("link-role-direction-select")
+    }),
+
+    init: function () {
+        this.linkRoleDirectionSelect.addOption('BOTH', 'Both directions');
+        this.linkRoleDirectionSelect.addOption('DIRECT', 'Direct only');
+        this.linkRoleDirectionSelect.addOption('REVERSE', 'Reverse only');
+    }
+}
+
 const Orientation = {
     orientationSelect: new CustomSelect({
         selectContainer: ctx.getElementById("orientation-select")
@@ -189,6 +201,7 @@ function saveStylePackage() {
             'specificChapters': ctx.getCheckboxValueById('specific-chapters') ? ctx.getValueById('chapters') : null,
             'language': ctx.getCheckboxValueById('localization') ? Languages.languageSelect.getSelectedValue() : null,
             'linkedWorkitemRoles': ctx.getCheckboxValueById('selected-roles') ? LinkRoles.rolesSelect.getSelectedValue() : null,
+            'linkRoleDirection': ctx.getCheckboxValueById('selected-roles') ? LinkRoleDirection.linkRoleDirectionSelect.getSelectedValue() : null,
             'removalSelector': ctx.getValueById('removal-selector-input'),
         }),
         onOk: () => {
@@ -264,6 +277,7 @@ function setStylePackage(content) {
     ctx.setCheckboxValueById('selected-roles', rolesProvided);
     ctx.getElementById('selected-roles').dispatchEvent(new Event('change'));
     LinkRoles.rolesSelect.selectMultipleValues(stylePackage.linkedWorkitemRoles);
+    LinkRoleDirection.linkRoleDirectionSelect.selectValue(stylePackage.linkRoleDirection || 'BOTH');
 
     if (stylePackage.bundleTimestamp !== ctx.getValueById('bundle-timestamp')) {
         ctx.setNewerVersionNotificationVisible(true);
@@ -275,6 +289,7 @@ function newConfigurationCreated() {
 }
 
 RenderComments.init();
+LinkRoleDirection.init();
 Orientation.init();
 PaperSize.init();
 Languages.init();

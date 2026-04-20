@@ -4,6 +4,7 @@ import ch.sbb.polarion.extension.docx_exporter.configuration.DocxExporterExtensi
 import ch.sbb.polarion.extension.docx_exporter.pandoc.service.PandocServiceConnector;
 import ch.sbb.polarion.extension.docx_exporter.pandoc.service.model.PandocParams;
 import ch.sbb.polarion.extension.docx_exporter.rest.model.conversion.ExportParams;
+import ch.sbb.polarion.extension.docx_exporter.rest.model.conversion.LinkRoleDirection;
 import ch.sbb.polarion.extension.docx_exporter.rest.model.documents.DocumentData;
 import ch.sbb.polarion.extension.docx_exporter.rest.model.documents.id.LiveDocId;
 import ch.sbb.polarion.extension.docx_exporter.rest.model.settings.templates.TemplatesModel;
@@ -110,10 +111,56 @@ class DocxConverterTest {
     @Test
     @SuppressWarnings("unchecked")
     void shouldPostProcessDocumentContent() {
-        // Arrange
+        ExportParams exportParams = ExportParams.builder()
+                .linkedWorkitemRoles(List.of("role1", "role2"))
+                .linkRoleDirection(LinkRoleDirection.BOTH)
+                .build();
+
+        List<String> captured = runPostProcessAndCaptureRoles(exportParams);
+
+        assertThat(captured).containsExactly("role1", "testRole1OppositeName", "role2", "testRole2OppositeName");
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void shouldPostProcessDocumentContentDirectOnly() {
+        ExportParams exportParams = ExportParams.builder()
+                .linkedWorkitemRoles(List.of("role1", "role2"))
+                .linkRoleDirection(LinkRoleDirection.DIRECT)
+                .build();
+
+        List<String> captured = runPostProcessAndCaptureRoles(exportParams);
+
+        assertThat(captured).containsExactly("role1", "role2");
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void shouldPostProcessDocumentContentReverseOnly() {
+        ExportParams exportParams = ExportParams.builder()
+                .linkedWorkitemRoles(List.of("role1", "role2"))
+                .linkRoleDirection(LinkRoleDirection.REVERSE)
+                .build();
+
+        List<String> captured = runPostProcessAndCaptureRoles(exportParams);
+
+        assertThat(captured).containsExactly("testRole1OppositeName", "testRole2OppositeName");
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void shouldPostProcessDocumentContentNullDirectionDefaultsToBoth() {
         ExportParams exportParams = ExportParams.builder()
                 .linkedWorkitemRoles(List.of("role1", "role2"))
                 .build();
+
+        List<String> captured = runPostProcessAndCaptureRoles(exportParams);
+
+        assertThat(captured).containsExactly("role1", "testRole1OppositeName", "role2", "testRole2OppositeName");
+    }
+
+    @SuppressWarnings("unchecked")
+    private List<String> runPostProcessAndCaptureRoles(ExportParams exportParams) {
         ITrackerProject project = mock(ITrackerProject.class);
         IEnumeration<ILinkRoleOpt> roleEnum = mock(IEnumeration.class);
         Properties props1 = new Properties();
@@ -130,15 +177,13 @@ class DocxConverterTest {
         when(project.getWorkItemLinkRoleEnum()).thenReturn(roleEnum);
         when(htmlProcessor.processHtmlForExport(anyString(), eq(exportParams), any(List.class), any())).thenReturn("result string");
 
-        // Act
         DocxConverter docxConverter = new DocxConverter(null, null, htmlProcessor, null);
         String resultContent = docxConverter.postProcessDocumentContent(exportParams, project, "test content");
 
-        // Assert
         assertThat(resultContent).isEqualTo("result string");
         ArgumentCaptor<List<String>> rolesCaptor = ArgumentCaptor.forClass(List.class);
         verify(htmlProcessor).processHtmlForExport(eq("test content"), eq(exportParams), rolesCaptor.capture(), any());
-        assertThat(rolesCaptor.getValue()).containsExactly("role1", "testRole1OppositeName", "role2", "testRole2OppositeName");
+        return rolesCaptor.getValue();
     }
 
 }

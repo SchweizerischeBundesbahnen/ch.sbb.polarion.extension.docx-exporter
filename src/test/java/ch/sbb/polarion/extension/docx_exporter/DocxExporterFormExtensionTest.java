@@ -2,6 +2,7 @@ package ch.sbb.polarion.extension.docx_exporter;
 
 import ch.sbb.polarion.extension.docx_exporter.configuration.DocxExporterExtensionConfigurationExtension;
 import ch.sbb.polarion.extension.docx_exporter.rest.model.conversion.CommentsRenderType;
+import ch.sbb.polarion.extension.docx_exporter.rest.model.conversion.LinkRoleDirection;
 import ch.sbb.polarion.extension.docx_exporter.rest.model.settings.stylepackage.StylePackageModel;
 import ch.sbb.polarion.extension.docx_exporter.util.EnumValuesProvider;
 import ch.sbb.polarion.extension.generic.settings.SettingName;
@@ -17,8 +18,10 @@ import org.mockito.MockedStatic;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.*;
 
 @ExtendWith({MockitoExtension.class, PlatformContextMockExtension.class, DocxExporterExtensionConfigurationExtension.class})
@@ -60,6 +63,114 @@ class DocxExporterFormExtensionTest {
             extension.renderForm(context, module);
             verify(builder, times(1)).html(argThat(arg -> expectedEntries.stream().allMatch(arg::contains)));
         }
+    }
+
+    @Test
+    void adjustLinkRolesShouldHideFieldsWhenNoRolesAvailable() {
+        DocxExporterFormExtension extension = new DocxExporterFormExtension();
+        String form = buildRolesFormFragment();
+
+        String result = extension.adjustLinkRoles(form, Collections.emptyList(), StylePackageModel.builder().build());
+
+        assertThat(result)
+                .contains("class='docx-roles-fields' style='display: none;'")
+                .contains("{ROLES_OPTIONS}") // Placeholder untouched when hidden
+                .doesNotContain("<option value='BOTH' selected")
+                .doesNotContain("<option value='DIRECT' selected")
+                .doesNotContain("<option value='REVERSE' selected");
+    }
+
+    @Test
+    void adjustLinkRolesShouldRenderAllOptionsUnselectedWhenStylePackageHasNoSelection() {
+        DocxExporterFormExtension extension = new DocxExporterFormExtension();
+        String form = buildRolesFormFragment();
+
+        String result = extension.adjustLinkRoles(form, List.of("relates to", "blocks"), StylePackageModel.builder().build());
+
+        assertThat(result)
+                .doesNotContain("{ROLES_OPTIONS}")
+                .contains("<option value='relates to' >relates to</option>")
+                .contains("<option value='blocks' >blocks</option>")
+                .doesNotContain("<input id='docx-selected-roles' checked")
+                .contains("id='docx-roles-wrapper' style='display: none;");
+    }
+
+    @Test
+    void adjustLinkRolesShouldDefaultDirectionToBothWhenNull() {
+        DocxExporterFormExtension extension = new DocxExporterFormExtension();
+        String form = buildRolesFormFragment();
+
+        String result = extension.adjustLinkRoles(form, List.of("relates to"), StylePackageModel.builder().build());
+
+        assertThat(result)
+                .contains("<option value='BOTH' selected")
+                .contains("<option value='DIRECT'>")
+                .contains("<option value='REVERSE'>");
+    }
+
+    @Test
+    void adjustLinkRolesShouldPreselectDirectDirection() {
+        DocxExporterFormExtension extension = new DocxExporterFormExtension();
+        String form = buildRolesFormFragment();
+        StylePackageModel stylePackage = StylePackageModel.builder()
+                .linkRoleDirection(LinkRoleDirection.DIRECT.toString())
+                .build();
+
+        String result = extension.adjustLinkRoles(form, List.of("relates to"), stylePackage);
+
+        assertThat(result)
+                .contains("<option value='DIRECT' selected")
+                .contains("<option value='BOTH'>")
+                .contains("<option value='REVERSE'>");
+    }
+
+    @Test
+    void adjustLinkRolesShouldPreselectReverseDirection() {
+        DocxExporterFormExtension extension = new DocxExporterFormExtension();
+        String form = buildRolesFormFragment();
+        StylePackageModel stylePackage = StylePackageModel.builder()
+                .linkRoleDirection(LinkRoleDirection.REVERSE.toString())
+                .build();
+
+        String result = extension.adjustLinkRoles(form, List.of("relates to"), stylePackage);
+
+        assertThat(result)
+                .contains("<option value='REVERSE' selected")
+                .contains("<option value='BOTH'>")
+                .contains("<option value='DIRECT'>");
+    }
+
+    @Test
+    void adjustLinkRolesShouldCheckCheckboxAndRevealWrapperWhenRolesSelected() {
+        DocxExporterFormExtension extension = new DocxExporterFormExtension();
+        String form = buildRolesFormFragment();
+        StylePackageModel stylePackage = StylePackageModel.builder()
+                .linkedWorkitemRoles(List.of("blocks"))
+                .linkRoleDirection(LinkRoleDirection.DIRECT.toString())
+                .build();
+
+        String result = extension.adjustLinkRoles(form, List.of("relates to", "blocks"), stylePackage);
+
+        assertThat(result)
+                .contains("<input id='docx-selected-roles' checked")
+                .contains("id='docx-roles-wrapper' style='display: flex;")
+                .contains("<option value='blocks' selected>blocks</option>")
+                .contains("<option value='relates to' >relates to</option>")
+                .contains("<option value='DIRECT' selected");
+    }
+
+    private String buildRolesFormFragment() {
+        return "<div class='docx-roles-fields'>"
+                + "<input id='docx-selected-roles' type='checkbox'/>"
+                + "<div id='docx-roles-wrapper' style='display: none; flex-direction: column'>"
+                + "<select id='docx-roles-selector' multiple>{ROLES_OPTIONS}</select>"
+                + "<select id='docx-link-role-direction'>"
+                + "<option value='BOTH'>Both directions</option>"
+                + "<option value='DIRECT'>Direct only</option>"
+                + "<option value='REVERSE'>Reverse only</option>"
+                + "</select>"
+                + "</div>"
+                + "</div>";
     }
 
 }

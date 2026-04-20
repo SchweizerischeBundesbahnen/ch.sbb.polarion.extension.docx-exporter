@@ -7,6 +7,7 @@ import ch.sbb.polarion.extension.generic.settings.GenericNamedSettings;
 import ch.sbb.polarion.extension.generic.settings.SettingId;
 import ch.sbb.polarion.extension.generic.settings.SettingsService;
 import ch.sbb.polarion.extension.generic.util.ScopeUtils;
+import ch.sbb.polarion.extension.docx_exporter.rest.model.conversion.LinkRoleDirection;
 import ch.sbb.polarion.extension.docx_exporter.rest.model.settings.stylepackage.StylePackageModel;
 import com.polarion.subterra.base.location.ILocation;
 import org.junit.jupiter.api.Test;
@@ -86,6 +87,43 @@ class StylePackageSettingsTest {
             assertEquals("custom", loadedModel.getBundleTimestamp());
 
             assertNull(loadedModel.getRenderComments());
+            assertNull(loadedModel.getLinkRoleDirection());
+        }
+    }
+
+    @Test
+    void testLinkRoleDirectionRoundTrip() {
+        try (MockedStatic<ScopeUtils> mockScopeUtils = mockStatic(ScopeUtils.class)) {
+            SettingsService mockedSettingsService = mock(SettingsService.class);
+            mockScopeUtils.when(() -> ScopeUtils.getFileContent(any())).thenCallRealMethod();
+
+            GenericNamedSettings<StylePackageModel> stylePackageSettings = new StylePackageSettings(mockedSettingsService);
+
+            String projectName = "test_project";
+
+            ILocation mockDefaultLocation = mock(ILocation.class);
+            when(mockDefaultLocation.append(anyString())).thenReturn(mockDefaultLocation);
+            mockScopeUtils.when(() -> ScopeUtils.getContextLocation("")).thenReturn(mockDefaultLocation);
+
+            ILocation mockProjectLocation = mock(ILocation.class);
+            when(mockProjectLocation.append(anyString())).thenReturn(mockProjectLocation);
+            mockScopeUtils.when(() -> ScopeUtils.getContextLocationByProject(projectName)).thenReturn(mockProjectLocation);
+            mockScopeUtils.when(() -> ScopeUtils.getScopeFromProject(projectName)).thenCallRealMethod();
+            mockScopeUtils.when(() -> ScopeUtils.getContextLocation("project/test_project/")).thenReturn(mockProjectLocation);
+
+            StylePackageModel savedModel = StylePackageModel.builder()
+                    .linkedWorkitemRoles(List.of("has parent"))
+                    .linkRoleDirection(LinkRoleDirection.DIRECT.toString())
+                    .build();
+            savedModel.setBundleTimestamp("custom");
+            when(mockedSettingsService.read(eq(mockProjectLocation), any())).thenReturn(savedModel.serialize());
+
+            when(mockedSettingsService.getLastRevision(mockProjectLocation)).thenReturn("345");
+            when(mockedSettingsService.getPersistedSettingFileNames(mockProjectLocation)).thenReturn(List.of("Any setting name"));
+
+            StylePackageModel loadedModel = stylePackageSettings.load(projectName, SettingId.fromName("Any setting name"));
+            assertEquals(LinkRoleDirection.DIRECT.toString(), loadedModel.getLinkRoleDirection());
+            assertEquals(List.of("has parent"), loadedModel.getLinkedWorkitemRoles());
         }
     }
 
