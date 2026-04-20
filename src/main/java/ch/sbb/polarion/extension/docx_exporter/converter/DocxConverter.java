@@ -4,6 +4,7 @@ import ch.sbb.polarion.extension.docx_exporter.pandoc.service.PandocServiceConne
 import ch.sbb.polarion.extension.docx_exporter.pandoc.service.model.PandocParams;
 import ch.sbb.polarion.extension.docx_exporter.properties.DocxExporterExtensionConfiguration;
 import ch.sbb.polarion.extension.docx_exporter.rest.model.conversion.ExportParams;
+import ch.sbb.polarion.extension.docx_exporter.rest.model.conversion.LinkRoleDirection;
 import ch.sbb.polarion.extension.docx_exporter.rest.model.documents.DocumentData;
 import ch.sbb.polarion.extension.docx_exporter.rest.model.settings.templates.TemplatesModel;
 import ch.sbb.polarion.extension.docx_exporter.rest.model.settings.webhooks.AuthType;
@@ -266,7 +267,7 @@ public class DocxConverter {
 
     String postProcessDocumentContent(@NotNull ExportParams exportParams, @Nullable ITrackerProject project, @Nullable String documentContent, @Nullable DocxGenerationLog generationLog) {
         if (documentContent != null) {
-            List<String> selectedRoleEnumValues = project == null ? Collections.emptyList() : EnumValuesProvider.getBidirectionalLinkRoleNames(project, exportParams.getLinkedWorkitemRoles());
+            List<String> selectedRoleEnumValues = project == null ? Collections.emptyList() : EnumValuesProvider.getLinkRoleNames(project, exportParams.getLinkedWorkitemRoles(), exportParams.getLinkRoleDirection());
             return htmlProcessor.processHtmlForExport(documentContent, exportParams, selectedRoleEnumValues, generationLog);
         } else {
             return "";

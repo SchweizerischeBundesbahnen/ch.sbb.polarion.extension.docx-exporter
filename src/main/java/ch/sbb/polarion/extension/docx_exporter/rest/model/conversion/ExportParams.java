@@ -66,6 +66,9 @@ public class ExportParams {
     @Schema(description = "Specific Workitem roles", example = "[\"has parent\", \"depends on\"]")
     private List<String> linkedWorkitemRoles;
 
+    @Schema(description = "Direction of selected link roles to include", defaultValue = "BOTH")
+    private LinkRoleDirection linkRoleDirection;
+
     @Schema(description = "Target file name of exported document")
     private String fileName;
 

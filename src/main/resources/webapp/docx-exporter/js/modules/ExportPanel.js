@@ -92,7 +92,8 @@ export default class ExportPanel {
                 });
             }
         }
-        this.ctx.displayIf("docx-roles-wrapper", rolesProvided);
+        this.ctx.displayIf("docx-roles-wrapper", rolesProvided, "flex");
+        this.ctx.setValue("docx-link-role-direction", stylePackage.linkRoleDirection || ExportParams.LinkRoleDirection.BOTH);
 
         this.ctx.displayIf("docx-style-package-content", stylePackage.exposeSettings);
     }
@@ -113,15 +114,17 @@ export default class ExportPanel {
         }
 
         const selectedRoles = [];
+        let selectedLinkRoleDirection = null;
         if (this.ctx.getElementById("docx-selected-roles").checked) {
             const selectedOptions = Array.from(this.ctx.getElementById("docx-roles-selector").options).filter(opt => opt.selected);
             selectedRoles.push(...selectedOptions.map(opt => opt.value));
+            selectedLinkRoleDirection = this.ctx.getElementById("docx-link-role-direction").value;
         }
 
-        return this.buildRequestJson(projectId, locationPath, baselineRevision, revision, selectedChapters, selectedRoles, fileName, targetFormat);
+        return this.buildRequestJson(projectId, locationPath, baselineRevision, revision, selectedChapters, selectedRoles, selectedLinkRoleDirection, fileName, targetFormat);
     }
 
-    buildRequestJson(projectId, locationPath, baselineRevision, revision, selectedChapters, selectedRoles, fileName) {
+    buildRequestJson(projectId, locationPath, baselineRevision, revision, selectedChapters, selectedRoles, selectedLinkRoleDirection, fileName) {
         const urlSearchParams = new URL(window.location.href.replace('#', '/')).searchParams;
         return new ExportParams.Builder()
             .setProjectId(projectId)
@@ -141,6 +144,7 @@ export default class ExportPanel {
             .setChapters(selectedChapters)
             .setLanguage(this.ctx.getElementById('docx-localization').checked ? this.ctx.getElementById("docx-language").value : null)
             .setLinkedWorkitemRoles(selectedRoles)
+            .setLinkRoleDirection(selectedLinkRoleDirection)
             .setFileName(fileName)
             .setUrlQueryParameters(Object.fromEntries([...urlSearchParams]))
             .build()

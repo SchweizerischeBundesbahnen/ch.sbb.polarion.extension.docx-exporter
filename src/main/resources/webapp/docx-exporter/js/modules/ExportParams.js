@@ -18,6 +18,12 @@ export default class ExportParams {
         LEDGER: 'LEDGER',
     };
 
+    static LinkRoleDirection = {
+        BOTH: 'BOTH',
+        DIRECT: 'DIRECT',
+        REVERSE: 'REVERSE',
+    };
+
     constructor(builder) {
         this.projectId = builder.projectId;
         this.locationPath = builder.locationPath;
@@ -36,6 +42,7 @@ export default class ExportParams {
         this.chapters = builder.chapters;
         this.language = builder.language;
         this.linkedWorkitemRoles = builder.linkedWorkitemRoles;
+        this.linkRoleDirection = builder.linkRoleDirection;
         this.fileName = builder.fileName;
         this.urlQueryParameters = builder.urlQueryParameters;
         this.internalContent = builder.internalContent;
@@ -74,6 +81,7 @@ export default class ExportParams {
                 this.chapters = undefined;
                 this.language = undefined;
                 this.linkedWorkitemRoles = undefined;
+                this.linkRoleDirection = undefined;
                 this.fileName = undefined;
                 this.urlQueryParameters = undefined;
                 this.internalContent = undefined;
@@ -162,6 +170,11 @@ export default class ExportParams {
 
             setLinkedWorkitemRoles(linkedWorkitemRoles) {
                 this.linkedWorkitemRoles = linkedWorkitemRoles;
+                return this;
+            }
+
+            setLinkRoleDirection(linkRoleDirection) {
+                this.linkRoleDirection = linkRoleDirection;
                 return this;
             }
 

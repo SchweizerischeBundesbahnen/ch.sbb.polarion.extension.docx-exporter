@@ -117,13 +117,18 @@
         <div class='docx-roles-fields'>
             <div class='property-wrapper'>
                 <label for='docx-selected-roles'>
-                    <input id='docx-selected-roles' onchange='document.querySelector("#docx-exporter-panel #docx-roles-wrapper").style.display = this.checked ? "block" : "none"' type='checkbox'/>
+                    <input id='docx-selected-roles' onchange='document.querySelector("#docx-exporter-panel #docx-roles-wrapper").style.display = this.checked ? "flex" : "none"' type='checkbox'/>
                     Specific Workitem roles
                 </label>
             </div>
-            <div class='property-wrapper' id='docx-roles-wrapper' style='display: none'>
-                <select id='docx-roles-selector' multiple>
+            <div class='property-wrapper' id='docx-roles-wrapper' style='display: none; flex-direction: column; align-items: flex-start; row-gap: 4px; padding-left: 24px'>
+                <select id='docx-roles-selector' multiple style='width: 142px'>
                     {ROLES_OPTIONS}
+                </select>
+                <select id='docx-link-role-direction' style='width: 142px'>
+                    <option value='BOTH'>Both directions</option>
+                    <option value='DIRECT'>Direct only</option>
+                    <option value='REVERSE'>Reverse only</option>
                 </select>
             </div>
         </div>

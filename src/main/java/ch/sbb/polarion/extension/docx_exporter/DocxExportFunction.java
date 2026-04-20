@@ -1,5 +1,6 @@
 package ch.sbb.polarion.extension.docx_exporter;
 
+import ch.sbb.polarion.extension.docx_exporter.rest.model.conversion.LinkRoleDirection;
 import ch.sbb.polarion.extension.generic.exception.ObjectNotFoundException;
 import ch.sbb.polarion.extension.generic.settings.NamedSettingsRegistry;
 import ch.sbb.polarion.extension.generic.settings.SettingId;
@@ -115,6 +116,7 @@ public class DocxExportFunction implements IFunction<IModule> {
                 .chapters(stylePackage.getSpecificChapters() == null ? null : List.of(stylePackage.getSpecificChapters().split(",")))
                 .language(stylePackage.getLanguage())
                 .linkedWorkitemRoles(stylePackage.getLinkedWorkitemRoles())
+                .linkRoleDirection(stylePackage.getLinkRoleDirection() != null ? LinkRoleDirection.valueOf(stylePackage.getLinkRoleDirection()) : LinkRoleDirection.BOTH)
                 .build();
     }
 
