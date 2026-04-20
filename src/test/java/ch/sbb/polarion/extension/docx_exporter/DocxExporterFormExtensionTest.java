@@ -72,11 +72,12 @@ class DocxExporterFormExtensionTest {
 
         String result = extension.adjustLinkRoles(form, Collections.emptyList(), StylePackageModel.builder().build());
 
-        assertThat(result).contains("class='docx-roles-fields' style='display: none;'");
-        assertThat(result).contains("{ROLES_OPTIONS}"); // Placeholder untouched when hidden
-        assertThat(result).doesNotContain("<option value='BOTH' selected");
-        assertThat(result).doesNotContain("<option value='DIRECT' selected");
-        assertThat(result).doesNotContain("<option value='REVERSE' selected");
+        assertThat(result)
+                .contains("class='docx-roles-fields' style='display: none;'")
+                .contains("{ROLES_OPTIONS}") // Placeholder untouched when hidden
+                .doesNotContain("<option value='BOTH' selected")
+                .doesNotContain("<option value='DIRECT' selected")
+                .doesNotContain("<option value='REVERSE' selected");
     }
 
     @Test
@@ -86,11 +87,12 @@ class DocxExporterFormExtensionTest {
 
         String result = extension.adjustLinkRoles(form, List.of("relates to", "blocks"), StylePackageModel.builder().build());
 
-        assertThat(result).doesNotContain("{ROLES_OPTIONS}");
-        assertThat(result).contains("<option value='relates to' >relates to</option>");
-        assertThat(result).contains("<option value='blocks' >blocks</option>");
-        assertThat(result).doesNotContain("<input id='docx-selected-roles' checked");
-        assertThat(result).contains("id='docx-roles-wrapper' style='display: none;");
+        assertThat(result)
+                .doesNotContain("{ROLES_OPTIONS}")
+                .contains("<option value='relates to' >relates to</option>")
+                .contains("<option value='blocks' >blocks</option>")
+                .doesNotContain("<input id='docx-selected-roles' checked")
+                .contains("id='docx-roles-wrapper' style='display: none;");
     }
 
     @Test
@@ -100,9 +102,10 @@ class DocxExporterFormExtensionTest {
 
         String result = extension.adjustLinkRoles(form, List.of("relates to"), StylePackageModel.builder().build());
 
-        assertThat(result).contains("<option value='BOTH' selected");
-        assertThat(result).contains("<option value='DIRECT'>");
-        assertThat(result).contains("<option value='REVERSE'>");
+        assertThat(result)
+                .contains("<option value='BOTH' selected")
+                .contains("<option value='DIRECT'>")
+                .contains("<option value='REVERSE'>");
     }
 
     @Test
@@ -115,9 +118,10 @@ class DocxExporterFormExtensionTest {
 
         String result = extension.adjustLinkRoles(form, List.of("relates to"), stylePackage);
 
-        assertThat(result).contains("<option value='DIRECT' selected");
-        assertThat(result).contains("<option value='BOTH'>");
-        assertThat(result).contains("<option value='REVERSE'>");
+        assertThat(result)
+                .contains("<option value='DIRECT' selected")
+                .contains("<option value='BOTH'>")
+                .contains("<option value='REVERSE'>");
     }
 
     @Test
@@ -130,9 +134,10 @@ class DocxExporterFormExtensionTest {
 
         String result = extension.adjustLinkRoles(form, List.of("relates to"), stylePackage);
 
-        assertThat(result).contains("<option value='REVERSE' selected");
-        assertThat(result).contains("<option value='BOTH'>");
-        assertThat(result).contains("<option value='DIRECT'>");
+        assertThat(result)
+                .contains("<option value='REVERSE' selected")
+                .contains("<option value='BOTH'>")
+                .contains("<option value='DIRECT'>");
     }
 
     @Test
@@ -146,11 +151,12 @@ class DocxExporterFormExtensionTest {
 
         String result = extension.adjustLinkRoles(form, List.of("relates to", "blocks"), stylePackage);
 
-        assertThat(result).contains("<input id='docx-selected-roles' checked");
-        assertThat(result).contains("id='docx-roles-wrapper' style='display: flex;");
-        assertThat(result).contains("<option value='blocks' selected>blocks</option>");
-        assertThat(result).contains("<option value='relates to' >relates to</option>");
-        assertThat(result).contains("<option value='DIRECT' selected");
+        assertThat(result)
+                .contains("<input id='docx-selected-roles' checked")
+                .contains("id='docx-roles-wrapper' style='display: flex;")
+                .contains("<option value='blocks' selected>blocks</option>")
+                .contains("<option value='relates to' >relates to</option>")
+                .contains("<option value='DIRECT' selected");
     }
 
     private String buildRolesFormFragment() {

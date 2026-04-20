@@ -19,6 +19,7 @@ import com.polarion.alm.tracker.model.ipi.IInternalBaselinesManager;
 import com.polarion.alm.tracker.workflow.IArguments;
 import com.polarion.alm.tracker.workflow.ICallContext;
 import com.polarion.alm.tracker.workflow.IFunction;
+import com.polarion.core.util.StringUtils;
 import com.polarion.core.util.exceptions.UserFriendlyRuntimeException;
 import com.polarion.core.util.types.Text;
 import com.polarion.platform.persistence.IEnumOption;
@@ -116,8 +117,16 @@ public class DocxExportFunction implements IFunction<IModule> {
                 .chapters(stylePackage.getSpecificChapters() == null ? null : List.of(stylePackage.getSpecificChapters().split(",")))
                 .language(stylePackage.getLanguage())
                 .linkedWorkitemRoles(stylePackage.getLinkedWorkitemRoles())
-                .linkRoleDirection(stylePackage.getLinkRoleDirection() != null ? LinkRoleDirection.valueOf(stylePackage.getLinkRoleDirection()) : LinkRoleDirection.BOTH)
+                .linkRoleDirection(safeParseLinkRoleDirection(stylePackage.getLinkRoleDirection()))
                 .build();
+    }
+
+    private LinkRoleDirection safeParseLinkRoleDirection(String linkRoleDirection) {
+        try {
+            return StringUtils.isEmpty(linkRoleDirection) ? LinkRoleDirection.BOTH : LinkRoleDirection.valueOf(linkRoleDirection);
+        } catch (Exception e) {
+            return LinkRoleDirection.BOTH;
+        }
     }
 
     @VisibleForTesting
