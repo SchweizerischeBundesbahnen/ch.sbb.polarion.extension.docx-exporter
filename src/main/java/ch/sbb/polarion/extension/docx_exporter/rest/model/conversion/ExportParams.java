@@ -48,6 +48,9 @@ public class ExportParams {
     @Schema(description = "Which comments should be rendered in the exported document")
     private CommentsRenderType renderComments;
 
+    @Schema(description = "Include unreferenced comments")
+    private boolean includeUnreferencedComments;
+
     @Schema(description = "Empty chapters should be removed from the document")
     private boolean cutEmptyChapters;
 

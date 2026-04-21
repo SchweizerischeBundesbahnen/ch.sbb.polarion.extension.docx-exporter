@@ -181,11 +181,16 @@ public class DocxExporterFormExtension implements IFormExtension {
         }
     }
 
-    private String adjustRenderComments(String form, StylePackageModel stylePackage) {
+    @VisibleForTesting
+    String adjustRenderComments(String form, StylePackageModel stylePackage) {
         if (stylePackage.getRenderComments() != null) {
             form = form.replace("<input id='render-comments'", "<input id='render-comments' checked");
             form = form.replace("id='render-comments-selector' style='display: none'", "id='render-comments-selector'");
             form = form.replace(String.format(OPTION_VALUE, stylePackage.getRenderComments()), String.format(OPTION_SELECTED, stylePackage.getRenderComments()));
+            form = form.replace("id='render-comments-options' style='display: none", "id='render-comments-options' style='display: flex");
+            if (stylePackage.isIncludeUnreferencedComments()) {
+                form = form.replace("<input id='include-unreferenced-comments'", "<input id='include-unreferenced-comments' checked");
+            }
         }
         return form;
     }

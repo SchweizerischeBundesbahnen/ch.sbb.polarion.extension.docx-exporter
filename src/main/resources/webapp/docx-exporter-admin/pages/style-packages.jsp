@@ -193,10 +193,16 @@
             <div class="flex-column">
                 <div class='checkbox input-group'>
                     <label for='render-comments' id='render-comments-label'>
-                        <input id="render-comments" onchange='document.getElementById("render-comments-select").style.visibility = this.checked ? "visible" : "hidden"' type='checkbox'/>
+                        <input id="render-comments" onchange='document.getElementById("render-comments-select").style.visibility = this.checked ? "visible" : "hidden"; document.getElementById("render-comments-options").style.display = this.checked ? "block" : "none"; if (!this.checked) { document.getElementById("include-unreferenced-comments").checked = false; }' type='checkbox'/>
                         Comments rendering
                     </label>
                     <div id="render-comments-select" style="visibility: hidden; margin-left: 10px; width: 200px"></div>
+                </div>
+                <div class='checkbox input-group' id='render-comments-options' style="display: none; padding-left: 20px">
+                    <label for='include-unreferenced-comments' id='include-unreferenced-comments-container' style="display: inline-block" title="Unreferenced comments will be rendered at the end of the document">
+                        <input id="include-unreferenced-comments" type='checkbox' />
+                        include unreferenced
+                    </label>
                 </div>
                 <div class='checkbox input-group'>
                     <label for='cut-empty-wi-attributes'>

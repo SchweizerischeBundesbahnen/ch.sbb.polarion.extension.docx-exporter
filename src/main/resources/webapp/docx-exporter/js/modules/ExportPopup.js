@@ -241,6 +241,9 @@ export default class ExportPopup {
         this.ctx.setValue("popup-docx-render-comments-selector", stylePackage.renderComments || 'OPEN');
         this.ctx.visibleIf("popup-docx-render-comments-selector", !!stylePackage.renderComments);
 
+        this.ctx.displayIf("popup-docx-render-comments-options", !!stylePackage.renderComments, "flex");
+        this.ctx.setCheckbox("popup-docx-include-unreferenced-comments", !!stylePackage.includeUnreferencedComments);
+
         this.ctx.setCheckbox("popup-docx-cut-urls", stylePackage.cutLocalURLs);
         this.ctx.setCheckbox("popup-docx-cut-empty-chapters", stylePackage.cutEmptyChapters);
         this.ctx.setCheckbox("popup-docx-cut-empty-wi-attributes", stylePackage.cutEmptyWorkitemAttributes);
@@ -355,6 +358,7 @@ export default class ExportPopup {
             .setWebhooks(this.ctx.getElementById("popup-docx-webhooks-checkbox").checked ? this.ctx.getElementById("popup-docx-webhooks-selector").value : null)
             .setRemovalSelector(this.ctx.getValueById("popup-docx-removal-selector"))
             .setRenderComments(this.ctx.getElementById('popup-docx-render-comments').checked ? this.ctx.getElementById("popup-docx-render-comments-selector").value : null)
+            .setIncludeUnreferencedComments(this.ctx.getElementById('popup-docx-render-comments').checked && this.ctx.getElementById('popup-docx-include-unreferenced-comments').checked)
             .setCutEmptyChapters(this.ctx.getElementById("popup-docx-cut-empty-chapters").checked)
             .setCutEmptyWIAttributes(this.ctx.getElementById('popup-docx-cut-empty-wi-attributes').checked)
             .setCutLocalUrls(this.ctx.getElementById("popup-docx-cut-urls").checked)

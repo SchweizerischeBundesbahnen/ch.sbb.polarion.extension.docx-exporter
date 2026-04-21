@@ -36,6 +36,7 @@ export default class ExportParams {
         this.webhooks = builder.webhooks;
         this.removalSelector = builder.removalSelector;
         this.renderComments = builder.renderComments;
+        this.includeUnreferencedComments = builder.includeUnreferencedComments;
         this.cutEmptyChapters = builder.cutEmptyChapters;
         this.cutEmptyWIAttributes = builder.cutEmptyWIAttributes;
         this.cutLocalUrls = builder.cutLocalUrls;
@@ -75,6 +76,7 @@ export default class ExportParams {
                 this.webhooks = undefined;
                 this.removalSelector = undefined;
                 this.renderComments = undefined;
+                this.includeUnreferencedComments = undefined;
                 this.cutEmptyChapters = undefined;
                 this.cutEmptyWIAttributes = undefined;
                 this.cutLocalUrls = undefined;
@@ -140,6 +142,11 @@ export default class ExportParams {
 
             setRenderComments(renderComments) {
                 this.renderComments = renderComments;
+                return this;
+            }
+
+            setIncludeUnreferencedComments(includeUnreferencedComments) {
+                this.includeUnreferencedComments = includeUnreferencedComments;
                 return this;
             }
 
