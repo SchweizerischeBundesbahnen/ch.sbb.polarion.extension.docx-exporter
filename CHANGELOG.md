@@ -1,5 +1,13 @@
 # Changelog
 
+## [4.2.0](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/compare/v4.1.1...v4.2.0) (2026-04-21)
+
+
+### Features
+
+* ability to export unreferenced comments ([#215](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/issues/215)) ([564a5f4](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/commit/564a5f429db725ec4b715ad1ecc67c862e5b03fe)), closes [#214](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/issues/214)
+* Add specification of direction of links – incoming, outgoing, both ([#212](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/issues/212)) ([9f55ee0](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/commit/9f55ee0ec391f8dabb6ec9a9d36e44c4e7b473fc))
+
 ## [4.1.1](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/compare/v4.1.0...v4.1.1) (2026-04-17)
 
 
