@@ -58,9 +58,9 @@ export default class ExportPanel {
 
         this.ctx.setCheckbox("render-comments", !!stylePackage.renderComments);
         this.ctx.setValue("render-comments-selector", stylePackage.renderComments  || 'OPEN');
-        this.ctx.displayIf("render-comments-selector", !!stylePackage.renderComments)
+        this.ctx.displayIf("render-comments-selector", !!stylePackage.renderComments);
 
-        this.ctx.displayIf("render-comments-options", !!stylePackage.renderComments, "flex")
+        this.ctx.displayIf("render-comments-options", !!stylePackage.renderComments, "flex");
         this.ctx.setCheckbox("include-unreferenced-comments", !!stylePackage.includeUnreferencedComments);
 
         this.ctx.setCheckbox("docx-cut-empty-chapters", stylePackage.cutEmptyChapters);

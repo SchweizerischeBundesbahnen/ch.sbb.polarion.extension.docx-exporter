@@ -241,7 +241,7 @@ export default class ExportPopup {
         this.ctx.setValue("popup-docx-render-comments-selector", stylePackage.renderComments || 'OPEN');
         this.ctx.visibleIf("popup-docx-render-comments-selector", !!stylePackage.renderComments);
 
-        this.ctx.displayIf("popup-docx-render-comments-options", !!stylePackage.renderComments, "flex")
+        this.ctx.displayIf("popup-docx-render-comments-options", !!stylePackage.renderComments, "flex");
         this.ctx.setCheckbox("popup-docx-include-unreferenced-comments", !!stylePackage.includeUnreferencedComments);
 
         this.ctx.setCheckbox("popup-docx-cut-urls", stylePackage.cutLocalURLs);
