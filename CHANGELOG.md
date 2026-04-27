@@ -1,5 +1,12 @@
 # Changelog
 
+## [4.2.1](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/compare/v4.2.0...v4.2.1) (2026-04-27)
+
+
+### Bug Fixes
+
+* **deps:** update dependency org.testcontainers:testcontainers-bom to v2.0.5 ([4d87ae5](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/commit/4d87ae5667e4ca871e5039c275a7670edbfdfec1))
+
 ## [4.2.0](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/compare/v4.1.1...v4.2.0) (2026-04-21)
 
 
