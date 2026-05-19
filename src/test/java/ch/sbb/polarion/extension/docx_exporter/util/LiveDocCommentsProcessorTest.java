@@ -6,6 +6,7 @@ import com.polarion.alm.server.api.model.document.ProxyDocument;
 import com.polarion.alm.shared.api.model.comment.CommentBase;
 import com.polarion.alm.shared.api.model.comment.CommentBasesTreeField;
 import com.polarion.alm.shared.api.model.document.UpdatableDocumentFields;
+import com.polarion.alm.shared.api.model.user.User;
 import lombok.SneakyThrows;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -214,6 +215,36 @@ class LiveDocCommentsProcessorTest {
         String result = processor.addUnreferencedComments(html, liveDocComments, renderedCommentIds);
 
         assertEquals(html, result);
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void addLiveDocCommentsRendersUnresolvableUserLabel() {
+        ProxyDocument document = mock(ProxyDocument.class, RETURNS_DEEP_STUBS);
+
+        UpdatableDocumentFields fields = mock(UpdatableDocumentFields.class);
+        CommentBasesTreeField<CommentBase> comments = mock(CommentBasesTreeField.class);
+        doCallRealMethod().when(comments).forEach(any(Consumer.class));
+        when(fields.comments()).thenReturn(comments);
+        when(document.fields()).thenReturn(fields);
+
+        CommentBase commentBase = mockComment("1", "text1", "irrelevant-name", false);
+        User user = Objects.requireNonNull(commentBase.fields().author().get());
+        when(user.isUnresolvable()).thenReturn(true);
+        when(user.label()).thenReturn("deleted-user-label");
+        when(comments.iterator()).thenReturn(List.of(commentBase).iterator());
+
+        String html = """
+                <div>some content</div>
+                <span id="polarion-comment:1"></span>
+                """;
+
+        LiveDocCommentsProcessor processor = new LiveDocCommentsProcessor();
+        Map<String, LiveDocComment> liveDocComments = processor.getLiveDocComments(document, CommentsRenderType.ALL);
+        String result = processor.addLiveDocComments(html, liveDocComments, new HashSet<>());
+
+        assertTrue(result.contains("[span class=author]deleted-user-label[/span]"));
+        assertFalse(result.contains("irrelevant-name"));
     }
 
     @SneakyThrows
