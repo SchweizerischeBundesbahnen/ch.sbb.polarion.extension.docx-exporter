@@ -1,5 +1,18 @@
 # Changelog
 
+## [4.2.1](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/compare/v4.2.0...v4.2.1) (2026-05-20)
+
+
+### Bug Fixes
+
+* **deps:** update dependency ch.sbb.polarion.extensions:ch.sbb.polarion.extension.generic to v14.1.4 ([1090d2b](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/commit/1090d2b17837fd0f4fbc5f4cecb6977215c58760))
+* **deps:** update dependency com.helger:ph-css to v8.2.0 ([457465e](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/commit/457465ed31edee7c4b9d81c0ecb5e306666b84e6))
+* **deps:** update dependency com.helger:ph-css to v8.2.1 ([9bce3eb](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/commit/9bce3eb766bda722326fe029e610983e5835901d))
+* **deps:** update dependency org.testcontainers:testcontainers-bom to v2.0.5 ([4d87ae5](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/commit/4d87ae5667e4ca871e5039c275a7670edbfdfec1))
+* **deps:** update docx4j.version to v11.5.13 ([10937c4](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/commit/10937c4460da8df6485e8191111d6c3679acf37d))
+* handle unknown MIME types gracefully in DocxExporter ([#222](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/issues/222)) ([68fb340](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/commit/68fb340018a4ff743f0517b058df46c628681888)), closes [#219](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/issues/219)
+* when author of a comment was deleted as a user in polarion generation of docx fails ([#225](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/issues/225)) ([9365054](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/commit/9365054ca3fed8c67a1208d630c3232f895a1665))
+
 ## [4.2.0](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/compare/v4.1.1...v4.2.0) (2026-04-21)
 
 
