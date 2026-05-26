@@ -164,6 +164,9 @@ public class HtmlProcessor {
             timedIfNotNull(generationLog, "Filter tabular linked work items", () -> filterTabularLinkedWorkItems(document, selectedRoleEnumValues));
             timedIfNotNull(generationLog, "Filter non-tabular linked work items", () -> filterNonTabularLinkedWorkItems(document, selectedRoleEnumValues));
         }
+        timedIfNotNull(generationLog, "Fix tabular linked work items", () -> fixTabularLinkedWorkItems(document));
+        timedIfNotNull(generationLog, "Fix non-tabular linked work items", () -> fixNonTabularLinkedWorkItems(document));
+
         if (exportParams.isCutEmptyWIAttributes()) {
             timedIfNotNull(generationLog, "Cut empty WI attributes", () -> cutEmptyWIAttributes(document));
         }
@@ -702,6 +705,37 @@ public class HtmlProcessor {
                 linkedWorkitemNodesList.get(i).appendComma(); // Separate each group by comma
             } else {
                 linkedWorkitemNodesList.get(i).removeBr(); // Remove br-tag after last group
+            }
+        }
+    }
+
+    private void fixTabularLinkedWorkItems(@NotNull Document document) {
+        Elements linkedWorkItemsCells = document.select("td[id='polarion_editor_field=linkedWorkItems']");
+        for (Element linkedWorkItemsCell : linkedWorkItemsCells) {
+            fixLinkedWorkItems(linkedWorkItemsCell);
+        }
+    }
+
+    private void fixNonTabularLinkedWorkItems(@NotNull Document document) {
+        Elements linkedWorkItemsCells = document.select("span[id='polarion_editor_field=linkedWorkItems']");
+        for (Element linkedWorkItemsCell : linkedWorkItemsCells) {
+            fixLinkedWorkItems(linkedWorkItemsCell);
+        }
+    }
+
+    private void fixLinkedWorkItems(@NotNull Element linkedWorkItemsContainer) {
+        Element nextChild = linkedWorkItemsContainer.firstElementChild();
+
+        while (nextChild != null) {
+            LinkedWorkitemNodes linkedWorkitemNodes = extractLinkedWorkItemNodes(nextChild);
+            if (linkedWorkitemNodes != null) {
+                nextChild = linkedWorkitemNodes.getNextSibling();
+
+                // Role of linked WorkItem is wrapped in div-tag which then takes whole line when converted into DOCX.
+                // We here are changing these divs on spans to allow them to be inlined.
+                linkedWorkitemNodes.roleElement.tagName(HtmlTag.SPAN);
+            } else {
+                nextChild = null;
             }
         }
     }
