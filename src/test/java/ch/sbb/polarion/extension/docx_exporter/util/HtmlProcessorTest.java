@@ -231,6 +231,31 @@ class HtmlProcessorTest {
         assertEquals(latex, scriptBody, "Expected raw LaTeX (no HTML-escaped entities) inside the script body, got: " + scriptBody);
     }
 
+    @ParameterizedTest
+    @CsvSource({
+            "<br/>",
+            "<br>",
+            "<br />",
+            "<BR/>",
+            "<Br />"
+    })
+    void convertPolarionFormulasStripsBrTagVariants(String brVariant) {
+        // Polarion serialises soft line breaks inside formula data-source attributes as <br> tags. The attribute value is a raw
+        // string (Jsoup does not HTML-parse attribute contents), so the stripping must be case-insensitive and tolerate the
+        // optional space and self-closing slash. LaTeX would otherwise render the literal "<br/>" text into the formula.
+        String latex = "a" + brVariant + "b";
+        String html = "<p><img class=\"polarion-rte-formula\" data-inline=\"false\" data-source=\"" + latex + "\"></p>";
+
+        Document document = JSoupUtils.parseHtml(html);
+        processor.convertPolarionFormulas(document);
+
+        String serialized = document.body().html();
+        int scriptStart = serialized.indexOf(">", serialized.indexOf("<script")) + 1;
+        int scriptEnd = serialized.indexOf("</script>");
+        String scriptBody = serialized.substring(scriptStart, scriptEnd);
+        assertEquals("ab", scriptBody);
+    }
+
     @Test
     void convertPolarionFormulasKeepsOtherImagesAndFormulasWithoutSourceTest() {
         String html = "<p><img src=\"data:image/png;base64,ZHVtbXk=\" />" +

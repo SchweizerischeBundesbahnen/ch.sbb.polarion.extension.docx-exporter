@@ -37,6 +37,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.regex.Pattern;
 
 import static ch.sbb.polarion.extension.docx_exporter.util.exporter.Constants.*;
 
@@ -64,6 +65,9 @@ public class HtmlProcessor {
     private static final String ROWSPAN_ATTR = "rowspan";
     private static final String RIGHT_ALIGNMENT_MARGIN = "auto 0px auto auto";
     private static final String ANCHORS_WITH_HREF_SELECTOR = "a[href]";
+
+    // Matches <br>, <br/>, <br />, <BR/> and other case/whitespace variants Polarion may emit inside formula data-source attributes.
+    private static final Pattern BR_TAG_PATTERN = Pattern.compile("<br\\s*/?>", Pattern.CASE_INSENSITIVE);
 
     private static final String LOCALHOST = "localhost";
     public static final String HTTP_PROTOCOL_PREFIX = "http://";
@@ -835,8 +839,9 @@ public class HtmlProcessor {
             }
 
             // br-tags are used in Polarion to format formula code, but they are not visible (shouldn't be visible) in formula itself.
-            // LaTeX though outputs them as is, so we remove them here
-            latex = latex.replace("<br/>", "");
+            // LaTeX though outputs them as is, so we remove them here. Polarion's data-source attribute is a raw string (Jsoup does
+            // not HTML-parse attribute values), so we must tolerate all common br variants: <br>, <br/>, <br />, <BR/>, etc.
+            latex = BR_TAG_PATTERN.matcher(latex).replaceAll("");
 
             // Polarion marks block formulas with data-inline="false"; inline formulas have no data-inline attribute at all.
             boolean display = "false".equals(img.attr("data-inline"));
