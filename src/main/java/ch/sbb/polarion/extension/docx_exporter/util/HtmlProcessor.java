@@ -833,6 +833,11 @@ public class HtmlProcessor {
             if (latex.isEmpty()) {
                 continue;
             }
+
+            // br-tags are used in Polarion to format formula code, but they are not visible (shouldn't be visible) in formula itself.
+            // LaTeX though outputs them as is, so we remove them here
+            latex = latex.replace("<br/>", "");
+
             // Polarion marks block formulas with data-inline="false"; inline formulas have no data-inline attribute at all.
             boolean display = "false".equals(img.attr("data-inline"));
             Element script = new Element("script").attr("type", display ? "math/tex; mode=display" : "math/tex");
