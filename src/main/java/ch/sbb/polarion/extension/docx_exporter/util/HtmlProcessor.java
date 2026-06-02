@@ -37,6 +37,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import static ch.sbb.polarion.extension.docx_exporter.util.exporter.Constants.*;
@@ -68,6 +69,11 @@ public class HtmlProcessor {
 
     // Matches <br>, <br/>, <br />, <BR/> and other case/whitespace variants Polarion may emit inside formula data-source attributes.
     private static final Pattern BR_TAG_PATTERN = Pattern.compile("<br\\s*/?>", Pattern.CASE_INSENSITIVE);
+
+    // Under XML output syntax, Jsoup (3.1.x / 1.21.2) wraps the data of a <script> element in "//<![CDATA[\n ... \n//]]>".
+    // Pandoc expects the raw LaTeX inside <script type="math/tex">, so we unwrap this serialization artifact for our formula scripts.
+    private static final Pattern MATH_TEX_CDATA_PATTERN = Pattern.compile(
+            "(<script type=\"math/tex(?:; mode=display)?\">)//<!\\[CDATA\\[\\n(.*?)\\n//\\]\\]>(</script>)", Pattern.DOTALL);
 
     private static final String LOCALHOST = "localhost";
     public static final String HTTP_PROTOCOL_PREFIX = "http://";
@@ -190,7 +196,7 @@ public class HtmlProcessor {
             timedIfNotNull(generationLog, "Clear selectors", () -> clearSelectors(document, exportParams.getRemovalSelector()));
         }
 
-        html = document.body().html();
+        html = unwrapMathScriptCdata(document.body().html());
 
         // III. THIRD SECTION - and finally again back to manipulating HTML as a String.
         // ----------------
@@ -858,6 +864,20 @@ public class HtmlProcessor {
             }
             img.replaceWith(script);
         }
+    }
+
+    // Removes Jsoup's XML-mode CDATA wrapper around math/tex <script> bodies so Pandoc receives the raw LaTeX.
+    // quoteReplacement is required because LaTeX contains '\' and '$', which appendReplacement would otherwise
+    // interpret as replacement metacharacters (e.g. "\left" would become "left").
+    @VisibleForTesting
+    static String unwrapMathScriptCdata(@NotNull String html) {
+        Matcher matcher = MATH_TEX_CDATA_PATTERN.matcher(html);
+        StringBuilder result = new StringBuilder();
+        while (matcher.find()) {
+            matcher.appendReplacement(result, Matcher.quoteReplacement(matcher.group(1) + matcher.group(2) + matcher.group(3)));
+        }
+        matcher.appendTail(result);
+        return result.toString();
     }
 
     @VisibleForTesting
