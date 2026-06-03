@@ -205,37 +205,12 @@
             <scope>provided</scope>
         </dependency>
 
-        <!-- commons-logging 1.3.x references javax.servlet.* (ServletContextCleaner)
-             which JakartaCompatibilityChecker rejects. Multiple transitive paths
-             pull it in (pdfbox, fop-core, jaxb-runtime, …), so a per-dep exclusion
-             is fragile. Declaring it here as `provided` makes Maven's nearest-wins
-             rule promote every transitive copy to `provided`, keeping it out of
-             WEB-INF/lib. Polarion 2606 ships org.apache.commons.logging_1.2.0 as
-             an OSGi bundle, which is already in generic's Require-Bundle.common
-             and supplies the org.apache.commons.logging.* API at runtime. -->
-        <dependency>
-            <groupId>commons-logging</groupId>
-            <artifactId>commons-logging</artifactId>
-            <version>1.3.5</version>
-            <scope>provided</scope>
-        </dependency>
-
-        <!-- mbassador 1.3.2 has 5 classes under net/engio/mbassy/dispatch/el/
-             that reference javax.el (the optional ElFilter feature). Multiple
-             docx4j-* modules pull it transitively, so declare it here as
-             `provided` to remove every copy from WEB-INF/lib in one shot.
-             docx4j references mbassador only via two static fields
-             (Docx4J.bus, Docx4jEvent.bus) that stay null unless the application
-             calls Docx4J.setEventNotifier(...) — docx-exporter never does, so
-             Java's lazy type linking keeps the missing MBassador class
-             unresolved and the bundle starts fine. -->
-        <dependency>
-            <groupId>net.engio</groupId>
-            <artifactId>mbassador</artifactId>
-            <version>1.3.2</version>
-            <scope>provided</scope>
-        </dependency>
-
+        <!-- Each docx4j-* module declares mbassador (javax.el-tainted, rejected by Polarion 2606's
+             JakartaCompatibilityChecker) as its own direct dependency, so a single <exclusion> cannot
+             remove it. It is instead excluded once from the bundle via maven-dependency-plugin's
+             excludeArtifactIds (see build/plugins). docx4j only touches mbassador via two static fields
+             (Docx4J.bus, Docx4jEvent.bus) that stay null unless setEventNotifier(...) is called —
+             docx-exporter never does — so its runtime absence from WEB-INF/lib is safe. -->
         <dependency>
             <groupId>org.docx4j</groupId>
             <artifactId>docx4j-core</artifactId>
@@ -402,6 +377,17 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-dependency-plugin</artifactId>
+                <!-- Exclude mbassador (javax.el-tainted, rejected by Polarion 2606's JakartaCompatibilityChecker)
+                     from the bundle in one place. Every docx4j-* module declares it as a direct dependency, so
+                     a single <exclusion> can't cover it; excludeArtifactIds matches by coordinate, so this one
+                     entry keeps it out of every path — current and future. As plugin-level config it applies to
+                     the parent's copy-dependencies (WEB-INF/lib) and build-classpath (Bundle-ClassPath)
+                     executions alike, so the manifest and the lib directory stay in sync (the local unpack
+                     execution below is unaffected — it pulls generic.app by explicit artifactItem). mbassador
+                     stays on the compile classpath (harmless — docx4j never links it), only out of the bundle. -->
+                <configuration>
+                    <excludeArtifactIds>mbassador</excludeArtifactIds>
+                </configuration>
                 <executions>
                     <execution>
                         <phase>generate-resources</phase>
