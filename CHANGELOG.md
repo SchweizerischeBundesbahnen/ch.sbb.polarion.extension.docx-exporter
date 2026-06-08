@@ -1,5 +1,16 @@
 # Changelog
 
+## [4.2.2](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/compare/v4.2.1...v4.2.2) (2026-06-08)
+
+
+### Bug Fixes
+
+* **deps:** update byte-buddy.version to v1.18.10-jdk5 ([0e4c521](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/commit/0e4c5217484e0f27a7d16df1f95de27700cf8e17))
+* **deps:** update byte-buddy.version to v1.18.9-jdk5 ([1d88119](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/commit/1d881192569894f60c8cd44a5f7895b73220d546))
+* **deps:** update dependency ch.sbb.polarion.extensions:ch.sbb.polarion.extension.generic to v14.1.5 ([a365d1f](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/commit/a365d1fa3c15449f9e8f66c7581acee548b467b1))
+* **deps:** update dependency ch.sbb.polarion.extensions:ch.sbb.polarion.extension.generic to v14.1.6 ([9a66209](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/commit/9a662096bc857991be31a44d2128ea50fff0de8c))
+* **deps:** update docx4j.version to v11.5.14 ([a9eb851](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/commit/a9eb851b5e10438e673bafdf2f1d78a202779de4))
+
 ## [4.2.1](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/compare/v4.2.0...v4.2.1) (2026-05-26)
 
 
