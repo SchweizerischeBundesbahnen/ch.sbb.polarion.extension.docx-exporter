@@ -5,7 +5,7 @@
     <parent>
         <groupId>ch.sbb.polarion.extensions</groupId>
         <artifactId>ch.sbb.polarion.extension.generic</artifactId>
-        <version>15.0.0</version>
+        <version>15.0.1</version>
     </parent>
 
     <artifactId>ch.sbb.polarion.extension.docx-exporter</artifactId>
@@ -18,8 +18,8 @@
 
     <licenses>
         <license>
-            <name>The SBB License, Version 1.0</name>
-            <url>https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/blob/main/LICENSES/SBB.txt</url>
+            <name>Apache License, Version 2.0</name>
+            <url>https://www.apache.org/licenses/LICENSE-2.0</url>
         </license>
     </licenses>
 
@@ -45,15 +45,15 @@
 
     <properties>
         <pdfbox.version>3.0.7</pdfbox.version>
-        <docx4j.version>11.5.13</docx4j.version>
+        <docx4j.version>11.5.14</docx4j.version>
         <jakarta.xml.bind.version>4.0.5</jakarta.xml.bind.version>
         <jakarta.activation.version>2.1.4</jakarta.activation.version>
         <okapi.xliff.version>1.48.0</okapi.xliff.version>
-        <byte-buddy.version>1.18.8-jdk5</byte-buddy.version>
+        <byte-buddy.version>1.18.10-jdk5</byte-buddy.version>
 
         <slf4j.version>2.0.18</slf4j.version>
         <testcontainers.version>2.0.5</testcontainers.version>
-        <jackson.version>2.21.4</jackson.version>
+        <jackson.version>2.22.0</jackson.version>
 
         <exec-maven-plugin.version>3.3.0</exec-maven-plugin.version>
         <awaitility.version>4.3.0</awaitility.version>
