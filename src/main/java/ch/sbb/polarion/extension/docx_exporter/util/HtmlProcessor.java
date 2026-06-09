@@ -72,6 +72,7 @@ public class HtmlProcessor {
 
     // Under XML output syntax, Jsoup (3.1.x / 1.21.2) wraps the data of a <script> element in "//<![CDATA[\n ... \n//]]>".
     // Pandoc expects the raw LaTeX inside <script type="math/tex">, so we unwrap this serialization artifact for our formula scripts.
+    @SuppressWarnings("java:S5852") // ignore vulnerable to polynomial runtime due to backtracking
     private static final Pattern MATH_TEX_CDATA_PATTERN = Pattern.compile(
             "(<script type=\"math/tex(?:; mode=display)?\">)//<!\\[CDATA\\[[\\r\\n]++(.*?)[\\r\\n]++//\\]\\]>(</script>)", Pattern.DOTALL);
 
