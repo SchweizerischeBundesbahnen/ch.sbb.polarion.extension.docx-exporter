@@ -50,11 +50,12 @@ class DocumentDataFactoryTest {
 
         InternalDocuments internalDocumentsMock = mock(InternalDocuments.class);
         DocumentSelector documentSelectorMock = mock(DocumentSelector.class);
-        when(documentSelectorMock.revision(ArgumentMatchers.any())).thenReturn(documentSelectorMock);
         Document documentMock = mock(Document.class);
-        when(documentSelectorMock.spaceReferenceAndName(ArgumentMatchers.any(), ArgumentMatchers.any())).thenReturn(documentMock);
+        // Polarion 2606: object references resolve via transaction.byEnum(prototype).getBy().reference(ref)
+        when(documentSelectorMock.reference(ArgumentMatchers.any())).thenReturn(documentMock);
         when(internalDocumentsMock.getBy()).thenReturn(documentSelectorMock);
-        when(internalReadOnlyTransactionMock.documents()).thenReturn(internalDocumentsMock);
+        // byEnum returns a wildcard-captured ModelObjectsBase; doReturn avoids the generics inference issue
+        doReturn(internalDocumentsMock).when(internalReadOnlyTransactionMock).byEnum(ArgumentMatchers.any());
     }
 
     @Test

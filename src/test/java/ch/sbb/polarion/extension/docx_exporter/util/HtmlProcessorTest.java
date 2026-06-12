@@ -192,7 +192,7 @@ class HtmlProcessorTest {
 
         assertEquals(
                 "<p>before <script type=\"math/tex; mode=display\">" + latex + "</script> after</p>",
-                document.body().html()
+                HtmlProcessor.unwrapMathScriptCdata(document.body().html())
         );
     }
 
@@ -208,7 +208,7 @@ class HtmlProcessorTest {
         // A zero-width space is prepended to the script tag so Word renders the formula as true inline math.
         assertEquals(
                 "<p>before \u200B<script type=\"math/tex\">" + latex + "</script> after</p>",
-                document.body().html()
+                HtmlProcessor.unwrapMathScriptCdata(document.body().html())
         );
     }
 
@@ -224,7 +224,7 @@ class HtmlProcessorTest {
         Document document = JSoupUtils.parseHtml(html);
         processor.convertPolarionFormulas(document);
 
-        String serialized = document.body().html();
+        String serialized = HtmlProcessor.unwrapMathScriptCdata(document.body().html());
         int scriptStart = serialized.indexOf(">", serialized.indexOf("<script")) + 1;
         int scriptEnd = serialized.indexOf("</script>");
         String scriptBody = serialized.substring(scriptStart, scriptEnd);
@@ -249,7 +249,7 @@ class HtmlProcessorTest {
         Document document = JSoupUtils.parseHtml(html);
         processor.convertPolarionFormulas(document);
 
-        String serialized = document.body().html();
+        String serialized = HtmlProcessor.unwrapMathScriptCdata(document.body().html());
         int scriptStart = serialized.indexOf(">", serialized.indexOf("<script")) + 1;
         int scriptEnd = serialized.indexOf("</script>");
         String scriptBody = serialized.substring(scriptStart, scriptEnd);
@@ -475,6 +475,7 @@ class HtmlProcessorTest {
             // to avoid changing input html and check with regular equals
             doNothing().when(spyHtmlProcessor).adjustCellWidth(any());
             exportParams.setCutEmptyChapters(false);
+            exportParams.setCutEmptyWIAttributes(false); // this test asserts the input is left unchanged, so disable WI-attribute cutting (defaults to true)
 
             // Spaces, new lines & nbsp symbols are removed to exclude difference in space characters
             String result = spyHtmlProcessor.processHtmlForExport(html, exportParams, List.of());

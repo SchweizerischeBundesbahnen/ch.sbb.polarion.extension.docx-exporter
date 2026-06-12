@@ -67,11 +67,12 @@ class ModelObjectProviderTest {
     void testModelObjectProviderGetDocument(@NotNull ExportParams exportParams, ExtensionContext extensionContext) {
         InternalDocuments internalDocumentsMock = mock(InternalDocuments.class);
         DocumentSelector documentSelectorMock = mock(DocumentSelector.class);
-        when(documentSelectorMock.revision(any())).thenReturn(documentSelectorMock);
         Document documentMock = mock(Document.class);
-        when(documentSelectorMock.spaceReferenceAndName(any(), any())).thenReturn(documentMock);
+        // Polarion 2606: object references resolve via transaction.byEnum(prototype).getBy().reference(ref)
+        when(documentSelectorMock.reference(any())).thenReturn(documentMock);
         when(internalDocumentsMock.getBy()).thenReturn(documentSelectorMock);
-        when(internalReadOnlyTransactionMock.documents()).thenReturn(internalDocumentsMock);
+        // byEnum returns a wildcard-captured ModelObjectsBase; doReturn avoids the generics inference issue
+        doReturn(internalDocumentsMock).when(internalReadOnlyTransactionMock).byEnum(any());
 
         ModelObjectProvider modelObjectProvider = new ModelObjectProvider(exportParams, docxExporterPolarionService);
         ModelObject modelObject = TransactionalExecutor.executeSafelyInReadOnlyTransaction(modelObjectProvider::getModelObject);

@@ -32,9 +32,6 @@ class CustomPageBreakPartTest {
     private RichTextRenderingContext renderingContext;
 
     @Mock
-    private RichTextRenderTarget renderTarget;
-
-    @Mock
     private HtmlElement element;
 
     @Mock
@@ -46,7 +43,7 @@ class CustomPageBreakPartTest {
     void setUp() {
         when(pageBreakPart.getElement()).thenReturn(element);
         customPageBreakPart = new CustomPageBreakPart(pageBreakPart);
-        when(renderingContext.getRenderTarget()).thenReturn(renderTarget);
+        when(renderingContext.getRenderTarget()).thenReturn(RichTextRenderTarget.PDF_EXPORT);
 
         // Mock the appendFragment method to return htmlFragmentBuilder
         when(htmlBuilder.appendFragment()).thenReturn(htmlFragmentBuilder);
@@ -54,7 +51,6 @@ class CustomPageBreakPartTest {
 
     @Test
     void testRenderPdfLandscapePageBreak() {
-        when(renderTarget.isPdf()).thenReturn(true);
         when(element.getAttribute()).thenReturn(attributesReader);
         when(attributesReader.byName("data-is-landscape")).thenReturn("true");
 
@@ -65,7 +61,6 @@ class CustomPageBreakPartTest {
 
     @Test
     void testRenderPdfPortraitPageBreak() {
-        when(renderTarget.isPdf()).thenReturn(true);
         when(element.getAttribute()).thenReturn(attributesReader);
         when(attributesReader.byName("data-is-landscape")).thenReturn("false");
 
@@ -76,7 +71,6 @@ class CustomPageBreakPartTest {
 
     @Test
     void testNullLandscapeAttributeDefaultsToFalse() {
-        when(renderTarget.isPdf()).thenReturn(true);
         when(element.getAttribute()).thenReturn(attributesReader);
         when(attributesReader.byName("data-is-landscape")).thenReturn(null);
 
@@ -87,7 +81,6 @@ class CustomPageBreakPartTest {
 
     @Test
     void testOrientationChangeFromPortraitToLandscape() {
-        when(renderTarget.isPdf()).thenReturn(true);
         when(element.getAttribute()).thenReturn(attributesReader);
 
         when(attributesReader.byName("data-is-landscape")).thenReturn("false");
@@ -101,7 +94,6 @@ class CustomPageBreakPartTest {
 
     @Test
     void testSameOrientationDoesNotGenerateOrientationChange() {
-        when(renderTarget.isPdf()).thenReturn(true);
         when(element.getAttribute()).thenReturn(attributesReader);
         when(attributesReader.byName("data-is-landscape")).thenReturn("true");
 
@@ -113,7 +105,6 @@ class CustomPageBreakPartTest {
 
     @Test
     void testMultipleRenderCyclesPreserveState() {
-        when(renderTarget.isPdf()).thenReturn(true);
         when(element.getAttribute()).thenReturn(attributesReader);
 
         when(attributesReader.byName("data-is-landscape")).thenReturn("false");

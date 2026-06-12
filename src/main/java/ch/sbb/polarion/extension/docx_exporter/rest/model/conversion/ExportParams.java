@@ -54,6 +54,7 @@ public class ExportParams {
     @Schema(description = "Empty chapters should be removed from the document")
     private boolean cutEmptyChapters;
 
+    @Builder.Default
     @Schema(description = "Empty work item attributes should be removed from the document", defaultValue = "true")
     private boolean cutEmptyWIAttributes = true;
 
