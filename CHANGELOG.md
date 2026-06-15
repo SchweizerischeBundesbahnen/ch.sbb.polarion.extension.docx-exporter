@@ -1,5 +1,16 @@
 # Changelog
 
+## [5.0.0](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/compare/v4.2.2...v5.0.0) (2026-06-15)
+
+
+### ⚠ BREAKING CHANGES
+
+* Polarion 2606 support ([#235](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/issues/235))
+
+### Features
+
+* Polarion 2606 support ([#235](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/issues/235)) ([53bafa4](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/commit/53bafa407a3ac83ebf6efbc57e905ddea725393c)), closes [#234](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/issues/234)
+
 ## [4.2.2](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/compare/v4.2.1...v4.2.2) (2026-06-08)
 
 
