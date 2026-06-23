@@ -44,7 +44,11 @@ export default class ExportPopup {
         this.hideAlerts();
         this.loadFormData();
 
-        MicroModal.show(POPUP_ID);
+        MicroModal.show(POPUP_ID, {
+            // Move focus out of the modal before micromodal sets aria-hidden on close, otherwise
+            // the browser blocks aria-hidden on the still-focused overlay (accessibility warning).
+            onClose: () => document.activeElement && document.activeElement.blur()
+        });
     }
 
     loadFormData() {
