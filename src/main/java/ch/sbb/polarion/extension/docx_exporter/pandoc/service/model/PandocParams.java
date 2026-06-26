@@ -1,5 +1,6 @@
 package ch.sbb.polarion.extension.docx_exporter.pandoc.service.model;
 
+import ch.sbb.polarion.extension.docx_exporter.rest.model.conversion.ImageDensity;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.polarion.core.util.StringUtils;
 import lombok.AllArgsConstructor;
@@ -7,6 +8,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.stream.Collectors;
 
@@ -20,12 +22,15 @@ public class PandocParams {
 
     private String orientation;
     private String paperSize;
+    private ImageDensity imageDensity;
 
     public String toUrlParams() {
-        String params = Map.of(
-                        "orientation", StringUtils.getEmptyIfNull(orientation),
-                        "paper_size", StringUtils.getEmptyIfNull(paperSize)
-                ).entrySet().stream()
+        Map<String, String> values = new LinkedHashMap<>();
+        values.put("orientation", StringUtils.getEmptyIfNull(orientation));
+        values.put("paper_size", StringUtils.getEmptyIfNull(paperSize));
+        // pandoc-service expects the device scale factor (same contract as weasyprint-service)
+        values.put("scale_factor", imageDensity == null ? "" : String.valueOf(imageDensity.getScale()));
+        String params = values.entrySet().stream()
                 .filter(entry -> !StringUtils.isEmpty(entry.getValue()))
                 .map(entry -> entry.getKey() + "=" + entry.getValue())
                 .collect(Collectors.joining("&"));

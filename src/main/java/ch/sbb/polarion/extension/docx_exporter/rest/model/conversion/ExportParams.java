@@ -39,6 +39,9 @@ public class ExportParams {
     @Schema(description = "Paper size")
     private String paperSize;
 
+    @Schema(description = "Quality of PNG images converted from SVG, by default 96 dpi")
+    private String imageDensity;
+
     @Schema(description = "Webhooks settings name")
     private String webhooks;
 

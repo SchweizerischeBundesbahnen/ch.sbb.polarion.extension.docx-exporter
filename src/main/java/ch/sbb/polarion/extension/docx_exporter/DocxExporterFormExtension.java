@@ -85,6 +85,7 @@ public class DocxExporterFormExtension implements IFormExtension {
             form = adjustLocalization(scope, form, selectedStylePackage);
             form = adjustOrientation(form, selectedStylePackage);
             form = adjustPaperSize(form, selectedStylePackage);
+            form = adjustImageDensity(form, selectedStylePackage);
             form = adjustWebhooks(scope, form, selectedStylePackage);
             form = adjustRenderComments(form, selectedStylePackage);
             form = adjustCutEmptyChapters(form, selectedStylePackage);
@@ -209,6 +210,15 @@ public class DocxExporterFormExtension implements IFormExtension {
             form = form.replace("<input id='docx-paper-size'", "<input id='docx-paper-size' checked");
             form = form.replace("id='docx-paper-size-selector' style='display: none'", "id='docx-paper-size-selector'");
             form = form.replace(String.format(OPTION_VALUE, stylePackage.getPaperSize()), String.format(OPTION_SELECTED, stylePackage.getPaperSize()));
+        }
+        return form;
+    }
+
+    private String adjustImageDensity(String form, StylePackageModel stylePackage) {
+        if (stylePackage.getImageDensity() != null) {
+            form = form.replace("<input id='docx-image-density'", "<input id='docx-image-density' checked");
+            form = form.replace("id='docx-image-density-selector' style='display: none'", "id='docx-image-density-selector'");
+            form = form.replace(String.format(OPTION_VALUE, stylePackage.getImageDensity()), String.format(OPTION_SELECTED, stylePackage.getImageDensity()));
         }
         return form;
     }

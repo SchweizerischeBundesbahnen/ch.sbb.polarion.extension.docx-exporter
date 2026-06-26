@@ -1,5 +1,6 @@
 package ch.sbb.polarion.extension.docx_exporter.pandoc.service.model;
 
+import ch.sbb.polarion.extension.docx_exporter.rest.model.conversion.ImageDensity;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -19,6 +20,44 @@ class PandocParamsTest {
         assertTrue(result.contains("orientation=landscape"));
         assertTrue(result.contains("paper_size=A4"));
         assertTrue(result.contains("&"));
+    }
+
+    @Test
+    void testToUrlParams_withImageDensity() {
+        PandocParams params = PandocParams.builder()
+                .imageDensity(ImageDensity.DPI_192)
+                .build();
+
+        String result = params.toUrlParams();
+
+        assertEquals("?scale_factor=2.0", result);
+    }
+
+    @Test
+    void testToUrlParams_withAllParams() {
+        PandocParams params = PandocParams.builder()
+                .orientation("landscape")
+                .paperSize("A4")
+                .imageDensity(ImageDensity.DPI_300)
+                .build();
+
+        String result = params.toUrlParams();
+
+        assertTrue(result.startsWith("?"));
+        assertTrue(result.contains("orientation=landscape"));
+        assertTrue(result.contains("paper_size=A4"));
+        assertTrue(result.contains("scale_factor=3.125"));
+    }
+
+    @Test
+    void testToUrlParams_withoutImageDensityOmitsScaleFactor() {
+        PandocParams params = PandocParams.builder()
+                .orientation("portrait")
+                .build();
+
+        String result = params.toUrlParams();
+
+        assertFalse(result.contains("scale_factor"));
     }
 
     @Test

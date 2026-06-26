@@ -1,6 +1,7 @@
 package ch.sbb.polarion.extension.docx_exporter.settings;
 
 import ch.sbb.polarion.extension.docx_exporter.rest.model.conversion.CommentsRenderType;
+import ch.sbb.polarion.extension.docx_exporter.rest.model.conversion.ImageDensity;
 import ch.sbb.polarion.extension.generic.settings.GenericNamedSettings;
 import ch.sbb.polarion.extension.generic.settings.SettingsService;
 import ch.sbb.polarion.extension.docx_exporter.rest.model.settings.stylepackage.StylePackageModel;
@@ -32,6 +33,7 @@ public class StylePackageSettings extends GenericNamedSettings<StylePackageModel
                 .webhooks(DEFAULT_NAME)
                 .renderComments(CommentsRenderType.OPEN)
                 .cutEmptyWorkitemAttributes(true)
+                .imageDensity(ImageDensity.DPI_96.name())
                 .weight(StylePackageModel.DEFAULT_WEIGHT)
                 .build();
     }
