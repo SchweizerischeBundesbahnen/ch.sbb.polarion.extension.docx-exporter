@@ -1506,6 +1506,10 @@
             "description": "Target file name of exported document",
             "type": "string"
           },
+          "imageDensity": {
+            "description": "Quality of PNG images converted from SVG, by default 96 dpi",
+            "type": "string"
+          },
           "includeUnreferencedComments": {
             "description": "Include unreferenced comments",
             "type": "boolean"

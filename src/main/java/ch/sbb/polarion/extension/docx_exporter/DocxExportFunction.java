@@ -109,6 +109,7 @@ public class DocxExportFunction implements IFunction<IModule> {
                 .localization(stylePackage.getLocalization())
                 .orientation(stylePackage.getOrientation())
                 .paperSize(stylePackage.getPaperSize())
+                .imageDensity(stylePackage.getImageDensity())
                 .webhooks(stylePackage.getWebhooks())
                 .renderComments(stylePackage.getRenderComments())
                 .cutEmptyChapters(stylePackage.isCutEmptyChapters())

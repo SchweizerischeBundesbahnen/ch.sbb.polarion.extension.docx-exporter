@@ -83,6 +83,10 @@ export default class ExportPanel {
         this.ctx.setValue("docx-paper-size-selector", stylePackage.paperSize || ExportParams.PaperSize.A4);
         this.ctx.displayIf("docx-paper-size-selector", !!stylePackage.paperSize);
 
+        this.ctx.setCheckbox("docx-image-density", !!stylePackage.imageDensity);
+        this.ctx.setValue("docx-image-density-selector", stylePackage.imageDensity || ExportParams.ImageDensity.DPI_96);
+        this.ctx.displayIf("docx-image-density-selector", !!stylePackage.imageDensity);
+
         const rolesProvided = stylePackage.linkedWorkitemRoles && stylePackage.linkedWorkitemRoles.length > 0;
         this.ctx.setCheckbox("docx-selected-roles", rolesProvided);
         this.ctx.querySelectorAll(`#docx-roles-selector option`).forEach(roleOption => {
@@ -138,6 +142,7 @@ export default class ExportPanel {
             .setLocalization(this.ctx.getElementById("docx-localization-selector").value)
             .setOrientation(this.ctx.getElementById("docx-orientation").checked ? this.ctx.getElementById("docx-orientation-selector").value : null)
             .setPaperSize(this.ctx.getElementById("docx-paper-size").checked ? this.ctx.getElementById("docx-paper-size-selector").value : null)
+            .setImageDensity(this.ctx.getElementById("docx-image-density").checked ? this.ctx.getElementById("docx-image-density-selector").value : null)
             .setWebhooks(this.ctx.getElementById("docx-webhooks-checkbox").checked ? this.ctx.getElementById("docx-webhooks-selector").value : null)
             .setRemovalSelector(this.ctx.getValueById("docx-removal-selector"))
             .setRenderComments(this.ctx.getElementById('render-comments').checked ? this.ctx.getElementById("render-comments-selector").value : null)

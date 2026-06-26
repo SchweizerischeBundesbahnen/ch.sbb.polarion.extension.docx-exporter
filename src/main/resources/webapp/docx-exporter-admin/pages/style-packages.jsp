@@ -177,6 +177,18 @@
             </div>
         </div>
 
+        <div class="flex-container">
+            <div class="flex-column">
+                <div class='checkbox input-group'>
+                    <label for='image-density' id='image-density-label'>
+                        <input id="image-density" onchange='document.getElementById("image-density-select").style.visibility = this.checked ? "visible" : "hidden"' type='checkbox'/>
+                        Custom image density
+                    </label>
+                    <div id="image-density-select" style="visibility: hidden; margin-left: 10px; width: 200px"></div>
+                </div>
+            </div>
+        </div>
+
         <div class="flex-container" style="border-top: 1px solid #ccc; margin-top: 20px; padding-top: 15px; display: <%= webhooksEnabled ? "flex" : "none" %>;">
             <div class="flex-column">
                 <div class="input-group">

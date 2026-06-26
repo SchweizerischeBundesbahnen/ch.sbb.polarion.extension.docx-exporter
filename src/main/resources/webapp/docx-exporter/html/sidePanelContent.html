@@ -69,6 +69,18 @@
             </select>
         </div>
         <div class='property-wrapper'>
+            <label for='docx-image-density'>
+                <input id='docx-image-density' onchange='document.querySelector("#docx-exporter-panel #docx-image-density-selector").style.display = this.checked ? "block" : "none"' type='checkbox'/>
+                Custom image density
+            </label>
+            <select id='docx-image-density-selector' style='display: none'>
+                <option value='DPI_96'>96 dpi</option>
+                <option value='DPI_192'>192 dpi</option>
+                <option value='DPI_300'>300 dpi</option>
+                <option value='DPI_600'>600 dpi</option>
+            </select>
+        </div>
+        <div class='property-wrapper'>
             <label for='render-comments'>
                 <input id='render-comments' onchange='document.querySelector("#docx-exporter-panel #render-comments-selector").style.display = this.checked ? "block" : "none"; document.querySelector("#docx-exporter-panel #render-comments-options").style.display = this.checked ? "flex" : "none"; if (!this.checked) { document.querySelector("#docx-exporter-panel #include-unreferenced-comments").checked = false; }' type='checkbox'/>
                 Comments rendering

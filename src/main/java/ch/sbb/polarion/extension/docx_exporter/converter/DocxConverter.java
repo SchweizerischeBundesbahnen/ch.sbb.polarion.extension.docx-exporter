@@ -4,6 +4,7 @@ import ch.sbb.polarion.extension.docx_exporter.pandoc.service.PandocServiceConne
 import ch.sbb.polarion.extension.docx_exporter.pandoc.service.model.PandocParams;
 import ch.sbb.polarion.extension.docx_exporter.properties.DocxExporterExtensionConfiguration;
 import ch.sbb.polarion.extension.docx_exporter.rest.model.conversion.ExportParams;
+import ch.sbb.polarion.extension.docx_exporter.rest.model.conversion.ImageDensity;
 import ch.sbb.polarion.extension.docx_exporter.rest.model.conversion.LinkRoleDirection;
 import ch.sbb.polarion.extension.docx_exporter.rest.model.documents.DocumentData;
 import ch.sbb.polarion.extension.docx_exporter.rest.model.settings.templates.TemplatesModel;
@@ -104,7 +105,7 @@ public class DocxConverter {
             // Generate DOCX
             final byte[] finalTemplate = template;
             byte[] bytes = generationLog.timed("Pandoc conversion",
-                    () -> generateDocx(htmlContent, finalTemplate, PandocParams.builder().orientation(exportParams.getOrientation()).paperSize(exportParams.getPaperSize()).build()),
+                    () -> generateDocx(htmlContent, finalTemplate, PandocParams.builder().orientation(exportParams.getOrientation()).paperSize(exportParams.getPaperSize()).imageDensity(ImageDensity.fromString(exportParams.getImageDensity())).build()),
                     docx -> String.format("docx_size=%d bytes", docx.length));
 
             // Set DOCX metrics

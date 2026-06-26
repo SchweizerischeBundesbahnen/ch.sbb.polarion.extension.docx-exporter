@@ -33,6 +33,7 @@ class PandocStatusProviderTest {
                 .timestamp(timestamp)
                 .pandoc("2.4")
                 .pandocService("1.0.0")
+                .chromium("148.0.7778.96")
                 .build();
 
         PandocServiceConnector pandocServiceConnector = mock(PandocServiceConnector.class);
@@ -44,11 +45,12 @@ class PandocStatusProviderTest {
 
             List<ConfigurationStatus> configurationStatuses = pandocStatusProvider.getStatuses(ConfigurationStatusProvider.Context.builder().build());
 
-            assertEquals(3, configurationStatuses.size());
+            assertEquals(4, configurationStatuses.size());
             assertThat(configurationStatuses).containsExactlyInAnyOrder(
                     new ConfigurationStatus("Pandoc Service", Status.OK, "1.0.0"),
                     new ConfigurationStatus("Pandoc Service: Python", Status.OK, "3.12.5"),
-                    new ConfigurationStatus("Pandoc Service: Pandoc", Status.OK, "2.4")
+                    new ConfigurationStatus("Pandoc Service: Pandoc", Status.OK, "2.4"),
+                    new ConfigurationStatus("Pandoc Service: Chromium", Status.OK, "148.0.7778.96")
             );
         }
     }
@@ -75,6 +77,7 @@ class PandocStatusProviderTest {
                 .timestamp(timestamp)
                 .pandoc("2.4")
                 .pandocService("1.0.0")
+                .chromium("148.0.7778.96")
                 .build();
 
         PandocServiceConnector pandocServiceConnector = mock(PandocServiceConnector.class);
@@ -86,11 +89,12 @@ class PandocStatusProviderTest {
 
             List<ConfigurationStatus> configurationStatuses = pandocStatusProvider.getStatuses(ConfigurationStatusProvider.Context.builder().build());
 
-            assertEquals(3, configurationStatuses.size());
+            assertEquals(4, configurationStatuses.size());
             assertThat(configurationStatuses).containsExactlyInAnyOrder(
                     new ConfigurationStatus("Pandoc Service", Status.WARNING, "1.0.0 (" + timestamp + "): <span style='color: red;'>use latest compatible</span> <a href='https://github.com/SchweizerischeBundesbahnen/pandoc-service/releases/tag/v1.0.1' target='_blank'>1.0.1</a>"),
                     new ConfigurationStatus("Pandoc Service: Python", Status.OK, "3.12.5"),
-                    new ConfigurationStatus("Pandoc Service: Pandoc", Status.OK, "2.4")
+                    new ConfigurationStatus("Pandoc Service: Pandoc", Status.OK, "2.4"),
+                    new ConfigurationStatus("Pandoc Service: Chromium", Status.OK, "148.0.7778.96")
             );
         }
     }
@@ -103,6 +107,7 @@ class PandocStatusProviderTest {
                 .timestamp(timestamp)
                 .pandoc("2.4")
                 .pandocService(null)
+                .chromium("148.0.7778.96")
                 .build();
 
         PandocServiceConnector pandocServiceConnector = mock(PandocServiceConnector.class);
@@ -114,11 +119,12 @@ class PandocStatusProviderTest {
 
             List<ConfigurationStatus> configurationStatuses = pandocStatusProvider.getStatuses(ConfigurationStatusProvider.Context.builder().build());
 
-            assertEquals(3, configurationStatuses.size());
+            assertEquals(4, configurationStatuses.size());
             assertThat(configurationStatuses).containsExactlyInAnyOrder(
                     new ConfigurationStatus("Pandoc Service", Status.ERROR, "Unknown (" + timestamp + "): <span style='color: red;'>use latest compatible</span> <a href='https://github.com/SchweizerischeBundesbahnen/pandoc-service/releases/tag/v1.0.1' target='_blank'>1.0.1</a>"),
                     new ConfigurationStatus("Pandoc Service: Python", Status.OK, "3.12.5"),
-                    new ConfigurationStatus("Pandoc Service: Pandoc", Status.OK, "2.4")
+                    new ConfigurationStatus("Pandoc Service: Pandoc", Status.OK, "2.4"),
+                    new ConfigurationStatus("Pandoc Service: Chromium", Status.OK, "148.0.7778.96")
             );
         }
     }
@@ -130,6 +136,7 @@ class PandocStatusProviderTest {
                 .timestamp(null)
                 .pandoc("2.4")
                 .pandocService(null)
+                .chromium("148.0.7778.96")
                 .build();
 
         PandocServiceConnector pandocServiceConnector = mock(PandocServiceConnector.class);
@@ -141,11 +148,12 @@ class PandocStatusProviderTest {
 
             List<ConfigurationStatus> configurationStatuses = pandocStatusProvider.getStatuses(ConfigurationStatusProvider.Context.builder().build());
 
-            assertEquals(3, configurationStatuses.size());
+            assertEquals(4, configurationStatuses.size());
             assertThat(configurationStatuses).containsExactlyInAnyOrder(
                     new ConfigurationStatus("Pandoc Service", Status.ERROR, "Unknown: <span style='color: red;'>use latest compatible</span> <a href='https://github.com/SchweizerischeBundesbahnen/pandoc-service/releases/tag/v1.0.1' target='_blank'>1.0.1</a>"),
                     new ConfigurationStatus("Pandoc Service: Python", Status.OK, "3.12.5"),
-                    new ConfigurationStatus("Pandoc Service: Pandoc", Status.OK, "2.4")
+                    new ConfigurationStatus("Pandoc Service: Pandoc", Status.OK, "2.4"),
+                    new ConfigurationStatus("Pandoc Service: Chromium", Status.OK, "148.0.7778.96")
             );
         }
     }
@@ -157,6 +165,7 @@ class PandocStatusProviderTest {
                 .timestamp("")
                 .pandoc("2.4")
                 .pandocService("1.0.0")
+                .chromium("148.0.7778.96")
                 .build();
 
         PandocServiceConnector pandocServiceConnector = mock(PandocServiceConnector.class);
@@ -168,11 +177,12 @@ class PandocStatusProviderTest {
 
             List<ConfigurationStatus> configurationStatuses = pandocStatusProvider.getStatuses(ConfigurationStatusProvider.Context.builder().build());
 
-            assertEquals(3, configurationStatuses.size());
+            assertEquals(4, configurationStatuses.size());
             assertThat(configurationStatuses).containsExactlyInAnyOrder(
                     new ConfigurationStatus("Pandoc Service", Status.WARNING, "1.0.0: <span style='color: red;'>use latest compatible</span> <a href='https://github.com/SchweizerischeBundesbahnen/pandoc-service/releases/tag/v1.0.1' target='_blank'>1.0.1</a>"),
                     new ConfigurationStatus("Pandoc Service: Python", Status.OK, "3.12.5"),
-                    new ConfigurationStatus("Pandoc Service: Pandoc", Status.OK, "2.4")
+                    new ConfigurationStatus("Pandoc Service: Pandoc", Status.OK, "2.4"),
+                    new ConfigurationStatus("Pandoc Service: Chromium", Status.OK, "148.0.7778.96")
             );
         }
     }
@@ -185,6 +195,7 @@ class PandocStatusProviderTest {
                 .timestamp(timestamp)
                 .pandoc("2.4")
                 .pandocService("1.0.5")
+                .chromium("148.0.7778.96")
                 .build();
 
         PandocServiceConnector pandocServiceConnector = mock(PandocServiceConnector.class);
@@ -196,11 +207,72 @@ class PandocStatusProviderTest {
 
             List<ConfigurationStatus> configurationStatuses = pandocStatusProvider.getStatuses(ConfigurationStatusProvider.Context.builder().build());
 
-            assertEquals(3, configurationStatuses.size());
+            assertEquals(4, configurationStatuses.size());
             assertThat(configurationStatuses).containsExactlyInAnyOrder(
                     new ConfigurationStatus("Pandoc Service", Status.WARNING, "1.0.5 (" + timestamp + "): <span style='color: red;'>use latest compatible</span> <a href='https://github.com/SchweizerischeBundesbahnen/pandoc-service/releases/tag/v1.0.1' target='_blank'>1.0.1</a>"),
                     new ConfigurationStatus("Pandoc Service: Python", Status.OK, "3.12.5"),
-                    new ConfigurationStatus("Pandoc Service: Pandoc", Status.OK, "2.4")
+                    new ConfigurationStatus("Pandoc Service: Pandoc", Status.OK, "2.4"),
+                    new ConfigurationStatus("Pandoc Service: Chromium", Status.OK, "148.0.7778.96")
+            );
+        }
+    }
+
+    @Test
+    void testNoChromiumVersion() {
+        String timestamp = ZonedDateTime.now(ZoneOffset.UTC).truncatedTo(ChronoUnit.SECONDS).format(DateTimeFormatter.ISO_INSTANT);
+        PandocInfo pandocInfo = PandocInfo.builder()
+                .python("3.12.5")
+                .timestamp(timestamp)
+                .pandoc("2.4")
+                .pandocService("1.0.0")
+                .chromium("")
+                .build();
+
+        PandocServiceConnector pandocServiceConnector = mock(PandocServiceConnector.class);
+        when(pandocServiceConnector.getPandocInfo()).thenReturn(pandocInfo);
+        PandocStatusProvider pandocStatusProvider = new PandocStatusProvider(pandocServiceConnector);
+
+        try (MockedStatic<VersionUtils> versionsUtilsMockedStatic = mockStatic(VersionUtils.class)) {
+            versionsUtilsMockedStatic.when(VersionUtils::getLatestCompatibleVersionPandocService).thenReturn("1.0.0");
+
+            List<ConfigurationStatus> configurationStatuses = pandocStatusProvider.getStatuses(ConfigurationStatusProvider.Context.builder().build());
+
+            assertEquals(4, configurationStatuses.size());
+            assertThat(configurationStatuses).containsExactlyInAnyOrder(
+                    new ConfigurationStatus("Pandoc Service", Status.OK, "1.0.0"),
+                    new ConfigurationStatus("Pandoc Service: Python", Status.OK, "3.12.5"),
+                    new ConfigurationStatus("Pandoc Service: Pandoc", Status.OK, "2.4"),
+                    new ConfigurationStatus("Pandoc Service: Chromium", Status.ERROR, "Unknown")
+            );
+        }
+    }
+
+    @Test
+    void testNullChromiumVersion() {
+        String timestamp = ZonedDateTime.now(ZoneOffset.UTC).truncatedTo(ChronoUnit.SECONDS).format(DateTimeFormatter.ISO_INSTANT);
+        PandocInfo pandocInfo = PandocInfo.builder()
+                .python("3.12.5")
+                .timestamp(timestamp)
+                .pandoc("2.4")
+                .pandocService("1.0.0")
+                .chromium(null)
+                .build();
+
+        PandocServiceConnector pandocServiceConnector = mock(PandocServiceConnector.class);
+        when(pandocServiceConnector.getPandocInfo()).thenReturn(pandocInfo);
+        PandocStatusProvider pandocStatusProvider = new PandocStatusProvider(pandocServiceConnector);
+
+        try (MockedStatic<VersionUtils> versionsUtilsMockedStatic = mockStatic(VersionUtils.class)) {
+            versionsUtilsMockedStatic.when(VersionUtils::getLatestCompatibleVersionPandocService).thenReturn("1.0.0");
+
+            List<ConfigurationStatus> configurationStatuses = pandocStatusProvider.getStatuses(ConfigurationStatusProvider.Context.builder().build());
+
+            assertEquals(4, configurationStatuses.size());
+            assertThat(configurationStatuses).containsExactlyInAnyOrder(
+                    new ConfigurationStatus("Pandoc Service", Status.OK, "1.0.0"),
+                    new ConfigurationStatus("Pandoc Service: Python", Status.OK, "3.12.5"),
+                    new ConfigurationStatus("Pandoc Service: Pandoc", Status.OK, "2.4"),
+                    new ConfigurationStatus("Pandoc Service: Chromium", Status.ERROR, "Unknown")
             );
         }
     }
