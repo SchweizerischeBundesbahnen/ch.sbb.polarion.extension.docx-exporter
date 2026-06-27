@@ -1,5 +1,17 @@
 # Changelog
 
+## [5.1.0](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/compare/v5.0.0...v5.1.0) (2026-06-27)
+
+
+### Features
+
+* align UI with Polarion 2606 ([#257](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/issues/257)) ([db80c7f](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/commit/db80c7f4a960068b19ea0edb9ac254d25ad6e6f0)), closes [#256](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/issues/256)
+
+
+### Bug Fixes
+
+* **deps:** update dependency ch.sbb.polarion.extensions:ch.sbb.polarion.extension.generic to v15.1.0 ([#258](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/issues/258)) ([87d0f3f](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/commit/87d0f3f7b78fc30ad1f1256f01441aea8b699888))
+
 ## [5.0.0](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/compare/v4.2.2...v5.0.0) (2026-06-15)
 
 
