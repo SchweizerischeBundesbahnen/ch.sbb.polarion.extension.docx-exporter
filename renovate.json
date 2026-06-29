@@ -16,5 +16,15 @@
       ],
       "versioningTemplate": "semver"
     }
+  ],
+  "packageRules": [
+    {
+      "description": "Keep both pandoc-service references in lockstep: the version in versions.properties (github-releases) and the CI service-container image (docker) update together in one PR",
+      "matchPackageNames": [
+        "SchweizerischeBundesbahnen/pandoc-service",
+        "ghcr.io/schweizerischebundesbahnen/pandoc-service"
+      ],
+      "groupName": "pandoc-service"
+    }
   ]
 }
