@@ -237,6 +237,10 @@ export default class ExportPopup {
         this.ctx.setValue("popup-docx-paper-size-selector", stylePackage.paperSize || ExportParams.PaperSize.A4);
         this.ctx.displayIf("popup-docx-paper-size-selector", !!stylePackage.paperSize);
 
+        this.ctx.setCheckbox("popup-docx-image-density", !!stylePackage.imageDensity);
+        this.ctx.setValue("popup-docx-image-density-selector", stylePackage.imageDensity || ExportParams.ImageDensity.DPI_96);
+        this.ctx.displayIf("popup-docx-image-density-selector", !!stylePackage.imageDensity);
+
         this.ctx.setCheckbox("popup-docx-webhooks-checkbox", !!stylePackage.webhooks);
         this.ctx.setSelector("popup-docx-webhooks-selector", stylePackage.webhooks);
         this.ctx.visibleIf("popup-docx-webhooks-selector", !!stylePackage.webhooks)
@@ -359,6 +363,7 @@ export default class ExportPopup {
             .setLocalization(this.ctx.getElementById("popup-docx-localization-selector").value)
             .setOrientation(this.ctx.getElementById("popup-docx-orientation").checked ? this.ctx.getElementById("popup-docx-orientation-selector").value : null)
             .setPaperSize(this.ctx.getElementById("popup-docx-paper-size").checked ? this.ctx.getElementById("popup-docx-paper-size-selector").value : null)
+            .setImageDensity(this.ctx.getElementById("popup-docx-image-density").checked ? this.ctx.getElementById("popup-docx-image-density-selector").value : null)
             .setWebhooks(this.ctx.getElementById("popup-docx-webhooks-checkbox").checked ? this.ctx.getElementById("popup-docx-webhooks-selector").value : null)
             .setRemovalSelector(this.ctx.getValueById("popup-docx-removal-selector"))
             .setRenderComments(this.ctx.getElementById('popup-docx-render-comments').checked ? this.ctx.getElementById("popup-docx-render-comments-selector").value : null)

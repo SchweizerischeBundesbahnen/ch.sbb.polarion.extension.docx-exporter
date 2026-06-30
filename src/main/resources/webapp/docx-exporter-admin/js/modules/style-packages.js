@@ -166,6 +166,20 @@ const PaperSize = {
     }
 }
 
+const ImageDensity = {
+    imageDensitySelect: new CustomSelect({
+        selectContainer: ctx.getElementById("image-density-select"),
+        label: ctx.getElementById("image-density-label")
+    }),
+
+    init: function () {
+        this.imageDensitySelect.addOption('DPI_96', '96 dpi');
+        this.imageDensitySelect.addOption('DPI_192', '192 dpi');
+        this.imageDensitySelect.addOption('DPI_300', '300 dpi');
+        this.imageDensitySelect.addOption('DPI_600', '600 dpi');
+    }
+}
+
 const Languages = {
     languageSelect: new CustomSelect({
         selectContainer: ctx.getElementById("language-select")
@@ -196,6 +210,7 @@ function saveStylePackage() {
             'includeUnreferencedComments': ctx.getCheckboxValueById('render-comments') && ctx.getCheckboxValueById('include-unreferenced-comments'),
             'orientation': ctx.getCheckboxValueById('orientation') ? Orientation.orientationSelect.getSelectedValue() : null,
             'paperSize': ctx.getCheckboxValueById('paper-size') ? PaperSize.paperSizeSelect.getSelectedValue() : null,
+            'imageDensity': ctx.getCheckboxValueById('image-density') ? ImageDensity.imageDensitySelect.getSelectedValue() : null,
             'cutEmptyChapters': ctx.getCheckboxValueById('cut-empty-chapters'),
             'cutEmptyWorkitemAttributes': ctx.getCheckboxValueById('cut-empty-wi-attributes'),
             'cutLocalURLs': ctx.getCheckboxValueById('cut-urls'),
@@ -251,6 +266,10 @@ function setStylePackage(content) {
     ctx.getElementById('paper-size').dispatchEvent(new Event('change'));
     PaperSize.paperSizeSelect.selectValue(stylePackage.paperSize || ExportParams.PaperSize.A4);
 
+    ctx.setCheckboxValueById('image-density', !!stylePackage.imageDensity);
+    ctx.getElementById('image-density').dispatchEvent(new Event('change'));
+    ImageDensity.imageDensitySelect.selectValue(stylePackage.imageDensity || ExportParams.ImageDensity.DPI_96);
+
     ctx.setCheckboxValueById('webhooks-checkbox', !!stylePackage.webhooks);
     ctx.getElementById('webhooks-checkbox').dispatchEvent(new Event('change'));
     ChildConfigurations.webhooksSelect.selectValue(ChildConfigurations.webhooksSelect.containsOption(stylePackage.webhooks) ? stylePackage.webhooks : DEFAULT_SETTING_NAME);
@@ -295,6 +314,7 @@ RenderComments.init();
 LinkRoleDirection.init();
 Orientation.init();
 PaperSize.init();
+ImageDensity.init();
 Languages.init();
 Promise.all([
     LinkRoles.load(),

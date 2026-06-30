@@ -24,6 +24,13 @@ export default class ExportParams {
         REVERSE: 'REVERSE',
     };
 
+    static ImageDensity = {
+        DPI_96: 'DPI_96',
+        DPI_192: 'DPI_192',
+        DPI_300: 'DPI_300',
+        DPI_600: 'DPI_600',
+    };
+
     constructor(builder) {
         this.projectId = builder.projectId;
         this.locationPath = builder.locationPath;
@@ -33,6 +40,7 @@ export default class ExportParams {
         this.localization = builder.localization;
         this.paperSize = builder.paperSize;
         this.orientation = builder.orientation;
+        this.imageDensity = builder.imageDensity;
         this.webhooks = builder.webhooks;
         this.removalSelector = builder.removalSelector;
         this.renderComments = builder.renderComments;
@@ -73,6 +81,7 @@ export default class ExportParams {
                 this.localization = undefined;
                 this.paperSize = undefined;
                 this.orientation = undefined;
+                this.imageDensity = undefined;
                 this.webhooks = undefined;
                 this.removalSelector = undefined;
                 this.renderComments = undefined;
@@ -126,6 +135,11 @@ export default class ExportParams {
 
             setOrientation(orientation) {
                 this.orientation = orientation;
+                return this;
+            }
+
+            setImageDensity(imageDensity) {
+                this.imageDensity = imageDensity;
                 return this;
             }
 

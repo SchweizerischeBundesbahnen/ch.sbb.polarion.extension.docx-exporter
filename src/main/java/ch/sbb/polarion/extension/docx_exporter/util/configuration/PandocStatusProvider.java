@@ -30,12 +30,14 @@ public class PandocStatusProvider extends ConfigurationStatusProvider {
         VERSION,
         PYTHON,
         PANDOC,
+        CHROMIUM,
     }
 
     private static final Map<PandocServiceInfo, String> PANDOC_SERVICE_INFO = Map.of(
             PandocServiceInfo.VERSION, "Pandoc Service",
             PandocServiceInfo.PYTHON, "Pandoc Service: Python",
-            PandocServiceInfo.PANDOC, "Pandoc Service: Pandoc"
+            PandocServiceInfo.PANDOC, "Pandoc Service: Pandoc",
+            PandocServiceInfo.CHROMIUM, "Pandoc Service: Chromium"
     );
 
     @Override
@@ -45,7 +47,8 @@ public class PandocStatusProvider extends ConfigurationStatusProvider {
             return List.of(
                     createPandocStatus(PANDOC_SERVICE_INFO.get(PandocServiceInfo.VERSION), pandocInfo.getPandocService(), pandocInfo.getTimestamp(), VersionUtils.getLatestCompatibleVersionPandocService()),
                     createPandocStatus(PANDOC_SERVICE_INFO.get(PandocServiceInfo.PYTHON), pandocInfo.getPython()),
-                    createPandocStatus(PANDOC_SERVICE_INFO.get(PandocServiceInfo.PANDOC), pandocInfo.getPandoc())
+                    createPandocStatus(PANDOC_SERVICE_INFO.get(PandocServiceInfo.PANDOC), pandocInfo.getPandoc()),
+                    createPandocStatus(PANDOC_SERVICE_INFO.get(PandocServiceInfo.CHROMIUM), pandocInfo.getChromium())
             );
         } catch (Exception e) {
             return List.of(new ConfigurationStatus(PANDOC_SERVICE_INFO.get(PandocServiceInfo.VERSION), Status.ERROR, e.getMessage()));

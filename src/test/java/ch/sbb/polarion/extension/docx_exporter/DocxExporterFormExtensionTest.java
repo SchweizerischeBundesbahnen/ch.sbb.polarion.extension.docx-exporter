@@ -52,13 +52,14 @@ class DocxExporterFormExtensionTest {
         try (MockedStatic<EnumValuesProvider> mockEnumValuesProvider = mockStatic(EnumValuesProvider.class)) {
             mockEnumValuesProvider.when(() -> EnumValuesProvider.getAllLinkRoleNames(any())).thenReturn(List.of("relates to", "blocks", "duplicates"));
             extension.renderForm(context, module);
-            List<String> expectedEntries = Arrays.asList("someSpecificSelector", "<input id='render-comments' checked", "<input id='docx-orientation' checked", "<input id='docx-paper-size' checked");
+            List<String> expectedEntries = Arrays.asList("someSpecificSelector", "<input id='render-comments' checked", "<input id='docx-orientation' checked", "<input id='docx-paper-size' checked", "<input id='docx-image-density' checked");
             verify(builder, times(0)).html(argThat(arg -> expectedEntries.stream().allMatch(arg::contains)));
 
             stylePackage.setRemovalSelector("someSpecificSelector");
             stylePackage.setRenderComments(CommentsRenderType.ALL);
             stylePackage.setOrientation("LANDSCAPE");
             stylePackage.setPaperSize("A3");
+            stylePackage.setImageDensity("DPI_300");
             stylePackage.setLanguage("de");
             extension.renderForm(context, module);
             verify(builder, times(1)).html(argThat(arg -> expectedEntries.stream().allMatch(arg::contains)));

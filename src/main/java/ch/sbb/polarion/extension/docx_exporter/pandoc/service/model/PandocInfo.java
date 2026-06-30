@@ -17,4 +17,5 @@ public class PandocInfo {
     private @Nullable String timestamp;
     private @Nullable String pandoc;
     private @Nullable String pandocService;
+    private @Nullable String chromium;
 }
