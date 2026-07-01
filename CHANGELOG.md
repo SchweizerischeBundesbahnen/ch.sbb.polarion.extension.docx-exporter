@@ -1,5 +1,20 @@
 # Changelog
 
+## [5.1.0](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/compare/v5.0.0...v5.1.0) (2026-07-01)
+
+
+### Features
+
+* add preserveTableStyles option to preserve CSS table cell style… ([#273](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/issues/273)) ([ad31e3a](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/commit/ad31e3a34cb9455c0469b491992e10c3be92236f)), closes [#251](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/issues/251)
+* advanced SVG rendering ([#262](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/issues/262)) ([b1678b8](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/commit/b1678b8c239e96d233b5d5bb41c2f3e354ba98de)), closes [#246](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/issues/246)
+* align UI with Polarion 2606 ([#257](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/issues/257)) ([db80c7f](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/commit/db80c7f4a960068b19ea0edb9ac254d25ad6e6f0)), closes [#256](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/issues/256)
+
+
+### Bug Fixes
+
+* **deps:** update dependency ch.sbb.polarion.extensions:ch.sbb.polarion.extension.generic to v15.1.0 ([#258](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/issues/258)) ([87d0f3f](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/commit/87d0f3f7b78fc30ad1f1256f01441aea8b699888))
+* use Polarion 2606 spinner (progressWheel) ([#272](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/issues/272)) ([6af200f](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/commit/6af200f848621cd1acb2053787caf513cc34c6ff)), closes [#271](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/issues/271)
+
 ## [5.0.0](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/compare/v4.2.2...v5.0.0) (2026-06-15)
 
 
