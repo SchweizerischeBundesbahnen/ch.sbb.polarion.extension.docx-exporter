@@ -117,6 +117,43 @@ class PandocParamsTest {
     }
 
     @Test
+    void testToUrlParams_withPreserveTableStyles() {
+        PandocParams params = PandocParams.builder()
+                .orientation("landscape")
+                .paperSize("A4")
+                .preserveTableStyles(true)
+                .build();
+
+        String result = params.toUrlParams();
+
+        assertTrue(result.startsWith("?"));
+        assertTrue(result.contains("orientation=landscape"));
+        assertTrue(result.contains("paper_size=A4"));
+        assertTrue(result.contains("preserve_table_styles=true"));
+    }
+
+    @Test
+    void testToUrlParams_withOnlyPreserveTableStyles() {
+        PandocParams params = PandocParams.builder()
+                .preserveTableStyles(true)
+                .build();
+
+        String result = params.toUrlParams();
+
+        assertEquals("?preserve_table_styles=true", result);
+    }
+
+    @Test
+    void testToUrlParams_preserveTableStylesFalseByDefault() {
+        PandocParams params = PandocParams.builder()
+                .build();
+
+        String result = params.toUrlParams();
+
+        assertFalse(result.contains("preserve_table_styles"));
+    }
+
+    @Test
     void testFromJson_validJson() {
         String json = "{\"orientation\":\"landscape\",\"paperSize\":\"A4\"}";
 
@@ -125,6 +162,18 @@ class PandocParamsTest {
         assertNotNull(params);
         assertEquals("landscape", params.getOrientation());
         assertEquals("A4", params.getPaperSize());
+    }
+
+    @Test
+    void testFromJson_withPreserveTableStyles() {
+        String json = "{\"orientation\":\"landscape\",\"paperSize\":\"A4\",\"preserveTableStyles\":true}";
+
+        PandocParams params = PandocParams.fromJson(json);
+
+        assertNotNull(params);
+        assertEquals("landscape", params.getOrientation());
+        assertEquals("A4", params.getPaperSize());
+        assertTrue(params.isPreserveTableStyles());
     }
 
     @Test

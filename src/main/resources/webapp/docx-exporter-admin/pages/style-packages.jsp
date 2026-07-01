@@ -189,6 +189,17 @@
             </div>
         </div>
 
+        <div class="flex-container">
+            <div class="flex-column">
+                <div class='checkbox input-group'>
+                    <label for='preserve-table-styles'>
+                        <input id="preserve-table-styles" type='checkbox'/>
+                        Preserve table styles
+                    </label>
+                </div>
+            </div>
+        </div>
+
         <div class="flex-container" style="border-top: 1px solid #ccc; margin-top: 20px; padding-top: 15px; display: <%= webhooksEnabled ? "flex" : "none" %>;">
             <div class="flex-column">
                 <div class="input-group">

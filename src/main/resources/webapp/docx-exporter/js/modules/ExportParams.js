@@ -53,6 +53,7 @@ export default class ExportParams {
         this.linkedWorkitemRoles = builder.linkedWorkitemRoles;
         this.linkRoleDirection = builder.linkRoleDirection;
         this.fileName = builder.fileName;
+        this.preserveTableStyles = builder.preserveTableStyles;
         this.urlQueryParameters = builder.urlQueryParameters;
         this.internalContent = builder.internalContent;
     }
@@ -94,6 +95,7 @@ export default class ExportParams {
                 this.linkedWorkitemRoles = undefined;
                 this.linkRoleDirection = undefined;
                 this.fileName = undefined;
+                this.preserveTableStyles = undefined;
                 this.urlQueryParameters = undefined;
                 this.internalContent = undefined;
             }
@@ -201,6 +203,11 @@ export default class ExportParams {
 
             setFileName(fileName) {
                 this.fileName = fileName;
+                return this;
+            }
+
+            setPreserveTableStyles(preserveTableStyles) {
+                this.preserveTableStyles = preserveTableStyles;
                 return this;
             }
 

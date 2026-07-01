@@ -23,6 +23,7 @@ public class PandocParams {
     private String orientation;
     private String paperSize;
     private ImageDensity imageDensity;
+    private boolean preserveTableStyles;
 
     public String toUrlParams() {
         Map<String, String> values = new LinkedHashMap<>();
@@ -34,6 +35,9 @@ public class PandocParams {
                 .filter(entry -> !StringUtils.isEmpty(entry.getValue()))
                 .map(entry -> entry.getKey() + "=" + entry.getValue())
                 .collect(Collectors.joining("&"));
+        if (preserveTableStyles) {
+            params = params.isEmpty() ? "preserve_table_styles=true" : params + "&preserve_table_styles=true";
+        }
         return params.isEmpty() ? "" : "?" + params;
     }
 

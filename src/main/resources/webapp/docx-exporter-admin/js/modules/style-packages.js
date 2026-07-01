@@ -211,6 +211,7 @@ function saveStylePackage() {
             'orientation': ctx.getCheckboxValueById('orientation') ? Orientation.orientationSelect.getSelectedValue() : null,
             'paperSize': ctx.getCheckboxValueById('paper-size') ? PaperSize.paperSizeSelect.getSelectedValue() : null,
             'imageDensity': ctx.getCheckboxValueById('image-density') ? ImageDensity.imageDensitySelect.getSelectedValue() : null,
+            'preserveTableStyles': ctx.getCheckboxValueById('preserve-table-styles'),
             'cutEmptyChapters': ctx.getCheckboxValueById('cut-empty-chapters'),
             'cutEmptyWorkitemAttributes': ctx.getCheckboxValueById('cut-empty-wi-attributes'),
             'cutLocalURLs': ctx.getCheckboxValueById('cut-urls'),
@@ -269,6 +270,8 @@ function setStylePackage(content) {
     ctx.setCheckboxValueById('image-density', !!stylePackage.imageDensity);
     ctx.getElementById('image-density').dispatchEvent(new Event('change'));
     ImageDensity.imageDensitySelect.selectValue(stylePackage.imageDensity || ExportParams.ImageDensity.DPI_96);
+
+    ctx.setCheckboxValueById('preserve-table-styles', !!stylePackage.preserveTableStyles);
 
     ctx.setCheckboxValueById('webhooks-checkbox', !!stylePackage.webhooks);
     ctx.getElementById('webhooks-checkbox').dispatchEvent(new Event('change'));

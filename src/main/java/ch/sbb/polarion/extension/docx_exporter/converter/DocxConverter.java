@@ -105,7 +105,7 @@ public class DocxConverter {
             // Generate DOCX
             final byte[] finalTemplate = template;
             byte[] bytes = generationLog.timed("Pandoc conversion",
-                    () -> generateDocx(htmlContent, finalTemplate, PandocParams.builder().orientation(exportParams.getOrientation()).paperSize(exportParams.getPaperSize()).imageDensity(ImageDensity.fromString(exportParams.getImageDensity())).build()),
+                    () -> generateDocx(htmlContent, finalTemplate, PandocParams.builder().orientation(exportParams.getOrientation()).paperSize(exportParams.getPaperSize()).imageDensity(ImageDensity.fromString(exportParams.getImageDensity())).preserveTableStyles(exportParams.isPreserveTableStyles()).build()),
                     docx -> String.format("docx_size=%d bytes", docx.length));
 
             // Set DOCX metrics
