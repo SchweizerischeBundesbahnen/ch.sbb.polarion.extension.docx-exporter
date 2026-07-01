@@ -42,6 +42,9 @@ public class ExportParams {
     @Schema(description = "Quality of PNG images converted from SVG, by default 96 dpi")
     private String imageDensity;
 
+    @Schema(description = "Preserve CSS table cell styles (background-color, borders) in DOCX output")
+    private boolean preserveTableStyles;
+
     @Schema(description = "Webhooks settings name")
     private String webhooks;
 
