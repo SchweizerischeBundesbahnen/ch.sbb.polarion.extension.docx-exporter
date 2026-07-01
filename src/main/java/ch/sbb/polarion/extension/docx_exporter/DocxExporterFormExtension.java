@@ -91,6 +91,7 @@ public class DocxExporterFormExtension implements IFormExtension {
             form = adjustCutEmptyChapters(form, selectedStylePackage);
             form = adjustCutEmptyWorkitemAttributes(form, selectedStylePackage);
             form = adjustCutLocalURLs(form, selectedStylePackage);
+            form = adjustPreserveTableStyles(form, selectedStylePackage);
             form = adjustChapters(form, selectedStylePackage);
             form = adjustLocalizeEnums(form, selectedStylePackage, module.getCustomField(DOC_LANGUAGE_FIELD));
             form = adjustLinkRoles(form, EnumValuesProvider.getAllLinkRoleNames(module.getProject()), selectedStylePackage);
@@ -233,6 +234,10 @@ public class DocxExporterFormExtension implements IFormExtension {
 
     private String adjustCutLocalURLs(String form, StylePackageModel stylePackage) {
         return stylePackage.isCutLocalURLs() ? form.replace("<input id='docx-cut-urls'", "<input id='docx-cut-urls' checked") : form;
+    }
+
+    private String adjustPreserveTableStyles(String form, StylePackageModel stylePackage) {
+        return stylePackage.isPreserveTableStyles() ? form.replace("<input id='docx-preserve-table-styles'", "<input id='docx-preserve-table-styles' checked") : form;
     }
 
     private String adjustChapters(String form, StylePackageModel stylePackage) {
