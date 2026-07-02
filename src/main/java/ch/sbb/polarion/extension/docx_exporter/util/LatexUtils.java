@@ -6,6 +6,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Map;
+import java.util.function.UnaryOperator;
 
 /**
  * Helpers that massage the LaTeX source of Polarion formulas into a form that Pandoc's math reader
@@ -383,33 +384,25 @@ public class LatexUtils {
         while (i < n) {
             char c = body.charAt(i);
             if (c == '\\') {
-                if (i + 1 < n && isAsciiLetter(body.charAt(i + 1))) {
-                    int nameEnd = controlWordEnd(body, i);
-                    if (depth == 0 && isExactName(body, i, nameEnd, CR_COMMAND)) {
-                        out.append(convertCellInfixOperator(body.substring(cellStart, i))).append(body, i, nameEnd);
-                        cellStart = nameEnd;
-                    }
-                    i = nameEnd;
-                } else {
-                    if (depth == 0 && i + 1 < n && body.charAt(i + 1) == '\\') {
-                        out.append(convertCellInfixOperator(body.substring(cellStart, i))).append(LATEX_ROW_SEPARATOR);
-                        cellStart = i + 2;
-                    }
-                    i += 2;
+                int after = skipControlSequence(body, i);
+                if (depth == 0 && isRowSeparatorToken(body, i, after)) {
+                    out.append(convertCellInfixOperator(body.substring(cellStart, i))).append(body, i, after);
+                    cellStart = after;
                 }
-                continue;
-            }
-            if (c == '{') {
+                i = after;
+            } else if (c == '{') {
                 depth++;
+                i++;
             } else if (c == '}') {
-                if (depth > 0) { // clamp at 0: a stray unmatched '}' must not push depth negative and misclassify a later top-level separator
-                    depth--;
-                }
+                depth = Math.max(0, depth - 1); // clamp: a stray unmatched '}' must not go negative and misclassify a later separator
+                i++;
             } else if (c == '&' && depth == 0) {
                 out.append(convertCellInfixOperator(body.substring(cellStart, i))).append('&');
                 cellStart = i + 1;
+                i++;
+            } else {
+                i++;
             }
-            i++;
         }
         out.append(convertCellInfixOperator(body.substring(cellStart)));
         return out.toString();
@@ -430,37 +423,45 @@ public class LatexUtils {
         while (i < n) {
             char c = cell.charAt(i);
             if (c == '\\') {
-                if (i + 1 < n && isAsciiLetter(cell.charAt(i + 1))) {
-                    int nameEnd = controlWordEnd(cell, i);
-                    if (depth == 0 && isExactName(cell, i, nameEnd, OVER_COMMAND)) {
-                        return "\\frac{" + convertInfixOperators(cell.substring(0, i)) + "}{" + convertInfixOperators(cell.substring(nameEnd)) + "}";
+                int after = skipControlSequence(cell, i);
+                if (depth == 0) {
+                    String converted = tryConvertInfixOperatorAt(cell, i, after);
+                    if (converted != null) {
+                        return converted;
                     }
-                    if (depth == 0 && isExactName(cell, i, nameEnd, ATOP_COMMAND)) {
-                        return "\\substack{" + convertInfixOperators(cell.substring(0, i)) + "\\\\" + convertInfixOperators(cell.substring(nameEnd)) + "}";
-                    }
-                    if (depth == 0 && (isExactName(cell, i, nameEnd, OVERWITHDELIMS_COMMAND) || isExactName(cell, i, nameEnd, ATOPWITHDELIMS_COMMAND))) {
-                        boolean ruleless = isExactName(cell, i, nameEnd, ATOPWITHDELIMS_COMMAND);
-                        String converted = convertDelimitedInfix(cell, i, nameEnd, ruleless);
-                        if (converted != null) {
-                            return converted;
-                        }
-                    }
-                    i = nameEnd;
-                } else {
-                    i += 2;
                 }
-                continue;
-            }
-            if (c == '{') {
+                i = after;
+            } else if (c == '{') {
                 depth++;
+                i++;
             } else if (c == '}') {
-                if (depth > 0) { // clamp at 0: a stray unmatched '}' must not push depth negative and misclassify a later top-level operator
-                    depth--;
-                }
+                depth = Math.max(0, depth - 1); // clamp: a stray unmatched '}' must not go negative and misclassify a later operator
+                i++;
+            } else {
+                i++;
             }
-            i++;
         }
         return recurseIntoGroups(cell);
+    }
+
+    /**
+     * If the control word spanning {@code [opStart, nameEnd)} is a top-level infix fraction operator, returns the cell
+     * rewritten around it ({@code \over} -> {@code \frac}, {@code \atop} -> {@code \substack}, and the delimited
+     * {@code \overwithdelims}/{@code \atopwithdelims} -> {@code \left..\right}); otherwise {@code null}. The first
+     * operator wins; in valid TeX a single group carries at most one.
+     */
+    @Nullable
+    private String tryConvertInfixOperatorAt(@NotNull String cell, int opStart, int nameEnd) {
+        if (isExactName(cell, opStart, nameEnd, OVER_COMMAND)) {
+            return "\\frac{" + convertInfixOperators(cell.substring(0, opStart)) + "}{" + convertInfixOperators(cell.substring(nameEnd)) + "}";
+        }
+        if (isExactName(cell, opStart, nameEnd, ATOP_COMMAND)) {
+            return "\\substack{" + convertInfixOperators(cell.substring(0, opStart)) + "\\\\" + convertInfixOperators(cell.substring(nameEnd)) + "}";
+        }
+        if (isExactName(cell, opStart, nameEnd, OVERWITHDELIMS_COMMAND) || isExactName(cell, opStart, nameEnd, ATOPWITHDELIMS_COMMAND)) {
+            return convertDelimitedInfix(cell, opStart, nameEnd, isExactName(cell, opStart, nameEnd, ATOPWITHDELIMS_COMMAND));
+        }
+        return null;
     }
 
     /**
@@ -555,9 +556,7 @@ public class LatexUtils {
      * {@code \\cr} -> false, {@code \\\cr} -> true, ... - correct for any number of leading backslashes.
      */
     private boolean isControlWordBackslash(@NotNull String body, int index) {
-        if (index < 0 || body.charAt(index) != '\\') {
-            return false;
-        }
+        // Count the run of backslashes ending at index (0 if index is not a backslash). Caller guarantees index >= 0.
         int backslashes = 0;
         for (int i = index; i >= 0 && body.charAt(i) == '\\'; i--) {
             backslashes++;
@@ -577,32 +576,41 @@ public class LatexUtils {
         int i = 0;
         int n = s.length();
         while (i < n) {
-            char c = s.charAt(i);
-            if (c == '\\') {
-                out.append(c);
-                if (i + 1 < n) {
-                    out.append(s.charAt(i + 1));
-                    i += 2;
-                } else {
-                    i++;
-                }
-                continue;
-            }
-            if (c == '{') {
-                int closing = findMatchingBrace(s, i);
-                if (closing == -1) {
-                    out.append(c);
-                    i++;
-                    continue;
-                }
-                out.append('{').append(convertInfixOperators(s.substring(i + 1, closing))).append('}');
-                i = closing + 1;
-            } else {
-                out.append(c);
-                i++;
-            }
+            i = s.charAt(i) == '\\'
+                    ? appendEscapedBackslash(out, s, i)
+                    : appendCharOrGroup(out, s, i, LatexUtils::convertInfixOperators);
         }
         return out.toString();
+    }
+
+    /**
+     * Appends the backslash at {@code i} together with its next character as a unit (so an escaped {@code \{} / {@code \}}
+     * or a {@code \\} row break does not disturb brace matching), and returns the index just past it.
+     */
+    private int appendEscapedBackslash(@NotNull StringBuilder out, @NotNull String s, int i) {
+        out.append(s.charAt(i));
+        if (i + 1 < s.length()) {
+            out.append(s.charAt(i + 1));
+            return i + 2;
+        }
+        return i + 1;
+    }
+
+    /**
+     * Appends {@code s.charAt(i)}; if it opens a balanced top-level brace group, the group is emitted with its content
+     * rewritten by {@code groupTransform} (otherwise the character is copied verbatim). Returns the index just past what
+     * was appended. Assumes {@code s.charAt(i)} is not a backslash (callers handle backslashes first).
+     */
+    private int appendCharOrGroup(@NotNull StringBuilder out, @NotNull String s, int i, @NotNull UnaryOperator<String> groupTransform) {
+        if (s.charAt(i) == '{') {
+            int closing = findMatchingBrace(s, i);
+            if (closing != -1) {
+                out.append('{').append(groupTransform.apply(s.substring(i + 1, closing))).append('}');
+                return closing + 1;
+            }
+        }
+        out.append(s.charAt(i));
+        return i + 1;
     }
 
     /**
@@ -623,45 +631,32 @@ public class LatexUtils {
         int n = s.length();
         while (i < n) {
             char c = s.charAt(i);
-            if (c == '\\') {
-                if (i + 1 < n && isAsciiLetter(s.charAt(i + 1))) {
-                    int nameEnd = controlWordEnd(s, i);
-                    String mathCommand = OLD_FONT_SWITCHES.get(s.substring(i + 1, nameEnd));
-                    if (mathCommand != null) {
-                        int scopeEnd = findCellEnd(s, nameEnd);
-                        String scope = s.substring(nameEnd, scopeEnd).strip();
-                        out.append('\\').append(mathCommand).append('{').append(convertOldFontSwitches(scope)).append('}');
-                        i = scopeEnd;
-                        continue;
-                    }
-                    out.append(s, i, nameEnd);
-                    i = nameEnd;
-                } else {
-                    out.append(c);
-                    if (i + 1 < n) {
-                        out.append(s.charAt(i + 1));
-                        i += 2;
-                    } else {
-                        i++;
-                    }
-                }
-                continue;
-            }
-            if (c == '{') {
-                int closing = findMatchingBrace(s, i);
-                if (closing == -1) {
-                    out.append(c);
-                    i++;
-                    continue;
-                }
-                out.append('{').append(convertOldFontSwitches(s.substring(i + 1, closing))).append('}');
-                i = closing + 1;
+            if (c == '\\' && i + 1 < n && isAsciiLetter(s.charAt(i + 1))) {
+                i = appendControlWordOrFontSwitch(out, s, i);
+            } else if (c == '\\') {
+                i = appendEscapedBackslash(out, s, i);
             } else {
-                out.append(c);
-                i++;
+                i = appendCharOrGroup(out, s, i, LatexUtils::convertOldFontSwitches);
             }
         }
         return out.toString();
+    }
+
+    /**
+     * Handles a control word starting at {@code i} (a backslash followed by letters). If it is an old font switch, its
+     * scope (up to the end of the group/cell, via {@link #findCellEnd}) is wrapped as {@code \mathXX{...}}; otherwise the
+     * control word is copied verbatim. Returns the index just past what was consumed.
+     */
+    private int appendControlWordOrFontSwitch(@NotNull StringBuilder out, @NotNull String s, int i) {
+        int nameEnd = controlWordEnd(s, i);
+        String mathCommand = OLD_FONT_SWITCHES.get(s.substring(i + 1, nameEnd));
+        if (mathCommand == null) {
+            out.append(s, i, nameEnd);
+            return nameEnd;
+        }
+        int scopeEnd = findCellEnd(s, nameEnd);
+        out.append('\\').append(mathCommand).append('{').append(convertOldFontSwitches(s.substring(nameEnd, scopeEnd).strip())).append('}');
+        return scopeEnd;
     }
 
     /**
@@ -676,31 +671,24 @@ public class LatexUtils {
         while (i < n) {
             char c = s.charAt(i);
             if (c == '\\') {
-                if (i + 1 < n && isAsciiLetter(s.charAt(i + 1))) {
-                    int nameEnd = controlWordEnd(s, i);
-                    if (depth == 0 && isExactName(s, i, nameEnd, CR_COMMAND)) {
-                        return i;
-                    }
-                    i = nameEnd;
-                } else {
-                    if (depth == 0 && i + 1 < n && s.charAt(i + 1) == '\\') {
-                        return i;
-                    }
-                    i += 2;
-                }
-                continue;
-            }
-            if (c == '{') {
-                depth++;
-            } else if (c == '}') {
-                if (depth == 0) {
+                int after = skipControlSequence(s, i);
+                if (depth == 0 && isRowSeparatorToken(s, i, after)) {
                     return i;
                 }
+                i = after;
+            } else if (c == '{') {
+                depth++;
+                i++;
+            } else if (c == '}' && depth == 0) {
+                return i; // the enclosing group closes here
+            } else if (c == '}') {
                 depth--;
+                i++;
             } else if (c == '&' && depth == 0) {
                 return i;
+            } else {
+                i++;
             }
-            i++;
         }
         return i;
     }
@@ -753,17 +741,16 @@ public class LatexUtils {
                 if (depth == 0 && isControlWordAt(s, i, name)) {
                     return i;
                 }
-                i = i + 1 < n && isAsciiLetter(s.charAt(i + 1)) ? controlWordEnd(s, i) : i + 2;
-                continue;
-            }
-            if (c == '{') {
+                i = skipControlSequence(s, i);
+            } else if (c == '{') {
                 depth++;
+                i++;
             } else if (c == '}') {
-                if (depth > 0) { // clamp at 0: a stray unmatched '}' must not push depth negative and hide a later top-level control word
-                    depth--;
-                }
+                depth = Math.max(0, depth - 1); // clamp: a stray unmatched '}' must not go negative and hide a later top-level control word
+                i++;
+            } else {
+                i++;
             }
-            i++;
         }
         return -1;
     }
@@ -802,41 +789,36 @@ public class LatexUtils {
             if (c != '\\') {
                 out.append(c);
                 i++;
-                continue;
+            } else if (i + 1 < n && !isAsciiLetter(latex.charAt(i + 1))) {
+                // A control symbol (e.g. "\\", "\{", "\,"): copy both chars so they neither look like a control word
+                // nor disturb brace matching.
+                i = appendEscapedBackslash(out, latex, i);
+            } else {
+                i = appendMatrixEnvironmentOrControlWord(out, latex, i);
             }
-
-            // A backslash followed by a non-letter is a control symbol (e.g. "\\", "\{", "\,"): copy both
-            // characters verbatim so they are neither mistaken for a control word nor able to disturb brace matching.
-            if (i + 1 < n && !isAsciiLetter(latex.charAt(i + 1))) {
-                out.append(c).append(latex.charAt(i + 1));
-                i += 2;
-                continue;
-            }
-
-            // Read the control word name (the run of ASCII letters after the backslash).
-            int nameEnd = i + 1;
-            while (nameEnd < n && isAsciiLetter(latex.charAt(nameEnd))) {
-                nameEnd++;
-            }
-            String command = latex.substring(i + 1, nameEnd);
-            String environment = PLAIN_TEX_MATRIX_ENVIRONMENTS.get(command);
-
-            int braceIndex = environment == null ? -1 : indexOfOpeningBrace(latex, nameEnd);
-            int closingIndex = braceIndex == -1 ? -1 : findMatchingBrace(latex, braceIndex);
-            if (closingIndex == -1) {
-                // Not a matrix macro, or it has no balanced "{...}" body: copy the command verbatim and move on.
-                out.append(latex, i, nameEnd);
-                i = nameEnd;
-                continue;
-            }
-
-            String body = stripTrailingRowSeparator(latex.substring(braceIndex + 1, closingIndex));
-            out.append("\\begin{").append(environment).append('}')
-                    .append(convertPlainTexMatrices(body)) // recurse to handle nested matrices
-                    .append("\\end{").append(environment).append('}');
-            i = closingIndex + 1;
         }
         return out.toString();
+    }
+
+    /**
+     * Handles a control word starting at {@code i}: if it is a plain-TeX matrix/alignment macro with a balanced
+     * {@code {...}} body, emits the corresponding amsmath environment (recursing into the body, after dropping a trailing
+     * row separator); otherwise copies the control word verbatim. Returns the index just past what was consumed.
+     */
+    private int appendMatrixEnvironmentOrControlWord(@NotNull StringBuilder out, @NotNull String latex, int i) {
+        int nameEnd = controlWordEnd(latex, i);
+        String environment = PLAIN_TEX_MATRIX_ENVIRONMENTS.get(latex.substring(i + 1, nameEnd));
+        int braceIndex = environment == null ? -1 : indexOfOpeningBrace(latex, nameEnd);
+        int closingIndex = braceIndex == -1 ? -1 : findMatchingBrace(latex, braceIndex);
+        if (closingIndex == -1) {
+            out.append(latex, i, nameEnd); // not a matrix macro, or no balanced "{...}" body
+            return nameEnd;
+        }
+        String body = stripTrailingRowSeparator(latex.substring(braceIndex + 1, closingIndex));
+        out.append("\\begin{").append(environment).append('}')
+                .append(convertPlainTexMatrices(body)) // recurse to handle nested matrices
+                .append("\\end{").append(environment).append('}');
+        return closingIndex + 1;
     }
 
     /**
@@ -860,19 +842,46 @@ public class LatexUtils {
      */
     private int findMatchingBrace(@NotNull String latex, int openBraceIndex) {
         int depth = 0;
-        for (int i = openBraceIndex; i < latex.length(); i++) {
+        int i = openBraceIndex;
+        int n = latex.length();
+        while (i < n) {
             char c = latex.charAt(i);
             if (c == '\\') {
-                i++; // skip the escaped character
-                continue;
-            }
-            if (c == '{') {
+                i += 2; // skip the escaped character
+            } else if (c == '{') {
                 depth++;
-            } else if (c == '}' && --depth == 0) {
-                return i;
+                i++;
+            } else if (c == '}') {
+                depth--;
+                if (depth == 0) {
+                    return i;
+                }
+                i++;
+            } else {
+                i++;
             }
         }
         return -1;
+    }
+
+    /**
+     * Returns the index just past the control sequence whose backslash is at {@code backslashIndex}: a control word
+     * (backslash + a run of letters, via {@link #controlWordEnd}) or a control symbol (backslash + one non-letter, or a
+     * lone trailing backslash).
+     */
+    private int skipControlSequence(@NotNull String s, int backslashIndex) {
+        if (backslashIndex + 1 < s.length() && isAsciiLetter(s.charAt(backslashIndex + 1))) {
+            return controlWordEnd(s, backslashIndex);
+        }
+        return Math.min(backslashIndex + 2, s.length());
+    }
+
+    /**
+     * Whether the token spanning {@code [start, end)} (as returned by {@link #skipControlSequence}) is a row separator:
+     * a {@code \\} (backslash + backslash) or the control word {@code \cr}.
+     */
+    private boolean isRowSeparatorToken(@NotNull String s, int start, int end) {
+        return (end == start + 2 && s.charAt(start + 1) == '\\') || isExactName(s, start, end, CR_COMMAND);
     }
 
     private boolean isAsciiLetter(char c) {

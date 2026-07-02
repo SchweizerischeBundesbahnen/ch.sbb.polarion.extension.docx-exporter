@@ -213,6 +213,71 @@ class LatexUtilsTest {
     }
 
     @Test
+    void rewritesRootWithControlWordRadicand() {
+        // Radicand is a control sequence (no braces): read as a single token.
+        assertEquals("\\sqrt[3]{\\alpha}", LatexUtils.sanitizeFormulaSource("\\root 3 \\of \\alpha"));
+    }
+
+    @Test
+    void rootWithoutOfIsLeftUntouched() {
+        // No \of keyword -> not a \root..\of construct, left as-is.
+        assertEquals("\\root 3 x", LatexUtils.sanitizeFormulaSource("\\root 3 x"));
+    }
+
+    @Test
+    void rootWithUnbalancedRadicandBraceIsLeftUntouched() {
+        // The radicand "{x+y" never closes -> the transform bails and leaves the source untouched.
+        assertEquals("\\root 3 \\of {x+y", LatexUtils.sanitizeFormulaSource("\\root 3 \\of {x+y"));
+    }
+
+    @Test
+    void buildrelWithoutOverIsLeftUntouched() {
+        assertEquals("\\buildrel x", LatexUtils.sanitizeFormulaSource("\\buildrel x"));
+    }
+
+    @Test
+    void overwithdelimsWithoutDelimitersIsLeftUntouched() {
+        // No delimiter tokens follow the operator -> convertDelimitedInfix bails, operator left in place.
+        assertEquals("{a \\overwithdelims}", LatexUtils.sanitizeFormulaSource("{a \\overwithdelims}"));
+    }
+
+    @Test
+    void overwithdelimsWithBraceDelimiterIsLeftUntouched() {
+        // A delimiter token may not be a brace group -> the operator is left untouched.
+        assertEquals("{a \\overwithdelims { } b}", LatexUtils.sanitizeFormulaSource("{a \\overwithdelims { } b}"));
+    }
+
+    @Test
+    void overwithdelimsWithControlSymbolDelimiters() {
+        // Delimiters given as escaped braces "\{" / "\}" (control symbols) -> \left\{ ... \right\}.
+        assertEquals("{\\left\\{\\frac{a }{ b}\\right\\}}", LatexUtils.sanitizeFormulaSource("{a \\overwithdelims \\{ \\} b}"));
+    }
+
+    @Test
+    void unbalancedOpeningBraceInCellIsCopiedVerbatim() {
+        // The denominator "b{c" has an unmatched "{": it is copied verbatim (no group to recurse into).
+        assertEquals("\\frac{a }{ b{c}", LatexUtils.sanitizeFormulaSource("a \\over b{c"));
+    }
+
+    @Test
+    void buildrelWithBracedTopBeforeOver() {
+        // Braces (and a control word) between \buildrel and \over exercise the depth-tracking scan that locates \over.
+        assertEquals("\\overset{{x}}{y}", LatexUtils.sanitizeFormulaSource("\\buildrel {x} \\over y"));
+    }
+
+    @Test
+    void emptyMatrixMacroBodyConverts() {
+        assertEquals("\\begin{matrix}\\end{matrix}", LatexUtils.sanitizeFormulaSource("\\matrix{}"));
+    }
+
+    @Test
+    void literalCrAfterRowBreakIsNotStripped() {
+        // "\\cr" is a "\\" row break followed by the literal letters "cr" (even backslash run), not a \cr control
+        // word, so the trailing-separator strip must leave it; only the interior separator handling applies.
+        assertEquals("\\begin{matrix}a \\\\cr\\end{matrix}", LatexUtils.sanitizeFormulaSource("\\matrix{a \\\\cr}"));
+    }
+
+    @Test
     void leavesPlainFormulaUntouched() {
         String plain = "\\frac{-b\\pm\\sqrt{b^2-4ac}}{2a}";
         assertEquals(plain, LatexUtils.sanitizeFormulaSource(plain));
