@@ -1,6 +1,6 @@
 import ExtensionContext from '../../ui/generic/js/modules/ExtensionContext.js';
 import ConfigurationsPane from '../../ui/generic/js/modules/ConfigurationsPane.js';
-import CustomSelect from '../../ui/generic/js/modules/CustomSelect.js';
+import SearchableDropdown from '../../ui/generic/js/modules/SearchableDropdown.js';
 import StylePackageUtils from './style-package-utils.js';
 import ExportParams from "../../../docx-exporter/js/modules/ExportParams.js";
 
@@ -31,15 +31,15 @@ ctx.onBlur(
 );
 
 const ChildConfigurations = {
-    localizationSelect: new CustomSelect({
+    localizationSelect: new SearchableDropdown({
         selectContainer: ctx.getElementById("localization-select"),
         label: ctx.getElementById("localization-select-label")
     }),
-    templateSelect: new CustomSelect({
+    templateSelect: new SearchableDropdown({
         selectContainer: ctx.getElementById("template-select"),
         label: ctx.getElementById("template-select-label")
     }),
-    webhooksSelect: new CustomSelect({
+    webhooksSelect: new SearchableDropdown({
         selectContainer: ctx.getElementById("webhooks-select")
     }),
 
@@ -89,7 +89,7 @@ const ChildConfigurations = {
 }
 
 const LinkRoles = {
-    rolesSelect: new CustomSelect({
+    rolesSelect: new SearchableDropdown({
         selectContainer: ctx.getElementById("roles-select"),
         multiselect: true
     }),
@@ -118,7 +118,7 @@ const LinkRoles = {
 }
 
 const RenderComments = {
-    renderCommentsSelect: new CustomSelect({
+    renderCommentsSelect: new SearchableDropdown({
         selectContainer: ctx.getElementById("render-comments-select")
     }),
 
@@ -129,7 +129,7 @@ const RenderComments = {
 }
 
 const LinkRoleDirection = {
-    linkRoleDirectionSelect: new CustomSelect({
+    linkRoleDirectionSelect: new SearchableDropdown({
         selectContainer: ctx.getElementById("link-role-direction-select")
     }),
 
@@ -141,7 +141,7 @@ const LinkRoleDirection = {
 }
 
 const Orientation = {
-    orientationSelect: new CustomSelect({
+    orientationSelect: new SearchableDropdown({
         selectContainer: ctx.getElementById("orientation-select")
     }),
 
@@ -152,7 +152,7 @@ const Orientation = {
 }
 
 const PaperSize = {
-    paperSizeSelect: new CustomSelect({
+    paperSizeSelect: new SearchableDropdown({
         selectContainer: ctx.getElementById("paper-size-select")
     }),
 
@@ -167,7 +167,7 @@ const PaperSize = {
 }
 
 const ImageDensity = {
-    imageDensitySelect: new CustomSelect({
+    imageDensitySelect: new SearchableDropdown({
         selectContainer: ctx.getElementById("image-density-select"),
         label: ctx.getElementById("image-density-label")
     }),
@@ -181,7 +181,7 @@ const ImageDensity = {
 }
 
 const Languages = {
-    languageSelect: new CustomSelect({
+    languageSelect: new SearchableDropdown({
         selectContainer: ctx.getElementById("language-select")
     }),
 

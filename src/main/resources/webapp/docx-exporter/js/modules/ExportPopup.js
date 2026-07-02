@@ -1,5 +1,6 @@
 import ExportParams from "./ExportParams.js";
 import ExportContext from "./ExportContext.js";
+import { initSearchableDropdowns } from "./dropdown-utils.js";
 
 export default class ExportPopup {
 
@@ -36,7 +37,17 @@ export default class ExportPopup {
             this.exportToDocx()
         });
 
+        this._initDropdowns();
         this.openPopup();
+    }
+
+    _initDropdowns() {
+        initSearchableDropdowns(this.ctx, [
+            'popup-docx-style-package-select', 'popup-docx-template-selector', 'popup-docx-localization-selector',
+            'popup-docx-webhooks-selector', 'popup-docx-orientation-selector', 'popup-docx-paper-size-selector',
+            'popup-docx-image-density-selector', 'popup-docx-render-comments-selector', 'popup-docx-language',
+            'popup-docx-link-role-direction'
+        ], 'popup-docx-roles-selector');
     }
 
     openPopup() {

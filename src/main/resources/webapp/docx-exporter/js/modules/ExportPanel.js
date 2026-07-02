@@ -1,5 +1,6 @@
 import ExportParams from "./ExportParams.js";
 import ExportContext from "./ExportContext.js";
+import { initSearchableDropdowns } from "./dropdown-utils.js";
 
 export default class ExportPanel {
 
@@ -12,6 +13,16 @@ export default class ExportPanel {
         this.ctx.onClick('export-docx', () => {
             this.loadDocx()
         });
+        this._initDropdowns();
+    }
+
+    _initDropdowns() {
+        initSearchableDropdowns(this.ctx, [
+            'docx-style-package-select', 'docx-template-selector', 'docx-localization-selector',
+            'docx-webhooks-selector', 'docx-orientation-selector', 'docx-paper-size-selector',
+            'docx-image-density-selector', 'render-comments-selector', 'docx-language',
+            'docx-link-role-direction'
+        ], 'docx-roles-selector');
     }
 
     stylePackageChanged() {

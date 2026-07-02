@@ -125,7 +125,7 @@
                 <input id='docx-specific-chapters' onchange='document.querySelector("#docx-exporter-panel #docx-chapters").style.display = this.checked ? "block" : "none"' type='checkbox'/>
                 Specific higher level chapters
             </label>
-            <input id='docx-chapters' style='display: none; width: 100px' placeholder='eg. 1,2,4 etc.' type='text'/>
+            <input id='docx-chapters' style='display: none; flex: 1; box-sizing: border-box; min-width: 0' placeholder='eg. 1,2,4 etc.' type='text'/>
         </div>
         <div class='property-wrapper'>
             <label for='docx-localization'>
@@ -146,7 +146,7 @@
                     Specific Workitem roles
                 </label>
             </div>
-            <div class='property-wrapper' id='docx-roles-wrapper' style='display: none; flex-direction: column; align-items: flex-start; row-gap: 4px; padding-left: 24px'>
+            <div class='property-wrapper' id='docx-roles-wrapper' style='display: none; flex-direction: column; align-items: flex-start; row-gap: 4px'>
                 <select id='docx-roles-selector' multiple style='width: 142px'>
                     {ROLES_OPTIONS}
                 </select>
