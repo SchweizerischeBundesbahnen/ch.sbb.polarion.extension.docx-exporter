@@ -34,7 +34,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 @ExtendWith({MockitoExtension.class, BundleJarsPrioritizingRunnableMockExtension.class})
-@SuppressWarnings("ConstantConditions")
+@SuppressWarnings({"ConstantConditions", "HttpUrlsUsage"})
 class HtmlProcessorTest {
 
     @Mock
@@ -192,7 +192,7 @@ class HtmlProcessorTest {
 
         assertEquals(
                 "<p>before <script type=\"math/tex; mode=display\">" + latex + "</script> after</p>",
-                HtmlProcessor.unwrapMathScriptCdata(document.body().html())
+                LatexUtils.unwrapMathScriptCdata(document.body().html())
         );
     }
 
@@ -208,7 +208,7 @@ class HtmlProcessorTest {
         // A zero-width space is prepended to the script tag so Word renders the formula as true inline math.
         assertEquals(
                 "<p>before \u200B<script type=\"math/tex\">" + latex + "</script> after</p>",
-                HtmlProcessor.unwrapMathScriptCdata(document.body().html())
+                LatexUtils.unwrapMathScriptCdata(document.body().html())
         );
     }
 
@@ -224,7 +224,7 @@ class HtmlProcessorTest {
         Document document = JSoupUtils.parseHtml(html);
         processor.convertPolarionFormulas(document);
 
-        String serialized = HtmlProcessor.unwrapMathScriptCdata(document.body().html());
+        String serialized = LatexUtils.unwrapMathScriptCdata(document.body().html());
         int scriptStart = serialized.indexOf(">", serialized.indexOf("<script")) + 1;
         int scriptEnd = serialized.indexOf("</script>");
         String scriptBody = serialized.substring(scriptStart, scriptEnd);
@@ -240,20 +240,23 @@ class HtmlProcessorTest {
             "<Br />"
     })
     void convertPolarionFormulasStripsBrTagVariants(String brVariant) {
-        // Polarion serialises soft line breaks inside formula data-source attributes as <br> tags. The attribute value is a raw
+        // Polarion serializes soft line breaks inside formula data-source attributes as <br> tags. The attribute value is a raw
         // string (Jsoup does not HTML-parse attribute contents), so the stripping must be case-insensitive and tolerate the
         // optional space and self-closing slash. LaTeX would otherwise render the literal "<br/>" text into the formula.
+        // Each <br> is replaced with a single space (not removed): a space is ignored in LaTeX math mode but preserves token
+        // boundaries, so a control word followed by a soft break (e.g. "\cr<br/>a_{21}") does not collapse into an undefined
+        // control sequence ("\cra_{21}") that would make pandoc's texmath fail to parse the whole formula.
         String latex = "a" + brVariant + "b";
         String html = "<p><img class=\"polarion-rte-formula\" data-inline=\"false\" data-source=\"" + latex + "\"></p>";
 
         Document document = JSoupUtils.parseHtml(html);
         processor.convertPolarionFormulas(document);
 
-        String serialized = HtmlProcessor.unwrapMathScriptCdata(document.body().html());
+        String serialized = LatexUtils.unwrapMathScriptCdata(document.body().html());
         int scriptStart = serialized.indexOf(">", serialized.indexOf("<script")) + 1;
         int scriptEnd = serialized.indexOf("</script>");
         String scriptBody = serialized.substring(scriptStart, scriptEnd);
-        assertEquals("ab", scriptBody);
+        assertEquals("a b", scriptBody);
     }
 
     @Test
@@ -622,7 +625,7 @@ class HtmlProcessorTest {
                     </html>
                 """;
 
-        assertEquals(TestStringUtils.removeNonsensicalSymbols(expectedHtml), TestStringUtils.removeNonsensicalSymbols(processedHtml.replaceAll(" ", "")));
+        assertEquals(TestStringUtils.removeNonsensicalSymbols(expectedHtml), TestStringUtils.removeNonsensicalSymbols(processedHtml.replace(" ", "")));
     }
 
     @Test
