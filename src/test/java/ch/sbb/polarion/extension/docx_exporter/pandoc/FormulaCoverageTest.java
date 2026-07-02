@@ -116,6 +116,12 @@ class FormulaCoverageTest extends BasePandocTest {
             new FormulaCase("font-rm", "font-switch", "{\\rm def}", LEAK, OK),
             new FormulaCase("font-bf", "font-switch", "\\bf x", LEAK, OK),
             new FormulaCase("font-nested", "font-switch", "{\\rm a {\\bf b} c}", LEAK, OK),
+            // The less-common alphabets map to \mathXX that historically need extra LaTeX packages (\mathscr -> mathrsfs,
+            // \mathfrak/\mathbb -> amssymb); pin that texmath accepts them so a future pandoc/texmath bump can't silently leak them.
+            new FormulaCase("font-cal", "font-switch", "{\\cal L}", LEAK, OK),
+            new FormulaCase("font-frak", "font-switch", "{\\frak g}", LEAK, OK),
+            new FormulaCase("font-bbb", "font-switch", "{\\Bbb R}", LEAK, OK),
+            new FormulaCase("font-scr", "font-switch", "{\\scr F}", LEAK, OK),
 
             // --- Color: the pandoc-service math-color shim now renders real OMML color; \textcolor no longer leaks.
             //     (This asserts only that an equation is produced; that the color is actually applied is verified in

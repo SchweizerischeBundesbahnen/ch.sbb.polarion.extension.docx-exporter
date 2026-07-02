@@ -56,6 +56,13 @@ class LatexUtilsTest {
     }
 
     @Test
+    void strayClosingBraceDoesNotDerailInfixConversion() {
+        // A stray unmatched '}' must clamp the brace depth at 0 (never negative), so a following top-level
+        // \over is still recognized at depth 0 and converted, instead of leaking as raw text.
+        assertEquals("\\frac{a} }{ b}", LatexUtils.sanitizeFormulaSource("a} \\over b"));
+    }
+
+    @Test
     void rewritesInfixAtopInBraceGroup() {
         // \atop is the ruleless sibling of \over; texmath has no ruleless fraction, so it maps to \substack.
         assertEquals("{\\substack{n \\\\ k}}", LatexUtils.sanitizeFormulaSource("{n \\atop k}"));
@@ -112,6 +119,23 @@ class LatexUtilsTest {
         assertEquals(
                 "\\begin{pmatrix} a \\\\ b \\end{pmatrix}",
                 LatexUtils.sanitizeFormulaSource("\\pmatrix{ a \\cr b }"));
+    }
+
+    @Test
+    void convertsCrFollowedByDigitOrUnderscore() {
+        // A TeX control word ends at the first non-letter, so \cr0 / \cr_ are \cr followed by 0/_ and must
+        // convert. (A "\cr\b" regex would miss these: RE2J's \b treats digits and _ as word characters.)
+        assertEquals("\\begin{matrix} a \\\\0 \\end{matrix}", LatexUtils.sanitizeFormulaSource("\\matrix{ a \\cr0 }"));
+        assertEquals("\\begin{matrix} a \\\\_1 \\end{matrix}", LatexUtils.sanitizeFormulaSource("\\matrix{ a \\cr_1 }"));
+    }
+
+    @Test
+    void stripsTrailingCrEvenWhenPrecededByRowBreak() {
+        // "\\\cr" is a "\\" row break plus a trailing "\cr": the "\cr" is a genuine control word (odd
+        // backslash run) and must still be stripped, not mistaken for the tail of an escaped "\\".
+        assertEquals(
+                "\\begin{matrix}a \\\\\\end{matrix}",
+                LatexUtils.sanitizeFormulaSource("\\matrix{a \\\\\\cr}"));
     }
 
     @Test

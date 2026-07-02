@@ -47,11 +47,6 @@ public class LatexUtils {
     // data-source attributes (the attribute value is a raw string, not HTML-parsed by Jsoup). (?i) = case-insensitive.
     private static final RegexMatcher BR_TAG_MATCHER = RegexMatcher.get("(?i)<br\\s*/?>");
 
-    // Matches the plain-TeX row separator "\cr" as a whole control word: a backslash, the letters "cr", and a word
-    // boundary, so it never matches a longer command such as "\create" or "\crcr". (Word boundary is used instead of
-    // a negative lookahead, which RE2J does not support.)
-    private static final RegexMatcher CR_SEPARATOR_MATCHER = RegexMatcher.get("\\\\cr\\b");
-
     // Under XML output syntax, Jsoup (3.1.x / 1.21.2) wraps the data of a <script> element in "//<![CDATA[\n ... \n//]]>".
     // Pandoc expects the raw LaTeX inside <script type="math/tex">, so we unwrap this serialization artifact for our
     // formula scripts. (?s) = DOTALL. The body quantifiers are plain (not possessive): RE2J runs in guaranteed linear
@@ -191,10 +186,38 @@ public class LatexUtils {
      * Converts {@code \cr} row separators into the {@code \\} separator that {@code texmath} expects.
      * Applied globally because {@code \cr} only ever appears as a row/line separator (inside matrices, arrays,
      * {@code cases}, alignment blocks, ...).
+     * <p>
+     * This is a character scan rather than a regex: a TeX control word ends at the first non-<i>letter</i>, so
+     * {@code \cr0} and {@code \cr_} are {@code \cr} followed by {@code 0}/{@code _} and must convert - but RE2J's
+     * {@code \b} counts digits and {@code _} as word characters (and RE2J has no lookahead), so a {@code \\cr\b}
+     * pattern would miss them. {@link #isControlWordAt} applies the correct letter-boundary rule, and a bare
+     * {@code \\} (or any escaped backslash) is copied as a two-character unit so its second backslash is never
+     * mistaken for the start of a {@code \cr}.
      */
     @NotNull
     private String convertCrRowSeparators(@NotNull String latex) {
-        return CR_SEPARATOR_MATCHER.replaceAll(latex, LATEX_ROW_SEPARATOR);
+        StringBuilder out = new StringBuilder(latex.length());
+        int i = 0;
+        int n = latex.length();
+        while (i < n) {
+            char c = latex.charAt(i);
+            if (c != '\\') {
+                out.append(c);
+                i++;
+                continue;
+            }
+            if (isControlWordAt(latex, i, CR_COMMAND)) {
+                out.append(LATEX_ROW_SEPARATOR);
+                i += 1 + CR_COMMAND.length();
+            } else if (i + 1 < n) {
+                out.append(c).append(latex.charAt(i + 1)); // copy "\\" / escaped char as a unit
+                i += 2;
+            } else {
+                out.append(c);
+                i++;
+            }
+        }
+        return out.toString();
     }
 
     /**
@@ -379,7 +402,9 @@ public class LatexUtils {
             if (c == '{') {
                 depth++;
             } else if (c == '}') {
-                depth--;
+                if (depth > 0) { // clamp at 0: a stray unmatched '}' must not push depth negative and misclassify a later top-level separator
+                    depth--;
+                }
             } else if (c == '&' && depth == 0) {
                 out.append(convertCellInfixOperator(body.substring(cellStart, i))).append('&');
                 cellStart = i + 1;
@@ -429,7 +454,9 @@ public class LatexUtils {
             if (c == '{') {
                 depth++;
             } else if (c == '}') {
-                depth--;
+                if (depth > 0) { // clamp at 0: a stray unmatched '}' must not push depth negative and misclassify a later top-level operator
+                    depth--;
+                }
             }
             i++;
         }
@@ -510,9 +537,8 @@ public class LatexUtils {
         }
         if (end >= 2 && body.charAt(end - 1) == '\\' && body.charAt(end - 2) == '\\') {
             end -= 2; // trailing "\\"
-        } else if (end >= 3 && body.charAt(end - 1) == 'r' && body.charAt(end - 2) == 'c' && body.charAt(end - 3) == '\\'
-                && (end < 4 || body.charAt(end - 4) != '\\')) {
-            end -= 3; // trailing control word "\cr" (not the tail of an escaped "\\cr")
+        } else if (end >= 3 && body.charAt(end - 1) == 'r' && body.charAt(end - 2) == 'c' && isControlWordBackslash(body, end - 3)) {
+            end -= 3; // trailing control word "\cr" (not the literal "cr" after an escaped "\\")
         } else {
             return body;
         }
@@ -520,6 +546,23 @@ public class LatexUtils {
             end--;
         }
         return body.substring(0, end);
+    }
+
+    /**
+     * Whether the backslash at {@code index} starts a control word rather than being the second half of an escaped
+     * {@code \\}. A backslash is a control-word introducer only when the run of consecutive backslashes ending at
+     * {@code index} is odd (an even run pairs up entirely into {@code \\} escapes). So for {@code \cr} -> true,
+     * {@code \\cr} -> false, {@code \\\cr} -> true, ... - correct for any number of leading backslashes.
+     */
+    private boolean isControlWordBackslash(@NotNull String body, int index) {
+        if (index < 0 || body.charAt(index) != '\\') {
+            return false;
+        }
+        int backslashes = 0;
+        for (int i = index; i >= 0 && body.charAt(i) == '\\'; i--) {
+            backslashes++;
+        }
+        return backslashes % 2 == 1;
     }
 
     /**
@@ -716,7 +759,9 @@ public class LatexUtils {
             if (c == '{') {
                 depth++;
             } else if (c == '}') {
-                depth--;
+                if (depth > 0) { // clamp at 0: a stray unmatched '}' must not push depth negative and hide a later top-level control word
+                    depth--;
+                }
             }
             i++;
         }
