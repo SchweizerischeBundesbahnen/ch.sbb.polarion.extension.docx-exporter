@@ -1,6 +1,6 @@
 import ExportParams from "./ExportParams.js";
 import ExportContext from "./ExportContext.js";
-import SearchableDropdown from "/polarion/docx-exporter/ui/generic/js/modules/SearchableDropdown.js";
+import { initSearchableDropdowns } from "./dropdown-utils.js";
 
 export default class ExportPanel {
 
@@ -17,23 +17,12 @@ export default class ExportPanel {
     }
 
     _initDropdowns() {
-        const ids = [
+        initSearchableDropdowns(this.ctx, [
             'docx-style-package-select', 'docx-template-selector', 'docx-localization-selector',
             'docx-webhooks-selector', 'docx-orientation-selector', 'docx-paper-size-selector',
             'docx-image-density-selector', 'render-comments-selector', 'docx-language',
             'docx-link-role-direction'
-        ];
-        ids.forEach(id => {
-            const element = this.ctx.getElementById(id);
-            if (element) {
-                new SearchableDropdown({element: element, placeholder: '', rememberSelection: false});
-            }
-        });
-        // Workitem roles is a <select multiple> — wrap it as a multi-select dropdown (same component).
-        const rolesElement = this.ctx.getElementById('docx-roles-selector');
-        if (rolesElement) {
-            new SearchableDropdown({element: rolesElement, placeholder: '', rememberSelection: false, multiselect: true});
-        }
+        ], 'docx-roles-selector');
     }
 
     stylePackageChanged() {
