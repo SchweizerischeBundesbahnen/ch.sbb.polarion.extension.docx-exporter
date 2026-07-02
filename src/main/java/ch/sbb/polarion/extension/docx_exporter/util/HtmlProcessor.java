@@ -37,11 +37,10 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import static ch.sbb.polarion.extension.docx_exporter.util.exporter.Constants.*;
 
+@SuppressWarnings("HttpUrlsUsage")
 public class HtmlProcessor {
 
     private static final String SPAN = "span";
@@ -66,15 +65,6 @@ public class HtmlProcessor {
     private static final String ROWSPAN_ATTR = "rowspan";
     private static final String RIGHT_ALIGNMENT_MARGIN = "auto 0px auto auto";
     private static final String ANCHORS_WITH_HREF_SELECTOR = "a[href]";
-
-    // Matches <br>, <br/>, <br />, <BR/> and other case/whitespace variants Polarion may emit inside formula data-source attributes.
-    private static final Pattern BR_TAG_PATTERN = Pattern.compile("<br\\s*/?>", Pattern.CASE_INSENSITIVE);
-
-    // Under XML output syntax, Jsoup (3.1.x / 1.21.2) wraps the data of a <script> element in "//<![CDATA[\n ... \n//]]>".
-    // Pandoc expects the raw LaTeX inside <script type="math/tex">, so we unwrap this serialization artifact for our formula scripts.
-    @SuppressWarnings("java:S5852") // ignore vulnerable to polynomial runtime due to backtracking
-    private static final Pattern MATH_TEX_CDATA_PATTERN = Pattern.compile(
-            "(<script type=\"math/tex(?:; mode=display)?\">)//<!\\[CDATA\\[[\\r\\n]++(.*?)[\\r\\n]++//\\]\\]>(</script>)", Pattern.DOTALL);
 
     private static final String LOCALHOST = "localhost";
     public static final String HTTP_PROTOCOL_PREFIX = "http://";
@@ -197,7 +187,7 @@ public class HtmlProcessor {
             timedIfNotNull(generationLog, "Clear selectors", () -> clearSelectors(document, exportParams.getRemovalSelector()));
         }
 
-        html = unwrapMathScriptCdata(document.body().html());
+        html = LatexUtils.unwrapMathScriptCdata(document.body().html());
 
         // III. THIRD SECTION - and finally again back to manipulating HTML as a String.
         // ----------------
@@ -845,10 +835,10 @@ public class HtmlProcessor {
                 continue;
             }
 
-            // br-tags are used in Polarion to format formula code, but they are not visible (shouldn't be visible) in formula itself.
-            // LaTeX though outputs them as is, so we remove them here. Polarion's data-source attribute is a raw string (Jsoup does
-            // not HTML-parse attribute values), so we must tolerate all common br variants: <br>, <br/>, <br />, <BR/>, etc.
-            latex = BR_TAG_PATTERN.matcher(latex).replaceAll("");
+            // Polarion stores MathJax-flavored LaTeX, which Pandoc's texmath reader cannot always parse. Normalize it
+            // (drop formatting <br> tags, rewrite plain-TeX matrix macros and \cr separators) so Pandoc can convert it
+            // to native Word equations instead of leaking the raw source as text. See LatexUtils for the rationale.
+            latex = LatexUtils.sanitizeFormulaSource(latex);
 
             // Polarion marks block formulas with data-inline="false"; inline formulas have no data-inline attribute at all.
             boolean display = "false".equals(img.attr("data-inline"));
@@ -865,20 +855,6 @@ public class HtmlProcessor {
             }
             img.replaceWith(script);
         }
-    }
-
-    // Removes Jsoup's XML-mode CDATA wrapper around math/tex <script> bodies so Pandoc receives the raw LaTeX.
-    // quoteReplacement is required because LaTeX contains '\' and '$', which appendReplacement would otherwise
-    // interpret as replacement metacharacters (e.g. "\left" would become "left").
-    @VisibleForTesting
-    static String unwrapMathScriptCdata(@NotNull String html) {
-        Matcher matcher = MATH_TEX_CDATA_PATTERN.matcher(html);
-        StringBuilder result = new StringBuilder();
-        while (matcher.find()) {
-            matcher.appendReplacement(result, Matcher.quoteReplacement(matcher.group(1) + matcher.group(2) + matcher.group(3)));
-        }
-        matcher.appendTail(result);
-        return result.toString();
     }
 
     @VisibleForTesting
