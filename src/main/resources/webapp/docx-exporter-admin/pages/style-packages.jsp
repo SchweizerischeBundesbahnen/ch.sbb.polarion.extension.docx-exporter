@@ -251,20 +251,20 @@
         </div>
         <div class="flex-container">
             <div class="flex-column">
-                <div class='checkbox input-group'>
+                <div class='checkbox input-group' style="display: flex; align-items: center;">
                     <label for='specific-chapters'>
                         <input id='specific-chapters' onchange='document.getElementById("chapters").style.visibility = this.checked ? "visible" : "hidden"' type='checkbox'/>
                         Specific higher level chapters
                     </label>
-                    <input id='chapters' placeholder='eg. 1,2,4 etc.' type='text' style="visibility: hidden; margin-left: 10px; width: 117px"/>
+                    <input id='chapters' placeholder='eg. 1,2,4 etc.' type='text' style="visibility: hidden; margin-left: 10px; flex: 1"/>
                 </div>
                 <div class='checkbox input-group' style="display: flex; flex-direction: column; align-items: flex-start; row-gap: 4px;">
                     <label for='selected-roles' style="margin-top: 5px">
                         <input id="selected-roles" onchange='document.getElementById("roles-select").style.display = this.checked ? "inline-block" : "none"; document.getElementById("link-role-direction-select").style.display = this.checked ? "inline-block" : "none"' type='checkbox'/>
                         Specific Workitem roles
                     </label>
-                    <div id="roles-select" style="display: none; margin-left: 24px; width: 152px"></div>
-                    <div id="link-role-direction-select" style="display: none; margin-left: 24px; width: 152px"></div>
+                    <div id="roles-select" style="display: none; margin-left: 20px; width: 152px"></div>
+                    <div id="link-role-direction-select" style="display: none; margin-left: 20px; width: 152px"></div>
                 </div>
             </div>
             <div class="flex-column">

@@ -310,6 +310,24 @@
     padding: 2px 4px 4px .4rem;
 }
 
+/* Uniform combobox width in the export panel & popup, matching the admin comboboxes (130px).
+   The searchable-dropdown wraps a native <select>; its container may inherit an inline width from
+   the original element, so !important pins it to 130px. */
+.property-wrapper .searchable-dropdown {
+    width: 130px !important;
+}
+
+/* Workitem-roles multiselect + its direction dropdown are stacked under the label; the visible
+   .searchable-dropdown container is inserted next to the hidden <select> and does not inherit its
+   margins, so the indent is pinned on the container itself (the wrapper's row-gap handles the
+   vertical spacing). */
+#docx-roles-selector + .searchable-dropdown,
+#popup-docx-roles-selector + .searchable-dropdown,
+#docx-link-role-direction + .searchable-dropdown,
+#popup-docx-link-role-direction + .searchable-dropdown {
+    margin-left: 20px;
+}
+
 .property-wrapper input.error {
     border-color: red;
     color: red;
@@ -332,6 +350,7 @@
 }
 
 .buttons-wrapper button {
+    vertical-align: middle;
     background-color: transparent;
     border: 1px solid #DEDEDE;
     color: #555;

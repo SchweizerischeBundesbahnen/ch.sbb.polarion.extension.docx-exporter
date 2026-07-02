@@ -10,6 +10,7 @@ const __dirname = dirname(__filename);
 const pathMappings = {
     '/polarion/docx-exporter/ui/generic/js/modules/ConfigurationsPane.js': pathResolve(__dirname, '../../../target/generic-jar-content/js/modules/ConfigurationsPane.js'),
     '/polarion/docx-exporter/ui/generic/js/modules/CustomSelect.js': pathResolve(__dirname, '../../../target/generic-jar-content/js/modules/CustomSelect.js'),
+    '/polarion/docx-exporter/ui/generic/js/modules/SearchableDropdown.js': pathResolve(__dirname, '../../../target/generic-jar-content/js/modules/SearchableDropdown.js'),
     '/polarion/docx-exporter/ui/generic/js/modules/ExtensionContext.js': pathResolve(__dirname, '../../../target/generic-jar-content/js/modules/ExtensionContext.js')
 };
 
