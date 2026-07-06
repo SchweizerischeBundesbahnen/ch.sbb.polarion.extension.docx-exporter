@@ -7,6 +7,12 @@ const ctx = new ExtensionContext({
     scopeFieldId: 'scope'
 });
 
+// Show a standard-dialog message (replaces native alert()); see info-modal in templates.jsp.
+function showInfoModal(message) {
+    ctx.getElementById('info-modal-content').innerText = message;
+    window.MicroModal.show('info-modal');
+}
+
 const conf = new ConfigurationsPane({
     ctx: ctx,
     setConfigurationContentCallback: setTemplates,
@@ -50,7 +56,7 @@ function processDocx(file) {
         reader.readAsArrayBuffer(file);
     } catch (error) {
         console.error("Error reading DOCX:", error);
-        alert("Uploaded file must be a valid docx file");
+        showInfoModal("Uploaded file must be a valid docx file");
         cleanFileUpload();
     }
 }
@@ -63,7 +69,7 @@ async function processDocxContent(data) {
             ctx.getElementById('file-info').innerHTML = `Style Count: ${docxDetails.styleCount}<br>Last Modified Date: ${docxDetails.modifiedDate}`;
             ctx.docx = data;
         } else {
-            alert("Uploaded file must be a valid docx file");
+            showInfoModal("Uploaded file must be a valid docx file");
         }
     }
     invalidatePanels();

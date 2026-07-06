@@ -37,7 +37,7 @@
         }
 
         .webhook-row td {
-            vertical-align: top;
+            vertical-align: middle;
         }
 
         .webhook-row td:first-child {
@@ -45,24 +45,26 @@
         }
 
         .webhook-row td:nth-child(2) {
-            padding-top: 6px;
             width: 30px;
         }
 
-        .webhook-row td:nth-child(3),
+        .webhook-row td:nth-child(3) {
+            width: 400px;
+            position: relative;
+        }
+
         .webhook-row td:nth-child(3) input {
             width: 400px;
         }
 
 
         .webhook-row td:nth-child(4) {
-            padding-top: 4px;
             width: 55px;
             min-width: 55px;
         }
 
         .webhook-row td:nth-child(5) {
-            width: 100px;
+            width: 150px;
         }
 
         .webhook-row td:nth-child(6),
@@ -77,6 +79,11 @@
 
         .invalid-webhook {
             color: #ddab19;
+            position: absolute;
+            top: 100%;
+            left: 0;
+            margin-top: 2px;
+            white-space: nowrap;
         }
 
         .invalid-webhook.hidden {

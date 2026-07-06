@@ -70,7 +70,7 @@
         generic.injectStyles("generic-checkbox-styles", `/polarion/docx-exporter/ui/generic/css/checkboxes.css${timestampParam}`);
         generic.injectStyles("generic-searchable-dropdown-styles", `/polarion/docx-exporter/ui/generic/css/searchable-dropdown.css${timestampParam}`);
         generic.injectStyles("generic-inputs-styles", `/polarion/docx-exporter/ui/generic/css/inputs.css${timestampParam}`);
-        generic.injectScript("docx-micromodal-script", `/polarion/docx-exporter/js/micromodal.min.js${timestampParam}`);
+        generic.injectScript("docx-micromodal-script", `/polarion/docx-exporter/ui/generic/js/micromodal.min.js${timestampParam}`);
         starter = generic.create({
             markerId: 'docx-exporter-toolbar-injected',
             alternateHtml: ALTERNATE_TOOLBAR_HTML,

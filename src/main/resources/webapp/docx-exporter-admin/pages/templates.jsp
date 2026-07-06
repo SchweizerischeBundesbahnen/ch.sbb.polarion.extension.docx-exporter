@@ -9,6 +9,8 @@
     <link rel="stylesheet" href="../ui/generic/css/custom-select.css?bundle=<%= bundleTimestamp %>">
     <link rel="stylesheet" href="../ui/generic/css/configurations.css?bundle=<%= bundleTimestamp %>">
     <script type="application/javascript" src="../js/jszip.min.js?bundle=<%= bundleTimestamp %>"></script>
+    <link rel="stylesheet" href="../ui/generic/css/micromodal.css?bundle=<%= bundleTimestamp %>">
+    <script type="text/javascript" src="../ui/generic/js/micromodal.min.js?bundle=<%= bundleTimestamp %>"></script>
     <script type="module" src="../js/modules/templates.js?bundle=<%= bundleTimestamp %>"></script>
     <style type="text/css">
         html {
@@ -158,6 +160,21 @@
                 Headers and footers can be configured differently for the first, odd and even pages - changes made in an editor will be applied to the resulting document:
                 <img class="admin-page-screenshot" src="../images/first_odd_even.png" alt="first_odd_even"/>
             </p>
+        </div>
+    </div>
+</div>
+
+<div class="modal micromodal-slide" id="info-modal" aria-hidden="true">
+    <div class="modal__overlay" tabindex="-1" data-micromodal-close>
+        <div class="modal__container standard-dialog" role="dialog" aria-modal="true" aria-labelledby="info-modal-title">
+            <header class="modal__header">
+                <h2 class="modal__title" id="info-modal-title">DOCX Exporter</h2>
+                <button class="modal__close" aria-label="Close" data-micromodal-close></button>
+            </header>
+            <main class="modal__content" id="info-modal-content"></main>
+            <footer class="modal__footer">
+                <button class="modal__btn modal__btn-primary" data-micromodal-close>OK</button>
+            </footer>
         </div>
     </div>
 </div>
