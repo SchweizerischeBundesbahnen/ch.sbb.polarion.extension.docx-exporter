@@ -10,23 +10,24 @@ export default class ExportPopup {
     }
 
     initPopup() {
-        // The shared generic micromodal caches one Modal instance per id and reuses it on show();
-        // drop the cached instance and any previous element so a rebuilt popup re-binds correctly —
-        // otherwise a 2nd+ open targets the detached old node and nothing appears.
-        if (typeof MicroModal !== "undefined") {
-            MicroModal.removeModal?.(POPUP_ID);
+        // Reuse the popup element across opens. The shared generic micromodal caches one Modal per
+        // id bound to the element it first saw, so rebuilding the element would leave that cache
+        // pointing at a detached node and later opens (e.g. after editing/saving the document) would
+        // silently do nothing.
+        let popup = document.getElementById(POPUP_ID);
+        if (!popup) {
+            popup = document.createElement('div');
+            popup.classList.add("modal", "micromodal-slide");
+            popup.id = POPUP_ID;
+            document.body.appendChild(popup);
         }
-        document.getElementById(POPUP_ID)?.remove();
-        const popup = document.createElement('div');
-        popup.classList.add("modal");
-        popup.classList.add("micromodal-slide");
-        popup.id = POPUP_ID;
         popup.setAttribute("aria-hidden", "true");
         popup.innerHTML = POPUP_HTML;
         this.popup = popup;
-        document.body.appendChild(popup);
 
-        fetch('/polarion/docx-exporter/html/popupForm.html')
+        // Derive the form URL from this module's own URL so it follows the same extension base as
+        // the toolbar import instead of a hardcoded /polarion/docx-exporter/ context.
+        fetch(new URL('../../../html/popupForm.html', import.meta.url).href)
             .then(response => response.text())
             .then(content => {
                 this.renderPanel(content);
