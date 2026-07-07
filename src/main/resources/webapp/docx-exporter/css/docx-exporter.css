@@ -401,9 +401,10 @@
     opacity: 0.3;
 }
 
-#export-docx-progress, #validate-pdf-progress {
+#export-docx-progress {
     display: none;
     width: 20px;
+    height: 20px;
     vertical-align: middle;
 }
 
