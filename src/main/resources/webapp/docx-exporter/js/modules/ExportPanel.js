@@ -1,6 +1,6 @@
 import ExportParams from "./ExportParams.js";
 import ExportContext from "./ExportContext.js";
-import { initSearchableDropdowns } from "./dropdown-utils.js";
+import { initSearchableDropdowns } from "../../generic/js/modules/searchableSelect.js";
 
 export default class ExportPanel {
 
@@ -236,12 +236,12 @@ export default class ExportPanel {
             //disable components
             this.ctx.getJQueryElement(":input").attr("disabled", true);
             //show loading icon
-            this.ctx.getJQueryElement("#export-docx-progress").show();
+            this.ctx.getJQueryElement("#export-docx-progress").css("display", "inline-block");
         } else {
             //enable components
             this.ctx.getJQueryElement(":input").attr("disabled", false);
             //hide loading icon
-            this.ctx.getJQueryElement("#export-docx-progress").hide();
+            this.ctx.getJQueryElement("#export-docx-progress").css("display", "none");
         }
     }
 }

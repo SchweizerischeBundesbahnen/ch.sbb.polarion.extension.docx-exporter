@@ -77,7 +77,7 @@
         <extender id="templates"
                   name="Templates"
                   parentNodeId="docx-export"
-                  iconUrl="/polarion/icons/default/topicIconsSmall/documentsAndWiki.svg"
+                  iconUrl="/polarion/docx-exporter-admin/ui/images/menu/16x16/templates.svg"
                   pageUrl="/polarion/docx-exporter-admin/pages/templates.jsp?scope=$scope$"
                   projectScope="true"
                   projectGroupScope="false"

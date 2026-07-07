@@ -12,7 +12,6 @@
     <link rel="stylesheet" href="../ui/generic/css/code-input.min.css?bundle=<%= bundleTimestamp %>">
     <script type="text/javascript" src="../ui/generic/js/code-input.min.js?bundle=<%= bundleTimestamp %>"></script>
     <link rel="stylesheet" href="../ui/generic/css/common.css?bundle=<%= bundleTimestamp %>">
-    <link rel="stylesheet" href="../ui/generic/css/custom-select.css?bundle=<%= bundleTimestamp %>">
     <link rel="stylesheet" href="../ui/generic/css/configurations.css?bundle=<%= bundleTimestamp %>">
     <script type="module" src="../js/modules/style-packages.js?bundle=<%= bundleTimestamp %>"></script>
     <style type="text/css">
@@ -160,7 +159,7 @@
                         <input id="orientation" onchange='document.getElementById("orientation-select").style.visibility = this.checked ? "visible" : "hidden"' type='checkbox'/>
                         Custom orientation
                     </label>
-                    <div id="orientation-select" style="visibility: hidden; margin-left: 10px; width: 200px"></div>
+                    <div id="orientation-select" style="visibility: hidden; margin-left: 10px"></div>
                 </div>
             </div>
         </div>
@@ -172,7 +171,7 @@
                         <input id="paper-size" onchange='document.getElementById("paper-size-select").style.visibility = this.checked ? "visible" : "hidden"' type='checkbox'/>
                         Custom paper size
                     </label>
-                    <div id="paper-size-select" style="visibility: hidden; margin-left: 10px; width: 200px"></div>
+                    <div id="paper-size-select" style="visibility: hidden; margin-left: 10px"></div>
                 </div>
             </div>
         </div>
@@ -184,7 +183,7 @@
                         <input id="image-density" onchange='document.getElementById("image-density-select").style.visibility = this.checked ? "visible" : "hidden"' type='checkbox'/>
                         Custom image density
                     </label>
-                    <div id="image-density-select" style="visibility: hidden; margin-left: 10px; width: 200px"></div>
+                    <div id="image-density-select" style="visibility: hidden; margin-left: 10px"></div>
                 </div>
             </div>
         </div>
@@ -219,7 +218,7 @@
                         <input id="render-comments" onchange='document.getElementById("render-comments-select").style.visibility = this.checked ? "visible" : "hidden"; document.getElementById("render-comments-options").style.display = this.checked ? "block" : "none"; if (!this.checked) { document.getElementById("include-unreferenced-comments").checked = false; }' type='checkbox'/>
                         Comments rendering
                     </label>
-                    <div id="render-comments-select" style="visibility: hidden; margin-left: 10px; width: 200px"></div>
+                    <div id="render-comments-select" style="visibility: hidden; margin-left: 10px"></div>
                 </div>
                 <div class='checkbox input-group' id='render-comments-options' style="display: none; padding-left: 20px">
                     <label for='include-unreferenced-comments' id='include-unreferenced-comments-container' style="display: inline-block" title="Unreferenced comments will be rendered at the end of the document">
@@ -273,7 +272,7 @@
                         <input id="localization" onchange='document.getElementById("language-select").style.visibility = this.checked ? "visible" : "hidden"' type='checkbox'/>
                         Localize enums
                     </label>
-                    <div id="language-select" style="visibility: hidden; margin-left: 10px; width: 200px"></div>
+                    <div id="language-select" style="visibility: hidden; margin-left: 10px"></div>
                 </div>
             </div>
         </div>

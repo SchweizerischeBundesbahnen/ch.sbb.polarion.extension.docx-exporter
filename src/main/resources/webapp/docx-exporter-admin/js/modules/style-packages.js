@@ -168,8 +168,7 @@ const PaperSize = {
 
 const ImageDensity = {
     imageDensitySelect: new SearchableDropdown({
-        selectContainer: ctx.getElementById("image-density-select"),
-        label: ctx.getElementById("image-density-label")
+        selectContainer: ctx.getElementById("image-density-select")
     }),
 
     init: function () {
