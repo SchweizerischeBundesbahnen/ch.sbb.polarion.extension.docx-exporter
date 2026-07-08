@@ -32,7 +32,7 @@
             </select>
         </div>
         <div class='property-wrapper {WEBHOOKS_DISPLAY}' style='border-top: 1px solid #eee; padding-top: 10px;'>
-            <label for='docx-webhooks-selector'>
+            <label for='docx-webhooks-checkbox'>
                 <input id='docx-webhooks-checkbox' onchange='document.querySelector("#docx-exporter-panel #docx-webhooks-selector").style.display = this.checked ? "inline-block" : "none"' type='checkbox' {WEBHOOKS_SELECTED}/>
                 Webhooks:
             </label>
@@ -87,7 +87,7 @@
             </label>
         </div>
         <div class='property-wrapper'>
-            <label for='render-comments'>
+            <label>
                 <input id='render-comments' onchange='document.querySelector("#docx-exporter-panel #render-comments-selector").style.display = this.checked ? "block" : "none"; document.querySelector("#docx-exporter-panel #render-comments-options").style.display = this.checked ? "flex" : "none"; if (!this.checked) { document.querySelector("#docx-exporter-panel #include-unreferenced-comments").checked = false; }' type='checkbox'/>
                 Comments rendering
             </label>
@@ -97,7 +97,7 @@
             </select>
         </div>
         <div class='property-wrapper' id='render-comments-options' style='display: none; padding-left: 20px'>
-            <label for='include-unreferenced-comments' id='include-unreferenced-comments-container' title="Unreferenced comments will be rendered at the end of the document">
+            <label id='include-unreferenced-comments-container' title="Unreferenced comments will be rendered at the end of the document">
                 <input id='include-unreferenced-comments' type='checkbox' />
                 include unreferenced
             </label>
