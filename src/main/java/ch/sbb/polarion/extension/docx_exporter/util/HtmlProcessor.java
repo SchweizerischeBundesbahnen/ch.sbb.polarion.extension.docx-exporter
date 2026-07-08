@@ -30,6 +30,7 @@ import org.jsoup.select.Elements;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
@@ -179,6 +180,9 @@ public class HtmlProcessor {
         // ----
 
         timedIfNotNull(generationLog, "Generate table of content", () -> addTableOfContent(document));
+
+        timedIfNotNull(generationLog, "Renumber captions", () -> renumberCaptions(document));
+
         timedIfNotNull(generationLog, "Add table of figures", () -> addTableOfFigures(document));
 
         timedIfNotNull(generationLog, "Replace links", () -> replaceLinks(document));
@@ -1056,6 +1060,37 @@ public class HtmlProcessor {
     public void clearSelectors(@NotNull Document document, @NotNull String clearSelector) {
         Elements elementsToRemove = document.select(clearSelector);
         elementsToRemove.remove();
+    }
+
+    /**
+     * Reassigns caption numbers ("Table 1", "Figure 2", ...) following the visual (DOM) order of the captions.
+     * <p>
+     * Polarion generates caption numbers server-side via a single stateful counter that increments in render
+     * order (see {@code RichTextCaption.render} / {@code CaptionIdGenerator}). For export Polarion renders
+     * all wiki/macro blocks first (see {@code ServerRichTextDocumentBase.renderImpl}) and only then the document's
+     * own parts. When a macro re-renders a work item's rich text that already contains a numbered caption, the
+     * macro copy grabs the lower number, so the numbering ends up reversed relative to what the editor shows
+     * (the editor numbers captions with CSS counters, i.e. in DOM order). We restore DOM-order numbering here.
+     */
+    @VisibleForTesting
+    @SuppressWarnings("java:S135") // several continue used to keep logic simple
+    void renumberCaptions(@NotNull Document document) {
+        Map<String, Integer> sequenceCounters = new HashMap<>();
+        // Restrict to paragraph-wrapped captions, i.e. the ones actually rendered as captions in the document body.
+        for (Element captionSpan : document.select("p.polarion-rte-caption-paragraph span.polarion-rte-caption[data-sequence]")) {
+            String sequence = captionSpan.dataset().get("sequence");
+            if (StringUtils.isEmpty(sequence)) {
+                continue;
+            }
+            Node numberNode = captionSpan.childNodes().stream().filter(TextNode.class::isInstance).findFirst().orElse(null);
+            if (!(numberNode instanceof TextNode numberTextNode) || !numberTextNode.text().trim().matches("\\d+")) {
+                continue;
+            }
+            int nextNumber = sequenceCounters.merge(sequence, 1, Integer::sum);
+            if (!numberTextNode.text().trim().equals(String.valueOf(nextNumber))) {
+                numberTextNode.text(String.valueOf(nextNumber));
+            }
+        }
     }
 
     @VisibleForTesting
