@@ -52,7 +52,7 @@ class DocxExporterFormExtensionTest {
         try (MockedStatic<EnumValuesProvider> mockEnumValuesProvider = mockStatic(EnumValuesProvider.class)) {
             mockEnumValuesProvider.when(() -> EnumValuesProvider.getAllLinkRoleNames(any())).thenReturn(List.of("relates to", "blocks", "duplicates"));
             extension.renderForm(context, module);
-            List<String> expectedEntries = Arrays.asList("someSpecificSelector", "<input id='render-comments' checked", "<input id='docx-orientation' checked", "<input id='docx-paper-size' checked", "<input id='docx-image-density' checked");
+            List<String> expectedEntries = Arrays.asList("someSpecificSelector", "<input id='docx-render-comments' checked", "<input id='docx-orientation' checked", "<input id='docx-paper-size' checked", "<input id='docx-image-density' checked");
             verify(builder, times(0)).html(argThat(arg -> expectedEntries.stream().allMatch(arg::contains)));
 
             stylePackage.setRemovalSelector("someSpecificSelector");
@@ -69,25 +69,25 @@ class DocxExporterFormExtensionTest {
     @Test
     void testAdjustRenderComments() {
         DocxExporterFormExtension extension = new DocxExporterFormExtension();
-        String form = "<input id='render-comments'/>"
-                + "<select id='render-comments-selector' style='display: none'><option value='ALL'></select>"
-                + "<div id='render-comments-options' style='display: none'>"
-                + "<input id='include-unreferenced-comments'/></div>";
+        String form = "<input id='docx-render-comments'/>"
+                + "<select id='docx-render-comments-selector' style='display: none'><option value='ALL'></select>"
+                + "<div id='docx-render-comments-options' style='display: none'>"
+                + "<input id='docx-include-unreferenced-comments'/></div>";
         StylePackageModel packageModel = new StylePackageModel();
         assertThat(extension.adjustRenderComments(form, packageModel)).isEqualTo(form);
 
         packageModel.setRenderComments(CommentsRenderType.ALL);
         assertThat(extension.adjustRenderComments(form, packageModel))
-                .contains("<input id='render-comments' checked")
-                .contains("id='render-comments-options' style='display: flex")
-                .contains("<input id='include-unreferenced-comments'/>")
-                .doesNotContain("<input id='include-unreferenced-comments' checked");
+                .contains("<input id='docx-render-comments' checked")
+                .contains("id='docx-render-comments-options' style='display: flex")
+                .contains("<input id='docx-include-unreferenced-comments'/>")
+                .doesNotContain("<input id='docx-include-unreferenced-comments' checked");
 
         packageModel.setIncludeUnreferencedComments(true);
         assertThat(extension.adjustRenderComments(form, packageModel))
-                .contains("<input id='render-comments' checked")
-                .contains("id='render-comments-options' style='display: flex")
-                .contains("<input id='include-unreferenced-comments' checked");
+                .contains("<input id='docx-render-comments' checked")
+                .contains("id='docx-render-comments-options' style='display: flex")
+                .contains("<input id='docx-include-unreferenced-comments' checked");
     }
 
     @Test
