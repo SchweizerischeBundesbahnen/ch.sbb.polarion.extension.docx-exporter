@@ -112,6 +112,7 @@ export default class ExportPanel {
                 });
             }
         }
+        this.ctx.getElementById("docx-roles-selector")?._searchableDropdown?.syncFromElement();
         this.ctx.displayIf("docx-roles-wrapper", rolesProvided, "flex");
         this.ctx.setValue("docx-link-role-direction", stylePackage.linkRoleDirection || ExportParams.LinkRoleDirection.BOTH);
 

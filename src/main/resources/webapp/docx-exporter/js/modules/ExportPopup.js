@@ -306,6 +306,9 @@ export default class ExportPopup {
                 });
             }
         }
+        // Roles were selected via raw option.selected; sync the multiselect widget so its chips
+        // reflect them (the widget only auto-syncs on option add/remove or a 'change' event).
+        this.ctx.getElementById("popup-docx-roles-selector")?._searchableDropdown?.syncFromElement();
         this.ctx.displayIf("popup-docx-roles-selector", rolesProvided, "inline-block");
 
         this.ctx.setValue("popup-docx-link-role-direction", stylePackage.linkRoleDirection || ExportParams.LinkRoleDirection.BOTH);
