@@ -20,7 +20,7 @@ export default class ExportPanel {
         initSearchableDropdowns(this.ctx, [
             'docx-style-package-select', 'docx-template-selector', 'docx-localization-selector',
             'docx-webhooks-selector', 'docx-orientation-selector', 'docx-paper-size-selector',
-            'docx-image-density-selector', 'render-comments-selector', 'docx-language',
+            'docx-image-density-selector', 'docx-render-comments-selector', 'docx-language',
             'docx-link-role-direction'
         ], 'docx-roles-selector');
     }
@@ -67,12 +67,12 @@ export default class ExportPanel {
         this.ctx.setSelector("docx-webhooks-selector", stylePackage.webhooks);
         this.ctx.displayIf("docx-webhooks-selector", !!stylePackage.webhooks, "inline-block")
 
-        this.ctx.setCheckbox("render-comments", !!stylePackage.renderComments);
-        this.ctx.setValue("render-comments-selector", stylePackage.renderComments  || 'OPEN');
-        this.ctx.displayIf("render-comments-selector", !!stylePackage.renderComments);
+        this.ctx.setCheckbox("docx-render-comments", !!stylePackage.renderComments);
+        this.ctx.setValue("docx-render-comments-selector", stylePackage.renderComments  || 'OPEN');
+        this.ctx.displayIf("docx-render-comments-selector", !!stylePackage.renderComments);
 
-        this.ctx.displayIf("render-comments-options", !!stylePackage.renderComments, "flex");
-        this.ctx.setCheckbox("include-unreferenced-comments", !!stylePackage.includeUnreferencedComments);
+        this.ctx.displayIf("docx-render-comments-options", !!stylePackage.renderComments, "flex");
+        this.ctx.setCheckbox("docx-include-unreferenced-comments", !!stylePackage.includeUnreferencedComments);
 
         this.ctx.setCheckbox("docx-cut-empty-chapters", stylePackage.cutEmptyChapters);
         this.ctx.setCheckbox("docx-cut-empty-wi-attributes", stylePackage.cutEmptyWorkitemAttributes);
@@ -159,8 +159,8 @@ export default class ExportPanel {
             .setPreserveTableStyles(this.ctx.getElementById("docx-preserve-table-styles").checked)
             .setWebhooks(this.ctx.getElementById("docx-webhooks-checkbox").checked ? this.ctx.getElementById("docx-webhooks-selector").value : null)
             .setRemovalSelector(this.ctx.getValueById("docx-removal-selector"))
-            .setRenderComments(this.ctx.getElementById('render-comments').checked ? this.ctx.getElementById("render-comments-selector").value : null)
-            .setIncludeUnreferencedComments(this.ctx.getElementById('render-comments').checked && this.ctx.getElementById('include-unreferenced-comments').checked)
+            .setRenderComments(this.ctx.getElementById('docx-render-comments').checked ? this.ctx.getElementById("docx-render-comments-selector").value : null)
+            .setIncludeUnreferencedComments(this.ctx.getElementById('docx-render-comments').checked && this.ctx.getElementById('docx-include-unreferenced-comments').checked)
             .setCutEmptyChapters(this.ctx.getElementById("docx-cut-empty-chapters").checked)
             .setCutEmptyWIAttributes(this.ctx.getElementById('docx-cut-empty-wi-attributes').checked)
             .setCutLocalUrls(this.ctx.getElementById("docx-cut-urls").checked)
