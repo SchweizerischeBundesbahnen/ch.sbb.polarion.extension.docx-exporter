@@ -14,5 +14,10 @@
     "jsdom": "29.1.1",
     "mocha": "11.7.6",
     "sinon": "22.0.0"
-  }
+  },
+  "engines": {
+    "node": ">=20.19.0",
+    "npm": ">=11"
+  },
+  "packageManager": "npm@11.6.1"
 }
