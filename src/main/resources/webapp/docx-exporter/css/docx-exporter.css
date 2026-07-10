@@ -289,7 +289,12 @@
     border-radius: 2px;
 }
 
-.property-wrapper select, .property-wrapper input[type="color"] {
+/* Native <select> dropdown chevron (shared --sbb-combo-chevron). Colour inputs are intentionally NOT
+   matched here: this extension has no colour picker in its document side panel, and this stylesheet is
+   injected into the shared DLE editor — an input[type="color"] rule (worse, with !important) would leak
+   onto sibling extensions' colour fields (e.g. pdf-exporter). The colour-input look is owned by generic
+   inputs.css. */
+.property-wrapper select {
     appearance: none !important;
     -webkit-appearance: none !important;
     -moz-appearance: none !important;
@@ -345,10 +350,6 @@
 
 .modal__container.docx-exporter .property-wrapper select {
     width: 200px;
-}
-
-.property-wrapper input[type="color"] {
-    padding: 2px 2rem 2px 2px;
 }
 
 .buttons-wrapper {
