@@ -145,21 +145,12 @@
     border: 1px solid #75b598;
 }
 
+/* Layout only; text colour + weight come from generic .validation-alerts .alert-*.
+   (The notifications box keeps the local .docx-notifications name — and thus its own colour blocks
+   above — to avoid the popup's querySelector matching Polarion's own page-level .notifications.) */
 .modal__container.docx-exporter .validation-alerts {
     display: inline-block;
     padding: 0 10px;
-}
-
-.modal__container.docx-exporter .validation-alerts .alert {
-    font-weight: bold;
-}
-
-.modal__container.docx-exporter .validation-alerts .alert-error {
-    color: red;
-}
-
-.modal__container.docx-exporter .validation-alerts .alert-success {
-    color: green;
 }
 
 .modal__container.docx-exporter .polarion-JSWizardButton-Primary.action-button:disabled,
@@ -302,7 +293,7 @@
     appearance: none !important;
     -webkit-appearance: none !important;
     -moz-appearance: none !important;
-    background: transparent url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAYAAAAGCAYAAADgzO9IAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAOUlEQVR4nGNgwAOKGRgY/qNhkBgDCwMDw0UkwasMDAysMF22DAwM/6ASjuhGLmVgYFiCzS5JKAYDACJtDIY1VpdwAAAAAElFTkSuQmCC") no-repeat;
+    background: transparent var(--sbb-combo-chevron) no-repeat;
     background-position: calc(100% - 1rem) 55% !important;
 }
 
@@ -577,7 +568,7 @@
 }
 
 .more-info {
-    background: url(/polarion/ria/images/msginfo.png) no-repeat;
+    background: var(--sbb-info-icon) no-repeat;
     display: inline-block;
     width: 17px;
     height: 17px;

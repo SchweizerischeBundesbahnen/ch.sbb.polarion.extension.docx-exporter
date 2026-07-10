@@ -39,8 +39,18 @@
             text-align: left;
             width: auto;
             margin: 4px 0px;
-            padding: 16px 4px 16px 36px;
-            background: #D8E4F1 url(/polarion/ria/images/msginfo.png) 10px 18px no-repeat;
+            padding: 16px;
+            background: #D8E4F1;
+            display: block;
+            overflow: hidden; /* contain the floated icon */
+        }
+        .upload-hint::before {
+            content: "";
+            float: left;
+            width: 16px;
+            height: 16px;
+            margin: 1px 10px 0 0;
+            background: var(--sbb-info-icon) center / contain no-repeat;
         }
 
         .docx-panel {
@@ -122,7 +132,7 @@
             <img id="docx-image" src="/polarion/docx-exporter-admin/ui/images/docx.png" alt="docx"/>
             <span id="file-info"></span>
             <button id="delete-file-button" class="toolbar-button" type="button">
-                <img class="button-image" alt="Cancel" title="Delete template" src="/polarion/ria/images/actions/cancel.gif?bundle=<%= bundleTimestamp %>">Delete attached file
+                <span class="button-image sbb-icon-cancel" role="img" aria-label="Cancel" title="Delete template"></span>Delete attached file
             </button>
         </div>
 

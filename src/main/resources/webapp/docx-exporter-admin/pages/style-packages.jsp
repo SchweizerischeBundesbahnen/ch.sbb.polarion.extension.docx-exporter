@@ -76,7 +76,7 @@
         }
 
         .more-info {
-            background: url(/polarion/ria/images/msginfo.png) no-repeat;
+            background: var(--sbb-info-icon) no-repeat;
             display: inline-block;
             width: 17px;
             height: 17px;
