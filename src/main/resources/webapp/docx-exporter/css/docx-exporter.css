@@ -124,30 +124,17 @@
     padding: 0 0 10px;
 }
 
+/* Box padding only; the wrapper carries the extra .notifications class so the box colours (bg/border)
+   and the warning/error triangle icon come from generic alerts.css (.notifications .alert-*). The
+   local .docx-notifications name is kept for the popup's querySelector, which must not match
+   Polarion's own page-level .notifications. */
 .modal__container.docx-exporter .docx-notifications .alert {
     margin-bottom: 10px;
     padding: 6px 12px;
     border-radius: 3px;
 }
 
-.modal__container.docx-exporter .docx-notifications .alert-error {
-    background-color: #f8d7da;
-    border: 1px solid #b3626a;
-}
-
-.modal__container.docx-exporter .docx-notifications .alert-warning {
-    background-color: #fff7cd;
-    border: 1px solid #ffc328;
-}
-
-.modal__container.docx-exporter .docx-notifications .alert-success {
-    background-color: #d1e7dd;
-    border: 1px solid #75b598;
-}
-
-/* Layout only; text colour + weight come from generic .validation-alerts .alert-*.
-   (The notifications box keeps the local .docx-notifications name — and thus its own colour blocks
-   above — to avoid the popup's querySelector matching Polarion's own page-level .notifications.) */
+/* Layout only; text colour + weight come from generic .validation-alerts .alert-*. */
 .modal__container.docx-exporter .validation-alerts {
     display: inline-block;
     padding: 0 10px;
@@ -401,15 +388,22 @@
 }
 
 #export-docx-error, #validate-error, #docx-style-package-error {
-    display: inline-block;
+    display: block;
     color: red;
     font-weight: bold;
 }
 
 #export-docx-warning {
-    display: inline-block;
+    display: block;
     color: orange;
     font-weight: bold;
+}
+
+/* Gap only when a message is actually present — these status divs are empty in the normal state, and
+   an unconditional margin on an empty block would permanently shift the following controls down. */
+#export-docx-error:not(:empty), #validate-error:not(:empty), #docx-style-package-error:not(:empty),
+#export-docx-warning:not(:empty) {
+    margin-top: 6px;
 }
 
 #validate-ok {
