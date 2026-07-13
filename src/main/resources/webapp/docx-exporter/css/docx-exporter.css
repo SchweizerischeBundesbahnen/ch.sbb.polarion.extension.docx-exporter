@@ -389,16 +389,21 @@
 
 #export-docx-error, #validate-error, #docx-style-package-error {
     display: block;
-    margin-top: 6px;
     color: red;
     font-weight: bold;
 }
 
 #export-docx-warning {
     display: block;
-    margin-top: 6px;
     color: orange;
     font-weight: bold;
+}
+
+/* Gap only when a message is actually present — these status divs are empty in the normal state, and
+   an unconditional margin on an empty block would permanently shift the following controls down. */
+#export-docx-error:not(:empty), #validate-error:not(:empty), #docx-style-package-error:not(:empty),
+#export-docx-warning:not(:empty) {
+    margin-top: 6px;
 }
 
 #validate-ok {
