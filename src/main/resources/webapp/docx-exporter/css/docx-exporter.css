@@ -518,7 +518,7 @@
     height: 100%;
     padding: 0 10px;
     border-radius: 4px;
-    background-color: #007993;
+    background-color: var(--sbb-accent);
     overflow: hidden;
     line-height: 1.6em;
     text-align: center;
