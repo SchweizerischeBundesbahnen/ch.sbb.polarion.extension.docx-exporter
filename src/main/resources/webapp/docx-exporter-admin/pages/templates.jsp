@@ -122,14 +122,14 @@
             For best results, the reference docx should be a modified version of a docx file built-in into Pandoc (<a href="/polarion/docx-exporter/rest/internal/template">download</a>).</span>
 
         <div id="choose-file-panel" class="docx-panel">
-            <img src="/polarion/docx-exporter-admin/ui/images/docx_gray.png" alt="docx"/>
+            <img src="/polarion/docx-exporter-admin/ui/images/word_doc_grey.svg" alt="docx"/>
             <span id="no-file-provided">No file provided</span>
             <label id="template-file-upload-label" for="template-file-upload" class="toolbar-button styled-upload-button">Choose docx template file</label>
             <input id="template-file-upload" name="file" type="file" accept=".docx"/>
         </div>
 
         <div id="file-chosen-panel" class="docx-panel">
-            <img id="docx-image" src="/polarion/docx-exporter-admin/ui/images/docx.png" alt="docx"/>
+            <img id="docx-image" src="/polarion/docx-exporter-admin/ui/images/word_doc_blue.svg" alt="docx"/>
             <span id="file-info"></span>
             <button id="delete-file-button" class="toolbar-button" type="button">
                 <span class="button-image sbb-icon-cancel" role="img" aria-label="Cancel" title="Delete template"></span>Delete attached file
