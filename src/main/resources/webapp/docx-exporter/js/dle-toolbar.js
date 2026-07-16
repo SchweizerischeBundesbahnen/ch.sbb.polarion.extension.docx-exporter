@@ -26,7 +26,13 @@
         .replace(/dle-toolbar\.js.*$/, 'starter.js') || '/polarion/docx-exporter/js/starter.js';
     const script = document.createElement('script');
     script.src = starterSrc;
-    script.onload = injectToolbar;
+    script.onload = function () {
+        if (window.DocxExporterStarter) {
+            injectToolbar();
+        } else {
+            console.error("docx-exporter: starter.js loaded but DocxExporterStarter is not defined — DLE toolbar button injection skipped.");
+        }
+    };
     script.onerror = function () {
         console.error("docx-exporter: failed to load starter.js — DLE toolbar button injection skipped.");
     };
