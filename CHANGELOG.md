@@ -1,5 +1,18 @@
 # Changelog
 
+## [5.2.0](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/compare/v5.1.0...v5.2.0) (2026-07-16)
+
+
+### Features
+
+* add single-tag dle-toolbar.js injector ([#304](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/issues/304)) ([d639fa3](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/commit/d639fa340b6f853244b8ce0f9735008cd8f9ad4a)), closes [#278](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/issues/278)
+* restyle style package weights admin page ([#300](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/issues/300)) ([051284e](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/commit/051284e64596757fbb96db11d96547a04b248c69)), closes [#301](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/issues/301)
+
+
+### Bug Fixes
+
+* **deps:** update dependency ch.sbb.polarion.extensions:ch.sbb.polarion.extension.generic to v15.5.0 ([98e88bc](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/commit/98e88bc88a198aed0e651245d8c65b526c965c99))
+
 ## [5.1.0](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/compare/v5.0.0...v5.1.0) (2026-07-14)
 
 
