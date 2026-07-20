@@ -89,6 +89,6 @@ class TableSizesConversionTest extends BasePandocTest {
 
     /** A cell that continues a vertical merge from the row above. */
     private static Cell cont() {
-        return new Cell("", "continue", 1);
+        return new Cell("", "continue", null);
     }
 }

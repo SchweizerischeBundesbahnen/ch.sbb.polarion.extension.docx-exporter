@@ -180,8 +180,8 @@ final class DocxStructureInspector {
         for (int i = 0; i < extentNodes.getLength(); i++) {
             Element extent = (Element) extentNodes.item(i);
             extents.add(new Extent(
-                    Long.parseLong(extent.getAttribute("cx")),
-                    Long.parseLong(extent.getAttribute("cy"))));
+                    parseLongOrDefault(extent.getAttribute("cx"), 0L),
+                    parseLongOrDefault(extent.getAttribute("cy"), 0L)));
         }
 
         return new Paragraph(styleId, segments, extents);
@@ -213,7 +213,7 @@ final class DocxStructureInspector {
         int size = 0;
         String sz = wAttr(child(rPr, "sz"), "val");
         if (sz != null && !"22".equals(sz)) { // 22 half-points = 11pt, the document default
-            size = Integer.parseInt(sz);
+            size = parseIntOrDefault(sz, 0);
         }
 
         return new RunFormat(bold, italic, underline, strike, vertAlign, color, highlight, size);
@@ -228,10 +228,7 @@ final class DocxStructureInspector {
             Element tblW = child(tblPr, "tblW");
             if (tblW != null) {
                 widthType = wAttr(tblW, "type");
-                String w = wAttr(tblW, "w");
-                if (w != null) {
-                    width = Long.parseLong(w);
-                }
+                width = parseLongOrDefault(wAttr(tblW, "w"), 0L);
             }
             Element jcElement = child(tblPr, "jc");
             if (jcElement != null && wAttr(jcElement, "val") != null) {
@@ -252,9 +249,10 @@ final class DocxStructureInspector {
                         String value = wAttr(vMergeElement, "val");
                         vMerge = value != null ? value : "continue";
                     }
-                    String gridSpanValue = wAttr(child(tcPr, "gridSpan"), "val");
-                    if (gridSpanValue != null) {
-                        gridSpan = Integer.parseInt(gridSpanValue);
+                    // gridSpan of 1 is the OOXML default (no horizontal span); record only real spans.
+                    int span = parseIntOrDefault(wAttr(child(tcPr, "gridSpan"), "val"), 1);
+                    if (span > 1) {
+                        gridSpan = span;
                     }
                 }
                 cells.add(new Cell(textOf(tc), vMerge, gridSpan));
@@ -272,6 +270,28 @@ final class DocxStructureInspector {
         return value == null || !("false".equalsIgnoreCase(value) || "0".equals(value));
     }
 
+    private static long parseLongOrDefault(String value, long defaultValue) {
+        if (value == null) {
+            return defaultValue;
+        }
+        try {
+            return Long.parseLong(value);
+        } catch (NumberFormatException e) {
+            return defaultValue;
+        }
+    }
+
+    private static int parseIntOrDefault(String value, int defaultValue) {
+        if (value == null) {
+            return defaultValue;
+        }
+        try {
+            return Integer.parseInt(value);
+        } catch (NumberFormatException e) {
+            return defaultValue;
+        }
+    }
+
     private static String normalizeColor(String value) {
         if (value == null || "auto".equalsIgnoreCase(value)
                 || "000000".equalsIgnoreCase(value) || "FFFFFF".equalsIgnoreCase(value)) {
@@ -285,14 +305,19 @@ final class DocxStructureInspector {
         if (documentXml == null) {
             throw new IOException("word/document.xml not found in DOCX");
         }
+        Element body;
         try {
             DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
             factory.setNamespaceAware(true);
             Document document = factory.newDocumentBuilder().parse(new ByteArrayInputStream(documentXml));
-            return (Element) document.getElementsByTagNameNS(W_NS, "body").item(0);
+            body = (Element) document.getElementsByTagNameNS(W_NS, "body").item(0);
         } catch (Exception e) {
             throw new IOException("Failed to parse word/document.xml", e);
         }
+        if (body == null) {
+            throw new IOException("<w:body> element not found in word/document.xml");
+        }
+        return body;
     }
 
     private static Map<String, byte[]> unzip(byte[] docx) throws IOException {
