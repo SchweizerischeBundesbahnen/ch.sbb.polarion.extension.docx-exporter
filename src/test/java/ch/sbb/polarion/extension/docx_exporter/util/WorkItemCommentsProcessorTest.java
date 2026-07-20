@@ -25,6 +25,16 @@ import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 @SuppressWarnings({"unchecked"})
 class WorkItemCommentsProcessorTest {
+
+    @Test
+    void extractWorkItemIdTest() {
+        WorkItemCommentsProcessor processor = new WorkItemCommentsProcessor();
+
+        assertThat(processor.extractWorkItemId("polarion-rp-parameter:params=id=EL-123;other=value")).isEqualTo("EL-123");
+        assertThat(processor.extractWorkItemId("polarion-rp-parameter:params=id=EL-123")).isEqualTo("EL-123");
+        assertThat(processor.extractWorkItemId("polarion-rp-parameter:no-marker-here")).isNull();
+    }
+
     @Test
     void addWorkItemComments_withOneWorkItemAndOneCommentTest() {
         // Arrange

@@ -16,6 +16,7 @@ import org.glassfish.jersey.media.multipart.MultiPartFeature;
 import org.glassfish.jersey.media.multipart.file.FileDataBodyPart;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.jetbrains.annotations.VisibleForTesting;
 
 import jakarta.ws.rs.client.Client;
 import jakarta.ws.rs.client.ClientBuilder;
@@ -110,7 +111,8 @@ public class PandocServiceConnector {
         }
     }
 
-    private byte[] readResponseBytes(@NotNull Response response) {
+    @VisibleForTesting
+    byte[] readResponseBytes(@NotNull Response response) {
         InputStream inputStream = response.readEntity(InputStream.class);
         try {
             logPandocVersionFromHeader(response);

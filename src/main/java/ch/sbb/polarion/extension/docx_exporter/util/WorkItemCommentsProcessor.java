@@ -8,6 +8,7 @@ import com.polarion.alm.tracker.model.IWorkItem;
 import lombok.Builder;
 import lombok.Data;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.VisibleForTesting;
 
 import java.text.SimpleDateFormat;
 import java.util.HashMap;
@@ -38,7 +39,8 @@ public class WorkItemCommentsProcessor {
         return doc.body().html();
     }
 
-    private String extractWorkItemId(@NotNull String idAttr) {
+    @VisibleForTesting
+    String extractWorkItemId(@NotNull String idAttr) {
         int idx = idAttr.indexOf(WORK_ITEM_ID_MARKER);
         if (idx == -1) {
             return null;
