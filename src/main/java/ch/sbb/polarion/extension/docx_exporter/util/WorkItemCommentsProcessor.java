@@ -10,7 +10,8 @@ import lombok.Data;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.VisibleForTesting;
 
-import java.text.SimpleDateFormat;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -18,6 +19,7 @@ import java.util.Map;
 public class WorkItemCommentsProcessor {
 
     private static final String WORK_ITEM_ID_MARKER = "params=id=";
+    private static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm").withZone(ZoneId.systemDefault());
 
     @NotNull
     public String addWorkItemComments(ProxyDocument document, @NotNull String html, boolean onlyOpen) {
@@ -80,17 +82,17 @@ public class WorkItemCommentsProcessor {
         }
     }
 
-    private WorkItemComment getCommentFromWorkItem(@NotNull IComment iComment) {
+    private WorkItemComment getCommentFromWorkItem(@NotNull IComment comment) {
         WorkItemComment build = WorkItemComment.builder()
-                .title(iComment.getTitle())
-                .id(iComment.getId())
-                .text(iComment.getText() == null ? iComment.getTitle() : iComment.getText().getContent())
-                .project(iComment.getProject().getId())
-                .author(iComment.getAuthor().getName())
-                .created(iComment.getCreated())
-                .resolved(iComment.isResolved())
+                .title(comment.getTitle())
+                .id(comment.getId())
+                .text(comment.getText() == null ? comment.getTitle() : comment.getText().getContent())
+                .project(comment.getProject().getId())
+                .author(comment.getAuthor().getName())
+                .created(comment.getCreated() != null ? comment.getCreated().toInstant() : null)
+                .resolved(comment.isResolved())
                 .build();
-        setChildComments(build, iComment);
+        setChildComments(build, comment);
         return build;
     }
 
@@ -116,7 +118,7 @@ public class WorkItemCommentsProcessor {
     }
 
     private WorkItemCommentsProcessor.CommentData getCommentData(WorkItemComment workItemComment) {
-        String date = new SimpleDateFormat("yyyy-MM-dd HH:mm").format(workItemComment.getCreated());
+        String date = DATE_FORMAT.format(workItemComment.getCreated());
         String user = workItemComment.getAuthor();
         String commentText = workItemComment.getText();
         boolean resolved = workItemComment.getResolved();
