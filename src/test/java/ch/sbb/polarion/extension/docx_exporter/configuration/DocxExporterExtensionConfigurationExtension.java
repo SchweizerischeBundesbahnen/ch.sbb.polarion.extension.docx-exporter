@@ -6,8 +6,8 @@ import org.junit.jupiter.api.extension.AfterEachCallback;
 import org.junit.jupiter.api.extension.BeforeEachCallback;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.mockito.MockedStatic;
-import org.mockito.Mockito;
 
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockStatic;
 
 public class DocxExporterExtensionConfigurationExtension implements BeforeEachCallback, AfterEachCallback {
@@ -16,7 +16,7 @@ public class DocxExporterExtensionConfigurationExtension implements BeforeEachCa
 
     @Override
     public void beforeEach(ExtensionContext extensionContext) throws Exception {
-        DocxExporterExtensionConfiguration docxExporterExtensionConfiguration = Mockito.mock(DocxExporterExtensionConfiguration.class);
+        DocxExporterExtensionConfiguration docxExporterExtensionConfiguration = mock(DocxExporterExtensionConfiguration.class);
         CustomExtensionMockInjector.inject(extensionContext, docxExporterExtensionConfiguration);
         docxExporterExtensionConfigurationMockedStatic = mockStatic(DocxExporterExtensionConfiguration.class);
         docxExporterExtensionConfigurationMockedStatic.when(DocxExporterExtensionConfiguration::getInstance).thenReturn(docxExporterExtensionConfiguration);
