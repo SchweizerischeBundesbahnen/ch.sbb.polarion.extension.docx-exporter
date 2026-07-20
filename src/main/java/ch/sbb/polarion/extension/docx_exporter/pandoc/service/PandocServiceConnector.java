@@ -16,6 +16,7 @@ import org.glassfish.jersey.media.multipart.MultiPartFeature;
 import org.glassfish.jersey.media.multipart.file.FileDataBodyPart;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.jetbrains.annotations.VisibleForTesting;
 
 import jakarta.ws.rs.client.Client;
 import jakarta.ws.rs.client.ClientBuilder;
@@ -90,17 +91,11 @@ public class PandocServiceConnector {
                 long startTime = System.currentTimeMillis();
                 try (Response response = requestBuilder.post(Entity.entity(multipart, multipart.getMediaType()))) {
                     if (response.getStatus() == Response.Status.OK.getStatusCode()) {
-                        InputStream inputStream = response.readEntity(InputStream.class);
-                        try {
-                            logPandocVersionFromHeader(response);
-                            byte[] docxBytes = inputStream.readAllBytes();
-                            recordTiming(generationLog, "Pandoc service conversion", System.currentTimeMillis() - startTime,
-                                    String.format("html_size=%d bytes, docx_size=%d bytes, template=%s",
-                                            htmlPage.length(), docxBytes.length, template != null ? "yes" : "no"));
-                            return docxBytes;
-                        } catch (IOException e) {
-                            throw new IllegalStateException("Could not read response stream", e);
-                        }
+                        byte[] docxBytes = readResponseBytes(response);
+                        recordTiming(generationLog, "Pandoc service conversion", System.currentTimeMillis() - startTime,
+                                String.format("html_size=%d bytes, docx_size=%d bytes, template=%s",
+                                        htmlPage.length(), docxBytes.length, template != null ? "yes" : "no"));
+                        return docxBytes;
                     } else {
                         String errorMessage = response.readEntity(String.class);
                         throw new IllegalStateException(String.format("Not expected response from Pandoc Service. Status: %s, Message: [%s]", response.getStatus(), errorMessage));
@@ -113,6 +108,17 @@ public class PandocServiceConnector {
             if (client != null) {
                 client.close();
             }
+        }
+    }
+
+    @VisibleForTesting
+    byte[] readResponseBytes(@NotNull Response response) {
+        InputStream inputStream = response.readEntity(InputStream.class);
+        try {
+            logPandocVersionFromHeader(response);
+            return inputStream.readAllBytes();
+        } catch (IOException e) {
+            throw new IllegalStateException("Could not read response stream", e);
         }
     }
 
@@ -135,13 +141,7 @@ public class PandocServiceConnector {
 
                 try (Response response = requestBuilder.post(Entity.entity(multipart, multipart.getMediaType()))) {
                     if (response.getStatus() == Response.Status.OK.getStatusCode()) {
-                        InputStream inputStream = response.readEntity(InputStream.class);
-                        try {
-                            logPandocVersionFromHeader(response);
-                            return inputStream.readAllBytes();
-                        } catch (IOException e) {
-                            throw new IllegalStateException("Could not read response stream", e);
-                        }
+                        return readResponseBytes(response);
                     } else {
                         String errorMessage = response.readEntity(String.class);
                         throw new IllegalStateException(String.format("Not expected response from Pandoc Service. Status: %s, Message: [%s]", response.getStatus(), errorMessage));

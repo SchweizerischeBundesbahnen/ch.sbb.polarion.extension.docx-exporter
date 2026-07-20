@@ -34,8 +34,7 @@ class ExternalCssInternalizerTest {
         when(fileResourceProvider.getResourceAsBytes("my-href-location")).thenReturn("test-stylesheet".getBytes());
         Optional<String> result = cssLinkInliner.inline(Map.of("rel", "stylesheet", "href", "my-href-location"));
 
-        assertThat(result).isNotEmpty();
-        assertThat(result.get()).isEqualTo("<style>test-stylesheet</style>");
+        assertThat(result).contains("<style>test-stylesheet</style>");
     }
 
     @Test
@@ -46,8 +45,7 @@ class ExternalCssInternalizerTest {
                 "href", "my-href-location",
                 "data-precedence", "test-data-precedence"));
 
-        assertThat(result).isNotEmpty();
-        assertThat(result.get()).isEqualTo("""
+        assertThat(result).contains("""
                 <style data-precedence="test-data-precedence">test-stylesheet</style>""");
     }
 
