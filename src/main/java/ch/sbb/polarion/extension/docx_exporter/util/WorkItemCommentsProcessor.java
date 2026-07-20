@@ -8,6 +8,7 @@ import com.polarion.alm.tracker.model.IWorkItem;
 import lombok.Builder;
 import lombok.Data;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.VisibleForTesting;
 
 import java.text.SimpleDateFormat;
 import java.util.HashMap;
@@ -16,20 +17,14 @@ import java.util.Map;
 
 public class WorkItemCommentsProcessor {
 
+    private static final String WORK_ITEM_ID_MARKER = "params=id=";
+
     @NotNull
     public String addWorkItemComments(ProxyDocument document, @NotNull String html, boolean onlyOpen) {
         final Map<String, Map<String, WorkItemComment>> workItemCommentMap = getCommentsFromWorkItem(document, onlyOpen);
         org.jsoup.nodes.Document doc = org.jsoup.Jsoup.parse(html);
         for (org.jsoup.nodes.Element el : doc.select("[id*='params=id=']")) {
-            String idAttr = el.attr("id");
-            String workItemId = null;
-            int idx = idAttr.indexOf("params=id=");
-            if (idx != -1) {
-                int start = idx + "params=id=".length();
-                int end = idAttr.indexOf(';', start);
-                if (end == -1) end = idAttr.length();
-                workItemId = idAttr.substring(start, end);
-            }
+            String workItemId = extractWorkItemId(el.attr("id"));
             if (workItemId != null) {
                 Map<String, WorkItemComment> commentMap = workItemCommentMap.get(workItemId);
                 if (commentMap != null && !commentMap.isEmpty()) {
@@ -42,6 +37,17 @@ public class WorkItemCommentsProcessor {
             }
         }
         return doc.body().html();
+    }
+
+    @VisibleForTesting
+    String extractWorkItemId(@NotNull String idAttr) {
+        int idx = idAttr.indexOf(WORK_ITEM_ID_MARKER);
+        if (idx == -1) {
+            return null;
+        }
+        int start = idx + WORK_ITEM_ID_MARKER.length();
+        int end = idAttr.indexOf(';', start);
+        return idAttr.substring(start, end == -1 ? idAttr.length() : end);
     }
 
     private Map<String, Map<String, WorkItemComment>> getCommentsFromWorkItem(@NotNull ProxyDocument document, boolean onlyOpen) {

@@ -25,6 +25,16 @@ import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 @SuppressWarnings({"unchecked"})
 class WorkItemCommentsProcessorTest {
+
+    @Test
+    void extractWorkItemIdTest() {
+        WorkItemCommentsProcessor processor = new WorkItemCommentsProcessor();
+
+        assertThat(processor.extractWorkItemId("polarion-rp-parameter:params=id=EL-123;other=value")).isEqualTo("EL-123");
+        assertThat(processor.extractWorkItemId("polarion-rp-parameter:params=id=EL-123")).isEqualTo("EL-123");
+        assertThat(processor.extractWorkItemId("polarion-rp-parameter:no-marker-here")).isNull();
+    }
+
     @Test
     void addWorkItemComments_withOneWorkItemAndOneCommentTest() {
         // Arrange
@@ -93,13 +103,14 @@ class WorkItemCommentsProcessorTest {
         Document resultDoc = Jsoup.parse(resultHtml);
         String updatedHtml = resultDoc.body().html();
 
-        assertThat(updatedHtml).contains("This is a comment");
-        assertThat(updatedHtml).contains("System Administrator");
-        assertThat(updatedHtml).contains("level-0");
-        assertThat(updatedHtml).contains("original content");
-        assertThat(updatedHtml).doesNotContain("Title 1");
-        assertThat(updatedHtml).contains("Title 2 visible");
-        assertThat(updatedHtml).contains("Title 3 visible");
+        assertThat(updatedHtml)
+                .contains("This is a comment")
+                .contains("System Administrator")
+                .contains("level-0")
+                .contains("original content")
+                .doesNotContain("Title 1")
+                .contains("Title 2 visible")
+                .contains("Title 3 visible");
 
         // Now test with onlyOpen = true, the resolved comment should be excluded
         resultHtml = new WorkItemCommentsProcessor().addWorkItemComments(mockDocument, inputHtml, true);

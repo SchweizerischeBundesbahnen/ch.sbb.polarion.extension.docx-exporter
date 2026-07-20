@@ -47,9 +47,8 @@ class StylePackageSettingsTest {
             mockScopeUtils.when(ScopeUtils::getDefaultLocation).thenReturn(mockDefaultLocation);
             mockScopeUtils.when(() -> ScopeUtils.getContextLocation("")).thenReturn(mockDefaultLocation);
 
-            assertThrows(ObjectNotFoundException.class, () -> {
-                stylePackageSettings.load(projectName, SettingId.fromName("Any setting name"));
-            });
+            SettingId settingId = SettingId.fromName("Any setting name");
+            assertThrows(ObjectNotFoundException.class, () -> stylePackageSettings.load(projectName, settingId));
         }
     }
 
