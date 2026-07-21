@@ -13,10 +13,10 @@ import lombok.Builder;
 import lombok.ToString;
 import org.jetbrains.annotations.NotNull;
 
-import java.text.DateFormat;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
+import java.time.format.FormatStyle;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Locale;
@@ -117,7 +117,7 @@ public class PlaceholderValues {
         } else if (fieldValue instanceof Text text) {
             return text.convertToHTML().getContent();
         } else if (fieldValue instanceof DateOnly dateOnly) {
-            return DateFormat.getDateInstance(DateFormat.LONG, locale).format(dateOnly.getDate());
+            return DateTimeFormatter.ofLocalizedDate(FormatStyle.LONG).withLocale(locale).withZone(ZoneId.systemDefault()).format(dateOnly.getDate().toInstant());
         } else if (fieldValue instanceof TimeOnly timeOnly) {
             return convertToTime(timeOnly.getDate(), locale, timeZone);
         } else if (fieldValue instanceof Date date) {
@@ -136,22 +136,18 @@ public class PlaceholderValues {
 
     @NotNull
     private String convertToTime(Date fieldValue, Locale locale, String timeZone) {
-        DateFormat timeFormat = DateFormat.getTimeInstance(DateFormat.LONG, locale);
-        return formatForTimeZone(fieldValue, timeZone, timeFormat);
+        return formatForTimeZone(fieldValue, timeZone, DateTimeFormatter.ofLocalizedTime(FormatStyle.LONG).withLocale(locale));
     }
 
     @NotNull
     private String convertToDateTime(Date fieldValue, Locale locale, String timeZone) {
-        DateFormat dateTimeFormat = DateFormat.getDateTimeInstance(DateFormat.LONG, DateFormat.LONG, locale);
-        return formatForTimeZone(fieldValue, timeZone, dateTimeFormat);
+        return formatForTimeZone(fieldValue, timeZone, DateTimeFormatter.ofLocalizedDateTime(FormatStyle.LONG).withLocale(locale));
     }
 
     @NotNull
-    private String formatForTimeZone(Date fieldValue, String timeZone, DateFormat timeFormat) {
-        if (timeZone != null) {
-            timeFormat.setTimeZone(TimeZone.getTimeZone(timeZone));
-        }
-        return timeFormat.format(fieldValue);
+    private String formatForTimeZone(Date fieldValue, String timeZone, DateTimeFormatter format) {
+        ZoneId zoneId = timeZone != null ? TimeZone.getTimeZone(timeZone).toZoneId() : ZoneId.systemDefault();
+        return format.withZone(zoneId).format(fieldValue.toInstant());
     }
 
     @NotNull
