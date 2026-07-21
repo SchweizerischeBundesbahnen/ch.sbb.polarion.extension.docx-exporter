@@ -39,6 +39,7 @@ public abstract class BasePandocTest {
     protected static final String PANDOC_TEST_RESOURCES_FOLDER = RESOURCE_BASE_PATH + "html/";
     protected static final String PANDOC_TEST_TEMPLATE_RESOURCES_FOLDER = RESOURCE_BASE_PATH + "templates/";
     protected static final String PANDOC_TEST_PNG_RESOURCES_FOLDER = RESOURCE_BASE_PATH + "png/";
+    protected static final String PANDOC_TEST_DOCX_RESOURCES_FOLDER = RESOURCE_BASE_PATH + "docx/";
     protected static final String REPORTS_FOLDER_PATH = "target/surefire-reports/";
     public static final String PAGE_SUFFIX = "_page_";
 
@@ -87,6 +88,20 @@ public abstract class BasePandocTest {
         try (InputStream inputStream = BasePandocTest.class.getResourceAsStream(PANDOC_TEST_TEMPLATE_RESOURCES_FOLDER + resourceName + EXT_DOCX)) {
             if (inputStream == null) {
                 throw new IOException("Template not found: " + resourceName);
+            }
+            return inputStream.readAllBytes();
+        }
+    }
+
+    /**
+     * Reads a reference DOCX from {@code /pandoc/docx/}. These "golden" documents encode the expected
+     * structure as a real DOCX: parsing one with {@link DocxStructureInspector} yields the expected
+     * {@code Paragraph}/{@code Table} model to compare a fresh pandoc conversion against.
+     */
+    public static byte[] readDocxResource(String resourceName) throws IOException {
+        try (InputStream inputStream = BasePandocTest.class.getResourceAsStream(PANDOC_TEST_DOCX_RESOURCES_FOLDER + resourceName + EXT_DOCX)) {
+            if (inputStream == null) {
+                throw new IOException("DOCX resource not found: " + resourceName);
             }
             return inputStream.readAllBytes();
         }

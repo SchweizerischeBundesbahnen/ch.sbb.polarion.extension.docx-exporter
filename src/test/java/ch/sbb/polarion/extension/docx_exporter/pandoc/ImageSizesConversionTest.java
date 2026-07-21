@@ -45,7 +45,7 @@ class ImageSizesConversionTest extends BasePandocTest {
         assertEquals(expected, paragraphs(docBytes));
     }
 
-    private String buildHtml() throws IOException {
+    static String buildHtml() throws IOException {
         String base64;
         try (InputStream inputStream = readPngResource("imageSizes")) {
             base64 = Base64.getEncoder().encodeToString(inputStream.readAllBytes());
