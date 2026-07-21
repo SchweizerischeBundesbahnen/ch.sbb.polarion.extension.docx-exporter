@@ -89,7 +89,7 @@ public class WorkItemCommentsProcessor {
                 .text(comment.getText() == null ? comment.getTitle() : comment.getText().getContent())
                 .project(comment.getProject().getId())
                 .author(comment.getAuthor().getName())
-                .created(comment.getCreated() != null ? comment.getCreated().toInstant() : null)
+                .created(comment.getCreated().toInstant())
                 .resolved(comment.isResolved())
                 .build();
         setChildComments(build, comment);
