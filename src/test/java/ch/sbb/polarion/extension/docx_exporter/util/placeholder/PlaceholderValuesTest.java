@@ -27,6 +27,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.math.BigDecimal;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -76,6 +77,39 @@ class PlaceholderValuesTest {
                 Arguments.of("testStringList", stringList, "testValue1, testValue2"),
                 Arguments.of("nonCustomFieldStatus", new StatusOpt(new EnumOption("status", "active", "Active", 2, false)), "Active"),
                 Arguments.of("nonCustomFieldAuthor", user, "System Administrator")
+        );
+    }
+
+    /**
+     * Pins the rendered representation of date/time fields per locale. Formatting goes straight into exported
+     * documents, so it must stay stable across JDK/CLDR updates and formatter refactorings.
+     */
+    @ParameterizedTest
+    @MethodSource("provideLocalizedDateFields")
+    void shouldRenderDatesLocalized(String languageTag, String fieldName, Object fieldValue, String expectedString) {
+        when(module.getCustomField(fieldName)).thenReturn(fieldValue);
+        lenient().when(module.getCustomField(PlaceholderValues.DOC_LANGUAGE_FIELD)).thenReturn(new EnumOption("Locale", languageTag, languageTag, 1, false));
+        lenient().when(module.getCustomField(PlaceholderValues.DOC_TIME_ZONE_FIELD)).thenReturn("CET");
+        PlaceholderValues placeholder = PlaceholderValues.builder().build();
+        placeholder.addCustomVariables(module, Set.of(fieldName));
+        assertThat(placeholder.getAllVariables()).containsEntry(fieldName, expectedString);
+    }
+
+    private static Stream<Arguments> provideLocalizedDateFields() throws ParseException {
+        DateOnly dateOnly = DateOnly.parse("2023-10-20");
+        TimeOnly timeOnly = TimeOnly.parse("12:01:02.000 +0000");
+        Date dateTime = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS Z").parse("2018-09-09 12:13:14.000 +0000");
+
+        return Stream.of(
+                Arguments.of("de", "testDateOnly", dateOnly, "20. Oktober 2023"),
+                Arguments.of("de", "testTimeOnly", timeOnly, "13:01:02 MEZ"),
+                Arguments.of("de", "testDate", dateTime, "9. September 2018, 14:13:14 MESZ"),
+                Arguments.of("fr", "testDateOnly", dateOnly, "20 octobre 2023"),
+                Arguments.of("fr", "testTimeOnly", timeOnly, "13:01:02 CET"),
+                Arguments.of("fr", "testDate", dateTime, "9 septembre 2018, 14:13:14 CEST"),
+                Arguments.of("it", "testDateOnly", dateOnly, "20 ottobre 2023"),
+                Arguments.of("it", "testTimeOnly", timeOnly, "13:01:02 CET"),
+                Arguments.of("it", "testDate", dateTime, "9 settembre 2018 14:13:14 CEST")
         );
     }
 

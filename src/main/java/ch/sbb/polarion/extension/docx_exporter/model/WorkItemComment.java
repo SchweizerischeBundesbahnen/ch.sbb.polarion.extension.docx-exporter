@@ -3,7 +3,7 @@ package ch.sbb.polarion.extension.docx_exporter.model;
 import lombok.Builder;
 import lombok.Data;
 
-import java.util.Date;
+import java.time.Instant;
 import java.util.Map;
 
 @Data
@@ -14,7 +14,7 @@ public class WorkItemComment {
     private String text;
     private String project;
     private String author;
-    private Date created;
+    private Instant created;
     private Boolean resolved;
     private Map<String, WorkItemComment> childComments;
 }

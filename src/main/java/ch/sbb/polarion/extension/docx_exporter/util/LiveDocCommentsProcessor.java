@@ -21,7 +21,8 @@ import lombok.Data;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.text.SimpleDateFormat;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -31,6 +32,8 @@ import java.util.Set;
 
 @SuppressWarnings("java:S1200")
 public class LiveDocCommentsProcessor {
+
+    private static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm").withZone(ZoneId.systemDefault());
 
     @NotNull
     public Map<String, LiveDocComment> getLiveDocComments(@NotNull ProxyDocument document, @Nullable CommentsRenderType commentsRenderType) {
@@ -136,7 +139,7 @@ public class LiveDocCommentsProcessor {
     }
 
     private CommentData getCommentData(LiveDocComment liveDocComment) {
-        String date = new SimpleDateFormat("yyyy-MM-dd HH:mm").format(liveDocComment.getCreated().get());
+        String date = DATE_FORMAT.format(liveDocComment.getCreated().get().toInstant());
         User user = liveDocComment.getAuthor().get();
         String authorName = user != null ? getUserName(user) : null;
         String commentText = liveDocComment.getText().persistedHtml();
