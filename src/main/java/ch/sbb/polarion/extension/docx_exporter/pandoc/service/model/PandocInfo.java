@@ -13,6 +13,7 @@ import org.jetbrains.annotations.Nullable;
 @Builder
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class PandocInfo {
+    private @Nullable Integer apiVersion;
     private @Nullable String python;
     private @Nullable String timestamp;
     private @Nullable String pandoc;
