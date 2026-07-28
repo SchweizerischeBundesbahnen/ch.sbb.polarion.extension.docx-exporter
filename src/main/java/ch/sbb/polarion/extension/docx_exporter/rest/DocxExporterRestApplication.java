@@ -21,6 +21,8 @@ import ch.sbb.polarion.extension.docx_exporter.rest.exception.UnresolvableObject
 import ch.sbb.polarion.extension.docx_exporter.rest.exception.WrapperExceptionMapper;
 import ch.sbb.polarion.extension.docx_exporter.rest.exception.XLIFFExceptionMapper;
 import ch.sbb.polarion.extension.docx_exporter.rest.filter.ExportContextFilter;
+import ch.sbb.polarion.extension.docx_exporter.rest.filter.RolesRestrictedFilter;
+import ch.sbb.polarion.extension.docx_exporter.settings.AuthorizationSettings;
 import ch.sbb.polarion.extension.docx_exporter.settings.FileNameTemplateSettings;
 import ch.sbb.polarion.extension.docx_exporter.settings.LocalizationSettings;
 import ch.sbb.polarion.extension.docx_exporter.settings.StylePackageSettings;
@@ -44,7 +46,8 @@ public class DocxExporterRestApplication extends GenericRestApplication {
                             new TemplatesSettings(),
                             new LocalizationSettings(),
                             new WebhooksSettings(),
-                            new FileNameTemplateSettings()
+                            new FileNameTemplateSettings(),
+                            new AuthorizationSettings()
                     )
             );
         } catch (Exception e) {
@@ -90,6 +93,6 @@ public class DocxExporterRestApplication extends GenericRestApplication {
 
     @Override
     protected @NotNull Set<Object> getExtensionFilterSingletons() {
-        return Set.of(new ExportContextFilter());
+        return Set.of(new ExportContextFilter(), new RolesRestrictedFilter());
     }
 }

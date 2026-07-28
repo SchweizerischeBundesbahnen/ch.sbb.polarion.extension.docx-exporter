@@ -78,6 +78,10 @@ public class DocxExportFunction implements IFunction<IModule> {
             return;
         }
 
+        if (!docxExporterPolarionService.userAuthorizedForExport(module.getProjectId())) {
+            throw new SecurityException("Current user is not allowed to export DOCX for project '" + module.getProjectId() + "'");
+        }
+
         ExportParams exportParams = getExportParams(module, args);
         byte[] pdfBytes = docxConverter.convertToDocx(exportParams);
         savePdfAsWorkItemAttachment(module, exportParams, context.getTargetStatusId(), args, pdfBytes);

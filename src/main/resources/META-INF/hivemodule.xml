@@ -109,6 +109,15 @@
                   projectScope="true"
                   projectGroupScope="false"
                   repositoryScope="true"/>
+
+        <extender id="authorization"
+                  name="Authorization"
+                  parentNodeId="docx-export"
+                  iconUrl="/polarion/docx-exporter-admin/ui/images/menu/16x16/authorization.svg"
+                  pageUrl="/polarion/docx-exporter-admin/pages/authorization.jsp?scope=$scope$"
+                  projectScope="true"
+                  projectGroupScope="false"
+                  repositoryScope="true"/>
     </contribution>
 
 </module>

@@ -43,7 +43,10 @@ export default class ExportPanel {
                 onOk: (responseText, request) => {
                     this.stylePackageSelected(request.response);
                     this.ctx.querySelectorAll('button').forEach(actionButton => {
-                        actionButton.disabled = false;
+                        // Never re-enable a button the server disabled for authorization reasons.
+                        if (actionButton.getAttribute('data-auth-disabled') !== 'true') {
+                            actionButton.disabled = false;
+                        }
                     });
                 },
                 onError: () => {

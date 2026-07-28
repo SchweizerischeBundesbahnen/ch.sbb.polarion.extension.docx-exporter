@@ -5,6 +5,8 @@ import ch.sbb.polarion.extension.docx_exporter.converter.DocxConverterJobsServic
 import ch.sbb.polarion.extension.docx_exporter.rest.model.conversion.ExportParams;
 import ch.sbb.polarion.extension.docx_exporter.rest.model.jobs.ConverterJobDetails;
 import ch.sbb.polarion.extension.docx_exporter.rest.model.jobs.ConverterJobStatus;
+import ch.sbb.polarion.extension.docx_exporter.service.DocxExporterPolarionService;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -29,6 +31,8 @@ import java.util.stream.Stream;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.nullable;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -37,9 +41,24 @@ class ConverterInternalControllerTest {
     private DocxConverterJobsService docxConverterJobService;
     @Mock
     private UriInfo uriInfo;
+    @Mock
+    private DocxExporterPolarionService docxExporterPolarionService;
 
     @InjectMocks
     private ConverterInternalController internalController;
+
+    @BeforeEach
+    void authorizeExportByDefault() {
+        lenient().when(docxExporterPolarionService.userAuthorizedForExport(nullable(String.class))).thenReturn(true);
+    }
+
+    @Test
+    void getExportPermission_returnsPermittedFlag() {
+        try (Response response = internalController.getExportPermission("testProjectId")) {
+            assertThat(response.getStatus()).isEqualTo(Response.Status.OK.getStatusCode());
+            assertThat((Boolean) ((Map<?, ?>) response.getEntity()).get("permitted")).isTrue();
+        }
+    }
 
     @Test
     void startPdfConverterJob_success() {

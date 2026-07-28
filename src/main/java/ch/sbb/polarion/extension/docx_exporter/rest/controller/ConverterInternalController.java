@@ -6,9 +6,11 @@ import ch.sbb.polarion.extension.docx_exporter.converter.DocxConverterJobsServic
 import ch.sbb.polarion.extension.docx_exporter.converter.DocxConverterJobsService.JobState;
 import ch.sbb.polarion.extension.docx_exporter.converter.PropertiesUtility;
 import ch.sbb.polarion.extension.docx_exporter.pandoc.service.model.PandocParams;
+import ch.sbb.polarion.extension.docx_exporter.rest.filter.RolesRestricted;
 import ch.sbb.polarion.extension.docx_exporter.rest.model.conversion.ExportParams;
 import ch.sbb.polarion.extension.docx_exporter.rest.model.jobs.ConverterJobDetails;
 import ch.sbb.polarion.extension.docx_exporter.rest.model.jobs.ConverterJobStatus;
+import ch.sbb.polarion.extension.docx_exporter.service.DocxExporterPolarionService;
 import ch.sbb.polarion.extension.docx_exporter.util.DocumentFileNameHelper;
 import ch.sbb.polarion.extension.docx_exporter.util.ExportContext;
 import com.polarion.core.util.StringUtils;
@@ -69,6 +71,7 @@ public class ConverterInternalController {
     private final DocxConverterJobsService pdfConverterJobService;
     private final PropertiesUtility propertiesUtility;
     private final HtmlToDocxConverter htmlToDocxConverter;
+    private final DocxExporterPolarionService docxExporterPolarionService;
 
     @Context
     private UriInfo uriInfo;
@@ -79,15 +82,17 @@ public class ConverterInternalController {
         this.pdfConverterJobService = new DocxConverterJobsService(docxConverter, securityService);
         this.propertiesUtility = new PropertiesUtility();
         this.htmlToDocxConverter = new HtmlToDocxConverter();
+        this.docxExporterPolarionService = new DocxExporterPolarionService();
     }
 
     @VisibleForTesting
-    ConverterInternalController(DocxConverter docxConverter, DocxConverterJobsService pdfConverterJobService, UriInfo uriInfo, HtmlToDocxConverter htmlToDocxConverter) {
+    ConverterInternalController(DocxConverter docxConverter, DocxConverterJobsService pdfConverterJobService, UriInfo uriInfo, HtmlToDocxConverter htmlToDocxConverter, DocxExporterPolarionService docxExporterPolarionService) {
         this.docxConverter = docxConverter;
         this.pdfConverterJobService = pdfConverterJobService;
         this.uriInfo = uriInfo;
         this.propertiesUtility = new PropertiesUtility();
         this.htmlToDocxConverter = htmlToDocxConverter;
+        this.docxExporterPolarionService = docxExporterPolarionService;
     }
 
     @POST
@@ -125,6 +130,7 @@ public class ConverterInternalController {
                             }
                     )
             })
+    @RolesRestricted
     public Response convertToDocx(ExportParams exportParams) {
         validateExportParameters(exportParams);
         String fileName = getFileName(exportParams);
@@ -155,6 +161,7 @@ public class ConverterInternalController {
                             content = {@Content(mediaType = MediaType.TEXT_HTML)}
                     )
             })
+    @RolesRestricted
     public String prepareHtmlContent(ExportParams exportParams) {
         validateExportParameters(exportParams);
         return docxConverter.prepareHtmlContent(exportParams);
@@ -175,6 +182,7 @@ public class ConverterInternalController {
                             description = "Conversion process is started, job URI is returned in Location header"
                     )
             })
+    @RolesRestricted
     public Response startPdfConverterJob(ExportParams exportParams) {
         validateExportParameters(exportParams);
 
@@ -386,6 +394,15 @@ public class ConverterInternalController {
         Response.ResponseBuilder responseBuilder = Response.ok(docxConverter.getTemplate())
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"Template.docx\"");
         return responseBuilder.build();
+    }
+
+    @GET
+    @Path("/permissions/export")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Hidden
+    @Operation(summary = "Returns whether the current user is allowed to export DOCX for the given project")
+    public Response getExportPermission(@QueryParam("projectId") String projectId) {
+        return Response.ok(Map.of("permitted", docxExporterPolarionService.userAuthorizedForExport(projectId))).build();
     }
 
     private void validateExportParameters(ExportParams exportParams) {
