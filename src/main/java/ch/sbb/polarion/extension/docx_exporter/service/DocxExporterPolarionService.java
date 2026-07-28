@@ -2,15 +2,18 @@ package ch.sbb.polarion.extension.docx_exporter.service;
 
 import ch.sbb.polarion.extension.generic.service.PolarionService;
 import ch.sbb.polarion.extension.generic.settings.GenericNamedSettings;
+import ch.sbb.polarion.extension.generic.settings.NamedSettings;
 import ch.sbb.polarion.extension.generic.settings.NamedSettingsRegistry;
 import ch.sbb.polarion.extension.generic.settings.SettingId;
 import ch.sbb.polarion.extension.generic.settings.SettingName;
 import ch.sbb.polarion.extension.generic.util.ScopeUtils;
 import ch.sbb.polarion.extension.docx_exporter.rest.model.attachments.TestRunAttachment;
 import ch.sbb.polarion.extension.docx_exporter.rest.model.collections.DocumentCollectionEntry;
+import ch.sbb.polarion.extension.docx_exporter.rest.model.settings.authorization.AuthorizationModel;
 import ch.sbb.polarion.extension.docx_exporter.rest.model.settings.stylepackage.DocIdentifier;
 import ch.sbb.polarion.extension.docx_exporter.rest.model.settings.stylepackage.StylePackageModel;
 import ch.sbb.polarion.extension.docx_exporter.rest.model.settings.stylepackage.StylePackageWeightInfo;
+import ch.sbb.polarion.extension.docx_exporter.settings.AuthorizationSettings;
 import ch.sbb.polarion.extension.docx_exporter.settings.StylePackageSettings;
 import ch.sbb.polarion.extension.docx_exporter.util.WildcardUtils;
 import com.polarion.alm.projects.IProjectService;
@@ -31,6 +34,7 @@ import com.polarion.platform.persistence.IDataService;
 import com.polarion.platform.persistence.model.IPObjectList;
 import com.polarion.platform.security.ISecurityService;
 import com.polarion.platform.service.repository.IRepositoryService;
+import com.polarion.subterra.base.data.identification.IContextId;
 import com.polarion.portal.internal.server.navigation.TestManagementServiceAccessor;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -225,6 +229,42 @@ public class DocxExporterPolarionService extends PolarionService {
         }
 
         return result;
+    }
+
+    /**
+     * Checks whether the current user is allowed to export documents to DOCX for the given project.
+     * <p>
+     * Reads the {@link AuthorizationModel} configured for the project scope (with the usual global-scope
+     * fallback of the settings framework). When no roles are configured the export is unrestricted and
+     * everyone is allowed. Otherwise the user must hold at least one of the configured global roles, or —
+     * when a project is given — one of the configured roles within that project's context.
+     *
+     * @param projectId project to export from, or {@code null} for a project-less export (only global roles apply)
+     * @return {@code true} if the current user may export
+     */
+    public boolean userAuthorizedForExport(@Nullable String projectId) {
+        AuthorizationModel authorizationModel = (AuthorizationModel)
+                NamedSettingsRegistry.INSTANCE.getByFeatureName(AuthorizationSettings.FEATURE_NAME).read(
+                        ScopeUtils.getScopeFromProject(projectId), SettingId.fromName(NamedSettings.DEFAULT_NAME), null);
+
+        if (authorizationModel.isUnrestricted()) {
+            return true;
+        }
+
+        List<String> allowedRoles = authorizationModel.getAllRoles();
+        String currentUser = securityService.getCurrentUser();
+
+        Collection<String> globalRoles = securityService.getRolesForUser(currentUser);
+        if (globalRoles.stream().anyMatch(allowedRoles::contains)) {
+            return true;
+        }
+
+        if (projectId != null) {
+            IContextId projectContext = getTrackerProject(projectId).getContextId();
+            Collection<String> projectRoles = securityService.getRolesForUser(currentUser, projectContext);
+            return projectRoles.stream().anyMatch(allowedRoles::contains);
+        }
+        return false;
     }
 
 }

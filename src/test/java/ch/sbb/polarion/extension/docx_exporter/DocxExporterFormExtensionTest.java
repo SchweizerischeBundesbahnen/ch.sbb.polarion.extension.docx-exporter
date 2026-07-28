@@ -4,6 +4,7 @@ import ch.sbb.polarion.extension.docx_exporter.configuration.DocxExporterExtensi
 import ch.sbb.polarion.extension.docx_exporter.rest.model.conversion.CommentsRenderType;
 import ch.sbb.polarion.extension.docx_exporter.rest.model.conversion.LinkRoleDirection;
 import ch.sbb.polarion.extension.docx_exporter.rest.model.settings.stylepackage.StylePackageModel;
+import ch.sbb.polarion.extension.docx_exporter.service.DocxExporterPolarionService;
 import ch.sbb.polarion.extension.docx_exporter.util.EnumValuesProvider;
 import ch.sbb.polarion.extension.generic.settings.SettingName;
 import ch.sbb.polarion.extension.generic.test_extensions.PlatformContextMockExtension;
@@ -14,6 +15,7 @@ import com.polarion.alm.tracker.model.ITrackerProject;
 import com.polarion.platform.persistence.IEnumOption;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.MockedConstruction;
 import org.mockito.MockedStatic;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -37,19 +39,22 @@ class DocxExporterFormExtensionTest {
         when(project.getId()).thenReturn("testProjectId");
         when(module.getProject()).thenReturn(project);
 
-        DocxExporterFormExtension extension = spy(new DocxExporterFormExtension());
-        SettingName settingName = SettingName.builder().id("testId").name("testName").build();
-        doReturn(List.of(settingName)).when(extension).getSuitableStylePackages(any());
-        StylePackageModel stylePackage = StylePackageModel.builder().build();
-        doReturn(stylePackage).when(extension).getSelectedStylePackage(any(), any());
-        doReturn(List.of(settingName)).when(extension).getSettingNames(any(), any());
-        doReturn("TestFileName.docx").when(extension).getFilename(any());
+        try (MockedConstruction<DocxExporterPolarionService> ignored = mockConstruction(DocxExporterPolarionService.class,
+                (mock, ctx) -> when(mock.userAuthorizedForExport(anyString())).thenReturn(true));
+             MockedStatic<EnumValuesProvider> mockEnumValuesProvider = mockStatic(EnumValuesProvider.class)) {
 
-        IEnumOption language = mock(IEnumOption.class);
-        when(language.getId()).thenReturn("Deutsch");
-        when(module.getCustomField("docLanguage")).thenReturn(language);
+            DocxExporterFormExtension extension = spy(new DocxExporterFormExtension());
+            SettingName settingName = SettingName.builder().id("testId").name("testName").build();
+            doReturn(List.of(settingName)).when(extension).getSuitableStylePackages(any());
+            StylePackageModel stylePackage = StylePackageModel.builder().build();
+            doReturn(stylePackage).when(extension).getSelectedStylePackage(any(), any());
+            doReturn(List.of(settingName)).when(extension).getSettingNames(any(), any());
+            doReturn("TestFileName.docx").when(extension).getFilename(any());
 
-        try (MockedStatic<EnumValuesProvider> mockEnumValuesProvider = mockStatic(EnumValuesProvider.class)) {
+            IEnumOption language = mock(IEnumOption.class);
+            when(language.getId()).thenReturn("Deutsch");
+            when(module.getCustomField("docLanguage")).thenReturn(language);
+
             mockEnumValuesProvider.when(() -> EnumValuesProvider.getAllLinkRoleNames(any())).thenReturn(List.of("relates to", "blocks", "duplicates"));
             extension.renderForm(context, module);
             List<String> expectedEntries = Arrays.asList("someSpecificSelector", "<input id='docx-render-comments' checked", "<input id='docx-orientation' checked", "<input id='docx-paper-size' checked", "<input id='docx-image-density' checked");
@@ -64,6 +69,21 @@ class DocxExporterFormExtensionTest {
             extension.renderForm(context, module);
             verify(builder, times(1)).html(argThat(arg -> expectedEntries.stream().allMatch(arg::contains)));
         }
+    }
+
+    @Test
+    void testAdjustExportAuthorization() {
+        DocxExporterFormExtension extension = new DocxExporterFormExtension();
+        String form = "<button type='button' id='export-docx'>Export to DOCX</button>";
+
+        // Authorized user — markup stays unchanged
+        assertThat(extension.adjustExportAuthorization(form, true)).isEqualTo(form);
+
+        // Unauthorized user — the export button becomes disabled and marked so the panel JS won't re-enable it
+        String disabled = extension.adjustExportAuthorization(form, false);
+        assertThat(disabled)
+                .contains("<button type='button' id='export-docx' disabled")
+                .contains("data-auth-disabled='true'");
     }
 
     @Test

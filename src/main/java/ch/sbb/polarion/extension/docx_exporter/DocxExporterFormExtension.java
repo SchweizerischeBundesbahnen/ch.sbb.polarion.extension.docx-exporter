@@ -97,6 +97,7 @@ public class DocxExporterFormExtension implements IFormExtension {
             form = adjustLinkRoles(form, EnumValuesProvider.getAllLinkRoleNames(module.getProject()), selectedStylePackage);
             form = adjustRemovalSelector(form, selectedStylePackage);
             form = adjustFilename(form, module);
+            form = adjustExportAuthorization(form, polarionService.userAuthorizedForExport(module.getProject().getId()));
 
             builder.html(form);
         }
@@ -302,6 +303,18 @@ public class DocxExporterFormExtension implements IFormExtension {
     private String adjustFilename(@NotNull String form, @NotNull IModule module) {
         String filename = getFilename(module);
         return form.replace("{FILENAME}", filename).replace("{DATA_FILENAME}", filename);
+    }
+
+    @VisibleForTesting
+    String adjustExportAuthorization(@NotNull String form, boolean authorized) {
+        if (!authorized) {
+            String title = "You are not allowed to export DOCX for this project";
+            // data-auth-disabled marks the button so the panel's own enable/disable cycle (ExportPanel.js)
+            // never re-enables it; the server-side 403 stays the real enforcement regardless.
+            form = form.replace("<button type='button' id='export-docx'>",
+                    String.format("<button type='button' id='export-docx' disabled data-auth-disabled='true' title='%s'>", title));
+        }
+        return form;
     }
 
     @VisibleForTesting

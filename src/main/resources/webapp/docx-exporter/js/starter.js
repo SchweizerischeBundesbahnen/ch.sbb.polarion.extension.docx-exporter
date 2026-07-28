@@ -50,6 +50,27 @@
             </tr>
         </table>`;
 
+    // Current project id, parsed from the Polarion location hash (…#/project/<id>/…), same convention
+    // as ExportContext. Reads the top frame's hash (this script runs in the editor iframe). Null when
+    // there is no project scope (only global roles then apply).
+    function getCurrentProjectId() {
+        try {
+            const hash = (top && top.location && top.location.hash) || window.location.hash || '';
+            const match = /project\/([^/]+)\//.exec(decodeURI(hash));
+            return match ? match[1] : null;
+        } catch (e) {
+            return null;
+        }
+    }
+
+    // Engine permission endpoint: the generic engine GETs this URL, expects JSON { permitted: boolean },
+    // injects the button disabled first, then enables it when permitted (fail-closed on non-OK/error).
+    // Server-side authorization is still enforced (403) regardless of the button state.
+    function exportPermissionUrl() {
+        const projectId = getCurrentProjectId();
+        return `${EXT_BASE}rest/internal/permissions/export` + (projectId ? `?projectId=${encodeURIComponent(projectId)}` : '');
+    }
+
     let starter = null, myOrder;
     const pending = [];
     window.DocxExporterStarter = {
@@ -87,11 +108,15 @@
         generic.injectStyles("generic-inputs-styles", `${EXT_BASE}ui/generic/css/inputs.css${timestampParam}`);
         generic.injectStyles("generic-alerts-styles", `${EXT_BASE}ui/generic/css/alerts.css${timestampParam}`);
         generic.injectScript("docx-micromodal-script", `${EXT_BASE}ui/generic/js/micromodal.min.js${timestampParam}`);
+        // The engine owns the disabled state: it injects the button disabled, runs permissionCheck,
+        // then enables it if permitted (or keeps it disabled on failure — fail-closed), and preserves
+        // that state across the toolbar's self-heal re-renders.
         starter = generic.create({
             markerId: 'docx-exporter-toolbar-injected',
             alternateHtml: ALTERNATE_TOOLBAR_HTML,
             defaultHtml: TOOLBAR_HTML,
-            order: myOrder
+            order: myOrder,
+            permissionCheckUrl: exportPermissionUrl()
         });
         pending.forEach(params => starter.injectToolbar(params));
         pending.length = 0;

@@ -56,6 +56,7 @@ class DocxExportFunctionTest {
         context = (ICallContext<? extends IWorkflowObject>) mock(ICallContext.class);
         trackerProject = mock(ITrackerProject.class);
         lenient().when(docxExporterPolarionService.getTrackerProject(anyString())).thenReturn(trackerProject);
+        lenient().when(docxExporterPolarionService.userAuthorizedForExport(nullable(String.class))).thenReturn(true);
         module = mock(IModule.class);
         ILocation moduleLocation = mock(ILocation.class);
         lenient().when(module.getModuleLocation()).thenReturn(moduleLocation);
@@ -78,6 +79,16 @@ class DocxExportFunctionTest {
         IArguments args = mock(IArguments.class);
 
         assertDoesNotThrow(() -> docxExportFunction.execute(context, args));
+    }
+
+    @Test
+    void executeThrowsWhenUserNotAuthorized() {
+        when(module.getProjectId()).thenReturn("testProject");
+        when(docxExporterPolarionService.userAuthorizedForExport("testProject")).thenReturn(false);
+        IArguments args = mock(IArguments.class);
+
+        assertThrows(SecurityException.class, () -> docxExportFunction.execute(context, args));
+        verify(docxConverter, never()).convertToDocx(any());
     }
 
     @Test
