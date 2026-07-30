@@ -44,27 +44,35 @@ export default function FilenameTemplate() {
   const [revisionsToken, setRevisionsToken] = useState(0);
   const [loadingError, setLoadingError] = useState(false);
 
+  /**
+   * Anything that supersedes an in-flight load - another load, or the administrator typing - bumps
+   * the counter, and a request that is no longer the newest writes nothing at all: not the content,
+   * and not the error either. A failure that lost the race would otherwise raise the banner over
+   * content that had already loaded successfully.
+   */
+  const supersedeLoads = useCallback(() => {
+    latestLoad.current += 1;
+    return latestLoad.current;
+  }, []);
+
   const load = useCallback(
     async (revision?: string) => {
-      const seq = ++latestLoad.current;
-      const content = await settings.loadContent(DEFAULT_NAME, scope, revision);
-      if (seq !== latestLoad.current) return;
-      setTemplate(content.documentNameTemplate ?? '');
-      // Whatever failed before has now succeeded; the banner would otherwise stay up over good data.
-      setLoadingError(false);
+      const seq = supersedeLoads();
+      try {
+        const content = await settings.loadContent(DEFAULT_NAME, scope, revision);
+        if (seq !== latestLoad.current) return;
+        setTemplate(content.documentNameTemplate ?? '');
+        // Whatever failed before has now succeeded; the banner would otherwise stay up over good data.
+        setLoadingError(false);
+      } catch {
+        if (seq === latestLoad.current) setLoadingError(true);
+      }
     },
-    [settings, scope],
+    [settings, scope, supersedeLoads],
   );
 
   useEffect(() => {
-    let cancelled = false;
-    setLoadingError(false);
-    load().catch(() => {
-      if (!cancelled) setLoadingError(true);
-    });
-    return () => {
-      cancelled = true;
-    };
+    void load();
   }, [load]);
 
   const handleSave = async () => {
@@ -81,25 +89,21 @@ export default function FilenameTemplate() {
   const handleCancel = async () => {
     if (!(await confirm('Are you sure you want to cancel editing and revert all changes made?'))) return;
     toast.dismiss();
-    try {
-      await load();
-    } catch {
-      setLoadingError(true);
-    }
+    await load();
   };
 
   const handleRevertToDefault = async () => {
     if (!(await confirm('Are you sure you want to return the default values?'))) return;
     toast.dismiss();
+    const seq = supersedeLoads();
     try {
-      const seq = ++latestLoad.current;
       const content = await settings.loadDefaultContent();
       if (seq !== latestLoad.current) return;
       setTemplate(content.documentNameTemplate ?? '');
       setLoadingError(false);
       toast.success('Reverted to the default values. Remember to save the configuration.');
     } catch {
-      setLoadingError(true);
+      if (seq === latestLoad.current) setLoadingError(true);
     }
   };
 
@@ -122,7 +126,10 @@ export default function FilenameTemplate() {
           id="document-name-template"
           className="filename-template-editor"
           value={template}
-          onChange={setTemplate}
+          onChange={(value) => {
+            supersedeLoads();
+            setTemplate(value);
+          }}
         />
 
         <ConfigurationButtons

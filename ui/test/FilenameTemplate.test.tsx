@@ -145,6 +145,77 @@ describe('Filename template page', () => {
     expect(editor().value).toBe(BUILT_IN);
   });
 
+  it('keeps what the administrator typed while a load was still in flight', async () => {
+    let release: (() => void) | undefined;
+    const original = globalThis.fetch;
+    installFetchMock(routes());
+    const mocked = globalThis.fetch;
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
+        if (String(input).includes('/names/Default/content')) {
+          await new Promise<void>((resolve) => {
+            release = resolve;
+          });
+        }
+        return (mocked as typeof original)(input, init);
+      }),
+    );
+    window.history.replaceState({}, '', '?feature=filename&embedded=true&scope=project/elibrary/');
+    render(<App />);
+
+    await vi.waitFor(() => expect(document.querySelector('#document-name-template')).not.toBeNull());
+    await userEvent.fill(editor(), 'typed while loading');
+
+    release?.();
+    await new Promise((resolve) => setTimeout(resolve, 50));
+
+    expect(editor().value).toBe('typed while loading');
+  });
+
+  it('does not raise the banner for a failure that lost the race', async () => {
+    // The initial load fails, but only after a Default has already filled the editor: the stale
+    // rejection must not claim the page could not read its data.
+    let release: (() => void) | undefined;
+    installFetchMock([
+      {
+        method: 'GET',
+        match: /\/settings\/filename-template\/names\/Default\/content/,
+        respond: () => new Response(JSON.stringify({ message: 'too late' }), { status: 500 }),
+      },
+      {
+        method: 'GET',
+        match: /\/settings\/filename-template\/default-content/,
+        json: { documentNameTemplate: BUILT_IN },
+      },
+    ]);
+    const mocked = globalThis.fetch;
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
+        if (String(input).includes('/names/Default/content')) {
+          await new Promise<void>((resolve) => {
+            release = resolve;
+          });
+        }
+        return (mocked as typeof globalThis.fetch)(input, init);
+      }),
+    );
+    window.history.replaceState({}, '', '?feature=filename&embedded=true&scope=project/elibrary/');
+    render(<App />);
+
+    await vi.waitFor(() => expect(document.querySelector('#document-name-template')).not.toBeNull());
+    await clickButton('Default');
+    await answerDialog('OK');
+    await vi.waitFor(() => expect(editor().value).toBe(BUILT_IN));
+
+    release?.();
+    await new Promise((resolve) => setTimeout(resolve, 50));
+
+    expect(document.querySelector('.notifications .alert-error')).toBeNull();
+    expect(editor().value).toBe(BUILT_IN);
+  });
+
   it('clears the load error once a retry succeeds', async () => {
     let fail = true;
     installFetchMock([
