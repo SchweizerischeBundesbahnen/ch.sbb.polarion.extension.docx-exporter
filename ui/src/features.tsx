@@ -2,6 +2,7 @@ import type { ComponentType } from 'react';
 import About from './pages/About';
 import Authorization from './pages/Authorization';
 import Disclaimer from './pages/Disclaimer';
+import StylePackageWeights from './pages/StylePackageWeights';
 import UserGuide from './pages/UserGuide';
 
 /**
@@ -38,6 +39,12 @@ export const FEATURES: Feature[] = [
     label: 'User Guide',
     description: 'How to use the extension, generated from USER_GUIDE.md.',
     component: UserGuide,
+  },
+  {
+    id: 'style-package-weights',
+    label: 'Style Package Weights',
+    description: 'Order the style packages; the top one is preselected on the export panel.',
+    component: StylePackageWeights,
   },
   {
     id: 'authorization',
