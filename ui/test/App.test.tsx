@@ -37,6 +37,7 @@ describe('findFeature', () => {
     expect(findFeature('about')?.id).toBe('about');
     expect(findFeature('disclaimer')?.id).toBe('disclaimer');
     expect(findFeature('user-guide')?.id).toBe('user-guide');
+    expect(findFeature('filename')?.id).toBe('filename');
     expect(findFeature('style-package-weights')?.id).toBe('style-package-weights');
     expect(findFeature('authorization')?.id).toBe('authorization');
     expect(findFeature('nope')).toBeUndefined();
@@ -57,6 +58,7 @@ describe('App router', () => {
       '?feature=about',
       '?feature=disclaimer',
       '?feature=user-guide',
+      '?feature=filename',
       '?feature=style-package-weights',
       '?feature=authorization',
     ]);

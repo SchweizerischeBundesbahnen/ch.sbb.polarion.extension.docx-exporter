@@ -2,6 +2,7 @@ import type { ComponentType } from 'react';
 import About from './pages/About';
 import Authorization from './pages/Authorization';
 import Disclaimer from './pages/Disclaimer';
+import FilenameTemplate from './pages/FilenameTemplate';
 import StylePackageWeights from './pages/StylePackageWeights';
 import UserGuide from './pages/UserGuide';
 
@@ -39,6 +40,12 @@ export const FEATURES: Feature[] = [
     label: 'User Guide',
     description: 'How to use the extension, generated from USER_GUIDE.md.',
     component: UserGuide,
+  },
+  {
+    id: 'filename',
+    label: 'Filename template',
+    description: 'The Velocity template exported documents are named after.',
+    component: FilenameTemplate,
   },
   {
     id: 'style-package-weights',
