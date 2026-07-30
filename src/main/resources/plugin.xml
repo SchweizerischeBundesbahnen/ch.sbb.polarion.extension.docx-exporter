@@ -16,4 +16,14 @@
                 contextRoot="webapp/docx-exporter-admin">
         </webapp>
     </extension>
+
+    <!-- The React administration app. Serves the Vite bundle and the build-generated help articles;
+         docx-exporter-admin stays until the last JSP page is converted. -->
+    <extension
+            point="com.polarion.portal.tomcat.webapps">
+        <webapp
+                name="polarion/docx-exporter-app"
+                contextRoot="webapp/docx-exporter-app">
+        </webapp>
+    </extension>
 </plugin>
