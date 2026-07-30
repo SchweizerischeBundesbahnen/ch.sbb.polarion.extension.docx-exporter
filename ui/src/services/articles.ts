@@ -2,7 +2,7 @@
 export const PROJECT_URL = 'https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter';
 
 /**
- * The build-generated DISCLAIMER article, served as a static file by `PdfExporterAppServlet` from
+ * The build-generated DISCLAIMER article, served as a static file by `DocxExporterAppServlet` from
  * this extension's app webapp (markdown2html writes it there, next to about.html and
  * user-guide.html). About and User Guide come from generic's REST endpoints instead; there is no
  * endpoint for the disclaimer.

@@ -82,6 +82,11 @@
         <markdown2html-maven-plugin.user-guide.inputFile>${project.basedir}/USER_GUIDE.md</markdown2html-maven-plugin.user-guide.inputFile>
         <markdown2html-maven-plugin.user-guide.outputFileName>user-guide.html</markdown2html-maven-plugin.user-guide.outputFileName>
         <markdown2html-maven-plugin.user-guide.outputFile>${markdown2html-maven-plugin.extensionContextAdminHtml}/${markdown2html-maven-plugin.user-guide.outputFileName}</markdown2html-maven-plugin.user-guide.outputFile>
+        <!-- The three generated articles (about, user guide, disclaimer) land in the *app* webapp,
+             not the admin one: as soon as ui/ exists the parent's vite-ui profile redefines
+             markdown2html-maven-plugin.extensionContextAdminHtml to ${vite.destination.root}/html.
+             The property name is historical - it predates the React apps - and the Usage Disclaimer
+             page reads the file from there (/polarion/docx-exporter-app/ui/html/disclaimer.html). -->
         <markdown2html-maven-plugin.disclaimer.inputFile>${project.basedir}/DISCLAIMER.md</markdown2html-maven-plugin.disclaimer.inputFile>
         <markdown2html-maven-plugin.disclaimer.outputFileName>disclaimer.html</markdown2html-maven-plugin.disclaimer.outputFileName>
         <markdown2html-maven-plugin.disclaimer.outputFile>${markdown2html-maven-plugin.extensionContextAdminHtml}/${markdown2html-maven-plugin.disclaimer.outputFileName}</markdown2html-maven-plugin.disclaimer.outputFile>
