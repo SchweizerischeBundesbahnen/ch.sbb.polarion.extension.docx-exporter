@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   CodeEditor,
   ConfigurationButtons,
@@ -33,14 +33,25 @@ export default function FilenameTemplate() {
   const { confirm, confirmDialog } = useConfirm();
 
   const [template, setTemplate] = useState('');
+  /**
+   * Which load is the current one. Every path that fills the editor - the initial load, Cancel,
+   * Default, reverting to a revision - is a request the administrator can outrun by typing or by
+   * starting another one, and the slowest response would otherwise land last and win. Only the
+   * newest request writes.
+   */
+  const latestLoad = useRef(0);
   const [showRevisions, setShowRevisions] = useState(false);
   const [revisionsToken, setRevisionsToken] = useState(0);
   const [loadingError, setLoadingError] = useState(false);
 
   const load = useCallback(
     async (revision?: string) => {
+      const seq = ++latestLoad.current;
       const content = await settings.loadContent(DEFAULT_NAME, scope, revision);
+      if (seq !== latestLoad.current) return;
       setTemplate(content.documentNameTemplate ?? '');
+      // Whatever failed before has now succeeded; the banner would otherwise stay up over good data.
+      setLoadingError(false);
     },
     [settings, scope],
   );
@@ -81,8 +92,11 @@ export default function FilenameTemplate() {
     if (!(await confirm('Are you sure you want to return the default values?'))) return;
     toast.dismiss();
     try {
+      const seq = ++latestLoad.current;
       const content = await settings.loadDefaultContent();
+      if (seq !== latestLoad.current) return;
       setTemplate(content.documentNameTemplate ?? '');
+      setLoadingError(false);
       toast.success('Reverted to the default values. Remember to save the configuration.');
     } catch {
       setLoadingError(true);

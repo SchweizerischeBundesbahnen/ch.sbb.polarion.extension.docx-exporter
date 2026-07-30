@@ -102,6 +102,78 @@ describe('Filename template page', () => {
     await vi.waitFor(() => expect(editor().value).toBe(STORED));
   });
 
+  it('lets the newest load win when a slow one is still in flight', async () => {
+    // The initial request can still be pending while the administrator asks for the built-in
+    // template; the slow one must not land afterwards and overwrite it.
+    let releaseInitial: (() => void) | undefined;
+    installFetchMock([
+      {
+        method: 'GET',
+        match: /\/settings\/filename-template\/names\/Default\/content/,
+        respond: () => new Response(JSON.stringify({ documentNameTemplate: STORED }), { status: 200 }),
+      },
+      {
+        method: 'GET',
+        match: /\/settings\/filename-template\/default-content/,
+        json: { documentNameTemplate: BUILT_IN },
+      },
+    ]);
+    const original = globalThis.fetch;
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
+        if (String(input).includes('/names/Default/content')) {
+          await new Promise<void>((resolve) => {
+            releaseInitial = resolve;
+          });
+        }
+        return original(input, init);
+      }),
+    );
+    window.history.replaceState({}, '', '?feature=filename&embedded=true&scope=project/elibrary/');
+    render(<App />);
+
+    await vi.waitFor(() => expect(document.querySelector('#document-name-template')).not.toBeNull());
+    await clickButton('Default');
+    await answerDialog('OK');
+    await vi.waitFor(() => expect(editor().value).toBe(BUILT_IN));
+
+    releaseInitial?.();
+
+    // Give the late response time to land; it must not win.
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    expect(editor().value).toBe(BUILT_IN);
+  });
+
+  it('clears the load error once a retry succeeds', async () => {
+    let fail = true;
+    installFetchMock([
+      {
+        method: 'GET',
+        match: /\/settings\/filename-template\/names\/Default\/content/,
+        respond: () =>
+          fail
+            ? new Response(JSON.stringify({ message: 'nope' }), { status: 500 })
+            : new Response(JSON.stringify({ documentNameTemplate: STORED }), { status: 200 }),
+      },
+      {
+        method: 'GET',
+        match: /\/settings\/filename-template\/default-content/,
+        json: { documentNameTemplate: BUILT_IN },
+      },
+    ]);
+    window.history.replaceState({}, '', '?feature=filename&embedded=true&scope=project/elibrary/');
+    render(<App />);
+    await vi.waitFor(() => expect(document.querySelector('.notifications .alert-error')).not.toBeNull());
+
+    fail = false;
+    await clickButton('Cancel');
+    await answerDialog('OK');
+
+    await vi.waitFor(() => expect(editor().value).toBe(STORED));
+    expect(document.querySelector('.notifications .alert-error')).toBeNull();
+  });
+
   it('reports a setting it cannot read', async () => {
     open([
       {
