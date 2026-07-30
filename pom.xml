@@ -98,19 +98,12 @@
         <skipJavaScriptTests>${skipTests}</skipJavaScriptTests>
 
         <apache-poi.version>5.5.1</apache-poi.version>
+
+        <velocity-engine-core.artifactId>org.apache.velocity.engine-core_2.3.0</velocity-engine-core.artifactId>
+        <org.jsoup.artifactId>org.jsoup_1.21.2</org.jsoup.artifactId>
     </properties>
 
     <profiles>
-        <profile>
-            <id>polarion2606</id>
-            <activation>
-                <activeByDefault>true</activeByDefault>
-            </activation>
-            <properties>
-                <velocity-engine-core.artifactId>org.apache.velocity.engine-core_2.3.0</velocity-engine-core.artifactId>
-                <org.jsoup.artifactId>org.jsoup_1.21.2</org.jsoup.artifactId>
-            </properties>
-        </profile>
         <profile>
             <id>tests-with-pandoc-docker</id>
 
