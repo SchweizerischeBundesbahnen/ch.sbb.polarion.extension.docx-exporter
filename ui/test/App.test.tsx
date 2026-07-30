@@ -59,6 +59,8 @@ describe('App router', () => {
       '?feature=disclaimer',
       '?feature=user-guide',
       '?feature=filename',
+      '?feature=localization',
+      '?feature=webhooks',
       '?feature=style-package-weights',
       '?feature=authorization',
     ]);

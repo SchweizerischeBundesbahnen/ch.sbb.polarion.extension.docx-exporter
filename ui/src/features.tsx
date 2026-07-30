@@ -3,8 +3,10 @@ import About from './pages/About';
 import Authorization from './pages/Authorization';
 import Disclaimer from './pages/Disclaimer';
 import FilenameTemplate from './pages/FilenameTemplate';
+import Localization from './pages/Localization';
 import StylePackageWeights from './pages/StylePackageWeights';
 import UserGuide from './pages/UserGuide';
+import Webhooks from './pages/Webhooks';
 
 /**
  * A single navigable page of the app. The `id` is what appears in the URL as `?feature=<id>` and is
@@ -12,8 +14,8 @@ import UserGuide from './pages/UserGuide';
  * stay identical - a typo is a blank page in Polarion and no test catches it.
  *
  * The administration menu has more entries than the list below: the ones still served by JSP (style
- * packages and their weights, the Velocity/CSS editors, localization, webhooks) keep pointing at the
- * `docx-exporter-admin` webapp until they are converted too.
+ * packages, the export templates) keep pointing at the `docx-exporter-admin` webapp until they are
+ * converted too.
  */
 export interface Feature {
   id: string;
@@ -46,6 +48,18 @@ export const FEATURES: Feature[] = [
     label: 'Filename template',
     description: 'The Velocity template exported documents are named after.',
     component: FilenameTemplate,
+  },
+  {
+    id: 'localization',
+    label: 'Localization',
+    description: 'German, French and Italian translations of the exported work item fields.',
+    component: Localization,
+  },
+  {
+    id: 'webhooks',
+    label: 'Webhooks',
+    description: 'REST endpoints the generated HTML is passed through before it is converted.',
+    component: Webhooks,
   },
   {
     id: 'style-package-weights',
