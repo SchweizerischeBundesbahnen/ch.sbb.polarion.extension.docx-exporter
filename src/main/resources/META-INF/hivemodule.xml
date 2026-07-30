@@ -22,7 +22,7 @@
                   parentNodeName="DOCX Export"
                   parentNodeIconUrl="/polarion/docx-exporter-admin/ui/images/menu/30x30/_parent.svg"
                   iconUrl="/polarion/docx-exporter-admin/ui/images/menu/16x16/about.svg"
-                  pageUrl="/polarion/docx-exporter-admin/pages/about.jsp?scope=$scope$"
+                  pageUrl="/polarion/docx-exporter-app/ui/app/index.html?feature=about&amp;embedded=true&amp;scope=$scope$"
                   projectScope="true"
                   projectGroupScope="false"
                   repositoryScope="true"/>
@@ -33,7 +33,7 @@
                   parentNodeName="DOCX Export"
                   parentNodeIconUrl="/polarion/docx-exporter-admin/ui/images/menu/30x30/_parent.svg"
                   iconUrl="/polarion/docx-exporter-admin/ui/images/menu/16x16/about.svg"
-                  pageUrl="/polarion/docx-exporter-admin/pages/disclaimer.jsp?scope=$scope$"
+                  pageUrl="/polarion/docx-exporter-app/ui/app/index.html?feature=disclaimer&amp;embedded=true&amp;scope=$scope$"
                   projectScope="true"
                   projectGroupScope="false"
                   repositoryScope="true"/>
@@ -42,7 +42,7 @@
                   name="User Guide"
                   parentNodeId="docx-export"
                   iconUrl="/polarion/docx-exporter-admin/ui/images/menu/16x16/user_guide.svg"
-                  pageUrl="/polarion/docx-exporter-admin/pages/user-guide.jsp?scope=$scope$"
+                  pageUrl="/polarion/docx-exporter-app/ui/app/index.html?feature=user-guide&amp;embedded=true&amp;scope=$scope$"
                   projectScope="true"
                   projectGroupScope="false"
                   repositoryScope="true"/>
@@ -114,7 +114,7 @@
                   name="Authorization"
                   parentNodeId="docx-export"
                   iconUrl="/polarion/docx-exporter-admin/ui/images/menu/16x16/authorization.svg"
-                  pageUrl="/polarion/docx-exporter-admin/pages/authorization.jsp?scope=$scope$"
+                  pageUrl="/polarion/docx-exporter-app/ui/app/index.html?feature=authorization&amp;embedded=true&amp;scope=$scope$"
                   projectScope="true"
                   projectGroupScope="false"
                   repositoryScope="true"/>

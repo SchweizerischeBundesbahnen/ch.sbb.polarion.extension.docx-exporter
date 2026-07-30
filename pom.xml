@@ -82,6 +82,11 @@
         <markdown2html-maven-plugin.user-guide.inputFile>${project.basedir}/USER_GUIDE.md</markdown2html-maven-plugin.user-guide.inputFile>
         <markdown2html-maven-plugin.user-guide.outputFileName>user-guide.html</markdown2html-maven-plugin.user-guide.outputFileName>
         <markdown2html-maven-plugin.user-guide.outputFile>${markdown2html-maven-plugin.extensionContextAdminHtml}/${markdown2html-maven-plugin.user-guide.outputFileName}</markdown2html-maven-plugin.user-guide.outputFile>
+        <!-- The three generated articles (about, user guide, disclaimer) land in the *app* webapp,
+             not the admin one: as soon as ui/ exists the parent's vite-ui profile redefines
+             markdown2html-maven-plugin.extensionContextAdminHtml to ${vite.destination.root}/html.
+             The property name is historical - it predates the React apps - and the Usage Disclaimer
+             page reads the file from there (/polarion/docx-exporter-app/ui/html/disclaimer.html). -->
         <markdown2html-maven-plugin.disclaimer.inputFile>${project.basedir}/DISCLAIMER.md</markdown2html-maven-plugin.disclaimer.inputFile>
         <markdown2html-maven-plugin.disclaimer.outputFileName>disclaimer.html</markdown2html-maven-plugin.disclaimer.outputFileName>
         <markdown2html-maven-plugin.disclaimer.outputFile>${markdown2html-maven-plugin.extensionContextAdminHtml}/${markdown2html-maven-plugin.disclaimer.outputFileName}</markdown2html-maven-plugin.disclaimer.outputFile>
@@ -435,6 +440,7 @@
                     <outputFormat>JSON</outputFormat>
                     <resourcePackages>
                         <package>ch.sbb.polarion.extension.generic.rest.controller.info</package>
+                        <package>ch.sbb.polarion.extension.generic.rest.controller.roles</package>
                         <package>ch.sbb.polarion.extension.generic.rest.controller.settings</package>
                         <package>ch.sbb.polarion.extension.generic.rest.model</package>
                         <package>ch.sbb.polarion.extension.docx_exporter.rest.controller</package>
@@ -458,6 +464,15 @@
                             <goal>install-node-and-npm</goal>
                         </goals>
                         <configuration>
+                            <!-- Spelled out per execution since the React app arrived: the parent's
+                                 vite-ui profile declares this same plugin with a plugin-level
+                                 <workingDirectory>ui</workingDirectory>, which Maven merges into this
+                                 declaration and which would otherwise move the product-JS build into
+                                 ui/ - where `npm run test` is the Vitest browser suite, not this
+                                 project's mocha one. Setting it at plugin level here is not an option
+                                 either: that would drag the parent's own vite executions back out of
+                                 ui/. -->
+                            <workingDirectory>${project.basedir}</workingDirectory>
                             <nodeVersion>${frontend-maven-plugin.nodeVersion}</nodeVersion>
                             <npmVersion>${frontend-maven-plugin.npmVersion}</npmVersion>
                             <skip>${skipJavaScriptTests}</skip>
@@ -472,6 +487,7 @@
                             <goal>npm</goal>
                         </goals>
                         <configuration>
+                            <workingDirectory>${project.basedir}</workingDirectory>
                             <arguments>install</arguments>
                             <skip>${skipJavaScriptTests}</skip>
                         </configuration>
@@ -485,6 +501,7 @@
                             <goal>npm</goal>
                         </goals>
                         <configuration>
+                            <workingDirectory>${project.basedir}</workingDirectory>
                             <arguments>run test</arguments>
                             <skip>${skipJavaScriptTests}</skip>
                         </configuration>

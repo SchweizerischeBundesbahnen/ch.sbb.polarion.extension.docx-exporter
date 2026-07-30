@@ -4,6 +4,8 @@ import ch.sbb.polarion.extension.docx_exporter.rest.controller.ConfigurationApiC
 import ch.sbb.polarion.extension.docx_exporter.rest.controller.ConfigurationInternalController;
 import ch.sbb.polarion.extension.docx_exporter.settings.TemplatesSettings;
 import ch.sbb.polarion.extension.generic.rest.GenericRestApplication;
+import ch.sbb.polarion.extension.generic.rest.controller.roles.RolesApiController;
+import ch.sbb.polarion.extension.generic.rest.controller.roles.RolesInternalController;
 import ch.sbb.polarion.extension.generic.settings.NamedSettingsRegistry;
 import ch.sbb.polarion.extension.docx_exporter.converter.DocxConverterJobsCleaner;
 import ch.sbb.polarion.extension.docx_exporter.rest.controller.CollectionApiController;
@@ -77,7 +79,13 @@ public class DocxExporterRestApplication extends GenericRestApplication {
                 TestRunAttachmentsApiController.class,
                 TestRunAttachmentsInternalController.class,
                 UtilityResourcesApiController.class,
-                UtilityResourcesInternalController.class
+                UtilityResourcesInternalController.class,
+                // The role endpoints are opt-in in generic: only the extensions whose settings grant
+                // permissions to roles serve them. The Authorization page reads /roles to know which
+                // global and project roles the current scope offers - the JSP page it replaces read
+                // them server-side instead, which is why they were never registered here.
+                RolesInternalController.class,
+                RolesApiController.class
         );
     }
 
