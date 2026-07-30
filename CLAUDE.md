@@ -7,7 +7,8 @@
   serve them side by side: `docx-exporter-app` (the Vite bundle in `ui/`, see [`ui/README.md`](ui/README.md))
   and the legacy `docx-exporter-admin` (the remaining JSP pages). `hivemodule.xml` carries a `pageUrl`
   per menu entry, which is what makes the split possible; the ids there must match `ui/src/features.tsx`.
-  Converted so far: About, Usage Disclaimer, User Guide, Authorization, Style Package Weights. `docx-exporter-admin` is deleted
+  Converted so far: About, Usage Disclaimer, User Guide, Authorization, Style Package Weights,
+  Filename template. Left on JSP: style packages, templates, localization, webhooks. `docx-exporter-admin` is deleted
   once the last JSP page is gone.
 
 - **The UI build comes from the generic parent**, activated by the presence of `ui/package.json` (its

@@ -104,3 +104,20 @@
 
 /* The About page (and its .markdown-body README article headings) is the shared
    @grigoriev/react-sbb-polarion component; its styles ship in the lib's bundled style.css. */
+
+.filename-template-editor {
+  height: 160px;
+  margin-bottom: 10px;
+}
+
+.placeholders {
+  margin-top: 16px;
+}
+
+.placeholders .monospace {
+  font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+}
+
+.help {
+  margin-top: 24px;
+}
