@@ -147,7 +147,6 @@ describe('Filename template page', () => {
 
   it('keeps what the administrator typed while a load was still in flight', async () => {
     let release: (() => void) | undefined;
-    const original = globalThis.fetch;
     installFetchMock(routes());
     const mocked = globalThis.fetch;
     vi.stubGlobal(
@@ -158,7 +157,7 @@ describe('Filename template page', () => {
             release = resolve;
           });
         }
-        return (mocked as typeof original)(input, init);
+        return (mocked as typeof globalThis.fetch)(input, init);
       }),
     );
     window.history.replaceState({}, '', '?feature=filename&embedded=true&scope=project/elibrary/');
