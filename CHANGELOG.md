@@ -1,5 +1,24 @@
 # Changelog
 
+## [5.3.0](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/compare/v5.2.0...v5.3.0) (2026-07-28)
+
+
+### Features
+
+* restrict DOCX export to configured roles ([#320](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/issues/320)) ([80182cb](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/commit/80182cbdf9337ec18addc06a5b24429007267fa3)), closes [#319](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/issues/319)
+* switch pandoc-service check to api version ([#316](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/issues/316)) ([7c0b870](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/commit/7c0b870e731a09be77b97771207b0777fec70931)), closes [#315](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/issues/315)
+
+
+### Bug Fixes
+
+* add wiki velocity tools to velocity evaluator context ([#307](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/issues/307)) ([ae06441](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/commit/ae06441af4be5702be993a8f11c3f56db2d7c731)), closes [#306](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/issues/306)
+* **deps:** update dependency ch.sbb.polarion.extensions:ch.sbb.polarion.extension.generic to v15.10.0 ([4f60b34](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/commit/4f60b344d656bd25b7fd32952e5ecbd989eeda8b))
+* **deps:** update dependency ch.sbb.polarion.extensions:ch.sbb.polarion.extension.generic to v15.6.0 ([a14590d](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/commit/a14590d9cb3475ed62c28624b2f5092bbee07af1))
+* **deps:** update dependency ch.sbb.polarion.extensions:ch.sbb.polarion.extension.generic to v15.8.1 ([498b59d](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/commit/498b59d4e1a70d172557057a8cb9dcf0b1b7e40f))
+* **deps:** update dependency org.apache.tika:tika-core to v3.3.2 ([cedc115](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/commit/cedc115e6df25fd0258b73f320d5a47300c125ad))
+* **deps:** update docx4j.version to v17.0.1 ([9f7e889](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/commit/9f7e88953e95c793aefe1474d83e410293c68efd))
+* filter linked work items having suspect links ([#313](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/issues/313)) ([280b223](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/commit/280b223200f5b089226aea0996c95ea46568bf9a)), closes [#312](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/issues/312)
+
 ## [5.2.0](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/compare/v5.1.0...v5.2.0) (2026-07-16)
 
 
