@@ -1,5 +1,22 @@
 # Changelog
 
+## [5.4.0](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/compare/v5.3.0...v5.4.0) (2026-08-06)
+
+
+### Features
+
+* convert the Filename template admin page to React ([#337](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/issues/337)) ([9df6790](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/commit/9df679072040f4910b006e3ac2a953a3ceab6b3e)), closes [#328](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/issues/328)
+* convert the first administration pages to React ([#334](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/issues/334)) ([125b3ac](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/commit/125b3acb4e7bfe590355dc13a5204b6c029eb947)), closes [#326](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/issues/326)
+* convert the Localization and Webhooks admin pages to React ([#340](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/issues/340)) ([f0c247d](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/commit/f0c247d30098887aaeb8862bc531b4226a37c326)), closes [#327](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/issues/327)
+* convert the Style Package Weights admin page to React ([#336](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/issues/336)) ([7110b9d](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/commit/7110b9dc4a7e379f1d09c38c4823283e220925e5)), closes [#333](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/issues/333)
+
+
+### Bug Fixes
+
+* **deps:** update dependency ch.sbb.polarion.extensions:ch.sbb.polarion.extension.generic to v15.10.1 ([3933e69](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/commit/3933e69c82a36330d3440cafd55ada37733ed4bd))
+* **deps:** update docx4j.version to v17.0.2 ([229eae4](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/commit/229eae41b4224e2366e872b7e3c0f6b42f7c0441))
+* keep the shared JSP fragments reachable for the JSP pages ([#338](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/issues/338)) ([6888122](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/commit/688812235c7b15e37c8c2d3cba68a32e1b162d11))
+
 ## [5.3.0](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/compare/v5.2.0...v5.3.0) (2026-07-28)
 
 
