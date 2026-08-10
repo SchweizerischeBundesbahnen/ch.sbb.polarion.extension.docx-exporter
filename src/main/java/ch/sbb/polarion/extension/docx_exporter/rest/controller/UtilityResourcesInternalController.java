@@ -1,10 +1,12 @@
 package ch.sbb.polarion.extension.docx_exporter.rest.controller;
 
+import ch.sbb.polarion.extension.docx_exporter.model.TemplateDetails;
 import ch.sbb.polarion.extension.docx_exporter.model.WebhooksStatus;
 import ch.sbb.polarion.extension.docx_exporter.properties.DocxExporterExtensionConfiguration;
 import ch.sbb.polarion.extension.docx_exporter.rest.model.conversion.ExportParams;
 import ch.sbb.polarion.extension.docx_exporter.service.DocxExporterPolarionService;
 import ch.sbb.polarion.extension.docx_exporter.util.DocumentFileNameHelper;
+import ch.sbb.polarion.extension.docx_exporter.util.DocxTemplateInspector;
 import ch.sbb.polarion.extension.docx_exporter.util.EnumValuesProvider;
 import com.polarion.alm.tracker.model.IModule;
 import com.polarion.alm.tracker.model.ITrackerProject;
@@ -20,6 +22,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
 import jakarta.inject.Singleton;
+import jakarta.ws.rs.BadRequestException;
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.POST;
@@ -127,5 +130,28 @@ public class UtilityResourcesInternalController {
     public WebhooksStatus getWebhooksStatus() {
         Boolean webhooksEnabled = DocxExporterExtensionConfiguration.getInstance().getWebhooksEnabled();
         return WebhooksStatus.builder().enabled(webhooksEnabled).build();
+    }
+
+    @POST
+    @Path("/template/details")
+    @Consumes(MediaType.APPLICATION_OCTET_STREAM)
+    @Produces(MediaType.APPLICATION_JSON)
+    @Operation(summary = "Reads style count and last modification date out of a DOCX reference template",
+            description = "Doubles as the validator of the file the Templates administration page uploads: anything that is not a readable DOCX is rejected",
+            requestBody = @RequestBody(description = "The DOCX file itself", required = true,
+                    content = @Content(mediaType = MediaType.APPLICATION_OCTET_STREAM)
+            ),
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "Successfully read the template details",
+                            content = @Content(schema = @Schema(implementation = TemplateDetails.class))),
+                    @ApiResponse(responseCode = "400", description = "The uploaded file is not a valid DOCX")
+            }
+    )
+    public TemplateDetails getTemplateDetails(byte[] template) {
+        try {
+            return new DocxTemplateInspector().inspect(template);
+        } catch (IllegalArgumentException e) {
+            throw new BadRequestException("Uploaded file must be a valid docx file", e);
+        }
     }
 }
