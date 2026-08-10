@@ -461,6 +461,15 @@
   color: palevioletred;
 }
 
+/* The button that opens the export dialog in its harness. A row rather than a block, so a second control
+   can be put next to it without moving this one. */
+.preview-controls {
+  display: flex;
+  gap: 8px;
+  margin-top: 16px;
+  flex-wrap: wrap;
+}
+
 /* The development harness for the Document Properties side panel frames the panel the way the editor's
    properties pane does: a white, padded box of the pane's own width, so what is inside the frame is
    what Polarion shows. */

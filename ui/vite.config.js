@@ -73,21 +73,26 @@ export default defineConfig(({ command, mode }) => {
       emptyOutDir: true,
       rollupOptions: {
         // Keep what an entry exports. A Vite app build assumes its entries are only ever executed, so it
-        // drops their exports - which would leave the side panel bundle without the `mountSidePanel` its
-        // importer calls. scripts/check-runtime-entries.mjs guards that after every build, since no test
-        // sees the built files.
+        // drops their exports - which would leave the runtime bundles without the `mountSidePanel` and
+        // `openExportPopup` their importers call. scripts/check-runtime-entries.mjs guards that after every
+        // build, since no test sees the built files.
         preserveEntrySignatures: 'strict',
-        // Two entries: the admin SPA (index.html), and the Document Properties side panel imported at
-        // runtime by the form-extension fragment in the document editor.
+        // Three entries: the admin SPA (index.html), the Document Properties side panel imported at runtime
+        // by the form-extension fragment in the document editor, and the export dialog imported at runtime
+        // by the editor's toolbar button.
         input: {
           index: fileURLToPath(new URL('index.html', import.meta.url)),
           'side-panel': fileURLToPath(new URL('src/sidepanel/mount.tsx', import.meta.url)),
+          'export-popup': fileURLToPath(new URL('src/popup/mount.tsx', import.meta.url)),
         },
         output: {
-          // The side panel's file name must stay predictable: its importer names it by URL and cannot know
-          // the hash Vite would append. It appends the extension version instead, which is what busts the
-          // browser cache on an update.
-          entryFileNames: (chunk) => (chunk.name === 'side-panel' ? 'assets/side-panel.js' : 'assets/[name]-[hash].js'),
+          // The two runtime entries' file names must stay predictable: their importers name them by URL and
+          // cannot know the hash Vite would append. They append the extension version instead, which is what
+          // busts the browser cache on an update.
+          entryFileNames: (chunk) =>
+            chunk.name === 'side-panel' || chunk.name === 'export-popup'
+              ? `assets/${chunk.name}.js`
+              : 'assets/[name]-[hash].js',
           // What the entries share (React above all) lands in one chunk. Rollup would name it after
           // whichever module it happened to pick, which reads as nonsense next to side-panel.js.
           chunkFileNames: 'assets/shared-[hash].js',

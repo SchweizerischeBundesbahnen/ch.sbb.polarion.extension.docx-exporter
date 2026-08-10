@@ -4,12 +4,13 @@ import { CHILD_SETTINGS, type ChildNames, NO_CHILD_NAMES, type StylePackageSetti
 import { toRequestBody } from './exportParams';
 
 /**
- * Everything the export panel needs before it can be shown, read over REST.
+ * Everything an export dialog needs before it can be shown, read over REST.
  *
- * `DocxExporterFormExtension` used to render the panel's markup with the style packages, the setting
- * names, the link roles, the file name and the export permission already substituted into it. None of
- * that reaches a React panel, so the same values are read from the endpoints the DLE toolbar popup has
- * always read them from.
+ * Both dialogs read the same endpoints, and both used to get this data another way: the side panel
+ * arrived with it substituted into its markup by `DocxExporterFormExtension`, and the toolbar popup
+ * filled its `<select>`s one XHR callback at a time in `ExportPopup.loadFormData`. The reads are shared
+ * here; what is not shared is how strict each dialog is about a failure, which is why there are two
+ * aggregates - {@link loadPanelData} and {@link loadPopupData}. See each for why.
  */
 
 /** One item the style packages are chosen for, in the shape `/settings/style-package/suitable-names` wants. */
@@ -151,9 +152,17 @@ export function loadExportPermission(sendRequest: SendRequest, projectId: string
 }
 
 /** The names every child dropdown offers, read in one round. */
-async function loadChildNames(sendRequest: SendRequest, scope: string): Promise<ChildNames> {
+async function loadChildNames(sendRequest: SendRequest, scope: string, requireNames: boolean): Promise<ChildNames> {
   const entries = await Promise.all(
-    CHILD_SETTINGS.map(async (setting) => [setting, await loadSettingNames(sendRequest, setting, scope)] as const),
+    CHILD_SETTINGS.map(async (setting) => {
+      const options = await loadSettingNames(sendRequest, setting, scope);
+      if (requireNames && options.length === 0) {
+        // The popup treated an empty child setting as a broken installation and refused to open rather
+        // than offering an empty dropdown - its `loadSettingNames` rejected on a zero count.
+        throw new Error(`No '${setting}' configurations in scope '${scope}'`);
+      }
+      return [setting, options] as const;
+    }),
   );
   return { ...NO_CHILD_NAMES, ...Object.fromEntries(entries) } as ChildNames;
 }
@@ -181,7 +190,7 @@ export interface PanelData {
 export async function loadPanelData(sendRequest: SendRequest, document: DocumentIdentity): Promise<PanelData> {
   const [stylePackages, childNames, roles] = await Promise.all([
     loadStylePackageNames(sendRequest, [toDocIdentifier(document)]),
-    loadChildNames(sendRequest, document.scope),
+    loadChildNames(sendRequest, document.scope, false),
     loadLinkRoles(sendRequest, document.scope).catch(() => []),
   ]);
 
@@ -197,4 +206,50 @@ export async function loadPanelData(sendRequest: SendRequest, document: Document
   ]);
 
   return { stylePackages, childNames, roles, fileName, documentLanguage, webhooksEnabled, exportPermission };
+}
+
+/** What the DLE toolbar export popup needs. */
+export interface PopupData {
+  stylePackages: SelectOption[];
+  childNames: ChildNames;
+  roles: SelectOption[];
+  fileName: string;
+  documentLanguage: string | null;
+  webhooksEnabled: boolean;
+}
+
+/**
+ * Reads the export popup's data in one round.
+ *
+ * Stricter than {@link loadPanelData} on purpose: the popup showed one "Error occurred loading form data"
+ * notification for any failure among these reads, an empty child setting included, and left its Export
+ * button useless. That is kept - the popup is the dialog a user reaches from a toolbar button, where an
+ * empty dropdown is indistinguishable from a working one.
+ *
+ * The export permission is not among the reads, as it was not before: the toolbar button that opens this
+ * dialog is itself disabled fail-closed for a user who may not export, so the dialog is unreachable then.
+ */
+export async function loadPopupData(sendRequest: SendRequest, document: DocumentIdentity): Promise<PopupData> {
+  // The style packages are read after the rest, as the popup read them: the selected one decides every
+  // field below it, so there is nothing to apply it to until the option lists are in.
+  const [childNames, roles, documentLanguage, fileName, webhooksEnabled] = await Promise.all([
+    loadChildNames(sendRequest, document.scope, true),
+    loadLinkRoles(sendRequest, document.scope),
+    loadDocumentLanguage(sendRequest, document),
+    loadExportFileName(sendRequest, {
+      projectId: document.projectId,
+      locationPath: document.locationPath,
+      baselineRevision: document.baselineRevision,
+      revision: document.revision,
+      urlQueryParameters: document.urlQueryParameters,
+    }),
+    loadWebhooksEnabled(sendRequest),
+  ]);
+
+  const stylePackages = await loadStylePackageNames(sendRequest, [toDocIdentifier(document)]);
+  if (stylePackages.length === 0) {
+    throw new Error('No style packages are suitable for this document');
+  }
+
+  return { stylePackages, childNames, roles, fileName, documentLanguage, webhooksEnabled };
 }

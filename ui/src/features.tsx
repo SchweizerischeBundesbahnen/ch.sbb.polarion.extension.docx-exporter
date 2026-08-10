@@ -2,6 +2,7 @@ import type { ComponentType } from 'react';
 import About from './pages/About';
 import Authorization from './pages/Authorization';
 import Disclaimer from './pages/Disclaimer';
+import ExportPopupPreview from './pages/ExportPopupPreview';
 import FilenameTemplate from './pages/FilenameTemplate';
 import Localization from './pages/Localization';
 import SidePanelPreview from './pages/SidePanelPreview';
@@ -88,14 +89,20 @@ export const FEATURES: Feature[] = [
     description: 'Configure which global and project roles are allowed to export.',
     component: Authorization,
   },
-  // Not an administration page: `hivemodule.xml` points at none of it. It is reachable only by typing
-  // `?feature=side-panel`, which is what the ` (dev)` in the label says, and it needs a Polarion behind
-  // VITE_BASE_URL to show anything.
+  // Not administration pages: `hivemodule.xml` points at neither. They are reachable only by typing
+  // `?feature=side-panel` or `?feature=export-popup`, which is what the ` (dev)` in the labels says, and
+  // both need a Polarion behind VITE_BASE_URL to show anything.
   {
     id: 'side-panel',
     label: 'Document Properties side panel (dev)',
     description: 'The export panel of the document editor, run against a real document.',
     component: SidePanelPreview,
+  },
+  {
+    id: 'export-popup',
+    label: 'Export to DOCX dialog (dev)',
+    description: 'The dialog the document editor toolbar button opens, run against a real document.',
+    component: ExportPopupPreview,
   },
 ];
 

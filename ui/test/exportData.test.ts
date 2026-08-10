@@ -1,6 +1,6 @@
 import type { SendRequest } from '@grigoriev/react-sbb-polarion';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { loadDocumentLanguage, loadPanelData, loadStylePackage } from '../src/export/exportData';
+import { loadDocumentLanguage, loadPanelData, loadPopupData, loadStylePackage } from '../src/export/exportData';
 import { installFetchMock } from './mockFetch';
 import type { Route } from './mockFetch';
 import { SAMPLE_DOCUMENT } from './sidePanelSamples';
@@ -108,6 +108,57 @@ describe('loading the panel data', () => {
     expect(data.fileName).toBe('');
     expect(data.documentLanguage).toBeNull();
     expect(data.webhooksEnabled).toBe(false);
+  });
+});
+
+describe('loading the popup data', () => {
+  it('reads the same endpoints as the panel, minus the export permission', async () => {
+    // The toolbar button that opens the dialog is itself disabled fail-closed, so the dialog never asks.
+    const fetchMock = installFetchMock(baseRoutes());
+
+    const data = await loadPopupData(sendRequest, SAMPLE_DOCUMENT);
+
+    expect(data.stylePackages.map((option) => option.id)).toEqual(['Specification', 'Default']);
+    expect(data.childNames.templates.map((option) => option.id)).toEqual(['Default', 'SBB']);
+    expect(data.roles.map((option) => option.id)).toEqual(['relates_to', 'verifies']);
+    expect(data.fileName).toBe('E-Library Doc.docx');
+    expect(data.documentLanguage).toBe('de');
+    expect(data.webhooksEnabled).toBe(true);
+    expect(fetchMock.mock.calls.some(([url]) => String(url).includes('permissions/export'))).toBe(false);
+  });
+
+  it('refuses to open on an empty child setting, where the panel would offer an empty dropdown', async () => {
+    // The legacy popup rejected on a zero count: an empty dropdown on a dialog reached from a toolbar
+    // button is indistinguishable from a working one.
+    installFetchMock(routesWith({ method: 'GET', match: /\/settings\/localization\/names/, json: [] }));
+
+    await expect(loadPopupData(sendRequest, SAMPLE_DOCUMENT)).rejects.toThrow(
+      "No 'localization' configurations in scope 'project/elibrary/'",
+    );
+  });
+
+  it('refuses to open when no style package suits the document', async () => {
+    installFetchMock(routesWith({ method: 'POST', match: /suitable-names/, json: [] }));
+
+    await expect(loadPopupData(sendRequest, SAMPLE_DOCUMENT)).rejects.toThrow('No style packages are suitable');
+  });
+
+  it('refuses to open on any read the panel would have tolerated', async () => {
+    installFetchMock(routesWith({ method: 'POST', match: /\/export-filename/, status: 500, json: {} }));
+
+    await expect(loadPopupData(sendRequest, SAMPLE_DOCUMENT)).rejects.toThrow('HTTP 500');
+  });
+
+  it('names the document in the file name request the way the legacy popup did', async () => {
+    const fetchMock = installFetchMock(baseRoutes());
+
+    await loadPopupData(sendRequest, { ...SAMPLE_DOCUMENT, urlQueryParameters: { revision: '42' } });
+
+    const call = fetchMock.mock.calls.find(([url]) => String(url).includes('export-filename'))!;
+    const sent = JSON.parse(String(call[1]!.body)) as Record<string, unknown>;
+    expect(sent.locationPath).toBe('Default Space/Cross Link Issue');
+    expect(sent.urlQueryParameters).toEqual({ revision: '42' });
+    expect('documentType' in sent).toBe(false);
   });
 });
 

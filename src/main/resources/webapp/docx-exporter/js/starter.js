@@ -18,14 +18,22 @@
     // so nothing below hardcodes the /polarion/<ext>/ segment.
     const EXT_BASE = (document.currentScript && document.currentScript.src || '').replace(/js\/starter\.js.*$/, '') || '/polarion/docx-exporter/';
 
+    // The export dialog is a React module of the docx-exporter-app webapp, imported on click. It mounts
+    // itself into a shadow root of its own, so nothing has to be injected into the page for it: the
+    // micromodal library and the six generic control stylesheets the legacy popup needed are gone.
+    // The timestamp is captured once per page load, so a click reuses the module the previous click
+    // loaded while an updated extension is still picked up on the next page open.
+    const POPUP_MODULE = `/polarion/docx-exporter-app/ui/app/assets/export-popup.js${timestampParam}`;
+    const openPopup = `import('${POPUP_MODULE}')
+                                .then(module => module.openExportPopup())
+                                .catch(console.error);`;
+
     const TOOLBAR_HTML = `
         <table class="dleToolBarTable">
             <tr class="dleToolBarRow">
                 <td class="dleToolBarTableCell" title="Export to DOCX">
                     <div class="dleToolBarSingleButton dleToolBarButton"
-                     onclick="import('${EXT_BASE}ui/js/modules/ExportPopup.js')
-                            .then(module => new module.default())
-                            .catch(console.error);">
+                     onclick="${openPopup}">
                         <img class="polarion-MenuButton-Icon" src="/polarion/ria/images/dle/operations/actionMsWordRoundtrip16.svg${timestampParam}" style="margin: 0">
                         <span style="margin: 0 5px 0 10px; font-weight: bold;">Export to DOCX</span>
                     </div>
@@ -41,9 +49,7 @@
                 <td ><div class="gwt-Label polarion-dle-toolbar-Padding"></div></td>
                 <td class="dleToolBarTableCell" title="Export to DOCX">
                     <div class="dleToolBarSingleButton dleToolBarButton"
-                    onclick="import('${EXT_BASE}ui/js/modules/ExportPopup.js')
-                            .then(module => new module.default())
-                            .catch(console.error);">
+                    onclick="${openPopup}">
                         <img class="polarion-MenuButton-Icon" src="/polarion/ria/images/dle/operations/actionMsWordRoundtrip16.svg${timestampParam}" style="margin: 0">
                     </div>
                 </td>
@@ -100,14 +106,10 @@
             pending.length = 0;
             return;
         }
-        generic.injectStyles("docx-exporter-styles", `${EXT_BASE}css/docx-exporter.css${timestampParam}`);
-        generic.injectStyles("docx-micromodal-styles", `${EXT_BASE}ui/generic/css/micromodal.css${timestampParam}`);
-        generic.injectStyles("generic-control-tokens", `${EXT_BASE}ui/generic/css/control-tokens.css${timestampParam}`);
-        generic.injectStyles("generic-checkbox-styles", `${EXT_BASE}ui/generic/css/checkboxes.css${timestampParam}`);
-        generic.injectStyles("generic-searchable-dropdown-styles", `${EXT_BASE}ui/generic/css/searchable-dropdown.css${timestampParam}`);
-        generic.injectStyles("generic-inputs-styles", `${EXT_BASE}ui/generic/css/inputs.css${timestampParam}`);
-        generic.injectStyles("generic-alerts-styles", `${EXT_BASE}ui/generic/css/alerts.css${timestampParam}`);
-        generic.injectScript("docx-micromodal-script", `${EXT_BASE}ui/generic/js/micromodal.min.js${timestampParam}`);
+        // No stylesheet is injected here any more: the export dialog styles itself inside its own shadow
+        // root, and the button's .dleToolBar* rules (incl. the disabled state) come from generic's
+        // css/dle-toolbar.css, which the toolbar engine injects itself.
+
         // The engine owns the disabled state: it injects the button disabled, runs permissionCheck,
         // then enables it if permitted (or keeps it disabled on failure — fail-closed), and preserves
         // that state across the toolbar's self-heal re-renders.

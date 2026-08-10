@@ -1,12 +1,28 @@
 import react from '@vitejs/plugin-react';
 import { playwright } from '@vitest/browser-playwright';
-import { defineConfig } from 'vitest/config';
+import { defaultExclude, defineConfig } from 'vitest/config';
 
-// Vitest browser mode (real Chromium via Playwright), the same setup as react-sbb-polarion: behavior
-// assertions see real CSS/layout and the visual layer (toMatchScreenshot) captures the real look. The
-// extension's REST calls are mocked at the global fetch level (see test/mockFetch.ts), so no Polarion
-// is needed. Reference screenshots are committed and MUST be generated in the pinned Playwright Docker
-// image (npm run test:update:docker) so Windows-dev and Linux-CI produce identical pixels.
+// Two projects, because this repository has two kinds of JavaScript to test.
+//
+//   browser - the React app in src/. Vitest browser mode (real Chromium via Playwright), the same
+//             setup as react-sbb-polarion: behavior assertions see real CSS/layout and the visual layer
+//             (toMatchScreenshot) captures the real look. The extension's REST calls are mocked at the
+//             global fetch level (see test/mockFetch.ts), so no Polarion is needed. Reference
+//             screenshots are committed and MUST be generated in the pinned Playwright Docker image
+//             (npm run test:update:docker) so Windows-dev and Linux-CI produce identical pixels.
+//
+//   node    - the product injector scripts under src/main/resources/webapp/docx-exporter/js/, which are
+//             plain page scripts, not part of the app bundle. They used to have their own mocha suite,
+//             their own package.json and their own node/ + node_modules/ at the repository root; that
+//             whole second toolchain is gone and the tests live here.
+//
+//             jsdom, NOT browser mode, and the reason is specific: those scripts are written against the
+//             TOP frame (top.document, top.__genericDleToolbarSeq). Vitest browser mode runs each test
+//             file in an iframe and keeps `top` for its own runner page, which is never reloaded between
+//             files, so the injections would land in the runner's DOM instead of the test's. In
+//             production these scripts run via scriptInjection.mainHead, where top === self, which is
+//             what jsdom reproduces. The assertions are element ids, markup and a promise race: no
+//             layout, no CSS, no paint, so browser mode would add the frame problem and no signal.
 
 // Per-component subfolder derived from the test file name (e.g. "Panel.visual.test.tsx" -> "Panel").
 const componentDir = (testFileName: string): string => testFileName.split(/[\\/]/).pop()!.split('.')[0];
@@ -17,6 +33,9 @@ const componentDir = (testFileName: string): string => testFileName.split(/[\\/]
 // skip themselves rather than failing on the host's font metrics - which shift both the antialiasing
 // and the rendered element height, i.e. a red run that says nothing about the code.
 const pixelReferences = process.env.PIXEL_REFERENCES === '1';
+
+// The node project's files. Named so the browser project can exclude exactly them and nothing else.
+const NODE_TESTS = 'test/**/*.node.test.ts';
 
 export default defineConfig({
   define: { __PIXEL_REFERENCES__: JSON.stringify(pixelReferences) },
@@ -42,40 +61,62 @@ export default defineConfig({
     ],
   },
   test: {
-    include: ['test/**/*.{test,spec}.{ts,tsx}'],
-    setupFiles: ['./test/setup.ts'],
-    // Insulate the suite from a developer's `ui/.env.local`. Vite loads that file in test mode too, so a
-    // personal VITE_BEARER_TOKEN would otherwise switch useRemote to the /api base and add an
-    // Authorization header, which is not the session-auth default the tests are written against. Empty,
-    // not removed, so `vi.stubEnv('VITE_BEARER_TOKEN', ...)` still works where a test wants a token.
-    env: { VITE_BEARER_TOKEN: '' },
-    // Run test files one at a time. Under high parallelism the Playwright browser provider
-    // intermittently fails a worker with "Vitest failed to find the runner"; serializing the files
-    // avoids that race. The suite is small and each file is fast, so the cost is minor.
-    fileParallelism: false,
-    browser: {
-      enabled: true,
-      // deviceScaleFactor: 2 -> all visual-regression references are captured at 2x (sharper, and finer
-      // diffs). Set on the provider's contextOptions (not the instance - the provider reads it there).
-      // `ignoreDefaultArgs: ['--hide-scrollbars']` because Playwright passes that flag to headless
-      // Chromium by default, and a hidden scrollbar takes no width. A form laid out in columns can wrap
-      // into one column on a real Polarion for want of the ~15px a scrollbar takes, and every reference
-      // screenshot stays green. Scrollbars are real here, so a reference that scrolls shows one.
-      provider: playwright({
-        contextOptions: { deviceScaleFactor: 2 },
-        launchOptions: { ignoreDefaultArgs: ['--hide-scrollbars'] },
-      }),
-      headless: true,
-      instances: [{ browser: 'chromium', viewport: { width: 1280, height: 720 } }],
-      expect: {
-        toMatchScreenshot: {
-          resolveScreenshotPath: ({ root, arg, ext, testFileName }) =>
-            `${root}/test/expected/${componentDir(testFileName)}/${arg}${ext}`,
-          resolveDiffPath: ({ root, arg, ext, testFileName }) =>
-            `${root}/test/__diff__/${componentDir(testFileName)}/${arg}${ext}`,
+    // `extends: true` on both projects: they inherit the Vite config above (plugins, resolve,
+    // optimizeDeps, define) and override only what differs.
+    projects: [
+      {
+        extends: true,
+        test: {
+          name: 'browser',
+          include: ['test/**/*.{test,spec}.{ts,tsx}'],
+          // defaultExclude first, or naming an exclude here would drop node_modules/dist from it.
+          exclude: [...defaultExclude, NODE_TESTS],
+          setupFiles: ['./test/setup.ts'],
+          // Insulate the suite from a developer's `ui/.env.local`. Vite loads that file in test mode too, so a
+          // personal VITE_BEARER_TOKEN would otherwise switch useRemote to the /api base and add an
+          // Authorization header, which is not the session-auth default the tests are written against. Empty,
+          // not removed, so `vi.stubEnv('VITE_BEARER_TOKEN', ...)` still works where a test wants a token.
+          env: { VITE_BEARER_TOKEN: '' },
+          // Run test files one at a time. Under high parallelism the Playwright browser provider
+          // intermittently fails a worker with "Vitest failed to find the runner"; serializing the files
+          // avoids that race. The suite is small and each file is fast, so the cost is minor.
+          fileParallelism: false,
+          browser: {
+            enabled: true,
+            // deviceScaleFactor: 2 -> all visual-regression references are captured at 2x (sharper, and finer
+            // diffs). Set on the provider's contextOptions (not the instance - the provider reads it there).
+            // `ignoreDefaultArgs: ['--hide-scrollbars']` because Playwright passes that flag to headless
+            // Chromium by default, and a hidden scrollbar takes no width. A form laid out in columns can wrap
+            // into one column on a real Polarion for want of the ~15px a scrollbar takes, and every reference
+            // screenshot stays green. Scrollbars are real here, so a reference that scrolls shows one.
+            provider: playwright({
+              contextOptions: { deviceScaleFactor: 2 },
+              launchOptions: { ignoreDefaultArgs: ['--hide-scrollbars'] },
+            }),
+            headless: true,
+            instances: [{ browser: 'chromium', viewport: { width: 1280, height: 720 } }],
+            expect: {
+              toMatchScreenshot: {
+                resolveScreenshotPath: ({ root, arg, ext, testFileName }) =>
+                  `${root}/test/expected/${componentDir(testFileName)}/${arg}${ext}`,
+                resolveDiffPath: ({ root, arg, ext, testFileName }) =>
+                  `${root}/test/__diff__/${componentDir(testFileName)}/${arg}${ext}`,
+              },
+            },
+          },
         },
       },
-    },
+      {
+        extends: true,
+        test: {
+          name: 'node',
+          include: [NODE_TESTS],
+          environment: 'jsdom',
+          // No setupFiles: test/setup.ts loads stylesheets and jest-dom matchers for the React suite,
+          // and the injectors need neither.
+        },
+      },
+    ],
     coverage: {
       // istanbul (source instrumented at transform time), NOT v8: in browser mode v8 intermittently
       // reports 0% depending on the dep-optimization cache.
