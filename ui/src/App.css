@@ -125,6 +125,7 @@
 /* --- Localization ------------------------------------------------------------------------------ */
 
 .localization-page:disabled,
+.templates-page:disabled,
 .webhooks-page:disabled {
   opacity: 0.5;
 }
@@ -186,6 +187,81 @@
   overflow: hidden;
   position: absolute;
   z-index: -1;
+}
+
+/* --- Templates --------------------------------------------------------------------------------- */
+
+/* The hint above the panel, with the shared info icon floated into its first line. */
+.upload-hint {
+  display: block;
+  width: auto;
+  margin: 4px 0;
+  padding: 16px;
+  background: #d8e4f1;
+  text-align: left;
+  /* Contains the floated icon, so the box grows with the text instead of collapsing behind it. */
+  overflow: hidden;
+}
+
+.upload-hint::before {
+  content: '';
+  float: left;
+  width: 16px;
+  height: 16px;
+  margin: 1px 10px 0 0;
+  background: var(--sbb-info-icon) center / contain no-repeat;
+}
+
+/* The "download" affordance inside that hint is a button, not a link: the endpoint behind it needs the
+   headers useRemote adds, so the file is fetched and handed to the browser rather than navigated to.
+   It still has to read as the link the legacy page had. */
+.link-button {
+  padding: 0;
+  border: none;
+  background: none;
+  font: inherit;
+  color: var(--pe-accent);
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+/* One panel at a time: the empty state offering the picker, or the attached document. */
+.docx-panel {
+  width: 300px;
+  margin-top: 20px;
+  padding: 20px;
+  border: 1px solid #ccc;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.docx-panel > * {
+  margin-top: 15px;
+}
+
+.docx-panel .file-info {
+  text-align: center;
+}
+
+/* Clicking the document icon downloads what is attached. */
+.docx-panel .docx-download {
+  cursor: pointer;
+}
+
+.docx-panel input[type='file'] {
+  /* The visible control is the label; the input itself only has to stay reachable by the keyboard. */
+  width: 0.1px;
+  height: 0.1px;
+  opacity: 0;
+  overflow: hidden;
+  position: absolute;
+  z-index: -1;
+}
+
+.admin-page-screenshot {
+  display: block;
+  padding: 20px;
 }
 
 /* --- Webhooks ---------------------------------------------------------------------------------- */

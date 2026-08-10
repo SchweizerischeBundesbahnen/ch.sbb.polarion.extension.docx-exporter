@@ -78,7 +78,7 @@
                   name="Templates"
                   parentNodeId="docx-export"
                   iconUrl="/polarion/docx-exporter-admin/ui/images/menu/16x16/templates.svg"
-                  pageUrl="/polarion/docx-exporter-admin/pages/templates.jsp?scope=$scope$"
+                  pageUrl="/polarion/docx-exporter-app/ui/app/index.html?feature=templates&amp;embedded=true&amp;scope=$scope$"
                   projectScope="true"
                   projectGroupScope="false"
                   repositoryScope="true"/>

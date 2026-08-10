@@ -8,7 +8,8 @@ import {
   useConfirm,
 } from '@grigoriev/react-sbb-polarion';
 import { toast } from 'sonner';
-import useLocalizationFiles, { type TranslationsMap, saveBlob } from '../services/localization';
+import { saveBlob } from '../services/files';
+import useLocalizationFiles, { type TranslationsMap } from '../services/localization';
 import { getScope } from '../services/scope';
 import useNamedSettings from '../services/settings';
 
