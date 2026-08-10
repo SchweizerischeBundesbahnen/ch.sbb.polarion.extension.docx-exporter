@@ -5,6 +5,7 @@ import Disclaimer from './pages/Disclaimer';
 import FilenameTemplate from './pages/FilenameTemplate';
 import Localization from './pages/Localization';
 import StylePackageWeights from './pages/StylePackageWeights';
+import StylePackages from './pages/StylePackages';
 import Templates from './pages/Templates';
 import UserGuide from './pages/UserGuide';
 import Webhooks from './pages/Webhooks';
@@ -49,6 +50,12 @@ export const FEATURES: Feature[] = [
     label: 'Filename template',
     description: 'The Velocity template exported documents are named after.',
     component: FilenameTemplate,
+  },
+  {
+    id: 'style-package',
+    label: 'Style Package',
+    description: 'Everything one export is driven by, from the reference template to the conversion switches.',
+    component: StylePackages,
   },
   {
     id: 'templates',

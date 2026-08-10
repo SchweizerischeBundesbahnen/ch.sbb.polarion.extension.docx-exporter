@@ -83,8 +83,9 @@ const captureDownloads = (): string[] => {
   return names;
 };
 
+/** The revisions arrive after the table, so the row's button is what has to be waited for. */
 const revertButton = async (): Promise<HTMLElement> => {
-  await vi.waitFor(() => expect(document.querySelector('.revisions-table')).not.toBeNull());
+  await vi.waitFor(() => expect(document.querySelector('.revisions-table tbody button')).not.toBeNull());
   return document.querySelector<HTMLElement>('.revisions-table tbody button')!;
 };
 

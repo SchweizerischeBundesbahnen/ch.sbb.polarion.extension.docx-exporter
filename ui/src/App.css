@@ -189,6 +189,169 @@
   z-index: -1;
 }
 
+/* --- Style Packages ---------------------------------------------------------------------------- */
+
+.style-packages-page:disabled {
+  opacity: 0.5;
+}
+
+/* The two-column arrangement of the JSP page this replaces. The left column is fixed so the right one
+   starts at the same x in every section, and a section that opens a new topic is separated by a rule. */
+.style-packages-page .flex-container {
+  display: flex;
+  column-gap: 20px;
+  flex-wrap: wrap;
+}
+
+/* Equal air on both sides of the rule: `margin-top` above it, `padding-top` below it, the same 15px. */
+.style-packages-page .flex-container.section {
+  border-top: 1px solid #ccc;
+  margin-top: 15px;
+  padding-top: 15px;
+}
+
+.style-packages-page .flex-column {
+  width: 440px;
+}
+
+.style-packages-page .flex-grow {
+  flex-grow: 1;
+}
+
+/* The three rules the JSP page inherited from generic's configurations.css: 120px labels are what line
+   the controls of the two columns up with each other. Not in RSP's bundled CSS, so they live here. */
+.style-packages-page .input-group {
+  margin-bottom: 10px;
+}
+
+/* The row spacing is between rows, so the last row of a column does not carry it - otherwise the bottom
+   of every block is 10px taller than it looks, and that padding lands above the next section's rule. */
+.style-packages-page .flex-column > .input-group:last-child,
+.style-packages-page .flex-grow > .input-group:last-child {
+  margin-bottom: 0;
+}
+
+/* Two blocks with no rule between them are still two blocks: they get the same 10px of air that
+   separates the rows inside them. */
+.style-packages-page .flex-container + .flex-container:not(.section) {
+  margin-top: 10px;
+}
+
+.style-packages-page .input-group label {
+  display: inline-block;
+  width: 120px;
+}
+
+/* Deliberately per type, and skipping the dropdown parts, rather than a bare `input`: RSP sizes the
+   checkbox and the searchable dropdown's own trigger and search box, and a shorter selector here would
+   outrank all of them and stretch them to a text field's width. */
+.style-packages-page .input-group input[type='text']:not(.sd-trigger):not(.search-box),
+.style-packages-page .input-group input[type='number'] {
+  width: 284px;
+}
+
+/* A label carrying a checkbox is as wide as its text, not a 120px column head. */
+.style-packages-page .checkbox.input-group label {
+  width: auto;
+}
+
+/* Except this one, which the JSP page held at the column width so the dropdown behind it lines up with
+   the ones below it. The selector is long enough to outrank the rule above. */
+.style-packages-page .checkbox.input-group label.webhooks-label {
+  width: 120px;
+}
+
+/* A row whose label, info icon and field share one line. */
+.style-packages-page .flex-centered {
+  display: flex;
+  align-items: center;
+}
+
+.style-packages-page .flex-centered label {
+  width: auto;
+  margin-right: 4px;
+}
+
+/* Weight and matching query have labels of different lengths but their fields start at the same x, as
+   they did on the JSP page. Both offsets are measured from the end of the info icon. */
+.style-packages-page .weight-input {
+  margin-left: 59px;
+}
+
+.style-packages-page .matching-query-input {
+  margin-left: 8px;
+}
+
+/* The removal selector is a row of its own, its field running the width of the page. */
+.style-packages-page .removal-selector-group {
+  width: 100%;
+}
+
+.style-packages-page .removal-selector-group .more-info {
+  margin-right: 35px;
+}
+
+/* The selector runs the width of the page, as its 615px field did on the JSP page. `flex` beats the
+   284px the text-input rule above gives it. */
+.style-packages-page .removal-selector-group .grows {
+  flex: 1;
+  box-sizing: border-box;
+}
+
+.style-packages-page .more-info {
+  background: var(--sbb-info-icon) no-repeat;
+  display: inline-block;
+  width: 17px;
+  height: 17px;
+  vertical-align: middle;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+/* A field that is switched off keeps its place in the layout instead of collapsing it, so the rows
+   below do not jump as boxes are ticked. It is also disabled, so it stays out of the tab order. */
+.style-packages-page .hidden {
+  visibility: hidden;
+}
+
+/* The value next to its switch, filling the rest of the row. `flex` beats the 284px width above. */
+.style-packages-page .with-value {
+  display: flex;
+  align-items: center;
+}
+
+.style-packages-page .with-value .grows {
+  flex: 1;
+  margin-left: 10px;
+  box-sizing: border-box;
+}
+
+.style-packages-page .value-select {
+  margin-left: 10px;
+}
+
+/* The comment sub-option is one indented row under the switch that reveals it. */
+.style-packages-page .render-comments-options {
+  padding-left: 20px;
+}
+
+/* The role picker and its direction stack under their switch rather than beside it: two 152px controls
+   would not fit next to the label. */
+.style-packages-page .roles-group {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.style-packages-page .roles-select {
+  width: 152px;
+  margin: 4px 0 0 20px;
+}
+
+.style-packages-page .roles-select .searchable-dropdown {
+  width: 100%;
+}
+
 /* --- Templates --------------------------------------------------------------------------------- */
 
 /* The hint above the panel, with the shared info icon floated into its first line. */
