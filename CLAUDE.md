@@ -23,8 +23,9 @@
     Its CSS is `ui/src/popup/export-popup.css`. There is no `documentType`: this extension exports Live
     Documents only, and `ExportParams.java` has no such field.
 
-  Each shadow root carries its own CSS, so the extension now puts **no stylesheet on a Polarion page at
-  all**. `css/docx-exporter.css` is deleted and the injector calls no `injectStyle`; the toolbar button
+  Each shadow root carries its own CSS, so the only stylesheet the extension still puts on a Polarion page
+  is the **empty** `css/starter.css`, and it is there to fire the side panel's `onload`, not to style
+  anything. `css/docx-exporter.css` is deleted and the injector calls no `injectStyle`; the toolbar button
   uses Polarion's own classes plus generic's `css/dle-toolbar.css`.
 
 - **`webapp/docx-exporter/js/modules/` is gone.** `ExportPopup.js`, `ExportPanel.js`, `ExportContext.js`
@@ -61,3 +62,5 @@
 - **After any code change, delete `<polarion_home>/data/workspace/.config` before restarting Polarion** — otherwise the changes are not picked up.
 
 - **Pre-commit hooks reject org-internal identifiers as secrets.** The `sensitive-data-leak-*` and gitleaks hooks fail on internal URLs, UE numbers, and DEV ticket numbers — so a commit can be blocked by something that isn't an obvious secret. Run `pre-commit run -a` after implementing and fix any flags before pushing.
+
+- **`pre-commit run -a` fails on `check-yaml`, and it is not yours.** `.github/workflows/maven-build.yml` declares `ports: [9082:9082]`; unquoted inside a flow sequence that is a plain scalar containing a colon, which PyYAML refuses to parse. GitHub Actions reads it fine. Quoting it is not enough on its own - `yamlfix` strips the quotes back off unless `.yamlfix.toml` sets `preserve_quotes`. The workflow files belong to DevOps, so leave both alone and ignore that one red hook. pdf-exporter has the identical problem with `ports: [9080:9080]`.

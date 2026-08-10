@@ -170,8 +170,13 @@ runs first in `npm run build`. Run `format:check` and `lint` yourself before com
 
 ## Production build
 
-`npm run build` emits the bundle to `ui/dist/app` with base path
-`/polarion/docx-exporter-app/ui/app/`. The Maven build (frontend-maven-plugin +
-maven-resources-plugin) runs this automatically and copies the bundle into
-`src/main/resources/webapp/docx-exporter-app/app`, where `AADSynchronizerAppServlet` serves it at
-`/polarion/docx-exporter-app/ui/app/index.html`.
+`npm run build` typechecks, emits the three entries to `ui/dist/app` with base path
+`/polarion/docx-exporter-app/ui/app/`, and then runs `scripts/check-runtime-entries.mjs` over the result.
+The Maven build runs all of it automatically through the parent's `vite-ui` profile - this pom declares no
+frontend plugin of its own - and copies the bundle into `src/main/resources/webapp/docx-exporter-app/app`,
+where `DocxExporterAppServlet` serves it at `/polarion/docx-exporter-app/ui/app/index.html`.
+
+> **Stop the dev server before running a Maven build.** The build runs `npm ci`, which starts by deleting
+> `node_modules`, and on Windows that fails with `EPERM (-4048)` while `vite` holds files there - leaving
+> `node_modules` half-deleted, so the dev server and the next build both break until `npm ci` is run
+> again.
