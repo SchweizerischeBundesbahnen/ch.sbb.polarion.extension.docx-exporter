@@ -44,6 +44,11 @@ export default defineConfig({
   test: {
     include: ['test/**/*.{test,spec}.{ts,tsx}'],
     setupFiles: ['./test/setup.ts'],
+    // Insulate the suite from a developer's `ui/.env.local`. Vite loads that file in test mode too, so a
+    // personal VITE_BEARER_TOKEN would otherwise switch useRemote to the /api base and add an
+    // Authorization header, which is not the session-auth default the tests are written against. Empty,
+    // not removed, so `vi.stubEnv('VITE_BEARER_TOKEN', ...)` still works where a test wants a token.
+    env: { VITE_BEARER_TOKEN: '' },
     // Run test files one at a time. Under high parallelism the Playwright browser provider
     // intermittently fails a worker with "Vitest failed to find the runner"; serializing the files
     // avoids that race. The suite is small and each file is fast, so the cost is minor.
@@ -52,7 +57,14 @@ export default defineConfig({
       enabled: true,
       // deviceScaleFactor: 2 -> all visual-regression references are captured at 2x (sharper, and finer
       // diffs). Set on the provider's contextOptions (not the instance - the provider reads it there).
-      provider: playwright({ contextOptions: { deviceScaleFactor: 2 } }),
+      // `ignoreDefaultArgs: ['--hide-scrollbars']` because Playwright passes that flag to headless
+      // Chromium by default, and a hidden scrollbar takes no width. A form laid out in columns can wrap
+      // into one column on a real Polarion for want of the ~15px a scrollbar takes, and every reference
+      // screenshot stays green. Scrollbars are real here, so a reference that scrolls shows one.
+      provider: playwright({
+        contextOptions: { deviceScaleFactor: 2 },
+        launchOptions: { ignoreDefaultArgs: ['--hide-scrollbars'] },
+      }),
       headless: true,
       instances: [{ browser: 'chromium', viewport: { width: 1280, height: 720 } }],
       expect: {
@@ -66,12 +78,15 @@ export default defineConfig({
     },
     coverage: {
       // istanbul (source instrumented at transform time), NOT v8: in browser mode v8 intermittently
-      // reports 0% depending on the dep-optimization cache. `all: false` so the istanbul uncovered-files
-      // pass (which can crash in browser mode) never runs.
+      // reports 0% depending on the dep-optimization cache.
       provider: 'istanbul',
       reporter: ['text', 'html', 'lcov'],
       reportsDirectory: './coverage',
-      all: false,
+      // `include` also pulls untested files into the report (Vitest 4 runs the uncovered-files pass
+      // whenever it is set), so an unimported source file cannot silently pass the threshold gate. It
+      // replaced `coverage.all`, which Vitest 4 dropped from the option type: the `all: false` that used
+      // to sit here did nothing at runtime - the istanbul provider never reads it - and only showed up as
+      // a type error in the IDE.
       include: ['src/**'],
       // Excluded: the app bootstrap (main.tsx), declaration files and CSS, plus the dev-only Landing
       // page (`vite dev` scaffolding never opened in Polarion; the router test covers its selection
