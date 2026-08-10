@@ -122,6 +122,18 @@
   margin-top: 24px;
 }
 
+/* Every settings page wraps its form in a <fieldset> for one reason only: `disabled` on it switches the
+   whole form off in one attribute while a configuration is being renamed or created. It is not meant to
+   look like a fieldset, so the browser's default chrome goes - the 2px groove border, the inline margin
+   and the padding. `min-inline-size` is the other UA default: it pins a fieldset to its content's width,
+   which stops the flex and grid children inside from shrinking. */
+.app fieldset {
+  min-inline-size: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
 /* --- Localization ------------------------------------------------------------------------------ */
 
 .localization-page:disabled,
