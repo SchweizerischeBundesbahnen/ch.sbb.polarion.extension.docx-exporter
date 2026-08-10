@@ -10,14 +10,45 @@
   `docx-exporter-admin` webapp is gone: its menu icons moved to `webapp/docx-exporter-app/images/`, so
   two webapps remain - `docx-exporter` (REST + the toolbar injectors) and `docx-exporter-app`.
 
+- **`docx-exporter-app` also serves two surfaces that are not administration pages**, each a Vite entry of
+  its own with a **fixed** file name (their importers name them by URL) kept exporting by
+  `preserveEntrySignatures: 'strict'` and guarded by `ui/scripts/check-runtime-entries.mjs`:
+  - **Document Properties side panel** - `DocxExporterFormExtension` emits only a fragment (an empty
+    `#docx-exporter-panel` div plus a `<link>` to `css/starter.css` whose `onload` fires the import) and
+    `assets/side-panel.js` mounts React into a shadow root of it. It reads its data from the same internal
+    REST endpoints the export dialog uses; the Java side substitutes nothing but the bundle version.
+    Its CSS is `ui/src/sidepanel/side-panel.css`.
+  - **"Export to DOCX" dialog** - `assets/export-popup.js` exporting `openExportPopup()`, imported on click
+    by `js/starter.js`. It appends its own host to the page body and mounts into a shadow root of it.
+    Its CSS is `ui/src/popup/export-popup.css`. There is no `documentType`: this extension exports Live
+    Documents only, and `ExportParams.java` has no such field.
+
+  Each shadow root carries its own CSS, so the extension now puts **no stylesheet on a Polarion page at
+  all**. `css/docx-exporter.css` is deleted and the injector calls no `injectStyle`; the toolbar button
+  uses Polarion's own classes plus generic's `css/dle-toolbar.css`.
+
+- **`webapp/docx-exporter/js/modules/` is gone.** `ExportPopup.js`, `ExportPanel.js`, `ExportContext.js`
+  and `ExportParams.js` were ported into the app: `ui/src/export/` (the shared export model - a style
+  package read into a form, a form turned into a request, the REST reads each surface needs),
+  `ui/src/services/exportContext.ts` (the location hash) and `ui/src/services/conversion.ts` (the
+  convert-job protocol). Nothing is loaded across webapps at runtime any more. What is left in
+  `webapp/docx-exporter` is the two injector scripts, the empty `css/starter.css` trigger and the two HTML
+  templates the Java side reads server-side (`sidePanelContent.html`, `docxTemplate.html`).
+
 - **The UI build comes from the generic parent**, activated by the presence of `ui/package.json` (its
   `vite-ui` profile): `npm ci` + `npm run build`, the bundle copied into `webapp/docx-exporter-app/`, and
-  the JS suite in the Maven `test` phase. This pom adds nothing for it, but it does have to defend
-  against it: the parent declares `frontend-maven-plugin` with a plugin-level
-  `<workingDirectory>ui</workingDirectory>`, which Maven merges into this pom's own declaration of the
-  same plugin. Each of the three product-JS executions therefore names `${project.basedir}` explicitly -
-  without that, `npm run test` runs the Vitest browser suite in `ui/` instead of this project's mocha
-  suite, and the product JS is never tested (it cost pdf-exporter a red CI to notice).
+  the JS suite in the Maven `test` phase. This pom adds nothing for it beyond pinning
+  `frontend-maven-plugin.version`, which the parent's profile reads. Note it also redirects
+  markdown2html's output (`about.html`, `user-guide.html`, `disclaimer.html`) into
+  `webapp/docx-exporter-app/html/`.
+
+- **There is one JS toolchain, and it lives in `ui/`.** The root `package.json`, `package-lock.json`,
+  `node/`, `node_modules/`, `src/test/js/` and this pom's own `frontend-maven-plugin` block are gone. The
+  mocha suite that tested the toolbar injectors is now `ui/test/starterInjector.node.test.ts` and
+  `ui/test/dleToolbar.node.test.ts`, run by the **`node`** project of `ui/vitest.config.ts` (jsdom) next to
+  the **`browser`** project that tests the app. Injector tests must stay in the `node` project: those
+  scripts drive the top frame, and Vitest browser mode runs each file in an iframe and keeps `top` for its
+  own runner page. Name them `*.node.test.ts` - that suffix is what routes a file between the two projects.
 
 - **`mvn verify` silently skips the entire Pandoc conversion test suite.** `BasePandocTest` is `@SkipTestWhenParamNotSet` keyed on the `docxExporterImpl` system property, so a plain build reports green without ever running the real HTML→DOCX tests. To actually run them, use `mvn verify -P tests-with-pandoc-docker -Dpandoc.service.url=<url>` (the profile sets `docxExporterImpl=docker`) with a reachable [pandoc-service](https://github.com/SchweizerischeBundesbahnen/pandoc-service) container. This is what CI does.
 
