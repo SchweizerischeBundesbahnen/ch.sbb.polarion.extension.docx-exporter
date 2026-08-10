@@ -3,10 +3,8 @@
 A React + Vite single-page app on [react-sbb-polarion](https://github.com/grigoriev/react-sbb-polarion)
 (RSP), served from the `docx-exporter-app` webapp.
 
-It is replacing the JSP administration UI **page by page**, so both live side by side for now: the
-administration entries listed below are React, the rest (style packages, templates,
-localization, webhooks) still point at `docx-exporter-admin`. That webapp goes
-away once the last of them is converted.
+It replaced the JSP administration UI page by page, and now serves all of it: the legacy
+`docx-exporter-admin` webapp is gone, its menu icons moved into this one.
 
 ## Feature routing
 
@@ -20,6 +18,11 @@ There is one `index.html` / bundle. The page to render is chosen from the `featu
 - `/?feature=user-guide` - User Guide (RSP's shared `UserGuide`).
 - `/?feature=filename` - Filename template (RSP's `CodeEditor` with the Velocity grammar over the
   single `filename-template` setting; the Default button loads the built-in template into the editor).
+- `/?feature=style-package` - Style Package: everything one export is driven by. The three "Custom ..."
+  switches (orientation, paper size, image density) are nullable here and not in pdf-exporter: unticking
+  one stores null, meaning "take what the reference template says".
+- `/?feature=templates` - Templates: the reference DOCX a style package converts against. The document is
+  held as bytes only, and `POST /template/details` both describes it and validates it.
 - `/?feature=style-package-weights` - Style Package Weights (RSP's shared `StylePackageWeights` over
   this extension's `settings/style-package/weights` endpoint; the list is shared with pdf-exporter).
 - `/?feature=authorization` - Authorization (RSP's shared `AuthorizationSettings` over the

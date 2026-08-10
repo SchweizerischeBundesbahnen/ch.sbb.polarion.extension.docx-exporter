@@ -2,14 +2,13 @@
 
 ## Gotchas
 
-- **Two administration UIs at once.** The administration pages are being converted to React on
-  [react-sbb-polarion](https://github.com/grigoriev/react-sbb-polarion) one at a time, so two webapps
-  serve them side by side: `docx-exporter-app` (the Vite bundle in `ui/`, see [`ui/README.md`](ui/README.md))
-  and the legacy `docx-exporter-admin` (the remaining JSP pages). `hivemodule.xml` carries a `pageUrl`
-  per menu entry, which is what makes the split possible; the ids there must match `ui/src/features.tsx`.
-  Converted so far: About, Usage Disclaimer, User Guide, Authorization, Style Package Weights,
-  Filename template, Localization, Webhooks. Left on JSP: style packages, templates.
-  `docx-exporter-admin` is deleted once the last JSP page is gone.
+- **All administration pages are React now.** They were converted to
+  [react-sbb-polarion](https://github.com/grigoriev/react-sbb-polarion) one at a time, and
+  `docx-exporter-app` (the Vite bundle in `ui/`, see [`ui/README.md`](ui/README.md)) serves every one of
+  them. `hivemodule.xml` carries a `pageUrl` per menu entry; the ids there must match
+  `ui/src/features.tsx` - a mismatch is a blank page and no test catches it. The legacy
+  `docx-exporter-admin` webapp is gone: its menu icons moved to `webapp/docx-exporter-app/images/`, so
+  two webapps remain - `docx-exporter` (REST + the toolbar injectors) and `docx-exporter-app`.
 
 - **The UI build comes from the generic parent**, activated by the presence of `ui/package.json` (its
   `vite-ui` profile): `npm ci` + `npm run build`, the bundle copied into `webapp/docx-exporter-app/`, and

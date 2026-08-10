@@ -15,9 +15,9 @@ import Webhooks from './pages/Webhooks';
  * also what `hivemodule.xml` points its admin extenders at, so the ids here and the extender ids must
  * stay identical - a typo is a blank page in Polarion and no test catches it.
  *
- * The administration menu has more entries than the list below: the ones still served by JSP (style
- * packages, the export templates) keep pointing at the `docx-exporter-admin` webapp until they are
- * converted too.
+ * Every administration entry of the extension is served from here; the legacy `docx-exporter-admin`
+ * webapp no longer exists. The one menu entry with no feature of its own is REST API, which opens the
+ * generated Swagger UI.
  */
 export interface Feature {
   id: string;
