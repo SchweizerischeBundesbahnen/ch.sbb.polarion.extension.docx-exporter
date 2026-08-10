@@ -65,6 +65,9 @@ describe('App router', () => {
       '?feature=webhooks',
       '?feature=style-package-weights',
       '?feature=authorization',
+      // Last, and the only entry no administration page points at: the development harness for the
+      // document editor's export panel
+      '?feature=side-panel',
     ]);
   });
 

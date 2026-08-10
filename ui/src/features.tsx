@@ -4,6 +4,7 @@ import Authorization from './pages/Authorization';
 import Disclaimer from './pages/Disclaimer';
 import FilenameTemplate from './pages/FilenameTemplate';
 import Localization from './pages/Localization';
+import SidePanelPreview from './pages/SidePanelPreview';
 import StylePackageWeights from './pages/StylePackageWeights';
 import StylePackages from './pages/StylePackages';
 import Templates from './pages/Templates';
@@ -86,6 +87,15 @@ export const FEATURES: Feature[] = [
     label: 'Authorization',
     description: 'Configure which global and project roles are allowed to export.',
     component: Authorization,
+  },
+  // Not an administration page: `hivemodule.xml` points at none of it. It is reachable only by typing
+  // `?feature=side-panel`, which is what the ` (dev)` in the label says, and it needs a Polarion behind
+  // VITE_BASE_URL to show anything.
+  {
+    id: 'side-panel',
+    label: 'Document Properties side panel (dev)',
+    description: 'The export panel of the document editor, run against a real document.',
+    component: SidePanelPreview,
   },
 ];
 

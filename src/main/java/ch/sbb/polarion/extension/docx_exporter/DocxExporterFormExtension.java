@@ -1,55 +1,38 @@
 package ch.sbb.polarion.extension.docx_exporter;
 
-import ch.sbb.polarion.extension.docx_exporter.settings.TemplatesSettings;
-import ch.sbb.polarion.extension.generic.settings.NamedSettings;
-import ch.sbb.polarion.extension.generic.settings.NamedSettingsRegistry;
-import ch.sbb.polarion.extension.generic.settings.SettingId;
-import ch.sbb.polarion.extension.generic.settings.SettingName;
-import ch.sbb.polarion.extension.generic.util.ScopeUtils;
-import ch.sbb.polarion.extension.docx_exporter.properties.DocxExporterExtensionConfiguration;
-import ch.sbb.polarion.extension.docx_exporter.rest.model.conversion.ExportParams;
-import ch.sbb.polarion.extension.docx_exporter.rest.model.conversion.LinkRoleDirection;
-import ch.sbb.polarion.extension.docx_exporter.rest.model.settings.localization.Language;
-import ch.sbb.polarion.extension.docx_exporter.rest.model.settings.stylepackage.DocIdentifier;
-import ch.sbb.polarion.extension.docx_exporter.rest.model.settings.stylepackage.StylePackageModel;
-import ch.sbb.polarion.extension.docx_exporter.service.DocxExporterPolarionService;
 import ch.sbb.polarion.extension.docx_exporter.service.PolarionBaselineExecutor;
-import ch.sbb.polarion.extension.docx_exporter.settings.LocalizationSettings;
-import ch.sbb.polarion.extension.docx_exporter.settings.StylePackageSettings;
-import ch.sbb.polarion.extension.docx_exporter.settings.WebhooksSettings;
-import ch.sbb.polarion.extension.docx_exporter.util.DocumentFileNameHelper;
-import ch.sbb.polarion.extension.docx_exporter.util.EnumValuesProvider;
-import ch.sbb.polarion.extension.docx_exporter.util.ExceptionHandler;
+import ch.sbb.polarion.extension.generic.util.ScopeUtils;
+import ch.sbb.polarion.extension.generic.util.VersionUtils;
 import com.polarion.alm.shared.api.SharedContext;
 import com.polarion.alm.shared.api.transaction.TransactionalExecutor;
 import com.polarion.alm.shared.api.utils.html.HtmlFragmentBuilder;
 import com.polarion.alm.tracker.model.IModule;
 import com.polarion.alm.ui.server.forms.extensions.IFormExtension;
 import com.polarion.alm.ui.server.forms.extensions.IFormExtensionContext;
-import com.polarion.alm.ui.shared.CollectionUtils;
-import com.polarion.core.util.StringUtils;
-import com.polarion.platform.persistence.IEnumOption;
 import com.polarion.platform.persistence.model.IPObject;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.VisibleForTesting;
 
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
-import static ch.sbb.polarion.extension.docx_exporter.util.placeholder.PlaceholderValues.DOC_LANGUAGE_FIELD;
-
+/**
+ * Contributes the "DOCX Exporter" pane to the document editor's Document Properties sidebar.
+ * <p>
+ * The pane itself is a React app: this extension only emits the fragment which imports it (see
+ * {@code webapp/docx-exporter/html/sidePanelContent.html}), and the panel reads everything it offers - the
+ * suitable style packages, the setting names, the link roles, the default file name, the document language,
+ * the webhooks switch and the export permission - from the extension's own REST API, which is where the DLE
+ * toolbar's export popup has always read the same data from.
+ * <p>
+ * It used to render the whole form here instead, substituting ~13 placeholders into that HTML file. That is
+ * gone: the panel is built once, in one place, and the server side no longer has a second copy of the form's
+ * defaults to keep in step with the popup's.
+ */
 public class DocxExporterFormExtension implements IFormExtension {
 
-    private static final String OPTION_TEMPLATE = "<option value='%s' %s>%s</option>";
-    private static final String OPTION_VALUE = "<option value='%s'";
-    private static final String OPTION_SELECTED = "<option value='%s' selected";
-    private static final String SELECTED = "selected";
-
-    private final DocxExporterPolarionService polarionService = new DocxExporterPolarionService();
+    @VisibleForTesting
+    static final String SIDE_PANEL_FRAGMENT = "webapp/docx-exporter/html/sidePanelContent.html";
 
     @Override
     @Nullable
@@ -63,272 +46,25 @@ public class DocxExporterFormExtension implements IFormExtension {
     public String renderForm(@NotNull SharedContext context, @NotNull IPObject object) {
         HtmlFragmentBuilder builder = context.createHtmlFragmentBuilderFor().gwt();
 
-        if (object instanceof IModule module) {
-
-            String form = ScopeUtils.getFileContent("webapp/docx-exporter/html/sidePanelContent.html");
-
-            String scope = ScopeUtils.getScopeFromProject(module.getProject().getId());
-            form = form.replace("{SCOPE_VALUE}", scope);
-
-            Collection<SettingName> stylePackageNames = getSuitableStylePackages(module);
-            SettingName stylePackageNameToSelect = getStylePackageNameToSelect(stylePackageNames); // Either default (if exists) or first from list
-
-            form = form.replace("{STYLE_PACKAGE_OPTIONS}", generateSelectOptions(stylePackageNames, stylePackageNameToSelect != null ? stylePackageNameToSelect.getName() : null));
-
-            StylePackageModel selectedStylePackage = getSelectedStylePackage(stylePackageNameToSelect, scope); // Implicitly default one will be returned if no style package persisted (whatever the reason)
-
-            if (!selectedStylePackage.isExposeSettings()) {
-                form = form.replace("<div id='docx-style-package-content'", "<div id='docx-style-package-content' class='hidden'"); // Hide settings pane if style package settings not exposed to end users
-            }
-
-            form = adjustTemplate(scope, form, selectedStylePackage);
-            form = adjustLocalization(scope, form, selectedStylePackage);
-            form = adjustOrientation(form, selectedStylePackage);
-            form = adjustPaperSize(form, selectedStylePackage);
-            form = adjustImageDensity(form, selectedStylePackage);
-            form = adjustWebhooks(scope, form, selectedStylePackage);
-            form = adjustRenderComments(form, selectedStylePackage);
-            form = adjustCutEmptyChapters(form, selectedStylePackage);
-            form = adjustCutEmptyWorkitemAttributes(form, selectedStylePackage);
-            form = adjustCutLocalURLs(form, selectedStylePackage);
-            form = adjustPreserveTableStyles(form, selectedStylePackage);
-            form = adjustChapters(form, selectedStylePackage);
-            form = adjustLocalizeEnums(form, selectedStylePackage, module.getCustomField(DOC_LANGUAGE_FIELD));
-            form = adjustLinkRoles(form, EnumValuesProvider.getAllLinkRoleNames(module.getProject()), selectedStylePackage);
-            form = adjustRemovalSelector(form, selectedStylePackage);
-            form = adjustFilename(form, module);
-            form = adjustExportAuthorization(form, polarionService.userAuthorizedForExport(module.getProject().getId()));
-
-            builder.html(form);
+        // Only documents can be exported by this panel, so nothing is contributed for anything else.
+        if (object instanceof IModule) {
+            builder.html(getSidePanelFragment());
         }
 
         builder.finished();
         return builder.toString();
     }
 
-    private SettingName getStylePackageNameToSelect(Collection<SettingName> stylePackageNames) {
-        return stylePackageNames.stream()
-                .findFirst()
-                .orElse(null);
-    }
-
+    /**
+     * The fragment, with the extension version put into the bundle URL. The panel is imported from a fixed
+     * URL - the fragment cannot know the hashed file names Vite emits for the rest of the bundle - so the
+     * version is what busts the browser's cache of it when the extension is updated.
+     */
     @VisibleForTesting
-    StylePackageModel getSelectedStylePackage(SettingName defaultStylePackageName, String scope) {
-        StylePackageSettings stylePackageSettings = (StylePackageSettings) NamedSettingsRegistry.INSTANCE.getByFeatureName(StylePackageSettings.FEATURE_NAME);
-        return defaultStylePackageName != null
-                ? stylePackageSettings.read(scope, SettingId.fromName(defaultStylePackageName.getName()), null)
-                : stylePackageSettings.defaultValues();
-    }
-
-    private String adjustTemplate(String scope, String form, StylePackageModel stylePackage) {
-        Collection<SettingName> templateNames = getSettingNames(TemplatesSettings.FEATURE_NAME, scope);
-        String templateOptions = generateSelectOptions(templateNames, stylePackage.getTemplate());
-        return form.replace("{TEMPLATE_OPTIONS}", templateOptions);
-    }
-
-    private String adjustLocalization(String scope, String form, StylePackageModel stylePackage) {
-        Collection<SettingName> localizationNames = getSettingNames(LocalizationSettings.FEATURE_NAME, scope);
-        String localizationOptions = generateSelectOptions(localizationNames, stylePackage.getLocalization());
-        return form.replace("{LOCALIZATION_OPTIONS}", localizationOptions);
-    }
-
-    private String adjustWebhooks(String scope, String form, StylePackageModel stylePackage) {
-        Collection<SettingName> webhooksNames = getSettingNames(WebhooksSettings.FEATURE_NAME, scope);
-        boolean noHooks = StringUtils.isEmpty(stylePackage.getWebhooks());
-        String webhooksOptions = generateSelectOptions(webhooksNames, noHooks ? NamedSettings.DEFAULT_NAME : stylePackage.getWebhooks());
-        form = form.replace("{WEBHOOKS_DISPLAY}", DocxExporterExtensionConfiguration.getInstance().getWebhooksEnabled() ? "" : "hidden");
-        form = form.replace("{WEBHOOKS_OPTIONS}", webhooksOptions);
-        form = form.replace("{WEBHOOKS_SELECTOR_DISPLAY}", noHooks ? "none" : "inline-block");
-        return form.replace("{WEBHOOKS_SELECTED}", noHooks ? "" : "checked");
-    }
-
-    @VisibleForTesting
-    Collection<SettingName> getSuitableStylePackages(@NotNull IModule module) {
-        String locationPath = module.getModuleLocation().getLocationPath();
-        String spaceId = "";
-        final String documentName;
-        if (locationPath.contains("/")) {
-            spaceId = locationPath.substring(0, locationPath.lastIndexOf('/'));
-            documentName = locationPath.substring(locationPath.lastIndexOf('/') + 1);
-        } else {
-            documentName = locationPath;
-        }
-        return polarionService.getSuitableStylePackages(List.of(new DocIdentifier(module.getProject().getId(), spaceId, documentName)));
-    }
-
-    @VisibleForTesting
-    @SuppressWarnings("unchecked")
-    Collection<SettingName> getSettingNames(@NotNull String featureName, @NotNull String scope) {
-        try {
-            return NamedSettingsRegistry.INSTANCE.getByFeatureName(featureName).readNames(scope);
-        } catch (IllegalStateException ex) {
-            return ExceptionHandler.handleTransactionIllegalStateException(ex, Collections.emptyList());
-        }
-    }
-
-    private String generateSelectOptions(Collection<SettingName> settingNames, String defaultName) {
-        if (!settingNames.isEmpty()) {
-             final String nameToPreselect;
-             if (defaultName != null && settingNames.stream().map(SettingName::getName).anyMatch(name -> name.equals(defaultName))) {
-                 nameToPreselect = defaultName;
-             } else {
-                 nameToPreselect = NamedSettings.DEFAULT_NAME;
-             }
-
-            return settingNames.stream()
-                    .map(settingName -> String.format(OPTION_TEMPLATE,
-                            settingName.getName(), settingName.getName().equals(nameToPreselect) ? SELECTED : "", settingName.getName()))
-                    .collect(Collectors.joining());
-        } else {
-            return String.format(OPTION_TEMPLATE, NamedSettings.DEFAULT_NAME, SELECTED, NamedSettings.DEFAULT_NAME);
-        }
-    }
-
-    @VisibleForTesting
-    String adjustRenderComments(String form, StylePackageModel stylePackage) {
-        if (stylePackage.getRenderComments() != null) {
-            form = form.replace("<input id='docx-render-comments'", "<input id='docx-render-comments' checked");
-            form = form.replace("id='docx-render-comments-selector' style='display: none'", "id='docx-render-comments-selector'");
-            form = form.replace(String.format(OPTION_VALUE, stylePackage.getRenderComments()), String.format(OPTION_SELECTED, stylePackage.getRenderComments()));
-            form = form.replace("id='docx-render-comments-options' style='display: none", "id='docx-render-comments-options' style='display: flex");
-            if (stylePackage.isIncludeUnreferencedComments()) {
-                form = form.replace("<input id='docx-include-unreferenced-comments'", "<input id='docx-include-unreferenced-comments' checked");
-            }
-        }
-        return form;
-    }
-
-    private String adjustOrientation(String form, StylePackageModel stylePackage) {
-        if (stylePackage.getOrientation() != null) {
-            form = form.replace("<input id='docx-orientation'", "<input id='docx-orientation' checked");
-            form = form.replace("id='docx-orientation-selector' style='display: none'", "id='docx-orientation-selector'");
-            form = form.replace(String.format(OPTION_VALUE, stylePackage.getOrientation()), String.format(OPTION_SELECTED, stylePackage.getOrientation()));
-        }
-        return form;
-    }
-
-    private String adjustPaperSize(String form, StylePackageModel stylePackage) {
-        if (stylePackage.getPaperSize() != null) {
-            form = form.replace("<input id='docx-paper-size'", "<input id='docx-paper-size' checked");
-            form = form.replace("id='docx-paper-size-selector' style='display: none'", "id='docx-paper-size-selector'");
-            form = form.replace(String.format(OPTION_VALUE, stylePackage.getPaperSize()), String.format(OPTION_SELECTED, stylePackage.getPaperSize()));
-        }
-        return form;
-    }
-
-    private String adjustImageDensity(String form, StylePackageModel stylePackage) {
-        if (stylePackage.getImageDensity() != null) {
-            form = form.replace("<input id='docx-image-density'", "<input id='docx-image-density' checked");
-            form = form.replace("id='docx-image-density-selector' style='display: none'", "id='docx-image-density-selector'");
-            form = form.replace(String.format(OPTION_VALUE, stylePackage.getImageDensity()), String.format(OPTION_SELECTED, stylePackage.getImageDensity()));
-        }
-        return form;
-    }
-
-    private String adjustCutEmptyChapters(String form, StylePackageModel stylePackage) {
-        return stylePackage.isCutEmptyChapters() ? form.replace("<input id='docx-cut-empty-chapters'", "<input id='docx-cut-empty-chapters' checked") : form;
-    }
-
-    private String adjustCutEmptyWorkitemAttributes(String form, StylePackageModel stylePackage) {
-        return stylePackage.isCutEmptyWorkitemAttributes() ? form.replace("<input id='docx-cut-empty-wi-attributes'", "<input id='docx-cut-empty-wi-attributes' checked") : form;
-    }
-
-    private String adjustCutLocalURLs(String form, StylePackageModel stylePackage) {
-        return stylePackage.isCutLocalURLs() ? form.replace("<input id='docx-cut-urls'", "<input id='docx-cut-urls' checked") : form;
-    }
-
-    private String adjustPreserveTableStyles(String form, StylePackageModel stylePackage) {
-        return stylePackage.isPreserveTableStyles() ? form.replace("<input id='docx-preserve-table-styles'", "<input id='docx-preserve-table-styles' checked") : form;
-    }
-
-    private String adjustChapters(String form, StylePackageModel stylePackage) {
-        if (!StringUtils.isEmpty(stylePackage.getSpecificChapters())) {
-            form = form.replace("<input id='docx-specific-chapters'", "<input id='docx-specific-chapters' checked");
-            form = form.replace("<input id='docx-chapters' style='display: none;", String.format("<input id='docx-chapters' value='%s' style='", stylePackage.getSpecificChapters()));
-        }
-        return form;
-    }
-
-    private String adjustLocalizeEnums(String form, StylePackageModel stylePackage, Object documentLanguageField) {
-        String documentLanguage = (documentLanguageField instanceof IEnumOption enumOption) ? enumOption.getId() : "";
-
-        if (!StringUtils.isEmpty(stylePackage.getLanguage())) {
-            form = form.replace("<input id='docx-localization'", "<input id='docx-localization' checked");
-            form = form.replace("id='docx-language' style='display: none'", "id='docx-language'");
-
-            String languageToPreselect = null;
-            for (Language language : Language.values()) {
-                if (language.name().equalsIgnoreCase(documentLanguage) || language.getValue().equalsIgnoreCase(documentLanguage)) {
-                    languageToPreselect = language.name().toLowerCase();
-                    break;
-                }
-            }
-            if (!stylePackage.isExposeSettings() || StringUtils.isEmpty(languageToPreselect)) {
-                languageToPreselect = stylePackage.getLanguage();
-            }
-
-            form = form.replace(String.format(OPTION_VALUE, languageToPreselect), String.format(OPTION_SELECTED, languageToPreselect));
-        }
-        return form.replace("{DOCUMENT_LANGUAGE}", documentLanguage);
-    }
-
-    @VisibleForTesting
-    String adjustLinkRoles(@NotNull String form, @NotNull List<String> roleEnumValues, @NotNull StylePackageModel stylePackage) {
-        if (!roleEnumValues.isEmpty()) {
-            if (!CollectionUtils.isEmpty(stylePackage.getLinkedWorkitemRoles())) {
-                form = form.replace("<input id='docx-selected-roles'", "<input id='docx-selected-roles' checked");
-                form = form.replace("id='docx-roles-wrapper' style='display: none;", "id='docx-roles-wrapper' style='display: flex;");
-            }
-
-
-            String linkRoleDirectionToPreselect = stylePackage.getLinkRoleDirection() != null ? stylePackage.getLinkRoleDirection() : LinkRoleDirection.BOTH.toString();
-            form = form.replace(String.format(OPTION_VALUE, linkRoleDirectionToPreselect), String.format(OPTION_SELECTED, linkRoleDirectionToPreselect));
-
-            String rolesOptions = roleEnumValues.stream()
-                    .map(roleEnumValue -> String.format(OPTION_TEMPLATE,
-                            roleEnumValue,
-                            !CollectionUtils.isEmpty(stylePackage.getLinkedWorkitemRoles()) && stylePackage.getLinkedWorkitemRoles().contains(roleEnumValue) ? SELECTED : "",
-                            roleEnumValue)
-                    ).collect(Collectors.joining());
-            return form.replace("{ROLES_OPTIONS}", rolesOptions);
-        } else {
-            return form.replace("class='docx-roles-fields'", "class='docx-roles-fields' style='display: none;'"); // Hide roles fields when no roles obtained
-        }
-    }
-
-    private String adjustRemovalSelector(@NotNull String form, @NotNull StylePackageModel stylePackage) {
-        return form.replace("{REMOVAL_SELECTOR}", StringUtils.getEmptyIfNull(stylePackage.getRemovalSelector()));
-    }
-
-    private String adjustFilename(@NotNull String form, @NotNull IModule module) {
-        String filename = getFilename(module);
-        return form.replace("{FILENAME}", filename).replace("{DATA_FILENAME}", filename);
-    }
-
-    @VisibleForTesting
-    String adjustExportAuthorization(@NotNull String form, boolean authorized) {
-        if (!authorized) {
-            String title = "You are not allowed to export DOCX for this project";
-            // data-auth-disabled marks the button so the panel's own enable/disable cycle (ExportPanel.js)
-            // never re-enables it; the server-side 403 stays the real enforcement regardless.
-            form = form.replace("<button type='button' id='export-docx'>",
-                    String.format("<button type='button' id='export-docx' disabled data-auth-disabled='true' title='%s'>", title));
-        }
-        return form;
-    }
-
-    @VisibleForTesting
-    @SuppressWarnings("java:S3252") // allow to build ExportParams using its own builder
-    String getFilename(@NotNull IModule module) {
-        DocumentFileNameHelper documentFileNameHelper = new DocumentFileNameHelper();
-
-        ExportParams exportParams = ExportParams.builder()
-                .projectId(module.getProject().getId())
-                .locationPath(module.getModuleLocation().getLocationPath())
-                .revision(module.getRevision())
-                .build();
-
-        return documentFileNameHelper.getDocumentFileName(exportParams);
+    @NotNull
+    String getSidePanelFragment() {
+        String version = VersionUtils.getVersion().getBundleVersion();
+        return ScopeUtils.getFileContent(SIDE_PANEL_FRAGMENT).replace("{BUNDLE_VERSION}", version == null ? "0" : version);
     }
 
     @Override
@@ -342,5 +78,4 @@ public class DocxExporterFormExtension implements IFormExtension {
     public String getLabel(@NotNull IPObject object, @Nullable Map<String, String> attributes) {
         return "DOCX Exporter";
     }
-
 }

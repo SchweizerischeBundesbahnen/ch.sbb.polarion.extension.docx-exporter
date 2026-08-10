@@ -1,3 +1,4 @@
+import { fileURLToPath } from 'node:url';
 import { defineConfig, loadEnv } from 'vite';
 import react from '@vitejs/plugin-react';
 
@@ -34,6 +35,11 @@ export default defineConfig(({ command, mode }) => {
             target: polarionUrl,
             changeOrigin: true,
           },
+          // The product JS and assets still served from the extension's own webapp, not from this app.
+          '/polarion/docx-exporter/ui': {
+            target: polarionUrl,
+            changeOrigin: true,
+          },
           '/polarion/rest': {
             target: polarionUrl,
             changeOrigin: true,
@@ -65,6 +71,28 @@ export default defineConfig(({ command, mode }) => {
     build: {
       outDir: './dist/app',
       emptyOutDir: true,
+      rollupOptions: {
+        // Keep what an entry exports. A Vite app build assumes its entries are only ever executed, so it
+        // drops their exports - which would leave the side panel bundle without the `mountSidePanel` its
+        // importer calls. scripts/check-runtime-entries.mjs guards that after every build, since no test
+        // sees the built files.
+        preserveEntrySignatures: 'strict',
+        // Two entries: the admin SPA (index.html), and the Document Properties side panel imported at
+        // runtime by the form-extension fragment in the document editor.
+        input: {
+          index: fileURLToPath(new URL('index.html', import.meta.url)),
+          'side-panel': fileURLToPath(new URL('src/sidepanel/mount.tsx', import.meta.url)),
+        },
+        output: {
+          // The side panel's file name must stay predictable: its importer names it by URL and cannot know
+          // the hash Vite would append. It appends the extension version instead, which is what busts the
+          // browser cache on an update.
+          entryFileNames: (chunk) => (chunk.name === 'side-panel' ? 'assets/side-panel.js' : 'assets/[name]-[hash].js'),
+          // What the entries share (React above all) lands in one chunk. Rollup would name it after
+          // whichever module it happened to pick, which reads as nonsense next to side-panel.js.
+          chunkFileNames: 'assets/shared-[hash].js',
+        },
+      },
     },
   };
 });

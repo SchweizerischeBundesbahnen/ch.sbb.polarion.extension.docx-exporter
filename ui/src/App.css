@@ -460,3 +460,13 @@
   font-style: italic;
   color: palevioletred;
 }
+
+/* The development harness for the Document Properties side panel frames the panel the way the editor's
+   properties pane does: a white, padded box of the pane's own width, so what is inside the frame is
+   what Polarion shows. */
+.preview-surface {
+  margin-top: 16px;
+  padding: 16px;
+  border: 1px dashed #c9c9c9;
+  background: #fff;
+}
