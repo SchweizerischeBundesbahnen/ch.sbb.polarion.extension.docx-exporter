@@ -54,9 +54,9 @@ class TemplatesSettingsTest {
     @Test
     void rejectsATemplateLargerThanTheConfiguredSize() {
         when(configuration.getTemplateMaxSizeMB()).thenReturn(1);
+        TemplatesModel oversized = templateOf(docx(2 * 1024 * 1024));
 
-        IllegalArgumentException thrown = assertThrows(IllegalArgumentException.class,
-                () -> settings.validateTemplate(templateOf(docx(2 * 1024 * 1024))));
+        IllegalArgumentException thrown = assertThrows(IllegalArgumentException.class, () -> settings.validateTemplate(oversized));
         assertEquals("Template file must not exceed 1 MB", thrown.getMessage());
     }
 
@@ -69,17 +69,19 @@ class TemplatesSettingsTest {
 
     @Test
     void rejectsAFileThatIsNotAZipContainer() {
-        byte[] notADocx = "this is a plain text file".getBytes(StandardCharsets.UTF_8);
+        TemplatesModel notADocx = templateOf("this is a plain text file".getBytes(StandardCharsets.UTF_8));
 
-        IllegalArgumentException thrown = assertThrows(IllegalArgumentException.class,
-                () -> settings.validateTemplate(templateOf(notADocx)));
+        IllegalArgumentException thrown = assertThrows(IllegalArgumentException.class, () -> settings.validateTemplate(notADocx));
         assertEquals("Uploaded file must be a valid docx file", thrown.getMessage());
     }
 
     @Test
     void rejectsAFileTooShortToCarryTheSignature() {
-        assertThrows(IllegalArgumentException.class, () -> settings.validateTemplate(templateOf(new byte[]{'P', 'K'})));
-        assertThrows(IllegalArgumentException.class, () -> settings.validateTemplate(templateOf(new byte[0])));
+        TemplatesModel halfASignature = templateOf(new byte[]{'P', 'K'});
+        TemplatesModel nothingAtAll = templateOf(new byte[0]);
+
+        assertThrows(IllegalArgumentException.class, () -> settings.validateTemplate(halfASignature));
+        assertThrows(IllegalArgumentException.class, () -> settings.validateTemplate(nothingAtAll));
     }
 
     /**
@@ -88,19 +90,22 @@ class TemplatesSettingsTest {
     @Test
     void reportsTheSizeOfAnOversizedFileThatIsNotADocxEither() {
         when(configuration.getTemplateMaxSizeMB()).thenReturn(1);
+        TemplatesModel oversizedAndUnrecognizable = templateOf(new byte[2 * 1024 * 1024]);
 
         IllegalArgumentException thrown = assertThrows(IllegalArgumentException.class,
-                () -> settings.validateTemplate(templateOf(new byte[2 * 1024 * 1024])));
+                () -> settings.validateTemplate(oversizedAndUnrecognizable));
         assertEquals("Template file must not exceed 1 MB", thrown.getMessage());
     }
 
     @Test
     void runsTheValidationBeforeEverySave() {
-        IllegalArgumentException thrown = assertThrows(IllegalArgumentException.class,
-                () -> settings.beforeSave(templateOf(new byte[]{1, 2, 3, 4})));
+        TemplatesModel notADocx = templateOf(new byte[]{1, 2, 3, 4});
+        TemplatesModel acceptable = templateOf(docx(2048));
+
+        IllegalArgumentException thrown = assertThrows(IllegalArgumentException.class, () -> settings.beforeSave(notADocx));
         assertEquals("Uploaded file must be a valid docx file", thrown.getMessage());
 
-        assertDoesNotThrow(() -> settings.beforeSave(templateOf(docx(2048))));
+        assertDoesNotThrow(() -> settings.beforeSave(acceptable));
     }
 
     @Test
