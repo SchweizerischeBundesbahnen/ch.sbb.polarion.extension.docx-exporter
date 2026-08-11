@@ -59,10 +59,16 @@ describe('App router', () => {
       '?feature=disclaimer',
       '?feature=user-guide',
       '?feature=filename',
+      '?feature=style-package',
+      '?feature=templates',
       '?feature=localization',
       '?feature=webhooks',
       '?feature=style-package-weights',
       '?feature=authorization',
+      // Last, and the only entries no administration page points at: the development harnesses for the
+      // document editor's export panel and for the dialog its toolbar button opens
+      '?feature=side-panel',
+      '?feature=export-popup',
     ]);
   });
 

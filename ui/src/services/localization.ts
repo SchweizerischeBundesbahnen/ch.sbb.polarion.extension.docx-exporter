@@ -5,22 +5,6 @@ import useRemote from './useRemote';
 export type TranslationsMap = Record<string, string>;
 
 /**
- * Saves a blob under the given file name, the way a download link would. The exported XLIFF arrives as
- * a response body rather than a navigable URL (the endpoint needs the session headers), so the page
- * has to hand it to the browser itself.
- */
-export function saveBlob(blob: Blob, fileName: string): void {
-  const objectUrl = URL.createObjectURL(blob);
-  const anchor = document.createElement('a');
-  anchor.href = objectUrl;
-  anchor.download = fileName;
-  document.body.appendChild(anchor);
-  anchor.click();
-  anchor.remove();
-  URL.revokeObjectURL(objectUrl);
-}
-
-/**
  * The two file endpoints of the localization setting, which are not part of the generic named-settings
  * REST shape `useNamedSettings` covers: XLIFF 2.0 export of one language, and import of such a file.
  *

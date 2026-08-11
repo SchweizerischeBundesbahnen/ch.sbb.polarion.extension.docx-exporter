@@ -1,221 +1,113 @@
 package ch.sbb.polarion.extension.docx_exporter;
 
 import ch.sbb.polarion.extension.docx_exporter.configuration.DocxExporterExtensionConfigurationExtension;
-import ch.sbb.polarion.extension.docx_exporter.rest.model.conversion.CommentsRenderType;
-import ch.sbb.polarion.extension.docx_exporter.rest.model.conversion.LinkRoleDirection;
-import ch.sbb.polarion.extension.docx_exporter.rest.model.settings.stylepackage.StylePackageModel;
-import ch.sbb.polarion.extension.docx_exporter.service.DocxExporterPolarionService;
-import ch.sbb.polarion.extension.docx_exporter.util.EnumValuesProvider;
-import ch.sbb.polarion.extension.generic.settings.SettingName;
+import ch.sbb.polarion.extension.generic.rest.model.Version;
 import ch.sbb.polarion.extension.generic.test_extensions.PlatformContextMockExtension;
+import ch.sbb.polarion.extension.generic.util.VersionUtils;
 import com.polarion.alm.shared.api.SharedContext;
 import com.polarion.alm.shared.api.utils.html.HtmlFragmentBuilder;
 import com.polarion.alm.tracker.model.IModule;
-import com.polarion.alm.tracker.model.ITrackerProject;
-import com.polarion.platform.persistence.IEnumOption;
+import com.polarion.alm.tracker.model.IWorkItem;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.MockedConstruction;
 import org.mockito.MockedStatic;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.contains;
+import static org.mockito.Mockito.RETURNS_DEEP_STUBS;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.mockStatic;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.*;
-
+/**
+ * The form extension contributes the fragment which imports the React side panel, and nothing else. What
+ * the panel then offers is covered by the panel's own suite (ui/test/SidePanel*.test.tsx); what is asserted
+ * here is that the fragment reaches the editor, addresses the bundle the build emits, and is contributed
+ * only for a document.
+ */
 @ExtendWith({MockitoExtension.class, PlatformContextMockExtension.class, DocxExporterExtensionConfigurationExtension.class})
 class DocxExporterFormExtensionTest {
 
+    private final DocxExporterFormExtension extension = new DocxExporterFormExtension();
+
     @Test
-    void testRenderForm() {
+    void testRenderFormContributesTheFragmentForADocument() {
         SharedContext context = mock(SharedContext.class, RETURNS_DEEP_STUBS);
         HtmlFragmentBuilder builder = mock(HtmlFragmentBuilder.class, RETURNS_DEEP_STUBS);
         when(context.createHtmlFragmentBuilderFor().gwt()).thenReturn(builder);
-        IModule module = mock(IModule.class);
-        ITrackerProject project = mock(ITrackerProject.class);
-        when(project.getId()).thenReturn("testProjectId");
-        when(module.getProject()).thenReturn(project);
 
-        try (MockedConstruction<DocxExporterPolarionService> ignored = mockConstruction(DocxExporterPolarionService.class,
-                (mock, ctx) -> when(mock.userAuthorizedForExport(anyString())).thenReturn(true));
-             MockedStatic<EnumValuesProvider> mockEnumValuesProvider = mockStatic(EnumValuesProvider.class)) {
+        extension.renderForm(context, mock(IModule.class, RETURNS_DEEP_STUBS));
 
-            DocxExporterFormExtension extension = spy(new DocxExporterFormExtension());
-            SettingName settingName = SettingName.builder().id("testId").name("testName").build();
-            doReturn(List.of(settingName)).when(extension).getSuitableStylePackages(any());
-            StylePackageModel stylePackage = StylePackageModel.builder().build();
-            doReturn(stylePackage).when(extension).getSelectedStylePackage(any(), any());
-            doReturn(List.of(settingName)).when(extension).getSettingNames(any(), any());
-            doReturn("TestFileName.docx").when(extension).getFilename(any());
+        verify(builder).html(contains("id=\"docx-exporter-panel\""));
+        verify(builder).finished();
+    }
 
-            IEnumOption language = mock(IEnumOption.class);
-            when(language.getId()).thenReturn("Deutsch");
-            when(module.getCustomField("docLanguage")).thenReturn(language);
+    @Test
+    void testRenderFormContributesNothingForAnythingButADocument() {
+        SharedContext context = mock(SharedContext.class, RETURNS_DEEP_STUBS);
+        HtmlFragmentBuilder builder = mock(HtmlFragmentBuilder.class, RETURNS_DEEP_STUBS);
+        when(context.createHtmlFragmentBuilderFor().gwt()).thenReturn(builder);
 
-            mockEnumValuesProvider.when(() -> EnumValuesProvider.getAllLinkRoleNames(any())).thenReturn(List.of("relates to", "blocks", "duplicates"));
-            extension.renderForm(context, module);
-            List<String> expectedEntries = Arrays.asList("someSpecificSelector", "<input id='docx-render-comments' checked", "<input id='docx-orientation' checked", "<input id='docx-paper-size' checked", "<input id='docx-image-density' checked");
-            verify(builder, times(0)).html(argThat(arg -> expectedEntries.stream().allMatch(arg::contains)));
+        extension.renderForm(context, mock(IWorkItem.class, RETURNS_DEEP_STUBS));
 
-            stylePackage.setRemovalSelector("someSpecificSelector");
-            stylePackage.setRenderComments(CommentsRenderType.ALL);
-            stylePackage.setOrientation("LANDSCAPE");
-            stylePackage.setPaperSize("A3");
-            stylePackage.setImageDensity("DPI_300");
-            stylePackage.setLanguage("de");
-            extension.renderForm(context, module);
-            verify(builder, times(1)).html(argThat(arg -> expectedEntries.stream().allMatch(arg::contains)));
+        verify(builder, never()).html(anyString());
+        verify(builder).finished();
+    }
+
+    @Test
+    void testFragmentMountsTheSidePanelBundle() {
+        String fragment = extension.getSidePanelFragment();
+
+        // The host the React app attaches its shadow root to, and the call that does it.
+        assertTrue(fragment.contains("id=\"docx-exporter-panel\""));
+        assertTrue(fragment.contains("assets/side-panel.js"));
+        assertTrue(fragment.contains("module.mountSidePanel(\"#docx-exporter-panel\")"));
+        // The trigger stylesheet whose onload fires that import; the panel's own styles are in the bundle.
+        assertTrue(fragment.contains("ui/css/starter.css"));
+    }
+
+    @Test
+    void testPaneIsLabelledAndCarriesNoIcon() {
+        IModule module = mock(IModule.class, RETURNS_DEEP_STUBS);
+
+        assertEquals("DOCX Exporter", extension.getLabel(module, null));
+        assertNull(extension.getIcon(module, null));
+    }
+
+    @Test
+    void testFragmentCarriesTheBundleVersion() {
+        Version version = Version.builder().bundleVersion("13.5.1").build();
+        try (MockedStatic<VersionUtils> versionUtils = mockStatic(VersionUtils.class)) {
+            versionUtils.when(VersionUtils::getVersion).thenReturn(version);
+
+            String fragment = extension.getSidePanelFragment();
+
+            // The bundle is imported from a fixed URL, so the version is what busts the browser's cache of
+            // it when the extension is updated.
+            assertTrue(fragment.contains("side-panel.js?v=13.5.1"));
+            assertFalse(fragment.contains("{BUNDLE_VERSION}"));
         }
     }
 
     @Test
-    void testAdjustExportAuthorization() {
-        DocxExporterFormExtension extension = new DocxExporterFormExtension();
-        String form = "<button type='button' id='export-docx'>Export to DOCX</button>";
+    void testFragmentFallsBackWhenThereIsNoBundleVersion() {
+        // No manifest to read it from - a unit test, or a deployment that lost its metadata. The
+        // placeholder must still be substituted: left in the URL it would be requested literally.
+        Version version = Version.builder().build();
+        try (MockedStatic<VersionUtils> versionUtils = mockStatic(VersionUtils.class)) {
+            versionUtils.when(VersionUtils::getVersion).thenReturn(version);
 
-        // Authorized user — markup stays unchanged
-        assertThat(extension.adjustExportAuthorization(form, true)).isEqualTo(form);
+            String fragment = extension.getSidePanelFragment();
 
-        // Unauthorized user — the export button becomes disabled and marked so the panel JS won't re-enable it
-        String disabled = extension.adjustExportAuthorization(form, false);
-        assertThat(disabled)
-                .contains("<button type='button' id='export-docx' disabled")
-                .contains("data-auth-disabled='true'");
+            assertTrue(fragment.contains("side-panel.js?v=0"));
+            assertFalse(fragment.contains("{BUNDLE_VERSION}"));
+        }
     }
-
-    @Test
-    void testAdjustRenderComments() {
-        DocxExporterFormExtension extension = new DocxExporterFormExtension();
-        String form = "<input id='docx-render-comments'/>"
-                + "<select id='docx-render-comments-selector' style='display: none'><option value='ALL'></select>"
-                + "<div id='docx-render-comments-options' style='display: none'>"
-                + "<input id='docx-include-unreferenced-comments'/></div>";
-        StylePackageModel packageModel = new StylePackageModel();
-        assertThat(extension.adjustRenderComments(form, packageModel)).isEqualTo(form);
-
-        packageModel.setRenderComments(CommentsRenderType.ALL);
-        assertThat(extension.adjustRenderComments(form, packageModel))
-                .contains("<input id='docx-render-comments' checked")
-                .contains("id='docx-render-comments-options' style='display: flex")
-                .contains("<input id='docx-include-unreferenced-comments'/>")
-                .doesNotContain("<input id='docx-include-unreferenced-comments' checked");
-
-        packageModel.setIncludeUnreferencedComments(true);
-        assertThat(extension.adjustRenderComments(form, packageModel))
-                .contains("<input id='docx-render-comments' checked")
-                .contains("id='docx-render-comments-options' style='display: flex")
-                .contains("<input id='docx-include-unreferenced-comments' checked");
-    }
-
-    @Test
-    void adjustLinkRolesShouldHideFieldsWhenNoRolesAvailable() {
-        DocxExporterFormExtension extension = new DocxExporterFormExtension();
-        String form = buildRolesFormFragment();
-
-        String result = extension.adjustLinkRoles(form, Collections.emptyList(), StylePackageModel.builder().build());
-
-        assertThat(result)
-                .contains("class='docx-roles-fields' style='display: none;'")
-                .contains("{ROLES_OPTIONS}") // Placeholder untouched when hidden
-                .doesNotContain("<option value='BOTH' selected")
-                .doesNotContain("<option value='DIRECT' selected")
-                .doesNotContain("<option value='REVERSE' selected");
-    }
-
-    @Test
-    void adjustLinkRolesShouldRenderAllOptionsUnselectedWhenStylePackageHasNoSelection() {
-        DocxExporterFormExtension extension = new DocxExporterFormExtension();
-        String form = buildRolesFormFragment();
-
-        String result = extension.adjustLinkRoles(form, List.of("relates to", "blocks"), StylePackageModel.builder().build());
-
-        assertThat(result)
-                .doesNotContain("{ROLES_OPTIONS}")
-                .contains("<option value='relates to' >relates to</option>")
-                .contains("<option value='blocks' >blocks</option>")
-                .doesNotContain("<input id='docx-selected-roles' checked")
-                .contains("id='docx-roles-wrapper' style='display: none;");
-    }
-
-    @Test
-    void adjustLinkRolesShouldDefaultDirectionToBothWhenNull() {
-        DocxExporterFormExtension extension = new DocxExporterFormExtension();
-        String form = buildRolesFormFragment();
-
-        String result = extension.adjustLinkRoles(form, List.of("relates to"), StylePackageModel.builder().build());
-
-        assertThat(result)
-                .contains("<option value='BOTH' selected")
-                .contains("<option value='DIRECT'>")
-                .contains("<option value='REVERSE'>");
-    }
-
-    @Test
-    void adjustLinkRolesShouldPreselectDirectDirection() {
-        DocxExporterFormExtension extension = new DocxExporterFormExtension();
-        String form = buildRolesFormFragment();
-        StylePackageModel stylePackage = StylePackageModel.builder()
-                .linkRoleDirection(LinkRoleDirection.DIRECT.toString())
-                .build();
-
-        String result = extension.adjustLinkRoles(form, List.of("relates to"), stylePackage);
-
-        assertThat(result)
-                .contains("<option value='DIRECT' selected")
-                .contains("<option value='BOTH'>")
-                .contains("<option value='REVERSE'>");
-    }
-
-    @Test
-    void adjustLinkRolesShouldPreselectReverseDirection() {
-        DocxExporterFormExtension extension = new DocxExporterFormExtension();
-        String form = buildRolesFormFragment();
-        StylePackageModel stylePackage = StylePackageModel.builder()
-                .linkRoleDirection(LinkRoleDirection.REVERSE.toString())
-                .build();
-
-        String result = extension.adjustLinkRoles(form, List.of("relates to"), stylePackage);
-
-        assertThat(result)
-                .contains("<option value='REVERSE' selected")
-                .contains("<option value='BOTH'>")
-                .contains("<option value='DIRECT'>");
-    }
-
-    @Test
-    void adjustLinkRolesShouldCheckCheckboxAndRevealWrapperWhenRolesSelected() {
-        DocxExporterFormExtension extension = new DocxExporterFormExtension();
-        String form = buildRolesFormFragment();
-        StylePackageModel stylePackage = StylePackageModel.builder()
-                .linkedWorkitemRoles(List.of("blocks"))
-                .linkRoleDirection(LinkRoleDirection.DIRECT.toString())
-                .build();
-
-        String result = extension.adjustLinkRoles(form, List.of("relates to", "blocks"), stylePackage);
-
-        assertThat(result)
-                .contains("<input id='docx-selected-roles' checked")
-                .contains("id='docx-roles-wrapper' style='display: flex;")
-                .contains("<option value='blocks' selected>blocks</option>")
-                .contains("<option value='relates to' >relates to</option>")
-                .contains("<option value='DIRECT' selected");
-    }
-
-    private String buildRolesFormFragment() {
-        return "<div class='docx-roles-fields'>"
-                + "<input id='docx-selected-roles' type='checkbox'/>"
-                + "<div id='docx-roles-wrapper' style='display: none; flex-direction: column'>"
-                + "<select id='docx-roles-selector' multiple>{ROLES_OPTIONS}</select>"
-                + "<select id='docx-link-role-direction'>"
-                + "<option value='BOTH'>Both directions</option>"
-                + "<option value='DIRECT'>Direct only</option>"
-                + "<option value='REVERSE'>Reverse only</option>"
-                + "</select>"
-                + "</div>"
-                + "</div>";
-    }
-
 }

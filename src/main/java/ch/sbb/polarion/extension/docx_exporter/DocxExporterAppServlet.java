@@ -5,9 +5,9 @@ import ch.sbb.polarion.extension.generic.GenericUiServlet;
 import java.io.Serial;
 
 /**
- * Serves the React administration app (the Vite bundle under {@code webapp/docx-exporter-app}) and the
- * build-generated help articles next to it. The pages still on JSP keep being served by
- * {@link DocxExporterAdminUiServlet} until they are converted too.
+ * Serves the React administration app (the Vite bundle under {@code webapp/docx-exporter-app}), the
+ * build-generated help articles next to it, and the administration menu icons {@code hivemodule.xml}
+ * points at. Every administration page of this extension is served from here.
  */
 public class DocxExporterAppServlet extends GenericUiServlet {
     @Serial
