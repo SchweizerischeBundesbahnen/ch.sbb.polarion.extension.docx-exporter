@@ -164,9 +164,14 @@ IDE showing one. `tsconfig.json` covers `src` **and** `test`: a test is code, an
 two assertions in `useRemote.test.tsx` indexed an untyped mock's call tuple. The config files themselves
 (`vite.config.js`, `vitest.config.ts`, `scripts/*.mjs`) are still outside the program.
 
-These are not wired into the repo's `.pre-commit-config.yaml`. What gates a change under `ui/` is the
-Maven `test` phase, which runs the dockerized suite through the parent's `vite-ui` profile; `typecheck`
-runs first in `npm run build`. Run `format:check` and `lint` yourself before committing.
+`format:check` and `lint` are wired into the repo's `.pre-commit-config.yaml` as the `ui-prettier` and
+`ui-eslint` hooks, gated on any change under `ui/`. They are check-only and never modify your files.
+Both use `language: system`, so run `npm ci` in `ui/` before `pre-commit run -a`. Without it they fail
+with an npm error rather than a lint finding.
+
+`typecheck` and the dockerized suite are not hooks. The Maven `test` phase gates them through the
+parent's `vite-ui` profile, and `typecheck` runs first in `npm run build`. The suite is deliberately
+left out: it needs Docker and adds 30-60s+ to every UI commit.
 
 ## Production build
 
