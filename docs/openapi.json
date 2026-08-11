@@ -1460,38 +1460,6 @@
         ]
       }
     },
-    "/api/template/details": {
-      "post": {
-        "description": "Doubles as the validator of the file the Templates administration page uploads: anything that is not a readable DOCX is rejected",
-        "operationId": "getTemplateDetails",
-        "requestBody": {
-          "content": {
-            "application/octet-stream": {}
-          },
-          "description": "The DOCX file itself",
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/TemplateDetails"
-                }
-              }
-            },
-            "description": "Successfully read the template details"
-          },
-          "400": {
-            "description": "The uploaded file is not a valid DOCX"
-          }
-        },
-        "summary": "Reads style count and last modification date out of a DOCX reference template",
-        "tags": [
-          "Utility resources"
-        ]
-      }
-    },
     "/api/user-guide": {
       "get": {
         "operationId": "getUserGuide",
@@ -1923,18 +1891,6 @@
             "description": "The weight of the setting",
             "format": "float",
             "type": "number"
-          }
-        },
-        "type": "object"
-      },
-      "TemplateDetails": {
-        "properties": {
-          "modifiedDate": {
-            "type": "string"
-          },
-          "styleCount": {
-            "format": "int32",
-            "type": "integer"
           }
         },
         "type": "object"

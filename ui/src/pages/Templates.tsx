@@ -15,7 +15,6 @@ import Placeholders from '../components/Placeholders';
 import useDocxTemplate, {
   DOCX_MIME_TYPE,
   type DocxBytes,
-  type TemplateDetails,
   type TemplatesSettings,
   base64ToBytes,
   bytesToBase64,
@@ -26,7 +25,12 @@ import useNamedSettings from '../services/settings';
 
 const FEATURE = 'templates';
 
-const INVALID_FILE = 'Uploaded file must be a valid docx file';
+/** The size of an attached document, in the unit that keeps the number short. */
+function formatFileSize(bytes: number): string {
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+}
 
 /**
  * DOCX Exporter: Templates - the reference document a style package converts against, one named
@@ -35,6 +39,12 @@ const INVALID_FILE = 'Uploaded file must be a valid docx file';
  * The whole content of a configuration is a single DOCX file, so the page is one of two panels: an
  * empty one offering the file picker, and a filled one showing what was attached. Neither choosing nor
  * deleting a file writes anything; the configuration is stored on Save, as it was on the JSP page.
+ *
+ * Nothing about the document is read here. The page reported a style count and a modification date out
+ * of the archive - and so needed a zip reader, first JSZip in the browser and then an endpoint on the
+ * server - for two facts nobody asked for. It shows the file size instead, which costs a byte count.
+ * Whether a file may be stored is decided on Save by `TemplatesSettings`, and its refusal arrives as
+ * the message of that failure.
  *
  * The attached document is held as bytes and only as bytes. The legacy page kept a binary string after
  * an upload and a Uint8Array after a load, and its download link built a Blob out of whichever it had -
@@ -52,49 +62,23 @@ export default function Templates() {
   const latestLoad = useRef(0);
 
   const [template, setTemplate] = useState<DocxBytes | null>(null);
-  const [details, setDetails] = useState<TemplateDetails | null>(null);
   const [selectedConfig, setSelectedConfig] = useState<string | null>(null);
   const [editingName, setEditingName] = useState(false);
   const [showRevisions, setShowRevisions] = useState(false);
   const [revisionsToken, setRevisionsToken] = useState(0);
   const [loadingError, setLoadingError] = useState(false);
 
-  /**
-   * Shows a document and asks the server what it contains. The details arrive after the bytes, so the
-   * panel appears immediately and fills in - and a load that has been superseded meanwhile drops its
-   * answer rather than describing the document of a configuration the administrator has left.
-   */
-  const showTemplate = useCallback(
-    async (bytes: DocxBytes | null, seq: number) => {
-      setTemplate(bytes);
-      setDetails(null);
-      if (!bytes) return;
-      try {
-        const read = await templates.readDetails(bytes);
-        if (seq !== latestLoad.current) return;
-        setDetails(read);
-      } catch {
-        if (seq !== latestLoad.current) return;
-        toast.error(INVALID_FILE);
-      }
-    },
-    [templates],
-  );
-
-  const applyContent = useCallback(
-    (content: TemplatesSettings) => {
-      const seq = ++latestLoad.current;
-      // A load that succeeded after an earlier failure would otherwise keep the banner up over good data.
-      setLoadingError(false);
-      void showTemplate(content.template ? base64ToBytes(content.template) : null, seq);
-    },
-    [showTemplate],
-  );
+  const applyContent = useCallback((content: TemplatesSettings) => {
+    latestLoad.current += 1;
+    // A load that succeeded after an earlier failure would otherwise keep the banner up over good data.
+    setLoadingError(false);
+    setTemplate(content.template ? base64ToBytes(content.template) : null);
+  }, []);
 
   /**
    * A new selection invalidates whatever is in flight for the old one, at the moment it is made rather
-   * than when the new content lands: a details response returning in between would otherwise describe
-   * the document of the configuration the administrator has already left.
+   * than when the new content lands: a load returning in between would otherwise attach the document of
+   * the configuration the administrator has already left.
    */
   const handleSelectedChange = useCallback((name: string | null) => {
     latestLoad.current += 1;
@@ -106,22 +90,13 @@ export default function Templates() {
     toast.dismiss();
     const seq = ++latestLoad.current;
     const bytes = new Uint8Array(await file.arrayBuffer());
-    try {
-      const read = await templates.readDetails(bytes);
-      if (seq !== latestLoad.current) return;
-      setTemplate(bytes);
-      setDetails(read);
-    } catch {
-      if (seq !== latestLoad.current) return;
-      // The document is rejected whole: an unreadable file leaves whatever was attached before in place.
-      toast.error(INVALID_FILE);
-    }
+    if (seq !== latestLoad.current) return;
+    setTemplate(bytes);
   };
 
   const handleDelete = () => {
     latestLoad.current += 1;
     setTemplate(null);
-    setDetails(null);
   };
 
   const handleDownload = () => {
@@ -157,7 +132,7 @@ export default function Templates() {
     const content = await settings.loadContent(selectedConfig, scope, revision);
     if (seq !== latestLoad.current) return;
     setLoadingError(false);
-    await showTemplate(content.template ? base64ToBytes(content.template) : null, seq);
+    setTemplate(content.template ? base64ToBytes(content.template) : null);
   };
 
   const handleCancel = async () => {
@@ -178,7 +153,7 @@ export default function Templates() {
       // The built-in default of this setting is no template at all, so Default detaches the file.
       const content = await settings.loadDefaultContent();
       if (seq !== latestLoad.current) return;
-      await showTemplate(content.template ? base64ToBytes(content.template) : null, seq);
+      setTemplate(content.template ? base64ToBytes(content.template) : null);
       toast.success('Default values loaded. Save the data to apply them.');
     } catch {
       setLoadingError(true);
@@ -233,11 +208,7 @@ export default function Templates() {
                 }
               }}
             />
-            <span className="file-info">
-              Style Count: {details ? details.styleCount : 'N/A'}
-              <br />
-              Last Modified Date: {details?.modifiedDate ?? 'N/A'}
-            </span>
+            <span className="file-info">File size: {formatFileSize(template.length)}</span>
             <button type="button" className="toolbar-button" title="Delete template" onClick={handleDelete}>
               <span className="button-image sbb-icon-cancel" role="img" aria-label="Cancel" />
               Delete attached file

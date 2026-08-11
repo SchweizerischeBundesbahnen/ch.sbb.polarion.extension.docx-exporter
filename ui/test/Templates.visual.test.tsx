@@ -15,11 +15,6 @@ const routes = (template: string | null) => [
   { method: 'GET', match: /\/settings\/templates\/names\/[^/]+\/content/, json: { template } },
   { method: 'GET', match: /\/settings\/templates\/default-content/, json: { template: null } },
   { method: 'GET', match: /\/settings\/templates\/names\/[^/]+\/revisions/, json: [] },
-  {
-    method: 'POST',
-    match: /\/template\/details/,
-    json: { styleCount: 42, modifiedDate: '2024-06-13 08:45:12' },
-  },
 ];
 
 afterEach(() => {
@@ -35,12 +30,11 @@ describe.skipIf(!__PIXEL_REFERENCES__)('Templates page visual', () => {
     expect(true).toBe(true);
   });
 
-  it('a configuration with a template, described by the server', async () => {
+  it('a configuration with a template, reported by its size', async () => {
     await snapshotFeature(
       'templates',
       routes('UEsDBBQAAAAIAA=='),
-      // The details arrive after the panel, so the snapshot waits for the text, not for the panel.
-      () => (document.querySelector('.docx-panel .file-info')?.textContent ?? '').includes('42'),
+      found('.docx-panel .file-info'),
       'templates-attached',
     );
     expect(true).toBe(true);

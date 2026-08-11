@@ -10,13 +10,6 @@ export const DOCX_MIME_TYPE = 'application/vnd.openxmlformats-officedocument.wor
  */
 export type DocxBytes = Uint8Array<ArrayBuffer>;
 
-/** What the server reads out of a reference template, and what the page displays about it. */
-export interface TemplateDetails {
-  styleCount: number;
-  /** Absent when the document carries no core properties, which is legal in OOXML. */
-  modifiedDate?: string;
-}
-
 /** Content of one named `templates` configuration: the reference DOCX, base64, or none. */
 export interface TemplatesSettings {
   template?: string | null;
@@ -44,34 +37,16 @@ export function bytesToBase64(bytes: DocxBytes): string {
 }
 
 /**
- * The two template endpoints that are not part of the generic named-settings REST shape
- * `useNamedSettings` covers: reading the details of a DOCX, and downloading the reference document
- * pandoc ships with.
+ * The one template endpoint that is not part of the generic named-settings REST shape
+ * `useNamedSettings` covers: downloading the reference document pandoc ships with.
  *
- * `readDetails` doubles as the validator of an upload. It used to run in the browser on JSZip, which
- * meant the administration page carried a zip library to answer two questions and to decide whether a
- * file was a DOCX at all. The server answers both now, so a rejected file is rejected by the runtime
- * that would have had to read it later.
+ * Nothing here inspects an attached document. The page used to read a style count and a modification
+ * date out of it - on JSZip in the browser first, then over a REST endpoint - and displays its size
+ * instead. Whether a file may be stored at all is decided where it is stored: `TemplatesSettings`
+ * rejects anything past `templateMaxSizeMB` or not opening like a zip container.
  */
 export default function useDocxTemplate() {
   const { sendRequest } = useRemote();
-
-  const readDetails = useCallback(
-    async (template: DocxBytes): Promise<TemplateDetails> => {
-      const response = await sendRequest({
-        method: 'POST',
-        url: '/template/details',
-        contentType: 'application/octet-stream',
-        // A copy, because the fetch body must be a plain ArrayBuffer view the caller does not reuse.
-        body: new Uint8Array(template),
-      });
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}`);
-      }
-      return (await response.json()) as TemplateDetails;
-    },
-    [sendRequest],
-  );
 
   /**
    * The reference document built into pandoc, which the hint on the page offers as the starting point
@@ -86,5 +61,5 @@ export default function useDocxTemplate() {
     return response.blob();
   }, [sendRequest]);
 
-  return useMemo(() => ({ readDetails, downloadBuiltInTemplate }), [readDetails, downloadBuiltInTemplate]);
+  return useMemo(() => ({ downloadBuiltInTemplate }), [downloadBuiltInTemplate]);
 }

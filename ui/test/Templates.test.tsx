@@ -7,14 +7,13 @@ import type { Route } from './mockFetch';
 
 // The Templates page: the reference DOCX it attaches to a named configuration, what it displays about
 // it, and what it stores. The page holds the document as bytes only - the assertions on the PUT body
-// and on the download are what keep it that way.
+// and on the download are what keep it that way. Nothing here reads inside the document: the page
+// reports its size, and whether it may be stored is the server's answer to the save.
 
 const origUrl = window.location.pathname + window.location.search;
 
-/** A stored document, as base64. The content is irrelevant: the server reads it, not the page. */
+/** A stored document, as base64. Ten bytes, which is what the page reports about it. */
 const STORED_BASE64 = 'UEsDBBQAAAAIAA==';
-
-const DETAILS = { styleCount: 42, modifiedDate: '2024-06-13 08:45:12' };
 
 const baseRoutes = (): Route[] => [
   {
@@ -26,7 +25,6 @@ const baseRoutes = (): Route[] => [
   { method: 'GET', match: /\/settings\/templates\/default-content/, json: { template: null } },
   { method: 'GET', match: /\/settings\/templates\/names\/[^/]+\/revisions/, json: [] },
   { method: 'PUT', match: /\/settings\/templates\/names\/[^/]+\/content/, json: {} },
-  { method: 'POST', match: /\/template\/details/, json: DETAILS },
   { method: 'GET', match: /\/template$/, respond: () => new Response('built-in', { status: 200 }) },
 ];
 
@@ -98,26 +96,29 @@ afterEach(() => {
 });
 
 describe('Templates page', () => {
-  it('shows what the server reads out of the stored template', async () => {
+  it('shows the size of the stored template', async () => {
     open();
     await loadedWithTemplate();
 
-    await vi.waitFor(() => expect(fileInfo()).toContain('Style Count: 42'));
-    expect(fileInfo()).toContain('Last Modified Date: 2024-06-13 08:45:12');
+    await vi.waitFor(() => expect(fileInfo()).toBe('File size: 10 B'));
   });
 
-  it('sends the stored document to the details endpoint as bytes, not as base64', async () => {
+  it('reads nothing out of the stored document, asking the server about it not at all', async () => {
     const fetchMock = open();
     await loadedWithTemplate();
 
-    await vi.waitFor(() => {
-      const post = fetchMock.mock.calls.find(([, init]) => init?.method === 'POST');
-      expect(post).toBeDefined();
-      const body = post![1]!.body as Uint8Array;
-      expect(body).toBeInstanceOf(Uint8Array);
-      // The first two bytes of every DOCX, which base64 text would not begin with.
-      expect(Array.from(body.subarray(0, 2))).toEqual([0x50, 0x4b]);
-    });
+    expect(fetchMock.mock.calls.some(([url]) => String(url).includes('/template/details'))).toBe(false);
+  });
+
+  it('scales the size it reports to the size of the document', async () => {
+    open(
+      routesWith({ method: 'GET', match: /\/settings\/templates\/names\/[^/]+\/content/, json: { template: null } }),
+    );
+    await vi.waitFor(() => expect(panel().textContent).toContain('No file provided'));
+
+    pickFile(docxFile(new Array<number>(2048).fill(0x50)));
+
+    await vi.waitFor(() => expect(fileInfo()).toBe('File size: 2.0 KB'));
   });
 
   it('offers the picker when the configuration has no template', async () => {
@@ -127,14 +128,6 @@ describe('Templates page', () => {
 
     await vi.waitFor(() => expect(panel().textContent).toContain('No file provided'));
     expect(attached()).toBe(false);
-  });
-
-  it('says N/A when the document carries no modification date', async () => {
-    open(routesWith({ method: 'POST', match: /\/template\/details/, json: { styleCount: 7 } }));
-    await loadedWithTemplate();
-
-    await vi.waitFor(() => expect(fileInfo()).toContain('Style Count: 7'));
-    expect(fileInfo()).toContain('Last Modified Date: N/A');
   });
 
   it('attaches a chosen file and stores it base64 on save', async () => {
@@ -154,19 +147,27 @@ describe('Templates page', () => {
     });
   });
 
-  it('attaches nothing when the chosen file is not a valid docx', async () => {
+  it('attaches whatever is chosen and lets the save report the server refusing it', async () => {
     open(
       routesWith(
         { method: 'GET', match: /\/settings\/templates\/names\/[^/]+\/content/, json: { template: null } },
-        { method: 'POST', match: /\/template\/details/, status: 400, json: {} },
+        {
+          method: 'PUT',
+          match: /\/settings\/templates\/names\/[^/]+\/content/,
+          respond: () => jsonResponse({ message: 'Uploaded file must be a valid docx file' }, 400),
+        },
       ),
     );
     await vi.waitFor(() => expect(panel().textContent).toContain('No file provided'));
 
+    // Nothing on the page inspects the bytes any more, so a file that is not a DOCX still attaches.
     pickFile(docxFile([0x00, 0x01]));
+    await loadedWithTemplate();
+    expect(fileInfo()).toBe('File size: 2 B');
+
+    await clickButton('Save');
 
     await vi.waitFor(() => expect(document.body.textContent).toContain('Uploaded file must be a valid docx file'));
-    expect(attached()).toBe(false);
   });
 
   it('detaches the document without storing anything until save', async () => {
