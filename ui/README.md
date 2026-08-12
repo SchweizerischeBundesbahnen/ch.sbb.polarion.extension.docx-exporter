@@ -164,14 +164,16 @@ IDE showing one. `tsconfig.json` covers `src` **and** `test`: a test is code, an
 two assertions in `useRemote.test.tsx` indexed an untyped mock's call tuple. The config files themselves
 (`vite.config.js`, `vitest.config.ts`, `scripts/*.mjs`) are still outside the program.
 
-`format:check` and `lint` are wired into the repo's `.pre-commit-config.yaml` as the `ui-prettier` and
-`ui-eslint` hooks, gated on any change under `ui/`. They are check-only and never modify your files.
-Both use `language: system`, so run `npm ci` in `ui/` before `pre-commit run -a`. Without it they fail
-with an npm error rather than a lint finding.
+`format:check`, `lint` and the dockerized suite are wired into the repo's `.pre-commit-config.yaml` as
+the `ui-prettier`, `ui-eslint` and `ui-test-coverage-docker` hooks, gated on any change under `ui/`.
+They are check-only and never modify your files. All use `language: system`, so run `npm ci` in `ui/`
+before `pre-commit run -a`. Without it they fail with an npm error rather than a lint finding.
 
-`typecheck` and the dockerized suite are not hooks. The Maven `test` phase gates them through the
-parent's `vite-ui` profile, and `typecheck` runs first in `npm run build`. The suite is deliberately
-left out: it needs Docker and adds 30-60s+ to every UI commit.
+The dockerized suite is the slow hook: it needs Docker running and adds 30-60s+ to a UI commit. That
+is the price of catching a broken suite or a coverage drop before the push rather than in CI.
+
+`typecheck` is not a hook. The Maven `test` phase gates it through the parent's `vite-ui` profile, and
+it runs first in `npm run build`.
 
 ## Production build
 
