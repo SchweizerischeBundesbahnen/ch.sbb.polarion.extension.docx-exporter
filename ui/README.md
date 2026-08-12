@@ -12,9 +12,9 @@ There is one `index.html` / bundle. The page to render is chosen from the `featu
 
 - `/` (no param) renders a development landing page listing every feature.
 - `/?feature=about` - About (RSP's shared `About`).
-- `/?feature=disclaimer` - Usage Disclaimer. The only page whose article is **not** a REST call:
-  generic serves `/readme` and `/user-guide` but has no disclaimer endpoint, so `disclaimer.html` is
-  read as a static file from this app's own webapp, where markdown2html writes it during the build.
+- `/?feature=disclaimer` - Usage Disclaimer. Reads the build-generated DISCLAIMER article from
+  generic's `/disclaimer` endpoint, the same way About and User Guide read theirs. An empty response
+  means the extension ships no disclaimer; the page then links to the online source.
 - `/?feature=user-guide` - User Guide (RSP's shared `UserGuide`).
 - `/?feature=filename` - Filename template (RSP's `CodeEditor` with the Velocity grammar over the
   single `filename-template` setting; the Default button loads the built-in template into the editor).
