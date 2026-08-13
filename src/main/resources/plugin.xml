@@ -9,11 +9,13 @@
         </webapp>
     </extension>
 
+    <!-- The React administration app. Serves the Vite bundle, the build-generated help articles and the
+         administration menu icons - every administration page of this extension comes from here. -->
     <extension
             point="com.polarion.portal.tomcat.webapps">
         <webapp
-                name="polarion/docx-exporter-admin"
-                contextRoot="webapp/docx-exporter-admin">
+                name="polarion/docx-exporter-app"
+                contextRoot="webapp/docx-exporter-app">
         </webapp>
     </extension>
 </plugin>

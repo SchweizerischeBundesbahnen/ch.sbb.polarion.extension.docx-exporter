@@ -128,4 +128,5 @@ public class UtilityResourcesInternalController {
         Boolean webhooksEnabled = DocxExporterExtensionConfiguration.getInstance().getWebhooksEnabled();
         return WebhooksStatus.builder().enabled(webhooksEnabled).build();
     }
+
 }

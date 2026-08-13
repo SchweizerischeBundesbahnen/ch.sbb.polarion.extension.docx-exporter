@@ -13,6 +13,8 @@ import ch.sbb.polarion.extension.generic.test_extensions.PlatformContextMockExte
 import ch.sbb.polarion.extension.generic.test_extensions.TransactionalExecutorExtension;
 import ch.sbb.polarion.extension.docx_exporter.util.velocity.VelocityEvaluator;
 import com.polarion.alm.tracker.model.IModule;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -43,6 +45,22 @@ class DocumentFileNameHelperTest {
 
     @InjectMocks
     private DocumentDataFactoryMockExtension documentDataFactoryMockExtension;
+
+    /**
+     * {@link NamedSettingsRegistry} is a singleton shared by the whole suite, and it holds a set keyed on
+     * the concrete class as well as the feature name. A spy is a different class from the settings it
+     * spies on, so registering one next to an instance another test class left behind adds a second entry
+     * for the same feature instead of replacing the first, and the lookup may then answer with either.
+     */
+    @BeforeEach
+    void beforeEach() {
+        NamedSettingsRegistry.INSTANCE.getAll().clear();
+    }
+
+    @AfterEach
+    void afterEach() {
+        NamedSettingsRegistry.INSTANCE.getAll().clear();
+    }
 
     @Test
     void evaluateVelocity() {

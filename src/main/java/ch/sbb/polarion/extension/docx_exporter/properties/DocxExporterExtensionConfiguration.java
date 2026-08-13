@@ -21,6 +21,10 @@ public class DocxExporterExtensionConfiguration extends ExtensionConfiguration {
     public static final String WEBHOOKS_ENABLED_DESCRIPTION = "Enable <a href='#enabling-webhooks'>webhooks</a>";
     public static final Boolean WEBHOOKS_ENABLED_DEFAULT_VALUE = false;
 
+    public static final String TEMPLATE_MAX_SIZE_MB = "templateMaxSizeMB";
+    public static final String TEMPLATE_MAX_SIZE_MB_DESCRIPTION = "Size in MB an uploaded <a href='#reference-template-size-limit'>reference template</a> may reach";
+    public static final int TEMPLATE_MAX_SIZE_MB_DEFAULT_VALUE = 16;
+
     @Override
     public String getDebugDescription() {
         return DEBUG_DESCRIPTION;
@@ -45,10 +49,25 @@ public class DocxExporterExtensionConfiguration extends ExtensionConfiguration {
         return String.valueOf(WEBHOOKS_ENABLED_DEFAULT_VALUE);
     }
 
+    public int getTemplateMaxSizeMB() {
+        return SystemValueReader.getInstance().readInt(getPropertyPrefix() + TEMPLATE_MAX_SIZE_MB, TEMPLATE_MAX_SIZE_MB_DEFAULT_VALUE);
+    }
+
+    @SuppressWarnings("unused")
+    public String getTemplateMaxSizeMBDescription() {
+        return TEMPLATE_MAX_SIZE_MB_DESCRIPTION;
+    }
+
+    @SuppressWarnings("unused")
+    public String getTemplateMaxSizeMBDefaultValue() {
+        return String.valueOf(TEMPLATE_MAX_SIZE_MB_DEFAULT_VALUE);
+    }
+
     @Override
     public @NotNull List<String> getSupportedProperties() {
         List<String> supportedProperties = new ArrayList<>(super.getSupportedProperties());
         supportedProperties.add(PANDOC_SERVICE);
+        supportedProperties.add(TEMPLATE_MAX_SIZE_MB);
         return supportedProperties;
     }
 

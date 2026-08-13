@@ -1,0 +1,493 @@
+:root {
+  --pe-muted: var(--sbb-color-text-muted, #6b6b6b);
+  --pe-accent: var(--sbb-color-accent, #0d5c9e);
+  --pe-border: var(--sbb-color-border, #d5d5d5);
+  --pe-bg-hover: var(--sbb-color-bg-hover, #f2f6fa);
+  /* Polarion admin-page look (from the generic common.css / about.css). */
+  --pe-code-border: #dfe1e6;
+  --pe-code-bg: #f4f5f7;
+}
+
+/* App root (App.tsx: <div class="app standard-admin-page">). Nothing is declared for `.app` here on
+   purpose: react-sbb-polarion's PageLayout.css owns the whole page shell — the body-margin reset, the
+   outer padding, the font family, the 13px admin base size and the text color — so every extension
+   shares one look. `standard-admin-page` (also from RSP's bundled style.css) supplies the --sbb-*
+   control tokens and the Polarion-styled checkboxes, so no per-app checkbox rules here either. */
+
+.feature-list a {
+  color: var(--pe-accent);
+  text-decoration: none;
+}
+
+.feature-list a:hover {
+  text-decoration: underline;
+}
+
+.landing-intro {
+  color: var(--pe-muted);
+  line-height: 1.5;
+}
+
+.landing-scope {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 16px 0 8px;
+}
+
+.landing-scope select,
+.landing-scope .searchable-dropdown {
+  width: 260px;
+  min-width: 260px;
+  max-width: 100%;
+}
+
+.feature-list {
+  list-style: none;
+  padding: 0;
+  margin: 16px 0 0;
+}
+
+.feature-list li {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 12px 14px;
+  border: 1px solid var(--pe-border);
+  border-radius: 6px;
+  margin-bottom: 10px;
+}
+
+.feature-list li:hover {
+  background: var(--pe-bg-hover);
+}
+
+.feature-list a {
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.feature-desc {
+  color: var(--pe-muted);
+  font-size: 13px;
+}
+
+/* Scoped to the dev Landing on purpose: a bare `code` rule also reaches the markup RSP components
+   render (it once boxed and shrank PropertiesEditor's highlight layer, knocking it out of alignment
+   with the textarea above it). */
+.landing code {
+  font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+  font-size: 0.9em;
+  border: 1px solid var(--pe-code-border);
+  background-color: var(--pe-code-bg);
+  padding: 0 3px;
+  border-radius: 3px;
+}
+
+.alert {
+  padding: 8px 12px;
+  border-radius: 4px;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.alert-error {
+  background: #fdeaea;
+  border: 1px solid #e6b0b0;
+  color: #a12020;
+}
+
+.alert a {
+  color: inherit;
+  font-weight: 600;
+}
+
+/* The About page (and its .markdown-body README article headings) is the shared
+   @grigoriev/react-sbb-polarion component; its styles ship in the lib's bundled style.css. */
+
+.filename-template-editor {
+  height: 160px;
+  margin-bottom: 10px;
+}
+
+.placeholders {
+  margin-top: 16px;
+}
+
+.placeholders .monospace {
+  font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+}
+
+.help {
+  margin-top: 24px;
+}
+
+/* Every settings page wraps its form in a <fieldset> for one reason only: `disabled` on it switches the
+   whole form off in one attribute while a configuration is being renamed or created. It is not meant to
+   look like a fieldset, so the browser's default chrome goes - the 2px groove border, the inline margin
+   and the padding. `min-inline-size` is the other UA default: it pins a fieldset to its content's width,
+   which stops the flex and grid children inside from shrinking. */
+.app fieldset {
+  min-inline-size: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+/* --- Localization ------------------------------------------------------------------------------ */
+
+.localization-page:disabled,
+.templates-page:disabled,
+.webhooks-page:disabled {
+  opacity: 0.5;
+}
+
+.translations-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 15px;
+}
+
+.translations-table th {
+  text-align: left;
+  font-weight: 600;
+  padding-bottom: 4px;
+}
+
+.translations-table td {
+  width: 24%;
+  padding: 1px 4px 1px 0;
+}
+
+.translations-table input[type='text'] {
+  width: 100%;
+  font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+}
+
+/* A cell with nothing in it is flagged rather than silently exported as an empty translation - the
+   legacy page did the same with its `red-border` class. The selector is deliberately longer than the
+   markup needs: RSP styles the admin text inputs through
+   `.standard-admin-page input[type=text]:not(.sd-trigger):not(.search-box)`, and anything shorter than
+   that loses the border-color on specificity and flags nothing. */
+.standard-admin-page .translations-table input[type='text'].empty-value {
+  border-color: #c1272d;
+}
+
+/* The delete / add column: as narrow as its button, and centered on the row. */
+.row-actions {
+  width: 1%;
+  white-space: nowrap;
+  text-align: center;
+}
+
+/* The export/import pair of one language, centered under its column (English has no files of its own). */
+.translations-table .language-files {
+  padding-top: 10px;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.translations-table .language-files > * {
+  margin: 0 4px;
+}
+
+.language-files input[type='file'] {
+  /* The visible control is the label; the input itself only has to stay reachable by the keyboard. */
+  width: 0.1px;
+  height: 0.1px;
+  opacity: 0;
+  overflow: hidden;
+  position: absolute;
+  z-index: -1;
+}
+
+/* --- Style Packages ---------------------------------------------------------------------------- */
+
+.style-packages-page:disabled {
+  opacity: 0.5;
+}
+
+/* The two-column arrangement of the JSP page this replaces. The left column is fixed so the right one
+   starts at the same x in every section, and a section that opens a new topic is separated by a rule. */
+.style-packages-page .flex-container {
+  display: flex;
+  column-gap: 20px;
+  flex-wrap: wrap;
+}
+
+/* Equal air on both sides of the rule: `margin-top` above it, `padding-top` below it, the same 15px. */
+.style-packages-page .flex-container.section {
+  border-top: 1px solid #ccc;
+  margin-top: 15px;
+  padding-top: 15px;
+}
+
+.style-packages-page .flex-column {
+  width: 440px;
+}
+
+.style-packages-page .flex-grow {
+  flex-grow: 1;
+}
+
+/* The three rules the JSP page inherited from generic's configurations.css: 120px labels are what line
+   the controls of the two columns up with each other. Not in RSP's bundled CSS, so they live here. */
+.style-packages-page .input-group {
+  margin-bottom: 10px;
+}
+
+/* The row spacing is between rows, so the last row of a column does not carry it - otherwise the bottom
+   of every block is 10px taller than it looks, and that padding lands above the next section's rule. */
+.style-packages-page .flex-column > .input-group:last-child,
+.style-packages-page .flex-grow > .input-group:last-child {
+  margin-bottom: 0;
+}
+
+/* Two blocks with no rule between them are still two blocks: they get the same 10px of air that
+   separates the rows inside them. */
+.style-packages-page .flex-container + .flex-container:not(.section) {
+  margin-top: 10px;
+}
+
+.style-packages-page .input-group label {
+  display: inline-block;
+  width: 120px;
+}
+
+/* Deliberately per type, and skipping the dropdown parts, rather than a bare `input`: RSP sizes the
+   checkbox and the searchable dropdown's own trigger and search box, and a shorter selector here would
+   outrank all of them and stretch them to a text field's width. */
+.style-packages-page .input-group input[type='text']:not(.sd-trigger):not(.search-box),
+.style-packages-page .input-group input[type='number'] {
+  width: 284px;
+}
+
+/* A label carrying a checkbox is as wide as its text, not a 120px column head. */
+.style-packages-page .checkbox.input-group label {
+  width: auto;
+}
+
+/* Except this one, which the JSP page held at the column width so the dropdown behind it lines up with
+   the ones below it. The selector is long enough to outrank the rule above. */
+.style-packages-page .checkbox.input-group label.webhooks-label {
+  width: 120px;
+}
+
+/* A row whose label, info icon and field share one line. */
+.style-packages-page .flex-centered {
+  display: flex;
+  align-items: center;
+}
+
+.style-packages-page .flex-centered label {
+  width: auto;
+  margin-right: 4px;
+}
+
+/* Weight and matching query have labels of different lengths but their fields start at the same x, as
+   they did on the JSP page. Both offsets are measured from the end of the info icon. */
+.style-packages-page .weight-input {
+  margin-left: 59px;
+}
+
+.style-packages-page .matching-query-input {
+  margin-left: 8px;
+}
+
+/* The removal selector is a row of its own, its field running the width of the page. */
+.style-packages-page .removal-selector-group {
+  width: 100%;
+}
+
+.style-packages-page .removal-selector-group .more-info {
+  margin-right: 35px;
+}
+
+/* The selector runs the width of the page, as its 615px field did on the JSP page. `flex` beats the
+   284px the text-input rule above gives it. */
+.style-packages-page .removal-selector-group .grows {
+  flex: 1;
+  box-sizing: border-box;
+}
+
+.style-packages-page .more-info {
+  background: var(--sbb-info-icon) no-repeat;
+  display: inline-block;
+  width: 17px;
+  height: 17px;
+  vertical-align: middle;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+/* A field that is switched off keeps its place in the layout instead of collapsing it, so the rows
+   below do not jump as boxes are ticked. It is also disabled, so it stays out of the tab order. */
+.style-packages-page .hidden {
+  visibility: hidden;
+}
+
+/* The value next to its switch, filling the rest of the row. `flex` beats the 284px width above. */
+.style-packages-page .with-value {
+  display: flex;
+  align-items: center;
+}
+
+.style-packages-page .with-value .grows {
+  flex: 1;
+  margin-left: 10px;
+  box-sizing: border-box;
+}
+
+.style-packages-page .value-select {
+  margin-left: 10px;
+}
+
+/* The comment sub-option is one indented row under the switch that reveals it. */
+.style-packages-page .render-comments-options {
+  padding-left: 20px;
+}
+
+/* The role picker and its direction stack under their switch rather than beside it: two 152px controls
+   would not fit next to the label. */
+.style-packages-page .roles-group {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.style-packages-page .roles-select {
+  width: 152px;
+  margin: 4px 0 0 20px;
+}
+
+.style-packages-page .roles-select .searchable-dropdown {
+  width: 100%;
+}
+
+/* --- Templates --------------------------------------------------------------------------------- */
+
+/* The hint above the panel, with the shared info icon floated into its first line. */
+.upload-hint {
+  display: block;
+  width: auto;
+  margin: 4px 0;
+  padding: 16px;
+  background: #d8e4f1;
+  text-align: left;
+  /* Contains the floated icon, so the box grows with the text instead of collapsing behind it. */
+  overflow: hidden;
+}
+
+.upload-hint::before {
+  content: '';
+  float: left;
+  width: 16px;
+  height: 16px;
+  margin: 1px 10px 0 0;
+  background: var(--sbb-info-icon) center / contain no-repeat;
+}
+
+/* The "download" affordance inside that hint is a button, not a link: the endpoint behind it needs the
+   headers useRemote adds, so the file is fetched and handed to the browser rather than navigated to.
+   It still has to read as the link the legacy page had. */
+.link-button {
+  padding: 0;
+  border: none;
+  background: none;
+  font: inherit;
+  color: var(--pe-accent);
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+/* One panel at a time: the empty state offering the picker, or the attached document. */
+.docx-panel {
+  width: 300px;
+  margin-top: 20px;
+  padding: 20px;
+  border: 1px solid #ccc;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.docx-panel > * {
+  margin-top: 15px;
+}
+
+.docx-panel .file-info {
+  text-align: center;
+}
+
+/* Clicking the document icon downloads what is attached. */
+.docx-panel .docx-download {
+  cursor: pointer;
+}
+
+.docx-panel input[type='file'] {
+  /* The visible control is the label; the input itself only has to stay reachable by the keyboard. */
+  width: 0.1px;
+  height: 0.1px;
+  opacity: 0;
+  overflow: hidden;
+  position: absolute;
+  z-index: -1;
+}
+
+.admin-page-screenshot {
+  display: block;
+  padding: 20px;
+}
+
+/* --- Webhooks ---------------------------------------------------------------------------------- */
+
+.webhooks-table {
+  border-collapse: collapse;
+}
+
+.webhooks-table td {
+  padding: 3px 6px 3px 0;
+  vertical-align: top;
+}
+
+.webhooks-table .webhook-url input {
+  width: 420px;
+}
+
+.webhooks-table .webhook-auth-type {
+  width: 160px;
+}
+
+.invalid-webhook {
+  color: #c1272d;
+  font-size: 12px;
+  padding-top: 2px;
+}
+
+.add-webhook {
+  margin-top: 10px;
+}
+
+.webhooks-disabled {
+  font-style: italic;
+  color: palevioletred;
+}
+
+/* The button that opens the export dialog in its harness. A row rather than a block, so a second control
+   can be put next to it without moving this one. */
+.preview-controls {
+  display: flex;
+  gap: 8px;
+  margin-top: 16px;
+  flex-wrap: wrap;
+}
+
+/* The development harness for the Document Properties side panel frames the panel the way the editor's
+   properties pane does: a white, padded box of the pane's own width, so what is inside the frame is
+   what Polarion shows. */
+.preview-surface {
+  margin-top: 16px;
+  padding: 16px;
+  border: 1px dashed #c9c9c9;
+  background: #fff;
+}

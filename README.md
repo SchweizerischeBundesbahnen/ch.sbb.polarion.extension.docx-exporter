@@ -151,6 +151,14 @@ By default, webhooks functionality is not enabled in DOCX Exporter. If you want 
 ch.sbb.polarion.extension.docx-exporter.webhooks.enabled=true
 ```
 
+### Reference template size limit
+
+Saving a `templates` configuration rejects a reference template larger than 16 MB. To change the limit,
+add the following line in `polarion.properties`:
+```properties
+ch.sbb.polarion.extension.docx-exporter.templateMaxSizeMB=32
+```
+
 ### Debug option
 
 This extension makes intensive HTML processing to extend similar standard Polarion functionality. There is a possibility to log

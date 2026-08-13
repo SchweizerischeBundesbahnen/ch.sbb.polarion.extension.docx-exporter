@@ -1,0 +1,6 @@
+/* Intentionally empty trigger stylesheet. The Document Properties side panel fragment
+   (html/sidePanelContent.html) loads this file via a <link> whose `onload` handler dynamically imports
+   and mounts the React side-panel bundle - an inline module <script> would not run inside a
+   GWT-injected fragment. The panel's real styles (ui/src/sidepanel/side-panel.css) are bundled into the
+   React app and injected into the shadow root (see ui/src/services/shadowMount.ts), so this file only
+   needs to exist and be served for the onload trigger to fire. */

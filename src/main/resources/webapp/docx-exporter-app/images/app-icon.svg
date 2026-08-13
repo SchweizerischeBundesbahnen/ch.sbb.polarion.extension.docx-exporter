@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+        width="81"
+        height="80"
+        viewBox="0 0 81 80"
+        fill="none"
+        version="1.1"
+        id="svg6"
+        xmlns="http://www.w3.org/2000/svg"
+        xmlns:svg="http://www.w3.org/2000/svg">
+    <defs
+            id="defs6">
+        <filter
+                id="filter0_d_1080_2778"
+                x="0.679932"
+                y="-0.00598145"
+                width="80"
+                height="80"
+                filterUnits="userSpaceOnUse"
+                color-interpolation-filters="sRGB">
+            <feFlood
+                    flood-opacity="0"
+                    result="BackgroundImageFix"
+                    id="feFlood4" />
+            <feColorMatrix
+                    in="SourceAlpha"
+                    type="matrix"
+                    values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0"
+                    result="hardAlpha"
+                    id="feColorMatrix4" />
+            <feOffset
+                    dy="2"
+                    id="feOffset4" />
+            <feGaussianBlur
+                    stdDeviation="2"
+                    id="feGaussianBlur4" />
+            <feColorMatrix
+                    type="matrix"
+                    values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.2 0"
+                    id="feColorMatrix5" />
+            <feBlend
+                    mode="normal"
+                    in2="BackgroundImageFix"
+                    result="effect1_dropShadow_1080_2778"
+                    id="feBlend5" />
+            <feBlend
+                    mode="normal"
+                    in="SourceGraphic"
+                    in2="effect1_dropShadow_1080_2778"
+                    result="shape"
+                    id="feBlend6" />
+        </filter>
+        <mask
+                id="mask0_1080_2778"
+                style="mask-type:luminance"
+                maskUnits="userSpaceOnUse"
+                x="4"
+                y="1"
+                width="73"
+                height="73">
+            <rect
+                    x="4.67993"
+                    y="1.99402"
+                    width="72"
+                    height="72"
+                    fill="white"
+                    id="rect1" />
+        </mask>
+    </defs>
+    <g
+            id="g6">
+        <g
+                mask="url(#mask0_1080_2778)"
+                id="g3"
+                style="filter:url(#filter0_d_1080_2778)">
+            <rect
+                    width="108"
+                    height="108"
+                    transform="translate(-13.3201,-16.006)"
+                    fill="#ffffff"
+                    id="rect2"
+                    x="0"
+                    y="0" />
+            <path
+                    fill-rule="evenodd"
+                    clip-rule="evenodd"
+                    d="M 26.5299,30.994 H 25.697 l -4e-4,0.8329 -0.0167,30 -5e-4,0.8338 h 0.8338 17.5 V 60.994 H 27.347 l 0.0158,-28.3333 h 9.9838 v 9.1667 0.8333 h 0.8333 9.1667 v 1.6667 h 1.6666 v -2.5 -0.3452 l -0.244,-0.2441 -10,-10 -0.2441,-0.2441 h -0.3452 z m 19.6382,10 -7.1549,-7.1548 v 7.1548 z m -0.2441,13.0893 5,5 0.5892,0.5892 0.5893,-0.5892 5,-5 -1.1785,-1.1785 -3.5774,3.5774 V 45.994 h -1.6667 v 10.4882 l -3.5774,-3.5774 z m 1.4226,6.9107 v 1.6667 h 8.3333 V 60.994 Z"
+                    fill="#000000"
+                    id="path2" />
+            <rect
+                    x="-13.3201"
+                    y="-16.006001"
+                    width="108"
+                    height="40"
+                    fill="#eb0000"
+                    id="rect3" />
+            <path
+                    fill-rule="evenodd"
+                    clip-rule="evenodd"
+                    d="m 34.67,19.4556 h 3.4962 l -4.7047,-4.7885 h 5.8392 v 4.7885 h 2.7594 v -4.7885 h 5.8395 l -4.7059,4.7885 h 3.4965 l 5.9897,-6.2211 -5.9897,-6.24048 h -3.4965 l 4.7059,4.80788 H 42.0601 V 6.99402 H 39.3007 V 11.8019 H 33.4615 L 38.1662,6.99402 H 34.67 l -5.9901,6.24048 5.9901,6.2211"
+                    fill="#ffffff"
+                    id="path3" />
+        </g>
+        <text
+                xml:space="preserve"
+                style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:6.66667px;font-family:Arial;-inkscape-font-specification:'Arial, Bold';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;text-align:start;writing-mode:lr-tb;direction:ltr;text-anchor:start;fill:#000000"
+                x="27.558859"
+                y="56.505577"
+                id="text6"><tspan
+         id="tspan6"
+         x="27.558859"
+         y="56.505577">DOCX</tspan></text>
+    </g>
+</svg>
