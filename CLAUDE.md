@@ -19,7 +19,7 @@
     REST endpoints the export dialog uses; the Java side substitutes nothing but the bundle version.
     Its CSS is `ui/src/sidepanel/side-panel.css`.
   - **"Export to DOCX" dialog** - `assets/export-popup.js` exporting `openExportPopup()`, imported on click
-    by `js/starter.js`. It appends its own host to the page body and mounts into a shadow root of it.
+    by `js/dle-toolbar.js`. It appends its own host to the page body and mounts into a shadow root of it.
     Its CSS is `ui/src/popup/export-popup.css`. There is no `documentType`: this extension exports Live
     Documents only, and `ExportParams.java` has no such field.
 

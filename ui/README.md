@@ -47,7 +47,7 @@ Vite would emit:
 | Entry                     | Emitted as               | Imported by                                       | Export it is called through |
 | ------------------------- | ------------------------ | ------------------------------------------------- | --------------------------- |
 | `src/sidepanel/mount.tsx` | `assets/side-panel.js`   | `webapp/docx-exporter/html/sidePanelContent.html` | `mountSidePanel(selector)`  |
-| `src/popup/mount.tsx`     | `assets/export-popup.js` | `webapp/docx-exporter/js/starter.js`              | `openExportPopup()`         |
+| `src/popup/mount.tsx`     | `assets/export-popup.js` | `webapp/docx-exporter/js/dle-toolbar.js`          | `openExportPopup()`         |
 
 Both need `rollupOptions.preserveEntrySignatures: 'strict'` to keep that export, which a Vite app build
 otherwise drops. Nothing in the Vitest suites sees the built files, so

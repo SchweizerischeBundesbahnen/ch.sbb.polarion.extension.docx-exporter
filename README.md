@@ -99,18 +99,6 @@ Alternatively you can configure DOCX Exporter such a way that a button to open t
 > scriptInjection.dleEditorHead=<script src="/polarion/pdf-exporter/js/dle-toolbar.js"></script><script src="/polarion/docx-exporter/js/dle-toolbar.js"></script><script src="/polarion/strictdoc-exporter/js/dle-toolbar.js"></script>
 > ```
 
-#### Deprecated configuration
-
-The explicit `DocxExporterStarter.injectToolbar(...)` configuration still works but is **deprecated** in favor of the single-tag `dle-toolbar.js` form above (removal is planned for a future major version):
-
-```properties
-# Button in Polarion's native document toolbar — equivalent to the recommended dle-toolbar.js form above.
-scriptInjection.dleEditorHead=<script src="/polarion/docx-exporter/js/starter.js"></script><script>DocxExporterStarter.injectToolbar({alternate: true});</script>
-```
-```properties
-# A separate toolbar with the button placed above the document editing area.
-scriptInjection.dleEditorHead=<script src="/polarion/docx-exporter/js/starter.js"></script><script>DocxExporterStarter.injectToolbar();</script>
-```
 
 ### Configuring logs
 
