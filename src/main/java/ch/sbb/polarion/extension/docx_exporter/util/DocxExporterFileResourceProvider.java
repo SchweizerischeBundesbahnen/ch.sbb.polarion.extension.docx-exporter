@@ -1,5 +1,6 @@
 package ch.sbb.polarion.extension.docx_exporter.util;
 
+import ch.sbb.polarion.extension.docx_exporter.properties.DocxExporterExtensionConfiguration;
 import com.polarion.alm.shared.api.transaction.TransactionalExecutor;
 import com.polarion.alm.tracker.internal.url.GenericUrlResolver;
 import com.polarion.alm.tracker.internal.url.IAttachmentUrlResolver;
@@ -41,14 +42,40 @@ public class DocxExporterFileResourceProvider implements FileResourceProvider {
     private static final Logger logger = Logger.getLogger(DocxExporterFileResourceProvider.class);
 
     private final List<IUrlResolver> resolvers;
+    private final ResourceUrlPolicy policy;
 
     public DocxExporterFileResourceProvider() {
-        this.resolvers = Arrays.asList(getPolarionUrlResolverWithoutGenericUrlChildResolver(), new CustomResourceUrlResolver());
+        this(ResourceUrlPolicy.getInstance());
+    }
+
+    private DocxExporterFileResourceProvider(@NotNull ResourceUrlPolicy policy) {
+        this.policy = policy;
+        this.resolvers = Arrays.asList(getPolarionUrlResolverWithoutGenericUrlChildResolver(), new CustomResourceUrlResolver(policy));
     }
 
     @VisibleForTesting
     public DocxExporterFileResourceProvider(List<IUrlResolver> resolvers) {
+        this(resolvers, new ResourceUrlPolicy(ResourceUrlPolicy.Mode.ALLOW_ALL, null, null,
+                DocxExporterExtensionConfiguration.EXTERNAL_RESOURCES_MAX_SIZE_MB_DEFAULT_VALUE));
+    }
+
+    @VisibleForTesting
+    public DocxExporterFileResourceProvider(List<IUrlResolver> resolvers, @NotNull ResourceUrlPolicy policy) {
         this.resolvers = resolvers;
+        this.policy = policy;
+    }
+
+    @Override
+    public boolean isForbidden(@NotNull String resource) {
+        if (MediaUtils.isDataUrl(resource) || resource.startsWith("/")) {
+            return false;
+        }
+        try {
+            return !policy.isAllowed(URI.create(resource).toURL());
+        } catch (Exception e) {
+            logger.warn("Cannot parse the resource url '" + resource + "', it is treated as forbidden");
+            return true;
+        }
     }
 
     @SneakyThrows

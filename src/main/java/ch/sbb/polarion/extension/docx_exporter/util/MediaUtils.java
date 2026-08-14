@@ -37,6 +37,11 @@ public class MediaUtils {
     public static final String URL_REGEX = "url\\(\\s*([\"'])?(?<url>.*?)\\1?\\s*\\)";
     public static final String RESOURCE_EXTENSION_REGEX = "^.*\\.(?<extension>[a-zA-Z\\d]{3,4})(?:[?&#]|$)";
     public static final String DATA_URL_PREFIX = "data:";
+    /**
+     * A 1x1 transparent PNG which replaces a resource the {@link ResourceUrlPolicy} rejected.
+     */
+    public static final String BLOCKED_RESOURCE_PLACEHOLDER =
+            "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==";
     private static final Logger logger = Logger.getLogger(MediaUtils.class);
     private static final int PDF_TO_PNG_DPI = 300;
     private static final String IMG_FORMAT_PNG = "png";
@@ -121,6 +126,10 @@ public class MediaUtils {
     public String inlineBase64Resources(String content, FileResourceProvider fileResourceProvider) {
         RegexMatcher.IReplacementCalculator dataReplacement = engine -> {
             String url = engine.group("url");
+            if (!MediaUtils.isDataUrl(url) && fileResourceProvider.isForbidden(url)) {
+                // the url is replaced, not kept, so that the conversion service does not load it either
+                return engine.group().replace(url, BLOCKED_RESOURCE_PLACEHOLDER);
+            }
             String base64String = MediaUtils.isDataUrl(url) ? url : fileResourceProvider.getResourceAsBase64String(url);
             return base64String == null ? null : engine.group().replace(url, base64String);
         };
