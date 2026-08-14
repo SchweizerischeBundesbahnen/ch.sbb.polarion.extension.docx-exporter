@@ -25,6 +25,18 @@ public class DocxExporterExtensionConfiguration extends ExtensionConfiguration {
     public static final String TEMPLATE_MAX_SIZE_MB_DESCRIPTION = "Size in MB an uploaded <a href='#reference-template-size-limit'>reference template</a> may reach";
     public static final int TEMPLATE_MAX_SIZE_MB_DEFAULT_VALUE = 16;
 
+    public static final String EXTERNAL_RESOURCES_POLICY = "externalResources.policy";
+    public static final String EXTERNAL_RESOURCES_POLICY_DESCRIPTION = "Which hosts a document may load <a href='#external-resources'>images, fonts and stylesheets</a> from";
+    public static final String EXTERNAL_RESOURCES_POLICY_DEFAULT_VALUE = "blockInternal";
+
+    public static final String EXTERNAL_RESOURCES_ALLOWED_HOSTS = "externalResources.allowedHosts";
+    public static final String EXTERNAL_RESOURCES_ALLOWED_HOSTS_DESCRIPTION = "Comma separated hosts which are always allowed as a source of <a href='#external-resources'>external resources</a>";
+    public static final String EXTERNAL_RESOURCES_ALLOWED_HOSTS_DEFAULT_VALUE = "";
+
+    public static final String EXTERNAL_RESOURCES_MAX_SIZE_MB = "externalResources.maxSizeMB";
+    public static final String EXTERNAL_RESOURCES_MAX_SIZE_MB_DESCRIPTION = "Size in MB a single loaded <a href='#external-resources'>external resource</a> may reach";
+    public static final int EXTERNAL_RESOURCES_MAX_SIZE_MB_DEFAULT_VALUE = 16;
+
     @Override
     public String getDebugDescription() {
         return DEBUG_DESCRIPTION;
@@ -63,11 +75,57 @@ public class DocxExporterExtensionConfiguration extends ExtensionConfiguration {
         return String.valueOf(TEMPLATE_MAX_SIZE_MB_DEFAULT_VALUE);
     }
 
+    public String getExternalResourcesPolicy() {
+        return SystemValueReader.getInstance().readString(getPropertyPrefix() + EXTERNAL_RESOURCES_POLICY, EXTERNAL_RESOURCES_POLICY_DEFAULT_VALUE);
+    }
+
+    @SuppressWarnings("unused")
+    public String getExternalResourcesPolicyDescription() {
+        return EXTERNAL_RESOURCES_POLICY_DESCRIPTION;
+    }
+
+    @SuppressWarnings("unused")
+    public String getExternalResourcesPolicyDefaultValue() {
+        return EXTERNAL_RESOURCES_POLICY_DEFAULT_VALUE;
+    }
+
+    @NotNull
+    public String getExternalResourcesAllowedHosts() {
+        return SystemValueReader.getInstance().readString(getPropertyPrefix() + EXTERNAL_RESOURCES_ALLOWED_HOSTS, EXTERNAL_RESOURCES_ALLOWED_HOSTS_DEFAULT_VALUE);
+    }
+
+    @SuppressWarnings("unused")
+    public String getExternalResourcesAllowedHostsDescription() {
+        return EXTERNAL_RESOURCES_ALLOWED_HOSTS_DESCRIPTION;
+    }
+
+    @SuppressWarnings("unused")
+    public String getExternalResourcesAllowedHostsDefaultValue() {
+        return EXTERNAL_RESOURCES_ALLOWED_HOSTS_DEFAULT_VALUE;
+    }
+
+    public int getExternalResourcesMaxSizeMB() {
+        return SystemValueReader.getInstance().readInt(getPropertyPrefix() + EXTERNAL_RESOURCES_MAX_SIZE_MB, EXTERNAL_RESOURCES_MAX_SIZE_MB_DEFAULT_VALUE);
+    }
+
+    @SuppressWarnings("unused")
+    public String getExternalResourcesMaxSizeMBDescription() {
+        return EXTERNAL_RESOURCES_MAX_SIZE_MB_DESCRIPTION;
+    }
+
+    @SuppressWarnings("unused")
+    public String getExternalResourcesMaxSizeMBDefaultValue() {
+        return String.valueOf(EXTERNAL_RESOURCES_MAX_SIZE_MB_DEFAULT_VALUE);
+    }
+
     @Override
     public @NotNull List<String> getSupportedProperties() {
         List<String> supportedProperties = new ArrayList<>(super.getSupportedProperties());
         supportedProperties.add(PANDOC_SERVICE);
         supportedProperties.add(TEMPLATE_MAX_SIZE_MB);
+        supportedProperties.add(EXTERNAL_RESOURCES_POLICY);
+        supportedProperties.add(EXTERNAL_RESOURCES_ALLOWED_HOSTS);
+        supportedProperties.add(EXTERNAL_RESOURCES_MAX_SIZE_MB);
         return supportedProperties;
     }
 
