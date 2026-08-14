@@ -52,6 +52,7 @@ public class MediaUtils {
     public static final String CSS_IMPORT_URL_REGEX = "(?i)@import" + CSS_AT_RULE_SEPARATOR + "url\\((?<url>[^)]*)\\)[^;]*;?";
     public static final String RESOURCE_EXTENSION_REGEX = "^.*\\.(?<extension>[a-zA-Z\\d]{3,4})(?:[?&#]|$)";
     public static final String DATA_URL_PREFIX = "data:";
+    private static final String NETWORK_PATH_PREFIX = "//";
     private static final String COMMENT_START = "/*";
     private static final String COMMENT_END = "*/";
     /**
@@ -143,9 +144,11 @@ public class MediaUtils {
     public String inlineBase64Resources(String content, FileResourceProvider fileResourceProvider) {
         // replace tags like <img src="...
         String result = RegexMatcher.get(IMG_SRC_REGEX).replace(content, replacement(fileResourceProvider, false));
-        // drop a forbidden '@import' before its url reaches the pass below, which would only replace the url
+        // An at-rule is never inlined, so any absolute target has to go: a forbidden one because the
+        // policy rejected it, an allowed one because pandoc would then load it from its own network
+        // position, with none of the checks this class applies. A relative target stays.
         RegexMatcher.IReplacementCalculator importReplacement = engine ->
-                fileResourceProvider.isForbidden(unwrapCssUrl(engine.group("url"))) ? "" : null;
+                isAbsoluteHttpUrl(unwrapCssUrl(engine.group("url"))) ? "" : null;
         result = RegexMatcher.get(CSS_IMPORT_URL_REGEX).useJavaUtil().replace(result, importReplacement);
         result = RegexMatcher.get(CSS_IMPORT_REGEX).useJavaUtil().replace(result, importReplacement);
         // replace CSS parameters like background: src('/polarion/...
@@ -162,7 +165,7 @@ public class MediaUtils {
         };
     }
 
-    private String inlineOrBlock(FileResourceProvider fileResourceProvider, String match, String rawUrl, String url) {
+    private String inlineOrBlock(@NotNull FileResourceProvider fileResourceProvider, @NotNull String match, @NotNull String rawUrl, @NotNull String url) {
         if (MediaUtils.isDataUrl(url)) {
             return null;
         }
@@ -183,10 +186,8 @@ public class MediaUtils {
      * stays in the value whenever a comment kept the pattern from capturing it separately. Only the
      * leading and the trailing comment go, a url may well carry the very same characters in its path.
      */
-    public String unwrapCssUrl(@Nullable String url) {
-        if (url == null) {
-            return null;
-        }
+    @NotNull
+    public String unwrapCssUrl(@NotNull String url) {
         String unwrapped = url.trim();
         while (unwrapped.startsWith(COMMENT_START) && unwrapped.contains(COMMENT_END)) {
             unwrapped = unwrapped.substring(unwrapped.indexOf(COMMENT_END) + COMMENT_END.length()).trim();
@@ -208,12 +209,21 @@ public class MediaUtils {
         return url.replace(" ", "%20").replace("%5F", "_");
     }
 
+    /**
+     * A network path reference like {@code //host/path} counts as well: the conversion service reads the
+     * document with a base url and gives such a reference the scheme of that base.
+     */
     public boolean isAbsoluteHttpUrl(@Nullable String url) {
         if (url == null) {
             return false;
         }
         String lowerCased = url.trim().toLowerCase(Locale.ROOT);
-        return lowerCased.startsWith("http://") || lowerCased.startsWith("https://");
+        return lowerCased.startsWith("http://") || lowerCased.startsWith("https://") || isNetworkPathReference(lowerCased);
+    }
+
+    public boolean isNetworkPathReference(@NotNull String url) {
+        String trimmed = url.trim();
+        return trimmed.startsWith(NETWORK_PATH_PREFIX) && trimmed.length() > NETWORK_PATH_PREFIX.length();
     }
 
     /**
