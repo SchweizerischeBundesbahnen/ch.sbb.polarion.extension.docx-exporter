@@ -19,6 +19,18 @@ import static org.mockito.Mockito.verifyNoInteractions;
 class MediaUtilsTest {
 
     @Test
+    void anUnplaceableRewriteIsNotClearedByALaterOneTest() {
+        // the flag answers "was every rewrite placed", so one that was not stands whatever follows it
+        MediaUtils.CssRewrite rewrite = new MediaUtils.CssRewrite();
+        assertTrue(rewrite.complete());
+
+        rewrite.missed(false);
+        rewrite.missed(true);
+
+        assertFalse(rewrite.complete());
+    }
+
+    @Test
     void dataUrlTest() {
         assertFalse(MediaUtils.isDataUrl(null));
         assertFalse(MediaUtils.isDataUrl(""));
