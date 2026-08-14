@@ -179,6 +179,19 @@ class ResourceUrlPolicyTest {
     }
 
     @Test
+    void fallsBackWhenTheConfigurationIsEmpty() {
+        DocxExporterExtensionConfiguration configuration = mock(DocxExporterExtensionConfiguration.class);
+
+        try (MockedStatic<DocxExporterExtensionConfiguration> mocked = mockStatic(DocxExporterExtensionConfiguration.class)) {
+            mocked.when(DocxExporterExtensionConfiguration::getInstance).thenReturn(configuration);
+
+            ResourceUrlPolicy policy = ResourceUrlPolicy.getInstance();
+            assertEquals(16L * 1024 * 1024, policy.getMaxResourceBytes());
+            assertFalse(policy.isAllowed(url("http://127.0.0.1/secret")));
+        }
+    }
+
+    @Test
     void convertsSizeLimitToBytes() {
         assertEquals(16L * 1024 * 1024, policy(Mode.BLOCK_INTERNAL, List.of()).getMaxResourceBytes());
     }
