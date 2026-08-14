@@ -24,6 +24,7 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.BiFunction;
@@ -34,7 +35,11 @@ import static ch.sbb.polarion.extension.docx_exporter.util.TikaMimeTypeResolver.
 @UtilityClass
 public class MediaUtils {
     public static final String IMG_SRC_REGEX = "<img[^<>]*src=(\"|')(?<url>[^(\"|')]*)(\"|')";
-    public static final String URL_REGEX = "url\\(\\s*([\"'])?(?<url>.*?)\\1?\\s*\\)";
+    public static final String URL_REGEX = "(?i)url\\(\\s*([\"'])?(?<url>.*?)\\1?\\s*\\)";
+    /**
+     * {@code @import "..."} without the {@code url(...)} wrapper, which {@link #URL_REGEX} does not match.
+     */
+    public static final String CSS_IMPORT_REGEX = "(?i)@import\\s+([\"'])(?<url>[^\"']+)\\1\\s*;?";
     public static final String RESOURCE_EXTENSION_REGEX = "^.*\\.(?<extension>[a-zA-Z\\d]{3,4})(?:[?&#]|$)";
     public static final String DATA_URL_PREFIX = "data:";
     /**
@@ -126,18 +131,45 @@ public class MediaUtils {
     public String inlineBase64Resources(String content, FileResourceProvider fileResourceProvider) {
         RegexMatcher.IReplacementCalculator dataReplacement = engine -> {
             String url = engine.group("url");
-            if (!MediaUtils.isDataUrl(url) && fileResourceProvider.isForbidden(url)) {
-                // the url is replaced, not kept, so that the conversion service does not load it either
-                return engine.group().replace(url, BLOCKED_RESOURCE_PLACEHOLDER);
+            if (MediaUtils.isDataUrl(url)) {
+                return null;
             }
-            String base64String = MediaUtils.isDataUrl(url) ? url : fileResourceProvider.getResourceAsBase64String(url);
-            return base64String == null ? null : engine.group().replace(url, base64String);
+            if (!fileResourceProvider.isForbidden(url)) {
+                String base64String = fileResourceProvider.getResourceAsBase64String(url);
+                if (base64String != null) {
+                    return engine.group().replace(url, base64String);
+                }
+            }
+            // An absolute url which was not inlined, whatever the reason, must not stay in the HTML:
+            // the conversion service would load it from its own network position. A relative url is
+            // left untouched, the service cannot resolve it.
+            return isAbsoluteHttpUrl(url) ? engine.group().replace(url, BLOCKED_RESOURCE_PLACEHOLDER) : null;
         };
 
+        // drop a forbidden '@import "..."', there is nothing to inline it with
+        RegexMatcher.IReplacementCalculator importReplacement = engine ->
+                fileResourceProvider.isForbidden(engine.group("url")) ? "" : null;
+
         // replace tags like <img src="...
-        String intermediateResult = RegexMatcher.get(IMG_SRC_REGEX).replace(content, dataReplacement);
+        String result = RegexMatcher.get(IMG_SRC_REGEX).replace(content, dataReplacement);
         // replace CSS parameters like background: src('/polarion/...
-        return RegexMatcher.get(URL_REGEX).useJavaUtil().replace(intermediateResult, dataReplacement);
+        result = RegexMatcher.get(URL_REGEX).useJavaUtil().replace(result, dataReplacement);
+        return RegexMatcher.get(CSS_IMPORT_REGEX).useJavaUtil().replace(result, importReplacement);
+    }
+
+    /**
+     * Normalizes a resource url the same way for the policy check and for the request itself.
+     */
+    public String normalizeUrl(@NotNull String url) {
+        return url.replace(" ", "%20").replace("%5F", "_");
+    }
+
+    public boolean isAbsoluteHttpUrl(@Nullable String url) {
+        if (url == null) {
+            return false;
+        }
+        String lowerCased = url.trim().toLowerCase(Locale.ROOT);
+        return lowerCased.startsWith("http://") || lowerCased.startsWith("https://");
     }
 
     /**
