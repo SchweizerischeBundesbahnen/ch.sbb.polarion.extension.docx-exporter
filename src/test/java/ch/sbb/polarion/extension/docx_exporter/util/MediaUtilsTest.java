@@ -12,6 +12,8 @@ import java.awt.image.BufferedImage;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verifyNoInteractions;
 
 @ExtendWith({MockitoExtension.class, BundleJarsPrioritizingRunnableMockExtension.class})
 class MediaUtilsTest {
@@ -133,4 +135,28 @@ class MediaUtilsTest {
         g2d.dispose();
     }
 
+
+    @Test
+    void recognizesAbsoluteHttpUrls() {
+        assertTrue(MediaUtils.isAbsoluteHttpUrl("http://example.com/img.png"));
+        assertTrue(MediaUtils.isAbsoluteHttpUrl(" HTTPS://example.com/img.png"));
+        assertFalse(MediaUtils.isAbsoluteHttpUrl(null));
+        assertFalse(MediaUtils.isAbsoluteHttpUrl("/polarion/img.png"));
+        assertFalse(MediaUtils.isAbsoluteHttpUrl("data:image/png;base64,AAAA"));
+    }
+
+    @Test
+    void keepsDataUrlsWhileInlining() {
+        FileResourceProvider provider = mock(FileResourceProvider.class);
+        String html = "<div><img src=\"data:image/png;base64,AAAA\"/></div>";
+
+        assertEquals(html, MediaUtils.inlineBase64Resources(html, provider));
+        verifyNoInteractions(provider);
+    }
+
+    @Test
+    void normalizesUrlForTheRequestAndTheCheck() {
+        assertEquals("http://example.com/some%20path/img_name.png",
+                MediaUtils.normalizeUrl("http://example.com/some path/img%5Fname.png"));
+    }
 }

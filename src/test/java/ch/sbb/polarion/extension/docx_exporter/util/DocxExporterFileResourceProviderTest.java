@@ -1,5 +1,6 @@
 package ch.sbb.polarion.extension.docx_exporter.util;
 
+import ch.sbb.polarion.extension.docx_exporter.properties.DocxExporterExtensionConfiguration;
 import ch.sbb.polarion.extension.generic.test_extensions.PlatformContextMockExtension;
 import ch.sbb.polarion.extension.generic.test_extensions.TransactionalExecutorExtension;
 import com.polarion.alm.tracker.internal.url.GenericUrlResolver;
@@ -509,5 +510,24 @@ class DocxExporterFileResourceProviderTest {
         assertFalse(provider.isForbidden("data:image/png;base64,AAAA"));
         assertFalse(provider.isForbidden("#gradient"));
         assertFalse(provider.isForbidden("images/local.png"));
+        // an absolute url which cannot be parsed at all must not reach the conversion service either
+        assertTrue(provider.isForbidden("http://[unterminated/img.png"));
+    }
+
+    @Test
+    void buildsItsResolversFromTheConfiguration() {
+        DocxExporterExtensionConfiguration configuration = mock(DocxExporterExtensionConfiguration.class);
+        IAttachmentUrlResolver parentUrlResolver = mock(IAttachmentUrlResolver.class);
+
+        try (MockedStatic<DocxExporterExtensionConfiguration> configurationMock = mockStatic(DocxExporterExtensionConfiguration.class);
+             MockedStatic<PolarionUrlResolver> polarionUrlResolverMock = mockStatic(PolarionUrlResolver.class)) {
+            configurationMock.when(DocxExporterExtensionConfiguration::getInstance).thenReturn(configuration);
+            polarionUrlResolverMock.when(PolarionUrlResolver::getInstance).thenReturn(parentUrlResolver);
+
+            DocxExporterFileResourceProvider provider = new DocxExporterFileResourceProvider();
+
+            assertTrue(provider.isForbidden("http://10.0.0.5/img.png"));
+            assertFalse(provider.isForbidden("https://8.8.8.8/img.png"));
+        }
     }
 }
