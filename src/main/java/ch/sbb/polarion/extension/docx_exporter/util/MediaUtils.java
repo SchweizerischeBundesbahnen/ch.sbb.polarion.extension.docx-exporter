@@ -158,21 +158,24 @@ public class MediaUtils {
             if (rawUrl == null || rawUrl.isEmpty()) {
                 return null;
             }
-            String url = css ? unwrapCssUrl(rawUrl) : rawUrl;
-            if (MediaUtils.isDataUrl(url)) {
-                return null;
-            }
-            if (!fileResourceProvider.isForbidden(url)) {
-                String base64String = fileResourceProvider.getResourceAsBase64String(url);
-                if (base64String != null) {
-                    return engine.group().replace(rawUrl, base64String);
-                }
-            }
-            // An absolute url which was not inlined, whatever the reason, must not stay in the HTML:
-            // the conversion service would load it from its own network position. A relative url is
-            // left untouched, the service cannot resolve it.
-            return isAbsoluteHttpUrl(url) ? engine.group().replace(rawUrl, BLOCKED_RESOURCE_PLACEHOLDER) : null;
+            return inlineOrBlock(fileResourceProvider, engine.group(), rawUrl, css ? unwrapCssUrl(rawUrl) : rawUrl);
         };
+    }
+
+    private String inlineOrBlock(FileResourceProvider fileResourceProvider, String match, String rawUrl, String url) {
+        if (MediaUtils.isDataUrl(url)) {
+            return null;
+        }
+        if (!fileResourceProvider.isForbidden(url)) {
+            String base64String = fileResourceProvider.getResourceAsBase64String(url);
+            if (base64String != null) {
+                return match.replace(rawUrl, base64String);
+            }
+        }
+        // An absolute url which was not inlined, whatever the reason, must not stay in the HTML:
+        // the conversion service would load it from its own network position. A relative url is
+        // left untouched, the service cannot resolve it.
+        return isAbsoluteHttpUrl(url) ? match.replace(rawUrl, BLOCKED_RESOURCE_PLACEHOLDER) : null;
     }
 
     /**
