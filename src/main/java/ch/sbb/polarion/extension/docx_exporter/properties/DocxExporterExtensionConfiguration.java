@@ -89,7 +89,6 @@ public class DocxExporterExtensionConfiguration extends ExtensionConfiguration {
         return EXTERNAL_RESOURCES_POLICY_DEFAULT_VALUE;
     }
 
-    @NotNull
     public String getExternalResourcesAllowedHosts() {
         return SystemValueReader.getInstance().readString(getPropertyPrefix() + EXTERNAL_RESOURCES_ALLOWED_HOSTS, EXTERNAL_RESOURCES_ALLOWED_HOSTS_DEFAULT_VALUE);
     }
