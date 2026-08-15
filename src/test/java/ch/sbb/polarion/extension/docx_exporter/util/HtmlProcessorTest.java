@@ -765,6 +765,35 @@ class HtmlProcessorTest {
         assertEquals("<style>a { color: red }" + lineBreak + "b { background: url(data:image/png;base64,AAAA) }</style>", result);
     }
 
+    @ParameterizedTest
+    @ValueSource(strings = {
+            // pandoc-service reads a file url and an absolute path out of its own container, and
+            // weasyprint-service reads a file url through an import: neither may stay in the markup
+            "<img src=\"file:///etc/hostname\">",
+            "<img src=\"/etc/hostname\">",
+            "<div style=\"background: url(file:///etc/hostname)\"></div>",
+            "<style>a { background: url(file:///etc/hostname) }</style>"
+    })
+    @SneakyThrows
+    void replaceAUrlAConverterWouldReadElsewhereTest(String html) {
+        // nothing here can be loaded by the extension, which is exactly why it must not stay
+        when(fileResourceProvider.getResourceAsBase64String(anyString())).thenReturn(null);
+
+        String result = processor.replaceResourcesAsBase64Encoded(html);
+
+        assertFalse(result.contains("/etc/hostname"));
+    }
+
+    @Test
+    @SneakyThrows
+    void dropAnImportOfAFileUrlTest() {
+        // an at-rule is never inlined, so its target is removed whatever the provider would answer
+        String result = processor.replaceResourcesAsBase64Encoded(
+                "<style>@import \"file:///etc/hostname\"; a { color: red }</style>");
+
+        assertFalse(result.contains("/etc/hostname"));
+    }
+
     @Test
     @SneakyThrows
     void blockAnEscapedSchemeOfAForbiddenAddressInAStyleAttributeTest() {

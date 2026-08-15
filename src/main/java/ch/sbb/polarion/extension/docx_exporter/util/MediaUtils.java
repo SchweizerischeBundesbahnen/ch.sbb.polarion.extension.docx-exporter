@@ -75,6 +75,9 @@ public class MediaUtils {
     public static final String RESOURCE_EXTENSION_REGEX = "^.*\\.(?<extension>[a-zA-Z\\d]{3,4})(?:[?&#]|$)";
     public static final String DATA_URL_PREFIX = "data:";
     private static final String NETWORK_PATH_PREFIX = "//";
+    // a url which names a scheme names where it is read from, and this class can vet two of them
+    private static final Pattern SCHEME_PATTERN = Pattern.compile("^[a-z][a-z\\d+.-]*:", Pattern.CASE_INSENSITIVE);
+
     private static final Pattern CSS_ESCAPE_PATTERN = Pattern.compile("\\\\(?:([0-9a-fA-F]{1,6})[ \\t\\r\\n\\f]?|(.))", Pattern.DOTALL);
     /**
      * A 1x1 transparent PNG which replaces a resource the {@link ResourceUrlPolicy} rejected.
@@ -226,10 +229,10 @@ public class MediaUtils {
                 return base64String;
             }
         }
-        // An absolute url which was not inlined, whatever the reason, must not stay in the document:
-        // the conversion service would load it from its own network position. A relative url is left
-        // untouched, the service cannot resolve it.
-        return isAbsoluteHttpUrl(decoded) ? BLOCKED_RESOURCE_PLACEHOLDER : null;
+        // A url which was not inlined, whatever the reason, must not stay in the document where the
+        // conversion service would read it from its own network or its own file system. A relative url
+        // is left untouched, no service reads one.
+        return isReadElsewhere(decoded) ? BLOCKED_RESOURCE_PLACEHOLDER : null;
     }
 
     /**
@@ -280,7 +283,7 @@ public class MediaUtils {
     private void readImports(@NotNull String css, @NotNull CascadingStyleSheet stylesheet, int[] lineStarts, @NotNull CssRewrite rewrite) {
         for (CSSImportRule importRule : stylesheet.getAllImportRules()) {
             CssRange range = rangeOf(lineStarts, css, importRule.getSourceLocation());
-            boolean absolute = isAbsoluteHttpUrl(decodeCssEscapes(importRule.getLocationString()));
+            boolean absolute = isReadElsewhere(decodeCssEscapes(importRule.getLocationString()));
             if (range == null) {
                 rewrite.missed(!absolute);
             } else {
@@ -407,7 +410,9 @@ public class MediaUtils {
      */
     private boolean namesAnAbsoluteAddress(@NotNull String css) {
         String probe = decodeCssEscapes(css).toLowerCase(Locale.ROOT);
-        return probe.contains("http:") || probe.contains("https:") || probe.contains(NETWORK_PATH_PREFIX);
+        // file: is the one scheme besides http and https which a conversion service here resolves
+        return probe.contains("http:") || probe.contains("https:") || probe.contains("file:")
+                || probe.contains(NETWORK_PATH_PREFIX);
     }
 
     /**
@@ -645,6 +650,22 @@ public class MediaUtils {
      */
     public String normalizeUrl(@NotNull String url) {
         return url.replace(" ", "%20").replace("%5F", "_");
+    }
+
+    /**
+     * Tells whether a converter would read this url from somewhere of its own: an address in any
+     * scheme, or a path from the root of a file system. Measured against pandoc-service: it reads a
+     * {@code file:} url and, because the document it converts carries no base to resolve against, a
+     * root path out of its own container as well. A relative url is read by neither, and a data url
+     * carries its own content.
+     */
+    public boolean isReadElsewhere(@Nullable String url) {
+        if (url == null) {
+            return false;
+        }
+        String trimmed = url.trim();
+        return !isDataUrl(trimmed)
+                && (trimmed.startsWith("/") || SCHEME_PATTERN.matcher(trimmed).find());
     }
 
     /**
