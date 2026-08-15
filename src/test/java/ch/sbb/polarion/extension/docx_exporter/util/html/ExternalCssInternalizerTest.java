@@ -128,4 +128,34 @@ class ExternalCssInternalizerTest {
 
         assertThat(result).isEmpty();
     }
+
+    @Test
+    void shouldKeepAValueOfTheDocumentInsideItsAttribute() {
+        // the value is written back as markup, so a quote in it may not end the attribute it sits in
+        when(fileResourceProvider.getResourceAsBytes("my-href-location")).thenReturn("body{color:red}".getBytes());
+
+        Optional<String> result = cssLinkInliner.inline(Map.of(
+                "rel", "stylesheet",
+                "href", "my-href-location",
+                "data-precedence", "x\"><img src=http://169.254.169.254/x>"));
+
+        assertThat(result).isPresent();
+        assertThat(result.get())
+                .doesNotContain("<img src=http://169.254.169.254/x>")
+                .contains("&quot;&gt;&lt;img");
+    }
+
+    @Test
+    void shouldKeepAStylesheetInsideItsStyleElement() {
+        // a style element ends at the first closing tag written in it, and a stylesheet may carry one
+        when(fileResourceProvider.getResourceAsBytes("my-href-location"))
+                .thenReturn("a::after{content:\"</style><img src=http://169.254.169.254/x>\"}".getBytes());
+
+        Optional<String> result = cssLinkInliner.inline(Map.of("rel", "stylesheet", "href", "my-href-location"));
+
+        assertThat(result).isPresent();
+        assertThat(result.get())
+                .doesNotContain("</style><img")
+                .endsWith("</style>");
+    }
 }
