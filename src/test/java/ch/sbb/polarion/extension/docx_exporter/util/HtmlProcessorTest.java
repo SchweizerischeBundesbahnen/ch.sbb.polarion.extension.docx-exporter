@@ -796,6 +796,18 @@ class HtmlProcessorTest {
 
     @Test
     @SneakyThrows
+    void readAUrlOfATabIndentedDeclarationTest() {
+        // the parser counts a tab as one column here, so its columns are the offsets of the text
+        String html = "<style>a {\n\tbackground: url(images/logo.png);\n}</style>";
+        when(fileResourceProvider.getResourceAsBase64String("images/logo.png")).thenReturn("data:image/png;base64,AAAA");
+
+        String result = processor.replaceResourcesAsBase64Encoded(html);
+
+        assertEquals("<style>a {\n\tbackground: url(data:image/png;base64,AAAA);\n}</style>", result);
+    }
+
+    @Test
+    @SneakyThrows
     void blockAnEscapedSchemeOfAForbiddenAddressInAStyleAttributeTest() {
         // the gate resolves the escapes, so the decision which follows it reads the same address
         when(fileResourceProvider.isForbidden(anyString())).thenReturn(true);

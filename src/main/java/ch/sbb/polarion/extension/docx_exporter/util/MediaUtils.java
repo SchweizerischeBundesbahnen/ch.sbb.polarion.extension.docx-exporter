@@ -275,6 +275,9 @@ public class MediaUtils {
         CSSReaderSettings settings = new CSSReaderSettings()
                 // a browser keeps what it understands and skips the rest, and so does the conversion service
                 .setBrowserCompliantMode(true)
+                // a tab counts as one column, so a column of the parser is an offset of the text again:
+                // the default of eight moves every position on a line which carries one
+                .setTabSize(1)
                 .setCustomErrorHandler(new DoNothingCSSParseErrorHandler())
                 .setCustomExceptionHandler(new DoNothingCSSParseExceptionCallback());
         return CSSReader.readFromStringReader(css, settings);
@@ -664,8 +667,11 @@ public class MediaUtils {
             return false;
         }
         String trimmed = url.trim();
-        return !isDataUrl(trimmed)
-                && (trimmed.startsWith("/") || SCHEME_PATTERN.matcher(trimmed).find());
+        if (isDataUrl(trimmed)) {
+            // a data url carries the resource itself, there is nowhere for it to be read from
+            return false;
+        }
+        return trimmed.startsWith("/") || SCHEME_PATTERN.matcher(trimmed).find();
     }
 
     /**
