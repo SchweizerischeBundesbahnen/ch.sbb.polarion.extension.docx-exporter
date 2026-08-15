@@ -48,6 +48,36 @@ class DocxExporterExtensionConfigurationTest {
         }
     }
 
+    @Test
+    void readsTheExternalResourcePolicyOutOfPolarionProperties() {
+        SystemValueReader reader = mock(SystemValueReader.class);
+        when(reader.readString(PREFIX + "externalResources.policy", "BLOCK_INTERNAL")).thenReturn("ALLOWLIST_ONLY");
+        when(reader.readString(PREFIX + "externalResources.allowedOrigins", "")).thenReturn("https://cdn.intranet");
+        when(reader.readInt(PREFIX + "externalResources.maxSizeMB", 16)).thenReturn(32);
+
+        assertEquals("ALLOWLIST_ONLY", withReader(reader, DocxExporterExtensionConfiguration::getExternalResourcesPolicy));
+        assertEquals("https://cdn.intranet", withReader(reader, DocxExporterExtensionConfiguration::getExternalResourcesAllowedOrigins));
+        assertEquals(32, withReader(reader, DocxExporterExtensionConfiguration::getExternalResourcesMaxSizeMB));
+    }
+
+    @Test
+    void offersTheExternalResourcePropertiesOnTheConfigurationPage() {
+        try (MockedStatic<ContextUtils> contextUtils = mockStatic(ContextUtils.class)) {
+            contextUtils.when(ContextUtils::getConfigurationPropertiesPrefix).thenReturn(PREFIX);
+            DocxExporterExtensionConfiguration configuration = new DocxExporterExtensionConfiguration();
+
+            assertTrue(configuration.getSupportedProperties().contains(DocxExporterExtensionConfiguration.EXTERNAL_RESOURCES_POLICY));
+            assertTrue(configuration.getSupportedProperties().contains(DocxExporterExtensionConfiguration.EXTERNAL_RESOURCES_ALLOWED_ORIGINS));
+            assertTrue(configuration.getSupportedProperties().contains(DocxExporterExtensionConfiguration.EXTERNAL_RESOURCES_MAX_SIZE_MB));
+            assertEquals("BLOCK_INTERNAL", configuration.getExternalResourcesPolicyDefaultValue());
+            assertEquals("", configuration.getExternalResourcesAllowedOriginsDefaultValue());
+            assertEquals("16", configuration.getExternalResourcesMaxSizeMBDefaultValue());
+            assertEquals(DocxExporterExtensionConfiguration.EXTERNAL_RESOURCES_POLICY_DESCRIPTION, configuration.getExternalResourcesPolicyDescription());
+            assertEquals(DocxExporterExtensionConfiguration.EXTERNAL_RESOURCES_ALLOWED_ORIGINS_DESCRIPTION, configuration.getExternalResourcesAllowedOriginsDescription());
+            assertEquals(DocxExporterExtensionConfiguration.EXTERNAL_RESOURCES_MAX_SIZE_MB_DESCRIPTION, configuration.getExternalResourcesMaxSizeMBDescription());
+        }
+    }
+
     private static <T> T withReader(SystemValueReader reader, Function<DocxExporterExtensionConfiguration, T> read) {
         try (MockedStatic<ContextUtils> contextUtils = mockStatic(ContextUtils.class);
              MockedStatic<SystemValueReader> readers = mockStatic(SystemValueReader.class)) {
