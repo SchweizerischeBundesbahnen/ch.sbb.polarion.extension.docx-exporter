@@ -1,6 +1,7 @@
 package ch.sbb.polarion.extension.docx_exporter.util.html;
 
 import ch.sbb.polarion.extension.docx_exporter.util.FileResourceProvider;
+import ch.sbb.polarion.extension.docx_exporter.util.MediaUtils;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -157,5 +158,39 @@ class ExternalCssInternalizerTest {
         assertThat(result.get())
                 .doesNotContain("</style><img")
                 .endsWith("</style>");
+    }
+
+    @Test
+    void shouldLeaveAUrlWrittenInsideAStringAlone() {
+        // the location of the stylesheet is applied by the parser, which reads a string as a string:
+        // a pattern over the text used to prefix this one as if it were a url of its own
+        when(fileResourceProvider.getResourceAsBytes("/some/location/file.css")).thenReturn("""
+                a::after { content: "url(not-a-resource.png)"; }
+                b { background: url(picture.png); }
+                """.getBytes());
+        when(fileResourceProvider.getResourceAsBase64String("/some/location/picture.png"))
+                .thenReturn("data:image/png;base64,AAAA");
+
+        Optional<String> result = cssLinkInliner.inline(Map.of("rel", "stylesheet", "href", "/some/location/file.css"));
+
+        assertThat(result).isPresent();
+        assertThat(result.get())
+                .contains("content: \"url(not-a-resource.png)\"")
+                .contains("url(data:image/png;base64,AAAA)");
+    }
+
+    @Test
+    void shouldReplaceAUrlOfTheStylesheetWhichCouldNotBeLoaded() {
+        // pandoc-service reads a path from the root out of its own container, so a url which resolves
+        // to nothing here becomes the placeholder rather than staying in the document
+        when(fileResourceProvider.getResourceAsBytes("/some/location/file.css"))
+                .thenReturn("a { background: url(picture.png); }".getBytes());
+
+        Optional<String> result = cssLinkInliner.inline(Map.of("rel", "stylesheet", "href", "/some/location/file.css"));
+
+        assertThat(result).isPresent();
+        assertThat(result.get())
+                .doesNotContain("picture.png")
+                .contains(MediaUtils.BLOCKED_RESOURCE_PLACEHOLDER);
     }
 }
