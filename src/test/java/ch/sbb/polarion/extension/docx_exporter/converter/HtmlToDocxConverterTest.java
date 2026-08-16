@@ -39,11 +39,14 @@ class HtmlToDocxConverterTest {
                     </body>
                 </html>""";
         PandocParams params = PandocParams.builder().build();
-        when(htmlProcessor.internalizeLinks(anyString())).thenAnswer(a -> a.getArgument(0));
-        when(htmlProcessor.replaceResourcesAsBase64Encoded(anyString())).thenAnswer(a -> a.getArgument(0));
+        when(htmlProcessor.internalizeLinks(anyString())).thenReturn("<html><body>internalized</body></html>");
+        when(htmlProcessor.replaceResourcesAsBase64Encoded("<html><body>internalized</body></html>"))
+                .thenReturn("<html><body>inlined</body></html>");
         HtmlToDocxConverter converter = new HtmlToDocxConverter(htmlProcessor, serviceConnector);
         assertDoesNotThrow(() -> converter.convert(html, null, params));
-        verify(serviceConnector).convertToDocx(html, null, params);
+        // the service converts what was processed here, never the html as it arrived: the original
+        // names the addresses of a document, and nothing vetted them
+        verify(serviceConnector).convertToDocx("<html><body>inlined</body></html>", null, params);
     }
 
     @Test

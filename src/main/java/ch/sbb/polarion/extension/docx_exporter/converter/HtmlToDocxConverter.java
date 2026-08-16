@@ -36,7 +36,9 @@ public class HtmlToDocxConverter {
         if (DocxExporterExtensionConfiguration.getInstance().isDebug()) {
             new HtmlLogger().log(origHtml, html, "");
         }
-        return pandocServiceConnector.convertToDocx(origHtml, template, params);
+        // what the service converts is what was processed here: the links of the document are
+        // internalized and its resources inlined, and the original names addresses nobody vetted
+        return pandocServiceConnector.convertToDocx(html, template, params);
     }
 
     private void validateHtml(String origHtml) {
