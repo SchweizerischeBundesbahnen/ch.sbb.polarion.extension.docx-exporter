@@ -193,4 +193,18 @@ class ExternalCssInternalizerTest {
                 .doesNotContain("picture.png")
                 .contains(MediaUtils.BLOCKED_RESOURCE_PLACEHOLDER);
     }
+
+    @Test
+    void shouldKeepAResolvedUrlInsideItsTerm() {
+        // the address was read inside quotes, so it may carry a bracket: written back without quotes it
+        // would end the term and what follows it would be read as css of its own
+        when(fileResourceProvider.getResourceAsBytes("/some/location/file.css")).thenReturn(
+                "a { background: url(\"x.png) } b { background: url(http://169.254.169.254/x.png) } c { color: red\"); }"
+                        .getBytes());
+
+        Optional<String> result = cssLinkInliner.inline(Map.of("rel", "stylesheet", "href", "/some/location/file.css"));
+
+        assertThat(result).isPresent();
+        assertThat(result.get()).doesNotContain("url(http://169.254.169.254/x.png)");
+    }
 }
