@@ -89,7 +89,8 @@ public class PandocServiceConnector {
                 : "Pandoc Service requires an API key, none is configured. Name the Polarion secret holding it in '" + DocxExporterExtensionConfiguration.PANDOC_API_KEY_SECRET + "'.";
     }
 
-    private void failOnUnauthorized(@NotNull Response response, @Nullable String apiKey) {
+    @VisibleForTesting
+    void failOnUnauthorized(@NotNull Response response, @Nullable String apiKey) {
         if (response.getStatus() == Response.Status.UNAUTHORIZED.getStatusCode()) {
             throw new IllegalStateException(unauthorizedMessage(apiKey != null));
         }

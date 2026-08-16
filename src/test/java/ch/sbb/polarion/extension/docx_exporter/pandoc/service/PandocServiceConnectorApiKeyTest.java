@@ -8,9 +8,12 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import jakarta.ws.rs.client.Invocation;
 import jakarta.ws.rs.client.WebTarget;
+import jakarta.ws.rs.core.Response;
 
 import static ch.sbb.polarion.extension.docx_exporter.pandoc.service.PandocServiceConnector.MEDIA_TYPE_DOCX;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -44,6 +47,36 @@ class PandocServiceConnectorApiKeyTest {
 
         assertThat(connector().requestWithApiKey(webTarget, MEDIA_TYPE_DOCX, null)).isSameAs(builder);
         verify(builder, never()).header(ArgumentMatchers.anyString(), ArgumentMatchers.any());
+    }
+
+    @Test
+    void shouldReportRejectedKeyOnUnauthorized() {
+        Response response = mock(Response.class);
+        when(response.getStatus()).thenReturn(401);
+        PandocServiceConnector connector = connector();
+
+        assertThatThrownBy(() -> connector.failOnUnauthorized(response, "a-key"))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("rejected the configured API key");
+    }
+
+    @Test
+    void shouldReportMissingKeyOnUnauthorized() {
+        Response response = mock(Response.class);
+        when(response.getStatus()).thenReturn(401);
+        PandocServiceConnector connector = connector();
+
+        assertThatThrownBy(() -> connector.failOnUnauthorized(response, null))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("requires an API key, none is configured");
+    }
+
+    @Test
+    void shouldPassAnyOtherStatusThrough() {
+        Response response = mock(Response.class);
+        when(response.getStatus()).thenReturn(400);
+
+        assertThatCode(() -> connector().failOnUnauthorized(response, "a-key")).doesNotThrowAnyException();
     }
 
     @Test
