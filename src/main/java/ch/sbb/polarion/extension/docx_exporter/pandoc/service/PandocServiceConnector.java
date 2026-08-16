@@ -47,6 +47,7 @@ public class PandocServiceConnector {
     private static final String PYTHON_VERSION_HEADER = "Python-Version";
     private static final String PANDOC_VERSION_HEADER = "Pandoc-Version";
     private static final String PANDOC_SERVICE_VERSION_HEADER = "Pandoc-Service-Version";
+    private static final String API_KEY_HEADER = "X-API-Key";
 
     private static final AtomicReference<String> pythonVersion = new AtomicReference<>();
     private static final AtomicReference<String> pandocVersion = new AtomicReference<>();
@@ -54,12 +55,44 @@ public class PandocServiceConnector {
 
     private final @NotNull String pandocServiceBaseUrl;
 
+    private final @NotNull ApiKeyProvider apiKeyProvider;
+
     public PandocServiceConnector() {
         this(DocxExporterExtensionConfiguration.getInstance().getPandocService());
     }
 
     public PandocServiceConnector(@NotNull String pandocServiceBaseUrl) {
+        this(pandocServiceBaseUrl, new ApiKeyProvider());
+    }
+
+    public PandocServiceConnector(@NotNull String pandocServiceBaseUrl, @NotNull ApiKeyProvider apiKeyProvider) {
         this.pandocServiceBaseUrl = pandocServiceBaseUrl;
+        this.apiKeyProvider = apiKeyProvider;
+    }
+
+    /**
+     * Builds the request, carrying the API key when one is configured.
+     */
+    @VisibleForTesting
+    Invocation.Builder requestWithApiKey(@NotNull WebTarget webTarget, @NotNull String acceptType, @Nullable String apiKey) {
+        Invocation.Builder builder = webTarget.request(acceptType);
+        return apiKey == null ? builder : builder.header(API_KEY_HEADER, apiKey);
+    }
+
+    /**
+     * Tells the two ways a 401 is reached apart, since each one has a different fix.
+     */
+    @VisibleForTesting
+    static @NotNull String unauthorizedMessage(boolean apiKeySent) {
+        return apiKeySent
+                ? "Pandoc Service rejected the configured API key. Check that the Polarion secret named in '" + DocxExporterExtensionConfiguration.PANDOC_API_KEY_SECRET + "' holds the key the service was started with."
+                : "Pandoc Service requires an API key, none is configured. Name the Polarion secret holding it in '" + DocxExporterExtensionConfiguration.PANDOC_API_KEY_SECRET + "'.";
+    }
+
+    private void failOnUnauthorized(@NotNull Response response, @Nullable String apiKey) {
+        if (response.getStatus() == Response.Status.UNAUTHORIZED.getStatusCode()) {
+            throw new IllegalStateException(unauthorizedMessage(apiKey != null));
+        }
     }
 
     public byte[] convertToDocx(String htmlPage, byte[] template,PandocParams params) {
@@ -86,10 +119,12 @@ public class PandocServiceConnector {
                     ));
                 }
 
-                Invocation.Builder requestBuilder = webTarget.request(MEDIA_TYPE_DOCX);
+                String apiKey = apiKeyProvider.getApiKey();
+                Invocation.Builder requestBuilder = requestWithApiKey(webTarget, MEDIA_TYPE_DOCX, apiKey);
 
                 long startTime = System.currentTimeMillis();
                 try (Response response = requestBuilder.post(Entity.entity(multipart, multipart.getMediaType()))) {
+                    failOnUnauthorized(response, apiKey);
                     if (response.getStatus() == Response.Status.OK.getStatusCode()) {
                         byte[] docxBytes = readResponseBytes(response);
                         recordTiming(generationLog, "Pandoc service conversion", System.currentTimeMillis() - startTime,
@@ -137,9 +172,11 @@ public class PandocServiceConnector {
             try (FormDataMultiPart multipart = new FormDataMultiPart()) {
                 multipart.bodyPart(new FileDataBodyPart("source", docx, MediaType.APPLICATION_OCTET_STREAM_TYPE));
 
-                Invocation.Builder requestBuilder = webTarget.request(MEDIA_TYPE_PDF);
+                String apiKey = apiKeyProvider.getApiKey();
+                Invocation.Builder requestBuilder = requestWithApiKey(webTarget, MEDIA_TYPE_PDF, apiKey);
 
                 try (Response response = requestBuilder.post(Entity.entity(multipart, multipart.getMediaType()))) {
+                    failOnUnauthorized(response, apiKey);
                     if (response.getStatus() == Response.Status.OK.getStatusCode()) {
                         return readResponseBytes(response);
                     } else {
@@ -161,7 +198,9 @@ public class PandocServiceConnector {
         Client client = ClientBuilder.newClient();
         WebTarget webTarget = client.target(getPandocServiceBaseUrl() + "/docx-template");
 
-        try (Response response = webTarget.request(MEDIA_TYPE_DOCX).get()) {
+        String apiKey = apiKeyProvider.getApiKey();
+        try (Response response = requestWithApiKey(webTarget, MEDIA_TYPE_DOCX, apiKey).get()) {
+            failOnUnauthorized(response, apiKey);
             if (response.getStatus() == Response.Status.OK.getStatusCode()) {
 
                 try (InputStream inputStream = response.readEntity(InputStream.class);

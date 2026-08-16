@@ -17,6 +17,10 @@ public class DocxExporterExtensionConfiguration extends ExtensionConfiguration {
     public static final String PANDOC_SERVICE = "pandoc.service";
     public static final String PANDOC_SERVICE_DEFAULT_VALUE = "http://localhost:9082";
 
+    public static final String PANDOC_API_KEY_SECRET = "pandoc.apiKeySecret";
+    public static final String PANDOC_API_KEY_SECRET_DESCRIPTION = "Name of the Polarion secret holding the <a href='#pandoc-api-key'>API key of the pandoc service</a>";
+    public static final String PANDOC_API_KEY_SECRET_DEFAULT_VALUE = "";
+
     public static final String WEBHOOKS_ENABLED = "webhooks.enabled";
     public static final String WEBHOOKS_ENABLED_DESCRIPTION = "Enable <a href='#enabling-webhooks'>webhooks</a>";
     public static final Boolean WEBHOOKS_ENABLED_DEFAULT_VALUE = false;
@@ -44,6 +48,20 @@ public class DocxExporterExtensionConfiguration extends ExtensionConfiguration {
 
     public String getPandocService() {
         return SystemValueReader.getInstance().readString(getPropertyPrefix() + PANDOC_SERVICE, PANDOC_SERVICE_DEFAULT_VALUE);
+    }
+
+    public String getPandocApiKeySecret() {
+        return SystemValueReader.getInstance().readString(getPropertyPrefix() + PANDOC_API_KEY_SECRET, PANDOC_API_KEY_SECRET_DEFAULT_VALUE);
+    }
+
+    @SuppressWarnings("unused")
+    public String getPandocApiKeySecretDescription() {
+        return PANDOC_API_KEY_SECRET_DESCRIPTION;
+    }
+
+    @SuppressWarnings("unused")
+    public String getPandocApiKeySecretDefaultValue() {
+        return PANDOC_API_KEY_SECRET_DEFAULT_VALUE;
     }
 
     @NotNull
@@ -121,6 +139,7 @@ public class DocxExporterExtensionConfiguration extends ExtensionConfiguration {
     public @NotNull List<String> getSupportedProperties() {
         List<String> supportedProperties = new ArrayList<>(super.getSupportedProperties());
         supportedProperties.add(PANDOC_SERVICE);
+        supportedProperties.add(PANDOC_API_KEY_SECRET);
         supportedProperties.add(TEMPLATE_MAX_SIZE_MB);
         supportedProperties.add(EXTERNAL_RESOURCES_POLICY);
         supportedProperties.add(EXTERNAL_RESOURCES_ALLOWED_ORIGINS);
