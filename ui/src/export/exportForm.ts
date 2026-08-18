@@ -1,4 +1,4 @@
-import type { SelectOption } from '@grigoriev/react-sbb-polarion';
+import type { SelectOption } from '@sbb-polarion/react-sbb-polarion';
 import {
   DEFAULT_IMAGE_DENSITY,
   DEFAULT_LANGUAGE,

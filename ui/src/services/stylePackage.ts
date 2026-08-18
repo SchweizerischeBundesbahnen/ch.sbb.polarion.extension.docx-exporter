@@ -1,4 +1,4 @@
-import type { SelectOption } from '@grigoriev/react-sbb-polarion';
+import type { SelectOption } from '@sbb-polarion/react-sbb-polarion';
 
 /**
  * The content document of one named `style-package` configuration, field for field as

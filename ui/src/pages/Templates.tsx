@@ -6,7 +6,7 @@ import {
   PageLayout,
   RevisionsTable,
   useConfirm,
-} from '@grigoriev/react-sbb-polarion';
+} from '@sbb-polarion/react-sbb-polarion';
 import { toast } from 'sonner';
 import firstOddEven from '../assets/first_odd_even.png';
 import wordDocBlue from '../assets/word_doc_blue.svg';
