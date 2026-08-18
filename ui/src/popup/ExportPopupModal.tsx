@@ -1,6 +1,6 @@
 import { type CSSProperties, useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Modal, SearchableSelect } from '@grigoriev/react-sbb-polarion';
-import type { SelectOption } from '@grigoriev/react-sbb-polarion';
+import { Modal, SearchableSelect } from '@sbb-polarion/react-sbb-polarion';
+import type { SelectOption } from '@sbb-polarion/react-sbb-polarion';
 import type { PopupData } from '../export/exportData';
 import { loadPopupData, loadStylePackage } from '../export/exportData';
 import type { ExportForm } from '../export/exportForm';

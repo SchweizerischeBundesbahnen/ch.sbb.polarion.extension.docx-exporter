@@ -5,7 +5,7 @@ import {
   PageLayout,
   RevisionsTable,
   useConfirm,
-} from '@grigoriev/react-sbb-polarion';
+} from '@sbb-polarion/react-sbb-polarion';
 import { toast } from 'sonner';
 import Placeholders from '../components/Placeholders';
 import { getScope } from '../services/scope';
