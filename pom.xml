@@ -53,7 +53,7 @@
 
         <slf4j.version>2.0.18</slf4j.version>
         <testcontainers.version>2.0.5</testcontainers.version>
-        <jackson.version>2.22.1</jackson.version>
+        <jackson.version>2.22.2</jackson.version>
 
         <awaitility.version>4.3.0</awaitility.version>
         <tika.version>3.3.2</tika.version>
