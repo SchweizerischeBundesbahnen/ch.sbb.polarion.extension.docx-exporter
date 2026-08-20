@@ -24,7 +24,7 @@
         .catch(console.error);`;
 
     const engine = document.createElement('script');
-    engine.src = `${APP_BASE}dle-toolbar-starter.js${timestampParam}`;
+    engine.src = `${APP_BASE}assets/dle-toolbar-starter.js${timestampParam}`;
     engine.dataset.marker = 'docx-exporter';
     engine.dataset.title = 'Export to DOCX';
     engine.dataset.icon = `/polarion/ria/images/dle/operations/actionMsWordRoundtrip16.svg${timestampParam}`;
