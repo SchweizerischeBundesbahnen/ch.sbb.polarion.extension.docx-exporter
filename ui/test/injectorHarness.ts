@@ -35,7 +35,7 @@ export const resetInjectorGlobals = (): void => {
   document.head.innerHTML = '';
   document.body.innerHTML = '';
   delete globals().DocxExporterStarter;
-  delete globals().GenericDleToolbarStarter;
+  delete globals().CommonDleToolbarStarter;
   delete globals().__genericDleToolbarSeq;
   window.location.hash = '';
 };
@@ -43,8 +43,7 @@ export const resetInjectorGlobals = (): void => {
 /** What an injector hands to the shared engine's `create`. */
 export interface ToolbarConfig {
   markerId: string;
-  defaultHtml?: string;
-  alternateHtml?: string;
+  html?: string;
   order?: number;
   permissionCheckUrl?: string;
 }
