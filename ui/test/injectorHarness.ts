@@ -36,30 +36,5 @@ export const resetInjectorGlobals = (): void => {
   document.body.innerHTML = '';
   delete globals().DocxExporterStarter;
   delete globals().CommonDleToolbarStarter;
-  delete globals().__genericDleToolbarSeq;
   window.location.hash = '';
-};
-
-/** What an injector hands to the shared engine's `create`. */
-export interface ToolbarConfig {
-  markerId: string;
-  html?: string;
-  order?: number;
-  permissionCheckUrl?: string;
-}
-
-/**
- * A stand-in for generic's GenericDleToolbarStarter that records what it was asked to do. The arrays
- * stay live, so a test can assert on them after the import.
- */
-export const engineRecorder = () => {
-  const createdConfigs: ToolbarConfig[] = [];
-  const injectToolbarCalls: unknown[] = [];
-  const stub = {
-    create: (config: ToolbarConfig) => {
-      createdConfigs.push(config);
-      return { injectToolbar: (params?: unknown) => injectToolbarCalls.push(params) };
-    },
-  };
-  return { createdConfigs, injectToolbarCalls, stub };
 };
