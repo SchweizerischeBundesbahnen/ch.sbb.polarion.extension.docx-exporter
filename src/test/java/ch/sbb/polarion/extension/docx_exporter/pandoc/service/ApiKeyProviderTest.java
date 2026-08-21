@@ -5,6 +5,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
+import com.polarion.core.util.exceptions.UserFriendlyRuntimeException;
 import org.junit.jupiter.api.Test;
 
 import java.io.PrintWriter;
@@ -92,7 +93,7 @@ class ApiKeyProviderTest {
         ApiKeyProvider provider = providerReading(secretValue);
 
         assertThatThrownBy(provider::getApiKey)
-                .isInstanceOf(IllegalStateException.class)
+                .isInstanceOf(UserFriendlyRuntimeException.class)
                 .hasMessageContaining(SECRET_NAME)
                 .hasMessageContaining("empty or does not exist");
     }
@@ -103,7 +104,7 @@ class ApiKeyProviderTest {
         ApiKeyProvider provider = providerReading(null);
 
         assertThatThrownBy(provider::getApiKey)
-                .isInstanceOf(IllegalStateException.class)
+                .isInstanceOf(UserFriendlyRuntimeException.class)
                 .hasMessageContaining(SECRET_NAME);
     }
 
@@ -120,7 +121,7 @@ class ApiKeyProviderTest {
         // the whole chain is measured, not only the top message: a cause is printed by every log
         // which dumps the stack, so a secrets manager quoting the key must not be carried along
         assertThatThrownBy(provider::getApiKey)
-                .isInstanceOf(IllegalStateException.class)
+                .isInstanceOf(UserFriendlyRuntimeException.class)
                 .hasMessageContaining("Could not read the pandoc API key")
                 .hasMessageContaining(SECRET_NAME)
                 .hasMessageContaining(IllegalArgumentException.class.getName())
