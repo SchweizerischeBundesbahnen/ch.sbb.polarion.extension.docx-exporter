@@ -2,6 +2,7 @@ package ch.sbb.polarion.extension.docx_exporter.util.configuration;
 
 import ch.sbb.polarion.extension.docx_exporter.pandoc.service.PandocServiceConnector;
 import ch.sbb.polarion.extension.docx_exporter.pandoc.service.model.PandocInfo;
+import ch.sbb.polarion.extension.docx_exporter.properties.DocxExporterExtensionConfiguration;
 import ch.sbb.polarion.extension.generic.configuration.ConfigurationStatus;
 import ch.sbb.polarion.extension.generic.configuration.ConfigurationStatusProvider;
 import ch.sbb.polarion.extension.generic.configuration.Status;
@@ -313,6 +314,37 @@ class PandocStatusProviderTest {
                     new ConfigurationStatus("Pandoc Service: Pandoc", Status.ERROR, "Unknown"),
                     new ConfigurationStatus("Pandoc Service: Chromium", Status.ERROR, "Unknown")
             );
+        }
+    }
+
+    @Test
+    void reportsAKeyConfiguredForAPlainHttpAddress() {
+        // /version carries no key, so the service answers and the page would look healthy while every
+        // export is refused. The configuration page is where an administrator looks first.
+        PandocServiceConnector pandocServiceConnector = mock(PandocServiceConnector.class);
+        when(pandocServiceConnector.getPandocServiceBaseUrl()).thenReturn("http://localhost:9082");
+        List<ConfigurationStatus> statuses = new PandocStatusProvider(pandocServiceConnector, () -> "pandoc-api-key")
+                .getStatuses(ConfigurationStatusProvider.Context.builder().build());
+
+        assertEquals(1, statuses.size());
+        assertEquals(Status.ERROR, statuses.get(0).getStatus());
+        assertThat(statuses.get(0).getDetails())
+                .contains(DocxExporterExtensionConfiguration.PANDOC_API_KEY_SECRET)
+                .contains(DocxExporterExtensionConfiguration.PANDOC_SERVICE)
+                .contains("every export is refused");
+        verify(pandocServiceConnector, never()).getPandocInfo();
+    }
+
+    @Test
+    void asksTheServiceWhereTheKeyTravelsOverHttps() {
+        PandocServiceConnector pandocServiceConnector = mock(PandocServiceConnector.class);
+        when(pandocServiceConnector.getPandocServiceBaseUrl()).thenReturn("https://pandoc.intranet:9082");
+        when(pandocServiceConnector.getPandocInfo()).thenReturn(PandocInfo.builder().apiVersion(1).python("3.12.5").pandoc("3.10").pandocService("2.4.0").chromium("148").build());
+        try (MockedStatic<VersionUtils> versions = mockStatic(VersionUtils.class)) {
+            versions.when(() -> VersionUtils.getValueFromProperties(VERSION_FILE, API_VERSION_PROPERTY)).thenReturn("1");
+
+            assertEquals(4, new PandocStatusProvider(pandocServiceConnector, () -> "pandoc-api-key")
+                    .getStatuses(ConfigurationStatusProvider.Context.builder().build()).size());
         }
     }
 }
