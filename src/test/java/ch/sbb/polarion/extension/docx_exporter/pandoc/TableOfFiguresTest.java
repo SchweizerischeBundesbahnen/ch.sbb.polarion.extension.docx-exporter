@@ -17,6 +17,7 @@ import java.io.IOException;
 import java.util.List;
 import java.util.stream.Stream;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.anyBoolean;
@@ -36,7 +37,9 @@ class TableOfFiguresTest extends BaseDocxConverterTest {
                                 "Figure 3 -- Security Layers"),
                         List.of(),
                         true,   // expectTofField
-                        false   // expectTotField
+                        false,  // expectTotField
+                        "Figure",
+                        null
                 ),
                 Arguments.of(
                         "tableOfTables",
@@ -46,7 +49,21 @@ class TableOfFiguresTest extends BaseDocxConverterTest {
                                 "Table 2 -- Required Software Versions",
                                 "Table 3 -- Environment Variables"),
                         false,  // expectTofField
-                        true    // expectTotField
+                        true,   // expectTotField
+                        null,
+                        "Table"
+                ),
+                Arguments.of(
+                        "tableOfTablesLocalized",
+                        "Localized Table of Tables Test",
+                        List.of(),
+                        List.of("Tabelle 1 -- Mindestanforderungen an die Hardware",
+                                "Tabelle 2 -- Erforderliche Softwareversionen",
+                                "Tabelle 3 -- Umgebungsvariablen"),
+                        false,  // expectTofField
+                        true,   // expectTotField
+                        null,
+                        "Tabelle"
                 ),
                 Arguments.of(
                         "tableOfFiguresAndTables",
@@ -54,7 +71,9 @@ class TableOfFiguresTest extends BaseDocxConverterTest {
                         List.of("Figure 1", "Figure 2"),
                         List.of("Table 1", "Table 2"),
                         true,   // expectTofField
-                        true    // expectTotField
+                        true,   // expectTotField
+                        "Figure",
+                        "Table"
                 )
         );
     }
@@ -66,7 +85,9 @@ class TableOfFiguresTest extends BaseDocxConverterTest {
                                       List<String> expectedFigures,
                                       List<String> expectedTables,
                                       boolean expectTofField,
-                                      boolean expectTotField) {
+                                      boolean expectTotField,
+                                      String figureSequence,
+                                      String tableSequence) {
         ExportParams params = ExportParams.builder()
                 .projectId("test")
                 .locationPath("testLocation")
@@ -89,14 +110,16 @@ class TableOfFiguresTest extends BaseDocxConverterTest {
 
         writeReportDocx(htmlResource, doc);
 
-        verifyDocxStructure(doc, expectedFigures, expectedTables, expectTofField, expectTotField);
+        verifyDocxStructure(doc, expectedFigures, expectedTables, expectTofField, expectTotField, figureSequence, tableSequence);
     }
 
     private void verifyDocxStructure(byte[] docBytes,
                                      List<String> expectedFigures,
                                      List<String> expectedTables,
                                      boolean expectTofField,
-                                     boolean expectTotField) throws IOException {
+                                     boolean expectTotField,
+                                     String figureSequence,
+                                     String tableSequence) throws IOException {
         try (XWPFDocument document = new XWPFDocument(new ByteArrayInputStream(docBytes))) {
             String fullText = extractFullText(document);
             String documentXml = getDocumentXml(document);
@@ -136,7 +159,46 @@ class TableOfFiguresTest extends BaseDocxConverterTest {
                 assertTrue(hasTcEntry(documentXml, expected, "T"),
                         "TC entry not found for table: '" + expected + "'");
             }
+
+            // Each caption number is a SEQ field, not plain text, so Word renumbers on update.
+            // The sequence name is Polarion's own (`data-sequence`), which may be localized.
+            if (figureSequence != null) {
+                assertEquals(expectedFigures.size(), countSeqFields(documentXml, figureSequence),
+                        "Expected one 'SEQ " + figureSequence + "' field per figure caption");
+            }
+            if (tableSequence != null) {
+                assertEquals(expectedTables.size(), countSeqFields(documentXml, tableSequence),
+                        "Expected one 'SEQ " + tableSequence + "' field per table caption");
+            }
+
+            // The ToF/ToT arrive pre-filled: one hyperlinked PAGEREF entry per caption, each
+            // pointing at a bookmark the same document defines. Without them the tables render
+            // empty until the reader presses F9.
+            int expectedEntries = expectedFigures.size() + expectedTables.size();
+            assertEquals(expectedEntries, countOccurrences(documentXml, "PAGEREF _Toc"),
+                    "Expected one pre-filled PAGEREF entry per caption");
+            assertTrue(countOccurrences(documentXml, "<w:hyperlink") >= expectedEntries,
+                    "Pre-filled entries are expected to be hyperlinks");
+            assertTrue(countOccurrences(documentXml, "w:name=\"_Toc") >= expectedEntries,
+                    "Every PAGEREF entry needs a bookmark to point at");
         }
+    }
+
+    /**
+     * Counts SEQ fields of one sequence, e.g. {@code SEQ Figure \* ARABIC} - the field Word uses to
+     * number captions. Polarion's sequence name is carried over as-is, so a localized document
+     * yields e.g. {@code SEQ Tabelle}.
+     */
+    private int countSeqFields(String documentXml, String sequenceName) {
+        return countOccurrences(documentXml, "SEQ " + sequenceName + " \\* ARABIC");
+    }
+
+    private int countOccurrences(String haystack, String needle) {
+        int count = 0;
+        for (int i = haystack.indexOf(needle); i >= 0; i = haystack.indexOf(needle, i + needle.length())) {
+            count++;
+        }
+        return count;
     }
 
     private String extractFullText(XWPFDocument document) {
@@ -148,11 +210,9 @@ class TableOfFiguresTest extends BaseDocxConverterTest {
     }
 
     private String getDocumentXml(XWPFDocument document) {
-        StringBuilder xml = new StringBuilder();
-        for (XWPFParagraph paragraph : document.getParagraphs()) {
-            xml.append(paragraph.getCTP().xmlText());
-        }
-        return xml.toString();
+        // The whole body, not just top-level paragraphs: caption and entry runs also live inside
+        // tables, and the pre-filled ToF/ToT entries are what this test now asserts on.
+        return document.getDocument().getBody().xmlText();
     }
 
     /**
