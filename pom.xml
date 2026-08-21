@@ -97,9 +97,6 @@
         <frontend-maven-plugin.version>2.0.2</frontend-maven-plugin.version>
 
         <apache-poi.version>5.5.1</apache-poi.version>
-
-        <velocity-engine-core.artifactId>org.apache.velocity.engine-core_2.3.0</velocity-engine-core.artifactId>
-        <org.jsoup.artifactId>org.jsoup_1.21.2</org.jsoup.artifactId>
     </properties>
 
     <profiles>
@@ -151,7 +148,7 @@
 
         <dependency>
             <groupId>com.polarion.thirdparty</groupId>
-            <artifactId>${velocity-engine-core.artifactId}</artifactId>
+            <artifactId>org.apache.velocity.engine-core_2.3.0</artifactId>
             <version>${polarion.version}</version>
             <scope>provided</scope>
         </dependency>
@@ -165,7 +162,7 @@
 
         <dependency>
             <groupId>com.polarion.thirdparty</groupId>
-            <artifactId>${org.jsoup.artifactId}</artifactId>
+            <artifactId>org.jsoup_1.21.2</artifactId>
             <version>${polarion.version}</version>
             <scope>provided</scope>
         </dependency>
