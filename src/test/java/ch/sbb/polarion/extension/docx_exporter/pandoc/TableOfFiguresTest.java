@@ -14,9 +14,15 @@ import org.junit.jupiter.params.provider.MethodSource;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.anyBoolean;
@@ -25,6 +31,10 @@ import static org.mockito.ArgumentMatchers.eq;
 @SkipTestWhenParamNotSet
 @SuppressWarnings("ResultOfMethodCallIgnored")
 class TableOfFiguresTest extends BaseDocxConverterTest {
+
+    private static final Pattern PAGE_REF_TARGET = Pattern.compile("PAGEREF\\s+(\\S+)");
+    private static final Pattern BOOKMARK_NAME = Pattern.compile("w:name=\"(_Toc[^\"]*)\"");
+    private static final Pattern HYPERLINK_BLOCK = Pattern.compile("<w:hyperlink\\b(.*?)</w:hyperlink>", Pattern.DOTALL);
 
     private static Stream<Arguments> provideTableOfFiguresTestCases() {
         return Stream.of(
@@ -36,7 +46,9 @@ class TableOfFiguresTest extends BaseDocxConverterTest {
                                 "Figure 3 -- Security Layers"),
                         List.of(),
                         true,   // expectTofField
-                        false   // expectTotField
+                        false,  // expectTotField
+                        "Figure",
+                        null
                 ),
                 Arguments.of(
                         "tableOfTables",
@@ -46,7 +58,21 @@ class TableOfFiguresTest extends BaseDocxConverterTest {
                                 "Table 2 -- Required Software Versions",
                                 "Table 3 -- Environment Variables"),
                         false,  // expectTofField
-                        true    // expectTotField
+                        true,   // expectTotField
+                        null,
+                        "Table"
+                ),
+                Arguments.of(
+                        "tableOfTablesLocalized",
+                        "Localized Table of Tables Test",
+                        List.of(),
+                        List.of("Tabelle 1 -- Mindestanforderungen an die Hardware",
+                                "Tabelle 2 -- Erforderliche Softwareversionen",
+                                "Tabelle 3 -- Umgebungsvariablen"),
+                        false,  // expectTofField
+                        true,   // expectTotField
+                        null,
+                        "Tabelle"
                 ),
                 Arguments.of(
                         "tableOfFiguresAndTables",
@@ -54,7 +80,9 @@ class TableOfFiguresTest extends BaseDocxConverterTest {
                         List.of("Figure 1", "Figure 2"),
                         List.of("Table 1", "Table 2"),
                         true,   // expectTofField
-                        true    // expectTotField
+                        true,   // expectTotField
+                        "Figure",
+                        "Table"
                 )
         );
     }
@@ -66,7 +94,9 @@ class TableOfFiguresTest extends BaseDocxConverterTest {
                                       List<String> expectedFigures,
                                       List<String> expectedTables,
                                       boolean expectTofField,
-                                      boolean expectTotField) {
+                                      boolean expectTotField,
+                                      String figureSequence,
+                                      String tableSequence) {
         ExportParams params = ExportParams.builder()
                 .projectId("test")
                 .locationPath("testLocation")
@@ -89,14 +119,16 @@ class TableOfFiguresTest extends BaseDocxConverterTest {
 
         writeReportDocx(htmlResource, doc);
 
-        verifyDocxStructure(doc, expectedFigures, expectedTables, expectTofField, expectTotField);
+        verifyDocxStructure(doc, expectedFigures, expectedTables, expectTofField, expectTotField, figureSequence, tableSequence);
     }
 
     private void verifyDocxStructure(byte[] docBytes,
                                      List<String> expectedFigures,
                                      List<String> expectedTables,
                                      boolean expectTofField,
-                                     boolean expectTotField) throws IOException {
+                                     boolean expectTotField,
+                                     String figureSequence,
+                                     String tableSequence) throws IOException {
         try (XWPFDocument document = new XWPFDocument(new ByteArrayInputStream(docBytes))) {
             String fullText = extractFullText(document);
             String documentXml = getDocumentXml(document);
@@ -136,7 +168,78 @@ class TableOfFiguresTest extends BaseDocxConverterTest {
                 assertTrue(hasTcEntry(documentXml, expected, "T"),
                         "TC entry not found for table: '" + expected + "'");
             }
+
+            // Each caption number is a SEQ field, not plain text, so Word renumbers on update.
+            // The sequence name is Polarion's own (`data-sequence`), which may be localized.
+            if (figureSequence != null) {
+                assertEquals(expectedFigures.size(), countSeqFields(documentXml, figureSequence),
+                        "Expected one 'SEQ " + figureSequence + "' field per figure caption");
+            }
+            if (tableSequence != null) {
+                assertEquals(expectedTables.size(), countSeqFields(documentXml, tableSequence),
+                        "Expected one 'SEQ " + tableSequence + "' field per table caption");
+            }
+
+            // The ToF/ToT arrive pre-filled: one hyperlinked PAGEREF entry per caption, each
+            // pointing at a bookmark the same document defines. Without them the tables render
+            // empty until the reader presses F9.
+            int expectedEntries = expectedFigures.size() + expectedTables.size();
+            List<String> pageRefTargets = findAll(documentXml, PAGE_REF_TARGET);
+            assertEquals(expectedEntries, pageRefTargets.size(),
+                    "Expected one pre-filled PAGEREF entry per caption");
+
+            // Targets are matched against the bookmarks, not merely counted: a PAGEREF pointing at
+            // a bookmark this document never defines resolves to "Error! Bookmark not defined."
+            Set<String> bookmarks = new HashSet<>(findAll(documentXml, BOOKMARK_NAME));
+            for (String target : pageRefTargets) {
+                assertTrue(bookmarks.contains(target),
+                        "PAGEREF points at '" + target + "', which no bookmark in this document defines");
+            }
+
+            assertEquals(expectedEntries, countHyperlinkedPageRefs(documentXml),
+                    "Every pre-filled entry is expected to sit inside its own hyperlink");
         }
+    }
+
+    /**
+     * Counts SEQ fields of one sequence, e.g. {@code SEQ Figure \* ARABIC} - the field Word uses to
+     * number captions. Polarion's sequence name is carried over as-is, so a localized document
+     * yields e.g. {@code SEQ Tabelle}.
+     */
+    private int countSeqFields(String documentXml, String sequenceName) {
+        return countOccurrences(documentXml, "SEQ " + sequenceName + " \\* ARABIC");
+    }
+
+    /**
+     * Counts hyperlinks that wrap a PAGEREF field. Counting the two separately would let an
+     * unrelated hyperlink stand in for a missing one.
+     */
+    private int countHyperlinkedPageRefs(String documentXml) {
+        int count = 0;
+        Matcher matcher = HYPERLINK_BLOCK.matcher(documentXml);
+        while (matcher.find()) {
+            if (matcher.group(1).contains("PAGEREF")) {
+                count++;
+            }
+        }
+        return count;
+    }
+
+    private List<String> findAll(String documentXml, Pattern pattern) {
+        List<String> found = new ArrayList<>();
+        Matcher matcher = pattern.matcher(documentXml);
+        while (matcher.find()) {
+            found.add(matcher.group(1));
+        }
+        return found;
+    }
+
+    private int countOccurrences(String haystack, String needle) {
+        int count = 0;
+        for (int i = haystack.indexOf(needle); i >= 0; i = haystack.indexOf(needle, i + needle.length())) {
+            count++;
+        }
+        return count;
     }
 
     private String extractFullText(XWPFDocument document) {
@@ -148,11 +251,9 @@ class TableOfFiguresTest extends BaseDocxConverterTest {
     }
 
     private String getDocumentXml(XWPFDocument document) {
-        StringBuilder xml = new StringBuilder();
-        for (XWPFParagraph paragraph : document.getParagraphs()) {
-            xml.append(paragraph.getCTP().xmlText());
-        }
-        return xml.toString();
+        // The whole body, not just top-level paragraphs: caption and entry runs also live inside
+        // tables, and the pre-filled ToF/ToT entries are what this test now asserts on.
+        return document.getDocument().getBody().xmlText();
     }
 
     /**
