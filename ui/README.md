@@ -1,6 +1,6 @@
 # DOCX Exporter UI
 
-A React + Vite single-page app on [react-sbb-polarion](https://github.com/grigoriev/react-sbb-polarion)
+A React + Vite single-page app on [react-sbb-polarion](https://github.com/SchweizerischeBundesbahnen/react-sbb-polarion)
 (RSP), served from the `docx-exporter-app` webapp.
 
 It replaced the JSP administration UI page by page, and now serves all of it: the legacy

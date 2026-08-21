@@ -3,7 +3,7 @@
 ## Gotchas
 
 - **All administration pages are React now.** They were converted to
-  [react-sbb-polarion](https://github.com/grigoriev/react-sbb-polarion) one at a time, and
+  [react-sbb-polarion](https://github.com/SchweizerischeBundesbahnen/react-sbb-polarion) one at a time, and
   `docx-exporter-app` (the Vite bundle in `ui/`, see [`ui/README.md`](ui/README.md)) serves every one of
   them. `hivemodule.xml` carries a `pageUrl` per menu entry; the ids there must match
   `ui/src/features.tsx` - a mismatch is a blank page and no test catches it. The legacy
