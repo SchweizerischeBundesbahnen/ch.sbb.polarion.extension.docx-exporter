@@ -34,8 +34,11 @@ public class ApiKeyProvider {
         try {
             apiKey = readSecret(secretName);
         } catch (Exception e) {
-            // The message names the secret, never its value.
-            throw new IllegalStateException(String.format("Could not read the pandoc API key from the Polarion secret '%s'", secretName), e);
+            // The message names the secret and what failed, never the value and never the text of the
+            // original failure: a secrets manager is free to quote the credential in its own message,
+            // and a cause carries that text into every log which prints the chain.
+            throw new IllegalStateException(String.format(
+                    "Could not read the pandoc API key from the Polarion secret '%s' (%s)", secretName, e.getClass().getName()));
         }
         if (apiKey == null || apiKey.isBlank()) {
             throw new IllegalStateException(String.format("The Polarion secret '%s', configured as the pandoc API key, is empty or does not exist", secretName));

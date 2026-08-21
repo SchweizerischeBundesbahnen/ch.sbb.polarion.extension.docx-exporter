@@ -32,6 +32,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
+import java.util.Locale;
 import java.util.concurrent.atomic.AtomicReference;
 
 import static com.polarion.core.util.StringUtils.isEmpty;
@@ -72,11 +73,31 @@ public class PandocServiceConnector {
 
     /**
      * Builds the request, carrying the API key when one is configured.
+     * <p>
+     * A key is a reusable credential, so it is only ever handed to a transport which protects it.
+     * Where the service is named over plain http the request is refused instead: sending the key
+     * would put it on the wire for anyone on the path to keep.
      */
     @VisibleForTesting
     Invocation.Builder requestWithApiKey(@NotNull WebTarget webTarget, @NotNull String acceptType, @Nullable String apiKey) {
         Invocation.Builder builder = webTarget.request(acceptType);
-        return apiKey == null ? builder : builder.header(API_KEY_HEADER, apiKey);
+        if (apiKey == null) {
+            return builder;
+        }
+        failOnInsecureTransport();
+        return builder.header(API_KEY_HEADER, apiKey);
+    }
+
+    /**
+     * Refuses to send the key where the transport does not protect it.
+     */
+    @VisibleForTesting
+    void failOnInsecureTransport() {
+        if (!getPandocServiceBaseUrl().toLowerCase(Locale.ROOT).startsWith("https://")) {
+            throw new UserFriendlyRuntimeException(String.format(
+                    "The pandoc API key is not sent over plain http. Name the service in '%s' with an https address, or clear '%s' where the service needs no key.",
+                    DocxExporterExtensionConfiguration.PANDOC_SERVICE, DocxExporterExtensionConfiguration.PANDOC_API_KEY_SECRET));
+        }
     }
 
     /**
@@ -92,7 +113,9 @@ public class PandocServiceConnector {
     @VisibleForTesting
     void failOnUnauthorized(@NotNull Response response, @Nullable String apiKey) {
         if (response.getStatus() == Response.Status.UNAUTHORIZED.getStatusCode()) {
-            throw new IllegalStateException(unauthorizedMessage(apiKey != null));
+            // user friendly on purpose: the catch-all below keeps such a failure as it is, so the
+            // reason reaches the export dialog rather than only the server log
+            throw new UserFriendlyRuntimeException(unauthorizedMessage(apiKey != null));
         }
     }
 
@@ -138,6 +161,9 @@ public class PandocServiceConnector {
                     }
                 }
             }
+        } catch (UserFriendlyRuntimeException e) {
+            // the api key failures explain themselves and the job stores this very message
+            throw e;
         } catch (Exception e) {
             throw new UserFriendlyRuntimeException("Could not get response from pandoc service", e);
         } finally {
@@ -186,6 +212,9 @@ public class PandocServiceConnector {
                     }
                 }
             }
+        } catch (UserFriendlyRuntimeException e) {
+            // the api key failures explain themselves and the job stores this very message
+            throw e;
         } catch (Exception e) {
             throw new UserFriendlyRuntimeException("Could not get response from pandoc service", e);
         } finally {
@@ -196,10 +225,13 @@ public class PandocServiceConnector {
     }
 
     public byte[] getTemplate() {
+        // resolved first: the lookup throws on a misconfigured secret, and a client created before it
+        // would never be closed on that path
+        String apiKey = apiKeyProvider.getApiKey();
+
         Client client = ClientBuilder.newClient();
         WebTarget webTarget = client.target(getPandocServiceBaseUrl() + "/docx-template");
 
-        String apiKey = apiKeyProvider.getApiKey();
         try (Response response = requestWithApiKey(webTarget, MEDIA_TYPE_DOCX, apiKey).get()) {
             failOnUnauthorized(response, apiKey);
             if (response.getStatus() == Response.Status.OK.getStatusCode()) {

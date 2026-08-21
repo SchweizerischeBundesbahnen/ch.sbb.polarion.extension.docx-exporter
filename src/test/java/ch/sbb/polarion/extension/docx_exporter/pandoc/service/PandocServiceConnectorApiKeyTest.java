@@ -1,6 +1,7 @@
 package ch.sbb.polarion.extension.docx_exporter.pandoc.service;
 
 import ch.sbb.polarion.extension.docx_exporter.properties.DocxExporterExtensionConfiguration;
+import com.polarion.core.util.exceptions.UserFriendlyRuntimeException;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentMatchers;
@@ -25,7 +26,11 @@ class PandocServiceConnectorApiKeyTest {
     private static final String API_KEY = "s3cr3t";
 
     private static PandocServiceConnector connector() {
-        return new PandocServiceConnector("http://localhost:9082", new ApiKeyProvider());
+        return new PandocServiceConnector("https://pandoc.intranet:9082", new ApiKeyProvider());
+    }
+
+    private static PandocServiceConnector plainHttpConnector() {
+        return new PandocServiceConnector("http://pandoc.intranet:9082", new ApiKeyProvider());
     }
 
     @Test
@@ -56,7 +61,7 @@ class PandocServiceConnectorApiKeyTest {
         PandocServiceConnector connector = connector();
 
         assertThatThrownBy(() -> connector.failOnUnauthorized(response, "a-key"))
-                .isInstanceOf(IllegalStateException.class)
+                .isInstanceOf(UserFriendlyRuntimeException.class)
                 .hasMessageContaining("rejected the configured API key");
     }
 
@@ -67,7 +72,7 @@ class PandocServiceConnectorApiKeyTest {
         PandocServiceConnector connector = connector();
 
         assertThatThrownBy(() -> connector.failOnUnauthorized(response, null))
-                .isInstanceOf(IllegalStateException.class)
+                .isInstanceOf(UserFriendlyRuntimeException.class)
                 .hasMessageContaining("requires an API key, none is configured");
     }
 
@@ -77,6 +82,32 @@ class PandocServiceConnectorApiKeyTest {
         when(response.getStatus()).thenReturn(400);
 
         assertThatCode(() -> connector().failOnUnauthorized(response, "a-key")).doesNotThrowAnyException();
+    }
+
+    @Test
+    void shouldRefuseToSendTheKeyOverPlainHttp() {
+        // a key is a reusable credential: on plain http anyone on the path keeps it
+        WebTarget webTarget = mock(WebTarget.class);
+        Invocation.Builder builder = mock(Invocation.Builder.class);
+        when(webTarget.request(MEDIA_TYPE_DOCX)).thenReturn(builder);
+        PandocServiceConnector connector = plainHttpConnector();
+
+        assertThatThrownBy(() -> connector.requestWithApiKey(webTarget, MEDIA_TYPE_DOCX, API_KEY))
+                .isInstanceOf(UserFriendlyRuntimeException.class)
+                .hasMessageContaining("not sent over plain http")
+                .hasMessageContaining(DocxExporterExtensionConfiguration.PANDOC_API_KEY_SECRET)
+                .hasMessageNotContaining(API_KEY);
+        verify(builder, never()).header(ArgumentMatchers.anyString(), ArgumentMatchers.any());
+    }
+
+    @Test
+    void shouldKeepWorkingOverPlainHttpWhenNoKeyIsConfigured() {
+        // the transport rule guards a credential; where there is none, nothing changes
+        WebTarget webTarget = mock(WebTarget.class);
+        Invocation.Builder builder = mock(Invocation.Builder.class);
+        when(webTarget.request(MEDIA_TYPE_DOCX)).thenReturn(builder);
+
+        assertThat(plainHttpConnector().requestWithApiKey(webTarget, MEDIA_TYPE_DOCX, null)).isSameAs(builder);
     }
 
     @Test

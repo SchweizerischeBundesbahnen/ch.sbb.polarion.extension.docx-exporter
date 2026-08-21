@@ -6,6 +6,9 @@ import org.jetbrains.annotations.Nullable;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
@@ -114,10 +117,27 @@ class ApiKeyProviderTest {
             }
         };
 
+        // the whole chain is measured, not only the top message: a cause is printed by every log
+        // which dumps the stack, so a secrets manager quoting the key must not be carried along
         assertThatThrownBy(provider::getApiKey)
                 .isInstanceOf(IllegalStateException.class)
                 .hasMessageContaining("Could not read the pandoc API key")
                 .hasMessageContaining(SECRET_NAME)
-                .hasMessageNotContaining(API_KEY);
+                .hasMessageContaining(IllegalArgumentException.class.getName())
+                .hasMessageNotContaining(API_KEY)
+                .hasNoCause();
+
+        assertThat(stackTraceOf(provider)).doesNotContain(API_KEY);
+    }
+
+    private static String stackTraceOf(ApiKeyProvider provider) {
+        try {
+            provider.getApiKey();
+        } catch (RuntimeException e) {
+            StringWriter written = new StringWriter();
+            e.printStackTrace(new PrintWriter(written));
+            return written.toString();
+        }
+        return "";
     }
 }

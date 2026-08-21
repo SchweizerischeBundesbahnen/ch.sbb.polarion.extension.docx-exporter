@@ -78,6 +78,35 @@ class DocxExporterExtensionConfigurationTest {
         }
     }
 
+    @Test
+    void readsTheApiKeySecretNameOutOfPolarionProperties() {
+        SystemValueReader reader = mock(SystemValueReader.class);
+        when(reader.readString(PREFIX + "pandoc.apiKeySecret", "")).thenReturn("pandoc-api-key");
+
+        assertEquals("pandoc-api-key", withReader(reader, DocxExporterExtensionConfiguration::getPandocApiKeySecret));
+    }
+
+    @Test
+    void namesNoSecretWhenTheApiKeyPropertyIsNotSet() {
+        // the empty default is what ApiKeyProvider reads as "this service needs no key"
+        SystemValueReader reader = mock(SystemValueReader.class);
+        when(reader.readString(anyString(), anyString())).thenAnswer(invocation -> invocation.getArgument(1));
+
+        assertEquals("", withReader(reader, DocxExporterExtensionConfiguration::getPandocApiKeySecret));
+    }
+
+    @Test
+    void offersTheApiKeySecretOnTheConfigurationPage() {
+        try (MockedStatic<ContextUtils> contextUtils = mockStatic(ContextUtils.class)) {
+            contextUtils.when(ContextUtils::getConfigurationPropertiesPrefix).thenReturn(PREFIX);
+            DocxExporterExtensionConfiguration configuration = new DocxExporterExtensionConfiguration();
+
+            assertTrue(configuration.getSupportedProperties().contains(DocxExporterExtensionConfiguration.PANDOC_API_KEY_SECRET));
+            assertEquals("", configuration.getPandocApiKeySecretDefaultValue());
+            assertEquals(DocxExporterExtensionConfiguration.PANDOC_API_KEY_SECRET_DESCRIPTION, configuration.getPandocApiKeySecretDescription());
+        }
+    }
+
     private static <T> T withReader(SystemValueReader reader, Function<DocxExporterExtensionConfiguration, T> read) {
         try (MockedStatic<ContextUtils> contextUtils = mockStatic(ContextUtils.class);
              MockedStatic<SystemValueReader> readers = mockStatic(SystemValueReader.class)) {
