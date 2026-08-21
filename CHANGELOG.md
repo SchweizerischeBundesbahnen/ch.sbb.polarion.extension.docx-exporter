@@ -1,5 +1,12 @@
 # Changelog
 
+## [5.5.0](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/compare/v5.4.0...v5.5.0) (2026-08-21)
+
+
+### Features
+
+* send an api key to the pandoc service ([#358](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/issues/358)) ([9ed0e83](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/commit/9ed0e83cf5bbdbf8d47d493a82e1c3037d1132c0))
+
 ## [5.4.0](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/compare/v5.3.0...v5.4.0) (2026-08-21)
 
 
