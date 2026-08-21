@@ -14,7 +14,12 @@ import org.junit.jupiter.params.provider.MethodSource;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -26,6 +31,10 @@ import static org.mockito.ArgumentMatchers.eq;
 @SkipTestWhenParamNotSet
 @SuppressWarnings("ResultOfMethodCallIgnored")
 class TableOfFiguresTest extends BaseDocxConverterTest {
+
+    private static final Pattern PAGE_REF_TARGET = Pattern.compile("PAGEREF\\s+(\\S+)");
+    private static final Pattern BOOKMARK_NAME = Pattern.compile("w:name=\"(_Toc[^\"]*)\"");
+    private static final Pattern HYPERLINK_BLOCK = Pattern.compile("<w:hyperlink\\b(.*?)</w:hyperlink>", Pattern.DOTALL);
 
     private static Stream<Arguments> provideTableOfFiguresTestCases() {
         return Stream.of(
@@ -175,12 +184,20 @@ class TableOfFiguresTest extends BaseDocxConverterTest {
             // pointing at a bookmark the same document defines. Without them the tables render
             // empty until the reader presses F9.
             int expectedEntries = expectedFigures.size() + expectedTables.size();
-            assertEquals(expectedEntries, countOccurrences(documentXml, "PAGEREF _Toc"),
+            List<String> pageRefTargets = findAll(documentXml, PAGE_REF_TARGET);
+            assertEquals(expectedEntries, pageRefTargets.size(),
                     "Expected one pre-filled PAGEREF entry per caption");
-            assertTrue(countOccurrences(documentXml, "<w:hyperlink") >= expectedEntries,
-                    "Pre-filled entries are expected to be hyperlinks");
-            assertTrue(countOccurrences(documentXml, "w:name=\"_Toc") >= expectedEntries,
-                    "Every PAGEREF entry needs a bookmark to point at");
+
+            // Targets are matched against the bookmarks, not merely counted: a PAGEREF pointing at
+            // a bookmark this document never defines resolves to "Error! Bookmark not defined."
+            Set<String> bookmarks = new HashSet<>(findAll(documentXml, BOOKMARK_NAME));
+            for (String target : pageRefTargets) {
+                assertTrue(bookmarks.contains(target),
+                        "PAGEREF points at '" + target + "', which no bookmark in this document defines");
+            }
+
+            assertEquals(expectedEntries, countHyperlinkedPageRefs(documentXml),
+                    "Every pre-filled entry is expected to sit inside its own hyperlink");
         }
     }
 
@@ -191,6 +208,30 @@ class TableOfFiguresTest extends BaseDocxConverterTest {
      */
     private int countSeqFields(String documentXml, String sequenceName) {
         return countOccurrences(documentXml, "SEQ " + sequenceName + " \\* ARABIC");
+    }
+
+    /**
+     * Counts hyperlinks that wrap a PAGEREF field. Counting the two separately would let an
+     * unrelated hyperlink stand in for a missing one.
+     */
+    private int countHyperlinkedPageRefs(String documentXml) {
+        int count = 0;
+        Matcher matcher = HYPERLINK_BLOCK.matcher(documentXml);
+        while (matcher.find()) {
+            if (matcher.group(1).contains("PAGEREF")) {
+                count++;
+            }
+        }
+        return count;
+    }
+
+    private List<String> findAll(String documentXml, Pattern pattern) {
+        List<String> found = new ArrayList<>();
+        Matcher matcher = pattern.matcher(documentXml);
+        while (matcher.find()) {
+            found.add(matcher.group(1));
+        }
+        return found;
     }
 
     private int countOccurrences(String haystack, String needle) {
