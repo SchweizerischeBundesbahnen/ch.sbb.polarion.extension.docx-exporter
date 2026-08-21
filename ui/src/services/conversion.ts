@@ -8,7 +8,7 @@
  * The legacy code drove `XMLHttpRequest` through callbacks; this is `fetch` through promises, which is
  * what lets a surface await an export instead of threading success and error callbacks.
  */
-import type { SendRequest } from '@grigoriev/react-sbb-polarion';
+import type { SendRequest } from '@sbb-polarion/react-sbb-polarion';
 
 /** The two request flavors a conversion needs: the REST base, and a URL the server handed out. */
 export interface Remote {
