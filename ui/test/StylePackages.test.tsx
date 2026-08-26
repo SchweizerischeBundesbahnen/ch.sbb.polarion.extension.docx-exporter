@@ -270,8 +270,11 @@ describe('Style Packages page', () => {
     open();
     await loaded();
 
-    const options = Array.from(select('template-select')!.options).map((o) => o.textContent);
-    expect(options).toEqual(['Default', 'With logo (inherited)']);
+    const options = Array.from(select('template-select')!.options);
+    // The name stays plain: the marker is the `parent` class, which the shared dropdown paints as a
+    // small italic "global" on the right of the option.
+    expect(options.map((o) => o.textContent)).toEqual(['Default', 'With logo']);
+    expect(options.map((o) => o.className)).toEqual(['', 'parent']);
   });
 
   it('saves what the dropdowns were changed to', async () => {
