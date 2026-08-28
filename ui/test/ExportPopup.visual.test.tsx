@@ -5,6 +5,7 @@ import { openExportPopup } from '../src/popup/mount';
 import { SAMPLE_DOCUMENT, popupDependencies } from './exportPopupSamples';
 import type { PopupSampleOptions } from './exportPopupSamples';
 import { SAMPLE_STYLE_PACKAGE, SAMPLE_STYLE_PACKAGE_FULL, SAMPLE_STYLE_PACKAGE_HIDDEN } from './sidePanelSamples';
+import { settleBeforeCapture } from './visualHelpers';
 
 // Docker-only snapshots of the "Export to DOCX" dialog as the editor toolbar button opens it, mounted the
 // way openExportPopup mounts it: its own shadow root, carrying react-sbb-polarion's stylesheet, the base
@@ -50,6 +51,7 @@ async function snapshotDialog(shadow: ShadowRoot, name: string): Promise<void> {
   // might have some, which is enough to make a reference disagree with itself from one run to the next.
   await userEvent.hover(shadow.querySelector('.rsp-modal-title')!);
   await page.viewport(VIEWPORT.width, VIEWPORT.height);
+  await settleBeforeCapture(false);
   await expect(page.elementLocator(shadow.querySelector<HTMLElement>('.rsp-modal')!)).toMatchScreenshot(name);
 }
 
