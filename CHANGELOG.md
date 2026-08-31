@@ -1,5 +1,19 @@
 # Changelog
 
+## [5.5.0](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/compare/v5.4.0...v5.5.0) (2026-08-31)
+
+
+### Features
+
+* send an api key to the pandoc service ([#358](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/issues/358)) ([9ed0e83](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/commit/9ed0e83cf5bbdbf8d47d493a82e1c3037d1132c0))
+
+
+### Bug Fixes
+
+* **deps:** update dependency org.apache.tika:tika-core to v4 ([#365](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/issues/365)) ([1ae6854](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/commit/1ae6854d5c7d9aa8a79a3e6980375e720c8b6d5d))
+* hold tika-core on 3.x to keep Polarion startable ([#367](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/issues/367)) ([3dce836](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/commit/3dce8365c68c9da488e85388a1ed63ed44a6f15e))
+* mark an inherited setting with the "global" marker ([#366](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/issues/366)) ([f6cc7c1](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/commit/f6cc7c185753a90854c6054c730cff54b5e0f0fb))
+
 ## [5.4.0](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/compare/v5.3.0...v5.4.0) (2026-08-21)
 
 
