@@ -13,9 +13,44 @@ const origUrl = window.location.pathname + window.location.search;
 
 afterEach(() => {
   cleanup();
+  // Every dropdown keeps its popup in a portal on the body, which React unmounting does not take with it.
+  document.querySelectorAll('.sd-portal').forEach((portal) => portal.remove());
   vi.unstubAllGlobals();
   window.history.replaceState({}, '', origUrl);
 });
+
+/** The dropdown opens, closes and picks on mousedown, so the helpers below drive that event. */
+const mousedown = (node: Element) =>
+  node.dispatchEvent(new MouseEvent('mousedown', { bubbles: true, cancelable: true }));
+
+/** Each role set is a multi-select SearchableSelect, which inserts itself right after the <select> the
+ *  component ids. Addressing it from that id keeps these helpers off the page order. */
+const trigger = (kind: 'global' | 'project'): HTMLElement => {
+  const container = document.querySelector(`#${kind}-roles`)?.nextElementSibling;
+  if (!(container instanceof HTMLElement)) {
+    throw new Error(`no ${kind} roles control`);
+  }
+  return container.querySelector<HTMLElement>('.sd-trigger-multi')!;
+};
+
+/** The roles granted in one control, as the chips painted on its trigger. */
+const granted = (kind: 'global' | 'project'): string[] =>
+  Array.from(trigger(kind).querySelectorAll('.sd-chip-label')).map((chip) => (chip.textContent ?? '').trim());
+
+/** Ticks (or unticks) one role and waits for its chip to follow, which is what proves React took the
+ *  change - so a Save right after reads the new selection rather than the previous render's. */
+async function toggleRole(kind: 'global' | 'project', role: string) {
+  const wasGranted = granted(kind).includes(role);
+  mousedown(trigger(kind));
+  const listbox = document.getElementById(trigger(kind).getAttribute('aria-controls')!)!;
+  const option = Array.from(listbox.querySelectorAll('.option')).find((o) => (o.textContent ?? '').trim() === role);
+  if (!option) {
+    throw new Error(`no option for role "${role}"`);
+  }
+  mousedown(option);
+  mousedown(trigger(kind));
+  await vi.waitFor(() => expect(granted(kind).includes(role)).toBe(!wasGranted));
+}
 
 const authorizationRoutes = (globalRoles: string[], projectRoles: string[], selected: string[] = []) => [
   { method: 'GET', match: /\/roles\?/, json: { globalRoles, projectRoles } },
@@ -42,16 +77,15 @@ describe('User Guide page', () => {
 });
 
 describe('Authorization page', () => {
-  it('lists the roles of the scope with the stored ones checked', async () => {
+  it('lists the roles of the scope with the stored ones granted', async () => {
     installFetchMock(authorizationRoutes(['admin', 'developer'], ['project_admin'], ['admin']));
     window.history.replaceState({}, '', '?feature=authorization&embedded=true&scope=project/elibrary/');
     render(<App />);
 
-    await vi.waitFor(() => expect(document.querySelectorAll('.roles-list input[type="checkbox"]').length).toBe(3));
-    const checked = Array.from(document.querySelectorAll<HTMLLabelElement>('.roles-list label'))
-      .filter((l) => l.querySelector<HTMLInputElement>('input')!.checked)
-      .map((l) => l.textContent);
-    expect(checked).toEqual(['admin']);
+    // Both controls, not just the first: they are upgraded asynchronously.
+    await vi.waitFor(() => expect(document.querySelectorAll('.roles-group .sd-trigger-multi')).toHaveLength(2));
+    expect(granted('global')).toEqual(['admin']);
+    expect(granted('project')).toEqual([]);
     expect(document.body.textContent).toContain('DOCX Exporter: Authorization');
     // Global and project roles are two groups; the project one only appears when the scope has roles.
     expect(document.querySelectorAll('.roles-group').length).toBe(2);
@@ -61,9 +95,10 @@ describe('Authorization page', () => {
     const fetchMock = installFetchMock(authorizationRoutes(['admin', 'developer'], []));
     window.history.replaceState({}, '', '?feature=authorization&embedded=true&scope=');
     render(<App />);
-    await vi.waitFor(() => expect(document.querySelectorAll('.roles-list input[type="checkbox"]').length).toBe(2));
+    // One group only: with no project roles in the scope that half of the page is not rendered.
+    await vi.waitFor(() => expect(document.querySelectorAll('.roles-group .sd-trigger-multi')).toHaveLength(1));
 
-    await userEvent.click(document.querySelectorAll<HTMLInputElement>('.roles-list input[type="checkbox"]')[1]);
+    await toggleRole('global', 'developer');
     const save = Array.from(document.querySelectorAll<HTMLElement>('button, .sbb-btn')).find(
       (b) => b.textContent?.trim() === 'Save',
     )!;
