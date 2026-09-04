@@ -44,7 +44,7 @@
   templates the Java side reads server-side (`sidePanelContent.html`, `docxTemplate.html`).
 
 - **The UI build comes from the generic parent**, activated by the presence of `ui/package.json` (its
-  `vite-ui` profile): `npm ci` + `npm run build`, the bundle copied into `webapp/docx-exporter-app/`, and
+  `ui-build-react-app` profile): `npm ci` + `npm run build`, the bundle copied into `webapp/docx-exporter-app/`, and
   the JS suite in the Maven `test` phase. This pom adds nothing for it beyond pinning
   `frontend-maven-plugin.version`, which the parent's profile reads. Note it also redirects
   markdown2html's output (`about.html`, `user-guide.html`, `disclaimer.html`) into

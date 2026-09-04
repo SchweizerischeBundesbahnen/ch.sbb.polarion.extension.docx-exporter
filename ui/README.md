@@ -172,14 +172,14 @@ before `pre-commit run -a`. Without it they fail with an npm error rather than a
 The dockerized suite is the slow hook: it needs Docker running and adds 30-60s+ to a UI commit. That
 is the price of catching a broken suite or a coverage drop before the push rather than in CI.
 
-`typecheck` is not a hook. The Maven `test` phase gates it through the parent's `vite-ui` profile, and
+`typecheck` is not a hook. The Maven `test` phase gates it through the parent's `ui-build-react-app` profile, and
 it runs first in `npm run build`.
 
 ## Production build
 
 `npm run build` typechecks, emits the three entries to `ui/dist/app` with base path
 `/polarion/docx-exporter-app/ui/app/`, and then runs `scripts/check-runtime-entries.mjs` over the result.
-The Maven build runs all of it automatically through the parent's `vite-ui` profile - this pom declares no
+The Maven build runs all of it automatically through the parent's `ui-build-react-app` profile - this pom declares no
 frontend plugin of its own - and copies the bundle into `src/main/resources/webapp/docx-exporter-app/app`,
 where `DocxExporterAppServlet` serves it at `/polarion/docx-exporter-app/ui/app/index.html`.
 
