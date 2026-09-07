@@ -1,4 +1,7 @@
-// Runs before every test file (see vitest.config.ts setupFiles).
+// Runs before every test file (see vitest.config.ts setupFiles), each time in a realm of its own: browser
+// mode gives every file its own iframe, and `isolate` is left on. So everything below is set up once per
+// file against a document that goes with it - the stylesheets, the stillness rule and the `attachShadow`
+// wrapper accumulate across nothing and none of them has to be put back.
 //
 // Loads the same stylesheets the app renders with, so the browser paints components realistically:
 //   1. react-sbb-polarion's bundled control CSS (tokens + buttons/inputs/checkboxes/searchable-dropdown/
