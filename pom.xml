@@ -238,6 +238,24 @@
                     <groupId>xml-apis</groupId>
                     <artifactId>xml-apis</artifactId>
                 </exclusion>
+                <!-- docx4j 17.0.4 added jeuclid to render equations in PDF. jeuclid-core carries 9
+                     JSR-305/JCIP annotation descriptors (javax.annotation.Nonnull, .concurrent.Immutable)
+                     plus Import-Package: javax.annotation in its manifest. Polarion 2606 matches
+                     "javax.annotation" as a plain substring, so it rejects the bundle and aborts server
+                     startup (PolarionSVNApplication.runImpl). Those references are annotations only, never
+                     linked, so nothing would actually break — but the gate cannot tell. docx4j reaches
+                     jeuclid solely via Class.forName inside a catch(Throwable) guard
+                     (FORendererApacheFOP.isMathMLRendererAvailable), so its absence only means equations
+                     in PDF render as text. Unlike mbassador, docx4j-export-fo is the sole path here, so an
+                     <exclusion> is enough. -->
+                <exclusion>
+                    <groupId>de.rototor.jeuclid</groupId>
+                    <artifactId>jeuclid-fop</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>de.rototor.jeuclid</groupId>
+                    <artifactId>jeuclid-core</artifactId>
+                </exclusion>
             </exclusions>
         </dependency>
         <dependency>
