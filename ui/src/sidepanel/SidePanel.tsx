@@ -1,26 +1,25 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { SearchableSelect } from '@sbb-polarion/react-sbb-polarion';
-import type { SelectOption } from '@sbb-polarion/react-sbb-polarion';
+import ToastHost from '../components/ToastHost';
+import ExportFormView from '../export/ExportFormView';
 import type { PanelData } from '../export/exportData';
 import { loadPanelData, loadStylePackage } from '../export/exportData';
 import type { ExportForm } from '../export/exportForm';
-import { childValue, toExportForm } from '../export/exportForm';
+import { toExportForm } from '../export/exportForm';
 import type { ExportField } from '../export/exportParams';
 import { buildExportParams, toRequestBody } from '../export/exportParams';
+import {
+  EXPORT_ERROR,
+  EXPORT_SUCCESS,
+  clearReports,
+  reportFailure,
+  reportRefusal,
+  reportSuccess,
+  reportWarning,
+} from '../export/reporting';
 import { convertDocx, downloadBlob } from '../services/conversion';
 import type { DocumentIdentity } from '../services/exportContext';
 import { currentDocumentLocation, toDocumentIdentity } from '../services/exportContext';
-import {
-  COMMENTS_RENDER_TYPES,
-  IMAGE_DENSITIES,
-  LANGUAGES,
-  LINK_ROLE_DIRECTIONS,
-  ORIENTATIONS,
-  PAPER_SIZES,
-  REMOVAL_SELECTOR_HELP,
-  type StylePackageSettings,
-  UNREFERENCED_COMMENTS_HELP,
-} from '../services/stylePackage';
+import type { StylePackageSettings } from '../services/stylePackage';
 import useRemote from '../services/useRemote';
 
 /** Polarion's own Word roundtrip icon, served by the platform - the icon the legacy panel used. */
@@ -44,6 +43,9 @@ const NOT_AUTHORIZED = 'You are not allowed to export DOCX for this project';
  */
 const PERMISSION_UNKNOWN = 'Could not check whether you are allowed to export. Please, reload the page.';
 
+/** The panel's element ids are the legacy fragment's own, which carry no prefix. */
+const IDS = '';
+
 /** What the panel reaches outside itself for, so the dev harness and the tests can replace it. */
 export interface SidePanelDependencies {
   /** Where the document is. Read from the editor URL when not given, which is what happens in Polarion. */
@@ -58,19 +60,15 @@ export interface SidePanelProps {
   deps?: SidePanelDependencies;
 }
 
-/** `<prefix>` on its own line, then the detail - the legacy `prefix + ":<br>" + message`. */
-const withDetail = (prefix: string, detail: string): string => (detail ? `${prefix}:\n${detail}` : prefix);
-
-/** What a rejected conversion says, which is the server's message or nothing. */
-const messageOf = (error: unknown): string => (error instanceof Error ? error.message : '');
-
 /**
  * DOCX Exporter's Document Properties side panel: the React port of `sidePanelContent.html` +
  * `ExportPanel.js`.
  *
  * It is mounted by `mountSidePanel` into a shadow root on the fragment div Polarion injects into the
- * document editor's Document Properties pane. `side-panel.css` - the panel's half of the legacy page
- * stylesheet, injected into the same shadow root - styles it, so the panel looks exactly as it did.
+ * document editor's Document Properties pane. The form itself is `export/ExportFormView.tsx`, which the
+ * "Export to DOCX" dialog renders as well - the two used to be two copies of the same form; what is left
+ * here is the panel's own business: reading the data, running the conversion, and the "Export to DOCX"
+ * button, which is the panel's own and not the dialog's footer.
  *
  * What did change is where the data comes from. `DocxExporterFormExtension` used to render this markup
  * with the style packages, setting names, link roles, file name and export permission already
@@ -100,8 +98,6 @@ export default function SidePanel({ deps }: Readonly<SidePanelProps>) {
   const [invalidField, setInvalidField] = useState<ExportField | null>(null);
 
   const [exporting, setExporting] = useState(false);
-  const [exportError, setExportError] = useState<string | null>(null);
-  const [exportWarning, setExportWarning] = useState<string | null>(null);
 
   /** Which package load is the current one; a slower earlier one must not overwrite it. */
   const latestPackage = useRef(0);
@@ -173,8 +169,8 @@ export default function SidePanel({ deps }: Readonly<SidePanelProps>) {
   };
 
   const exportToDocx = async () => {
-    setExportError(null);
-    setExportWarning(null);
+    // What the last operation said, taken back before this one starts
+    clearReports();
     if (!form) {
       return;
     }
@@ -182,7 +178,7 @@ export default function SidePanel({ deps }: Readonly<SidePanelProps>) {
     const built = buildExportParams(form, document_, name);
     if ('error' in built) {
       setInvalidField(built.error.field);
-      setExportError(built.error.message);
+      reportRefusal(built.error.message);
       return;
     }
     setInvalidField(null);
@@ -191,20 +187,27 @@ export default function SidePanel({ deps }: Readonly<SidePanelProps>) {
     try {
       const result = await convert(remote, toRequestBody(built.params));
       if (result.warning) {
-        setExportWarning(result.warning);
+        reportWarning(result.warning);
       }
       download(result.blob, name);
-    } catch (error) {
-      setExportError(withDetail('Error occurred during DOCX generation', messageOf(error)));
+      reportSuccess(EXPORT_SUCCESS);
+    } catch (failure) {
+      reportFailure(EXPORT_ERROR, failure);
     } finally {
       setExporting(false);
     }
   };
 
-  const childOptions = (setting: keyof PanelData['childNames']): SelectOption[] => data?.childNames[setting] ?? [];
-
+  // Nothing to show a form for: the option lists the panel offers could not be read at all. Reported as the
+  // same alert the form itself would carry, which is the one the export dialog shows in the same case.
   if (loadError && !form) {
-    return <div id="style-package-error">{loadError}</div>;
+    return (
+      <div className="notifications">
+        <div id="load-error" className="alert alert-error">
+          {loadError}
+        </div>
+      </div>
+    );
   }
 
   if (!data || !form) {
@@ -225,334 +228,48 @@ export default function SidePanel({ deps }: Readonly<SidePanelProps>) {
         : undefined;
 
   return (
-    <fieldset className="panel-fieldset" disabled={exporting}>
-      <p>Select one of style packages in dropdown below which you wish to use during export.</p>
-      <div className="property-wrapper">
-        <label htmlFor="style-package-select">Style package:</label>
-        <SearchableSelect
-          id="style-package-select"
-          options={data.stylePackages}
-          value={stylePackage}
-          onChange={setStylePackage}
-          disabled={exporting}
+    <>
+      {/* Outside the fieldset on purpose: it is disabled while an export runs, and a disabled fieldset
+          disables every control inside it - a toast's own close button included. */}
+      <ToastHost />
+
+      <fieldset className="panel-fieldset" disabled={exporting}>
+        <ExportFormView
+          ids={IDS}
+          data={data}
+          stylePackage={stylePackage}
+          onStylePackage={setStylePackage}
+          form={form}
+          onPatch={patch}
+          exposeSettings={exposeSettings}
+          fileName={fileName}
+          onFileName={setFileName}
+          invalidField={invalidField}
+          busy={exporting}
+          loadError={loadError}
+          actions={
+            <div className="buttons-wrapper">
+              <button
+                type="button"
+                id="export-docx"
+                disabled={exportDisabled}
+                title={permissionTitle}
+                onClick={() => void exportToDocx()}
+              >
+                <img src={EXPORT_ICON} alt="" />
+                Export to DOCX
+              </button>
+              <span
+                id="export-docx-progress"
+                className="sbb-spinner"
+                role="img"
+                aria-label="Loading"
+                style={exporting ? { display: 'inline-block' } : undefined}
+              />
+            </div>
+          }
         />
-      </div>
-      <div id="style-package-error">{loadError}</div>
-
-      {exposeSettings && (
-        <div id="style-package-content" className="group-start">
-          <p>Selected style package exposes its settings, so you can redefine them.</p>
-
-          <div className="property-wrapper">
-            <label htmlFor="template-selector">Template:</label>
-            <SearchableSelect
-              id="template-selector"
-              options={childOptions('templates')}
-              value={childValue(childOptions('templates'), form.template)}
-              onChange={(value) => patch({ template: value })}
-              disabled={exporting}
-            />
-          </div>
-
-          <div className="property-wrapper">
-            <label htmlFor="localization-selector">Localization:</label>
-            <SearchableSelect
-              id="localization-selector"
-              options={childOptions('localization')}
-              value={childValue(childOptions('localization'), form.localization)}
-              onChange={(value) => patch({ localization: value })}
-              disabled={exporting}
-            />
-          </div>
-
-          {data.webhooksEnabled && (
-            <div className="property-wrapper group-start">
-              <label htmlFor="webhooks-checkbox">
-                <input
-                  id="webhooks-checkbox"
-                  type="checkbox"
-                  checked={form.webhooksEnabled}
-                  onChange={(e) => patch({ webhooksEnabled: e.target.checked })}
-                />
-                Webhooks:
-              </label>
-              {form.webhooksEnabled && (
-                <SearchableSelect
-                  id="webhooks-selector"
-                  options={childOptions('webhooks')}
-                  value={childValue(childOptions('webhooks'), form.webhooks)}
-                  onChange={(value) => patch({ webhooks: value })}
-                  disabled={exporting}
-                />
-              )}
-            </div>
-          )}
-
-          {/* The three page setup rows are a checkbox plus a dropdown, not a dropdown alone: unticked, the
-              export carries no value at all and the conversion takes what the reference template says. */}
-          <div className="property-wrapper">
-            <label htmlFor="orientation">
-              <input
-                id="orientation"
-                type="checkbox"
-                checked={form.orientationEnabled}
-                onChange={(e) => patch({ orientationEnabled: e.target.checked })}
-              />
-              Custom orientation
-            </label>
-            {form.orientationEnabled && (
-              <SearchableSelect
-                id="orientation-selector"
-                options={ORIENTATIONS}
-                value={form.orientation}
-                onChange={(value) => patch({ orientation: value })}
-                disabled={exporting}
-              />
-            )}
-          </div>
-
-          <div className="property-wrapper">
-            <label htmlFor="paper-size">
-              <input
-                id="paper-size"
-                type="checkbox"
-                checked={form.paperSizeEnabled}
-                onChange={(e) => patch({ paperSizeEnabled: e.target.checked })}
-              />
-              Custom paper size
-            </label>
-            {form.paperSizeEnabled && (
-              <SearchableSelect
-                id="paper-size-selector"
-                options={PAPER_SIZES}
-                value={form.paperSize}
-                onChange={(value) => patch({ paperSize: value })}
-                disabled={exporting}
-              />
-            )}
-          </div>
-
-          <div className="property-wrapper">
-            <label htmlFor="image-density">
-              <input
-                id="image-density"
-                type="checkbox"
-                checked={form.imageDensityEnabled}
-                onChange={(e) => patch({ imageDensityEnabled: e.target.checked })}
-              />
-              Custom image density
-            </label>
-            {form.imageDensityEnabled && (
-              <SearchableSelect
-                id="image-density-selector"
-                options={IMAGE_DENSITIES}
-                value={form.imageDensity}
-                onChange={(value) => patch({ imageDensity: value })}
-                disabled={exporting}
-              />
-            )}
-          </div>
-
-          <div className="property-wrapper">
-            <label htmlFor="preserve-table-styles">
-              <input
-                id="preserve-table-styles"
-                type="checkbox"
-                checked={form.preserveTableStyles}
-                onChange={(e) => patch({ preserveTableStyles: e.target.checked })}
-              />
-              Preserve table styles
-            </label>
-          </div>
-
-          <div className="property-wrapper">
-            <label htmlFor="render-comments">
-              <input
-                id="render-comments"
-                type="checkbox"
-                checked={form.renderCommentsEnabled}
-                onChange={(e) => patch({ renderCommentsEnabled: e.target.checked })}
-              />
-              Comments rendering
-            </label>
-            {form.renderCommentsEnabled && (
-              <SearchableSelect
-                id="render-comments-selector"
-                options={COMMENTS_RENDER_TYPES}
-                value={form.renderComments}
-                onChange={(value) => patch({ renderComments: value })}
-                disabled={exporting}
-              />
-            )}
-          </div>
-
-          {form.renderCommentsEnabled && (
-            <div className="property-wrapper" id="render-comments-options" style={{ paddingLeft: 20 }}>
-              <label htmlFor="include-unreferenced-comments" title={UNREFERENCED_COMMENTS_HELP}>
-                <input
-                  id="include-unreferenced-comments"
-                  type="checkbox"
-                  checked={form.includeUnreferencedComments}
-                  onChange={(e) => patch({ includeUnreferencedComments: e.target.checked })}
-                />
-                include unreferenced
-              </label>
-            </div>
-          )}
-
-          <div className="property-wrapper">
-            <label htmlFor="cut-empty-chapters">
-              <input
-                id="cut-empty-chapters"
-                type="checkbox"
-                checked={form.cutEmptyChapters}
-                onChange={(e) => patch({ cutEmptyChapters: e.target.checked })}
-              />
-              Cut empty chapters (any level)
-            </label>
-          </div>
-
-          <div className="property-wrapper">
-            <label htmlFor="cut-empty-wi-attributes">
-              <input
-                id="cut-empty-wi-attributes"
-                type="checkbox"
-                checked={form.cutEmptyWorkitemAttributes}
-                onChange={(e) => patch({ cutEmptyWorkitemAttributes: e.target.checked })}
-              />
-              Cut empty Workitem attributes
-            </label>
-          </div>
-
-          <div className="property-wrapper">
-            <label htmlFor="cut-urls">
-              <input
-                id="cut-urls"
-                type="checkbox"
-                checked={form.cutLocalURLs}
-                onChange={(e) => patch({ cutLocalURLs: e.target.checked })}
-              />
-              Cut local Polarion URLs
-            </label>
-          </div>
-
-          <div className="property-wrapper">
-            <label htmlFor="specific-chapters" className="w-chapters">
-              <input
-                id="specific-chapters"
-                type="checkbox"
-                checked={form.specificChaptersEnabled}
-                onChange={(e) => patch({ specificChaptersEnabled: e.target.checked })}
-              />
-              Specific higher level chapters
-            </label>
-            {form.specificChaptersEnabled && (
-              <input
-                id="chapters"
-                className={invalidField === 'chapters' ? 'grows error' : 'grows'}
-                type="text"
-                placeholder="eg. 1,2,4 etc."
-                value={form.specificChapters}
-                onChange={(e) => patch({ specificChapters: e.target.value })}
-              />
-            )}
-          </div>
-
-          <div className="property-wrapper">
-            <label htmlFor="localization">
-              <input
-                id="localization"
-                type="checkbox"
-                checked={form.localizeEnums}
-                onChange={(e) => patch({ localizeEnums: e.target.checked })}
-              />
-              Localize enums
-            </label>
-            {form.localizeEnums && (
-              <SearchableSelect
-                id="language"
-                options={LANGUAGES}
-                value={form.language}
-                onChange={(value) => patch({ language: value })}
-                disabled={exporting}
-              />
-            )}
-          </div>
-
-          {/* Roles apply only where the project defines any; an empty list hid the whole group before too. */}
-          {data.roles.length > 0 && (
-            <div className="roles-fields">
-              <div className="property-wrapper">
-                <label htmlFor="selected-roles">
-                  <input
-                    id="selected-roles"
-                    type="checkbox"
-                    checked={form.rolesEnabled}
-                    onChange={(e) => patch({ rolesEnabled: e.target.checked })}
-                  />
-                  Specific Workitem roles
-                </label>
-              </div>
-              {form.rolesEnabled && (
-                <div className="property-wrapper" id="roles-wrapper">
-                  <SearchableSelect
-                    id="roles-selector"
-                    multiple
-                    options={data.roles}
-                    value={form.linkedWorkitemRoles}
-                    onChange={(values) => patch({ linkedWorkitemRoles: values })}
-                    disabled={exporting}
-                  />
-                  <SearchableSelect
-                    id="roles-direction-selector"
-                    options={LINK_ROLE_DIRECTIONS}
-                    value={form.linkRoleDirection}
-                    onChange={(value) => patch({ linkRoleDirection: value })}
-                    disabled={exporting}
-                  />
-                </div>
-              )}
-            </div>
-          )}
-
-          <div className="property-wrapper">
-            <label htmlFor="removal-selector" className="w-auto">
-              Removal selector:
-            </label>
-            <div className="more-info" title={REMOVAL_SELECTOR_HELP} />
-            <input
-              id="removal-selector"
-              className="grows"
-              type="text"
-              value={form.removalSelector}
-              onChange={(e) => patch({ removalSelector: e.target.value })}
-            />
-          </div>
-        </div>
-      )}
-
-      <div className="property-wrapper">
-        <label htmlFor="filename" className="w-filename">
-          File name:
-        </label>
-        <input id="filename" type="text" value={fileName} onChange={(e) => setFileName(e.target.value)} />
-      </div>
-
-      <div className="buttons-wrapper">
-        <button type="button" id="export-docx" disabled={exportDisabled} title={permissionTitle} onClick={exportToDocx}>
-          <img src={EXPORT_ICON} alt="" />
-          Export to DOCX
-        </button>
-        <span
-          id="export-docx-progress"
-          className="sbb-spinner"
-          role="img"
-          aria-label="Loading"
-          style={exporting ? { display: 'inline-block' } : undefined}
-        />
-        <div id="export-error">{exportError}</div>
-        <div id="export-warning">{exportWarning}</div>
-      </div>
-    </fieldset>
+      </fieldset>
+    </>
   );
 }

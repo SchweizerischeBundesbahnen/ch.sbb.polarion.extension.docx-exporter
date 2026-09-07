@@ -12,6 +12,7 @@ import {
   docxResult,
   sampleDependencies,
 } from './sidePanelSamples';
+import { clearToasts, toastText, toasted } from './toasts';
 
 // The export panel of the document editor: what the selected style package puts on screen, what the export
 // sends, and what the user is told when something is wrong. The panel is rendered directly rather than
@@ -42,6 +43,7 @@ function pick(id: string, value: string): void {
 
 afterEach(() => {
   cleanup();
+  clearToasts();
   vi.unstubAllGlobals();
 });
 
@@ -98,16 +100,20 @@ describe('what the style package puts on screen', () => {
     expect(field('#image-density-selector')).toBeNull();
   });
 
-  it('shows a value field only while its switch is on', async () => {
+  it('reserves the space of a value field rather than removing it, as the export dialog does', async () => {
+    // `visibility` and not `display`: ticking a checkbox must not reflow the rows around it. The three page
+    // setup dropdowns are the exception - see the test above, where an absent dropdown IS the state.
     open();
     await settled();
 
-    expect(field('#chapters')).toBeNull();
-    await userEvent.click(checkbox('specific-chapters'));
-    expect(field('#chapters')).not.toBeNull();
+    const chapters = field<HTMLInputElement>('#chapters')!;
+    expect(getComputedStyle(chapters).visibility).toBe('hidden');
 
     await userEvent.click(checkbox('specific-chapters'));
-    expect(field('#chapters')).toBeNull();
+    expect(getComputedStyle(field('#chapters')!).visibility).toBe('visible');
+
+    await userEvent.click(checkbox('specific-chapters'));
+    expect(getComputedStyle(field('#chapters')!).visibility).toBe('hidden');
   });
 
   it('keeps the value a switch was turned off on, so turning it back on restores it', async () => {
@@ -324,16 +330,19 @@ describe('what the style package puts on screen', () => {
 });
 
 describe('what the panel says when it cannot load', () => {
+  // A form that could not be loaded is a state, not an event, so it stays in the panel rather than becoming
+  // a toast that comes and goes - which is what the export dialog does with the same failure.
   it('reports a style package that cannot be read', async () => {
     open({ ...sampleDependencies(), loadPackage: () => Promise.reject(new Error('HTTP 500')) });
 
-    await vi.waitFor(() => expect(text('#style-package-error')).toContain('error loading style package settings'));
+    await vi.waitFor(() => expect(text('#load-error')).toContain('error loading style package settings'));
+    expect(toastText('error')).toBe('');
   });
 
   it('reports data that cannot be read', async () => {
     open({ ...sampleDependencies(), loadData: () => Promise.reject(new Error('HTTP 500')) });
 
-    await vi.waitFor(() => expect(text('#style-package-error')).toContain('error loading style package settings'));
+    await vi.waitFor(() => expect(text('#load-error')).toContain('error loading style package settings'));
   });
 });
 
@@ -402,7 +411,7 @@ describe('exporting', () => {
 
     await userEvent.click(field<HTMLButtonElement>('#export-docx')!);
 
-    expect(text('#export-warning')).toBe('2 image(s) were not exported');
+    expect(await toasted('warning')).toBe('2 image(s) were not exported');
   });
 
   it('shows why a conversion failed', async () => {
@@ -411,9 +420,7 @@ describe('exporting', () => {
 
     await userEvent.click(field<HTMLButtonElement>('#export-docx')!);
 
-    await vi.waitFor(() =>
-      expect(text('#export-error')).toBe('Error occurred during DOCX generation:\nThe document has no content'),
-    );
+    expect(await toasted('error')).toBe('Error occurred during DOCX generation: The document has no content');
   });
 
   it('says only that it failed when the server gave no reason', async () => {
@@ -422,7 +429,7 @@ describe('exporting', () => {
 
     await userEvent.click(field<HTMLButtonElement>('#export-docx')!);
 
-    await vi.waitFor(() => expect(text('#export-error')).toBe('Error occurred during DOCX generation'));
+    expect(await toasted('error')).toBe('Error occurred during DOCX generation');
   });
 
   it('disables the panel and shows the spinner while an export runs', async () => {
@@ -447,7 +454,7 @@ describe('exporting', () => {
     await userEvent.fill(field<HTMLInputElement>('#chapters')!, 'one, two');
     await userEvent.click(field<HTMLButtonElement>('#export-docx')!);
 
-    expect(text('#export-error')).toContain('comma separated list of integer values');
+    expect(await toasted('error')).toContain('comma separated list of integer values');
     expect(field('#chapters')!.className).toContain('error');
     // Nothing was started, so the panel is still usable
     expect(field<HTMLButtonElement>('#export-docx')!.disabled).toBe(false);
