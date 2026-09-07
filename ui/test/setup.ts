@@ -1,4 +1,7 @@
-// Runs before every test file (see vitest.config.ts setupFiles).
+// Runs before every test file (see vitest.config.ts setupFiles), each time in a realm of its own: browser
+// mode gives every file its own iframe, and `isolate` is left on. So everything below is set up once per
+// file against a document that goes with it - the stylesheets, the stillness rule and the `attachShadow`
+// wrapper accumulate across nothing and none of them has to be put back.
 //
 // Loads the same stylesheets the app renders with, so the browser paints components realistically:
 //   1. react-sbb-polarion's bundled control CSS (tokens + buttons/inputs/checkboxes/searchable-dropdown/
@@ -20,6 +23,26 @@ import '../src/App.css';
 // Blink, so on the Linux container the rule parses and is ignored - a reference captured with it is
 // byte-identical to one captured without. `--disable-lcd-text` in vitest.config.ts is the platform
 // independent way to ask for the same thing.
+const STILLNESS = '*, *::before, *::after { transition: none !important; animation: none !important; }';
+
 const stillness = document.createElement('style');
-stillness.textContent = '*, *::before, *::after { transition: none !important; animation: none !important; }';
+stillness.textContent = STILLNESS;
 document.head.appendChild(stillness);
+
+// A shadow root sees none of the document's rules, and two of this app's surfaces are mounted in one - the
+// side panel and the export dialog. Their controls are react-sbb-polarion's,
+// which transitions `border-color` over 150ms, so a value read or captured right after a class changed is
+// the value it is fading FROM: an input marked `.error` reads as the grey it just left, whatever the
+// stylesheet says. That is what this plants in every shadow root as it is created.
+//
+// An adopted stylesheet rather than a `<style>` child, because `mountInShadow` calls `replaceChildren()`
+// on the root it is given - which would sweep a child straight out again - and because adopted sheets are
+// applied after the root's own, so nothing in the root can outrank this.
+const stillnessSheet = new CSSStyleSheet();
+stillnessSheet.replaceSync(STILLNESS);
+const attachShadow = Element.prototype.attachShadow;
+Element.prototype.attachShadow = function attachStillShadow(init: ShadowRootInit): ShadowRoot {
+  const root = attachShadow.call(this, init);
+  root.adoptedStyleSheets = [...root.adoptedStyleSheets, stillnessSheet];
+  return root;
+};

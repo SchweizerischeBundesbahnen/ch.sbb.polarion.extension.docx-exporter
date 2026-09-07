@@ -25,17 +25,40 @@
     `#docx-exporter-panel` div plus a `<link>` to `css/starter.css` whose `onload` fires the import) and
     `assets/side-panel.js` mounts React into a shadow root of it. It reads its data from the same internal
     REST endpoints the export dialog uses; the Java side substitutes nothing but the bundle version.
-    Its CSS is `ui/src/sidepanel/side-panel.css`.
+    Its CSS is the shared `ui/src/export/export-form.css` plus `ui/src/sidepanel/side-panel.css` for the
+    pane's own chrome.
   - **"Export to DOCX" dialog** - `assets/export-popup.js` exporting `openExportPopup()`, imported on click
     by `js/starter.js`. It appends its own host to the page body and mounts into a shadow root of it.
-    Its CSS is `ui/src/popup/export-popup.css`. There is no `documentType`: this extension exports Live
-    Documents only, and `ExportParams.java` has no such field.
+    Its CSS is the shared `ui/src/export/export-form.css` plus `ui/src/popup/export-popup.css` for the
+    dialog's own chrome. There is no `documentType`: this extension exports Live Documents only, and
+    `ExportParams.java` has no such field.
 
   Each shadow root carries its own CSS, so the only stylesheet the extension still puts on a Polarion page
   is the **empty** `css/starter.css`, and it is there to fire the side panel's `onload`, not to style
   anything. `css/docx-exporter.css` is deleted and the injector calls no `injectStyle`; the toolbar button
   uses Polarion's own classes plus generic's `css/dle-toolbar.css`.
 
+- **The export form is one component, and it is the same one on both surfaces.**
+  `ui/src/export/ExportFormView.tsx` is every row of it; the side panel and the "Export to DOCX" dialog
+  differ only in the chrome around it (a `<fieldset>` with its own button, or RSP's `Modal` with its footer).
+  Its layout follows the width it is given through a container query on `.docx-export-form` - one column in
+  the 360px properties pane, two in the dialog - so neither surface has a layout of its own to keep in step.
+  This mirrors pdf-exporter's form deliberately: the two are looked at side by side, so a change to one is
+  worth making in the other.
+- **A toast inside a shadow root needs its stylesheet brought in, and one host.** `sonner` (through RSP's
+  `Toaster`) injects its CSS into `document.head` when its module loads, which neither shadow-mounted
+  surface can see - so `ui/src/export/export-form.css` imports `sonner/dist/styles.css` and Vite inlines it
+  into both roots. And `toast()` broadcasts to **every** mounted `Toaster`, while the side panel and the
+  export dialog are both on the page whenever a document is open in the editor:
+  `ui/src/components/ToastHost.tsx` is what makes one host the only one that reports, and it ranks them by
+  the `surface` each is mounted for - `dialog` > `panel` > `app`, mount order only breaking a tie. Mount
+  order alone is wrong: the panel renders its host below its own loading state, so a dialog opened while
+  the pane still reads `Loading...` would be pushed aside when those reads returned. It also empties the
+  queue whenever the reporting changes hands, because sonner replays each toast still active to a
+  `Toaster` that has just subscribed - so a failure the panel reported would otherwise reappear in the
+  dialog opened over it, and the dialog's own report would move into the pane behind it on close. The
+  dialog's host must be **inside** the `<dialog>`, the top layer painting above everything outside it, and
+  the panel's outside its `<fieldset>`, which would otherwise disable the toast's own close button.
 - **`webapp/docx-exporter/js/modules/` is gone.** `ExportPopup.js`, `ExportPanel.js`, `ExportContext.js`
   and `ExportParams.js` were ported into the app: `ui/src/export/` (the shared export model - a style
   package read into a form, a form turned into a request, the REST reads each surface needs),

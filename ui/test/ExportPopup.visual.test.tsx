@@ -5,6 +5,7 @@ import { openExportPopup } from '../src/popup/mount';
 import { SAMPLE_DOCUMENT, popupDependencies } from './exportPopupSamples';
 import type { PopupSampleOptions } from './exportPopupSamples';
 import { SAMPLE_STYLE_PACKAGE, SAMPLE_STYLE_PACKAGE_FULL, SAMPLE_STYLE_PACKAGE_HIDDEN } from './sidePanelSamples';
+import { clearToasts } from './toasts';
 import { settleBeforeCapture } from './visualHelpers';
 
 // Docker-only snapshots of the "Export to DOCX" dialog as the editor toolbar button opens it, mounted the
@@ -45,6 +46,23 @@ const dropdownsUpgraded = (shadow: ShadowRoot) =>
  */
 const VIEWPORT = { width: 900, height: 1400 } as const;
 
+/**
+ * Snapshots the toast a surface reported through, which is the one thing that is NOT in a capture of the
+ * dialog: a toast is `position: fixed` at the top of the window, and the dialog is centred in it.
+ *
+ * The `<li>` and not sonner's `<ol>`: the list is a fixed box of no height, its toasts absolutely positioned
+ * inside it, so an element capture of the list would be empty.
+ */
+async function snapshotToast(shadow: ShadowRoot, name: string): Promise<void> {
+  const toast = await vi.waitFor(() => {
+    const found = shadow.querySelector<HTMLElement>('[data-sonner-toast]');
+    expect(found).not.toBeNull();
+    return found!;
+  });
+  await settleBeforeCapture(false);
+  await expect(page.elementLocator(toast)).toMatchScreenshot(name);
+}
+
 /** Snapshots the dialog itself: it is a native <dialog> in the top layer, so its host's box is empty. */
 async function snapshotDialog(shadow: ShadowRoot, name: string): Promise<void> {
   // Park the pointer somewhere without hover styling. Wherever it happened to rest after the previous test
@@ -61,6 +79,9 @@ async function snapshot(shadow: ShadowRoot, name: string): Promise<void> {
 }
 
 afterEach(() => {
+  // Before the roots go: a toast outlives its host (sonner keeps the queue), and the next host to mount is
+  // handed everything still active - which would report one test's failure into the next one's reference.
+  clearToasts();
   roots.splice(0).forEach((root) => root.unmount());
   document.querySelectorAll('body > div').forEach((element) => {
     if (element.shadowRoot) element.remove();
@@ -109,9 +130,12 @@ describe.skipIf(!__PIXEL_REFERENCES__)('export dialog visual', () => {
 
     await userEvent.fill(shadow.querySelector<HTMLInputElement>('#popup-chapters')!, 'one, two');
     shadow.querySelector<HTMLButtonElement>('.rsp-modal-footer .sbb-btn--primary')!.click();
-    await vi.waitFor(() => expect(shadow.querySelector('.notifications .alert-error')).not.toBeNull());
+    await vi.waitFor(() => expect(shadow.querySelector('[data-sonner-toast]')).not.toBeNull());
 
     await snapshot(shadow, 'popup-invalid-field');
+    // The reason is a toast, which is at the top of the window rather than inside the dialog - so the
+    // reference above shows the marked field and this one shows what was said about it.
+    await snapshotToast(shadow, 'popup-export-refused');
   });
 
   it('an open dropdown, which has to paint above the dialog', async () => {
@@ -142,9 +166,8 @@ describe.skipIf(!__PIXEL_REFERENCES__)('export dialog visual', () => {
     // dialog actually shipped with: in a real Polarion the two columns wrapped into a single tall column.
     //
     // The window is a normal width and merely short. That is enough: the form goes over its height cap, the
-    // content area scrolls, and the scrollbar takes about 15px off it - leaving 685px where two fixed 340px
-    // columns and their 20px gap need 700. The columns are sized to shrink rather than wrap (see
-    // .flex-column in export-popup.css), so they stay level here.
+    // content area scrolls, and the scrollbar takes about 15px off the form's width - and the form's own
+    // container query is what decides how many columns are left of it (see export/export-form.css).
     //
     // The scrollbar is real, not simulated. It needs `ignoreDefaultArgs: ['--hide-scrollbars']` in
     // vitest.config.ts: Playwright passes that flag to headless Chromium by default, which is why this
@@ -161,7 +184,7 @@ describe.skipIf(!__PIXEL_REFERENCES__)('export dialog visual', () => {
 
   it('the data it could not read', async () => {
     const shadow = mounted({ loadError: new Error("No 'templates' configurations in scope 'project/elibrary/'") });
-    await vi.waitFor(() => expect(shadow.querySelector('.notifications .alert-error')).not.toBeNull());
+    await vi.waitFor(() => expect(shadow.querySelector('#popup-load-error')).not.toBeNull());
 
     await snapshotDialog(shadow, 'popup-load-failed');
   });
