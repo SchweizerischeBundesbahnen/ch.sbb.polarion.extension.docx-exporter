@@ -230,8 +230,9 @@ export default function SidePanel({ deps }: Readonly<SidePanelProps>) {
   return (
     <>
       {/* Outside the fieldset on purpose: it is disabled while an export runs, and a disabled fieldset
-          disables every control inside it - a toast's own close button included. */}
-      <ToastHost />
+          disables every control inside it - a toast's own close button included. `surface`, because the
+          dialog reports over this panel whenever one is open, whichever of the two mounted first. */}
+      <ToastHost surface="panel" />
 
       <fieldset className="panel-fieldset" disabled={exporting}>
         <ExportFormView

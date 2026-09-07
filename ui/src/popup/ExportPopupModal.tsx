@@ -207,8 +207,9 @@ export default function ExportPopupModal({ document: document_, onClose, deps }:
       onCancel={onClose}
     >
       {/* Inside the dialog on purpose: it is a native `<dialog>` in the top layer, and a toast host outside
-          it would be painted behind the dialog and dimmed by its backdrop. */}
-      <ToastHost />
+          it would be painted behind the dialog and dimmed by its backdrop. `surface`, because for the same
+          reason this is the only host worth reporting through while the dialog is open. */}
+      <ToastHost surface="dialog" />
 
       <ExportFormView
         ids={IDS}

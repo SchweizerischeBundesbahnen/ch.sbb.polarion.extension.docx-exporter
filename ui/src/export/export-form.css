@@ -1,7 +1,7 @@
 /* The look of the export form, shared by the "Export to DOCX" dialog and the Document Properties side panel.
 
    Both surfaces render the same form (export/ExportFormView.tsx) and differ only in what surrounds it: a
-   dialog with its footer buttons, or a pane with an "Export to PDF" button of its own. So the rows, the
+   dialog with its footer buttons, or a pane with an "Export to DOCX" button of its own. So the rows, the
    columns and the toasts are one stylesheet, injected into each surface's shadow
    root next to react-sbb-polarion's stylesheet - see popup/mount.tsx and sidepanel/mount.tsx.
    What is left in popup/export-popup.css and sidepanel/side-panel.css is each surface's own chrome.

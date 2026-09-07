@@ -49,9 +49,15 @@
   surface can see - so `ui/src/export/export-form.css` imports `sonner/dist/styles.css` and Vite inlines it
   into both roots. And `toast()` broadcasts to **every** mounted `Toaster`, while the side panel and the
   export dialog are both on the page whenever a document is open in the editor:
-  `ui/src/components/ToastHost.tsx` is what makes the newest host the only one that renders. The dialog's
-  host must be **inside** the `<dialog>`, the top layer painting above everything outside it, and the
-  panel's outside its `<fieldset>`, which would otherwise disable the toast's own close button.
+  `ui/src/components/ToastHost.tsx` is what makes one host the only one that reports, and it ranks them by
+  the `surface` each is mounted for - `dialog` > `panel` > `app`, mount order only breaking a tie. Mount
+  order alone is wrong: the panel renders its host below its own loading state, so a dialog opened while
+  the pane still reads `Loading...` would be pushed aside when those reads returned. It also empties the
+  queue whenever the reporting changes hands, because sonner replays each toast still active to a
+  `Toaster` that has just subscribed - so a failure the panel reported would otherwise reappear in the
+  dialog opened over it, and the dialog's own report would move into the pane behind it on close. The
+  dialog's host must be **inside** the `<dialog>`, the top layer painting above everything outside it, and
+  the panel's outside its `<fieldset>`, which would otherwise disable the toast's own close button.
 - **`webapp/docx-exporter/js/modules/` is gone.** `ExportPopup.js`, `ExportPanel.js`, `ExportContext.js`
   and `ExportParams.js` were ported into the app: `ui/src/export/` (the shared export model - a style
   package read into a form, a form turned into a request, the REST reads each surface needs),
