@@ -1,5 +1,6 @@
 import { createRoot } from 'react-dom/client';
 import type { Root } from 'react-dom/client';
+import formStyle from '../export/export-form.css?inline';
 import { mountInShadow } from '../services/shadowMount';
 import SidePanel from './SidePanel';
 import type { SidePanelDependencies } from './SidePanel';
@@ -25,7 +26,7 @@ export function mountSidePanel(selector: string, deps?: SidePanelDependencies): 
   }
   const container = mountInShadow(host, {
     containerClassName: 'docx-exporter form-wrapper sbb-ui',
-    styleTexts: [panelStyle],
+    styleTexts: [formStyle, panelStyle],
   });
   const root = createRoot(container);
   root.render(<SidePanel deps={deps} />);

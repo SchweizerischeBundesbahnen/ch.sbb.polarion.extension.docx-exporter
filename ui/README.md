@@ -58,14 +58,19 @@ otherwise drops. Nothing in the Vitest suites sees the built files, so
 Two surfaces export: the toolbar dialog and the Document Properties side panel. What they share is
 [`src/export/`](src/export/) plus two services:
 
-| Module                      | What it holds                                                  |
-| --------------------------- | -------------------------------------------------------------- |
-| `export/exportForm.ts`      | A style package read into form state.                          |
-| `export/exportParams.ts`    | Form state turned into an export request.                      |
-| `export/exportData.ts`      | The REST reads each surface needs before it can be shown.      |
-| `export/validation.ts`      | The fields a user can get wrong.                               |
-| `services/exportContext.ts` | Where the document is, read out of the Polarion location hash. |
-| `services/conversion.ts`    | Submit a conversion job, poll it, download the result.         |
+| Module                      | What it holds                                                                        |
+| --------------------------- | ------------------------------------------------------------------------------------ |
+| `export/exportForm.ts`      | A style package read into form state.                                                |
+| `export/exportParams.ts`    | Form state turned into an export request.                                            |
+| `export/exportData.ts`      | The REST reads each surface needs before it can be shown.                            |
+| `export/validation.ts`      | The fields a user can get wrong.                                                     |
+| `export/ExportFormView.tsx` | The form itself: every row, on both surfaces.                                        |
+| `export/formRows.tsx`       | The two kinds of row it is built from, and the cell a control sits in.               |
+| `export/export-form.css`    | How those rows and their columns are laid out; the toast styles a shadow root needs. |
+| `export/reporting.ts`       | What the form tells the user, as toasts.                                             |
+| `components/ToastHost.tsx`  | The one toast host that renders, wherever several are mounted.                       |
+| `services/exportContext.ts` | Where the document is, read out of the Polarion location hash.                       |
+| `services/conversion.ts`    | Submit a conversion job, poll it, download the result.                               |
 
 There is no `documentType`: this extension exports Live Documents only. The legacy builder set one and
 then never serialized it, and `ExportParams.java` has no such field, so the request does not carry one.
@@ -75,6 +80,61 @@ the switch and the value - so unticking a box does not throw away what was picke
 again. Orientation, paper size and image density work that way; pdf-exporter sends all three
 unconditionally, which is why its `exportParams.ts` is not a drop-in here.
 
+## The shared export form
+
+The dialog and the side panel render the **same** form: `export/ExportFormView.tsx`. They were two copies of
+it - the same rows, the same style package, the same request - laid out by hand, the dialog in two fixed flex
+columns and the panel in one, each with its own label widths, its own way of hiding an optional field, and
+its own way of reporting a failure. What is left per surface is the chrome: RSP's `Modal` with its footer, or
+a `<fieldset>` in the properties pane with an "Export to DOCX" button of its own (passed in as `actions`).
+
+Four things about that form are worth knowing. They are the same four as in
+[pdf-exporter](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.pdf-exporter), whose
+form this one is deliberately a sibling of - the two extensions are looked at side by side.
+
+**It follows the room it has, not the surface it is on.** `.docx-export-form` is a query container
+(`container-type: inline-size`), and a section of rows is one column below 620px of form width and two above
+it. So the 360px properties pane gets one column, the dialog two, and a narrow window folds the dialog's form
+without a rule of its own. That is also why `export-popup.css` **states** the dialog's width rather than
+sizing it to its content: an element with inline-size containment contributes nothing to its parent's
+max-content width, so a `width: max-content` dialog would collapse to one column at every window size.
+
+**Every label starts at the same x.** A row is a three-track grid: a checkbox gutter, a label column, the
+control. So the checkboxes line up down the whole form, the label texts line up beside them, and every
+control lands on one more shared x, in both columns of the wide layout. The one exception is "Specific higher
+level chapters", whose label is a sentence: widening the column to hold it would push every aligned control
+halfway across the form, so that row lets its field follow the label instead (`.tight`).
+
+**The order is the two-column order, and one column falls out of it.** Rows flow across a section before they
+flow down, so the DOM order is the reading order in a pane and pairs up into columns in a dialog - with the
+pair that belongs together ("cut empty chapters" / "cut empty Workitem attributes") side by side. Nothing is
+assigned to a column. The sections are: the style package, the configurations the package points at, the page
+setup, the render switches, comments rendering with its option under it, the workitem roles, the two typed
+values, and the file name. The last four are one column at every width, and the file name takes a line of its
+own.
+
+**It reports through toasts.** A failed export, a conversion warning, a refused export and a successful one
+are `toast.error` / `toast.warning` / `toast.success` - the same toasts every administration page raises,
+through the same host (RSP's `Toaster`). The dialog's alert boxes inside the form and the panel's plain red
+and orange text under its button are both gone. `export/reporting.ts` is the whole of it: a failure waits to
+be dismissed, a warning outstays the 5s a "saved" toast gets, a success does not, and all three carry a close
+button. The one message that stays in the form is the form that could not be loaded - a state rather than an
+event, and a toast that came and went would leave a form that quietly does not work.
+
+Toasts in a shadow root need two things an administration page does not. Their stylesheet has to be inside
+the root, so `export/export-form.css` imports `sonner/dist/styles.css` and Vite inlines it; and only one host
+may render at a time, which is `components/ToastHost.tsx` - `toast()` broadcasts to every mounted `Toaster`,
+and the panel and the dialog are both on the page whenever a document is open in the editor, so both hosts
+would show every message twice. The hosts take turns: the newest renders, the rest stand down. The dialog's
+own host is rendered inside the dialog, a native `<dialog>` painting above anything outside it whatever its
+z-index; the panel's is outside its `<fieldset>`, which is disabled while an export runs and would disable
+the toast's close button with everything else.
+
+An optional value field is hidden with `visibility` rather than removed: ticking a checkbox must not reflow
+the rows around it. The three page setup dropdowns are the exception, and deliberately - unticked, the export
+carries no value at all and the conversion takes what the reference template says, so an absent dropdown is
+the state being described.
+
 ## The "Export to DOCX" dialog
 
 `src/popup/` is the dialog the document editor's toolbar button opens. It imports
@@ -82,8 +142,8 @@ unconditionally, which is why its `exportParams.ts` is not a drop-in here.
 
 The chrome is RSP's shared `Modal` - a native `<dialog>`, so the top layer, the backdrop and Escape come
 for free. That replaced micromodal: `openExportPopup` appends a host to the page body, mounts into a
-**shadow root** of it with RSP's stylesheet and `src/popup/export-popup.css` injected, and removes the
-host on close. Nothing is put on the page for it any more, which is why `starter.js` no longer injects
+**shadow root** of it with RSP's stylesheet, the shared `src/export/export-form.css` and the dialog's own
+`src/popup/export-popup.css` injected, and removes the host on close. Nothing is put on the page for it any more, which is why `starter.js` no longer injects
 micromodal and six generic control stylesheets.
 
 Because `<dialog>` is in the browser top layer, RSP's `SearchableSelect` option-list portal (a sibling of
@@ -100,8 +160,10 @@ the import (an inline module `<script>` does not run inside a GWT-injected fragm
 It mounts into a **shadow root** of that div. The properties pane is one page shared by every extension's
 panel, each possibly built against a different RSP version, so the isolation goes both ways:
 `services/shadowMount.ts` (shared with the export dialog) injects RSP's stylesheet, a base-font rule
-(nothing inside a shadow root inherits the page's font) and the panel's own `side-panel.css` into the
-root, and none of it can leak out.
+(nothing inside a shadow root inherits the page's font), the shared `export/export-form.css` and the panel's
+own `side-panel.css` into the root, and none of it can leak out. Each of those two surface stylesheets is now
+only the chrome around the shared form: the dialog's size and its overlay, the panel's fieldset, its loading
+state and its button.
 
 Everything the panel offers is read over REST from the endpoints the toolbar dialog has always used: the
 suitable style packages, the child setting names, the link roles, the default file name, the document

@@ -51,6 +51,8 @@ describe('mounting the side panel', () => {
     expect(styles.some((css) => css.includes('--sbb-control-font-family'))).toBe(true);
     // ... and the panel's own layout, which used to be a page stylesheet
     expect(styles.some((css) => css.includes('.property-wrapper'))).toBe(true);
+    // ... including the shared export form, which the export dialog carries too
+    expect(styles.some((css) => css.includes('.docx-section'))).toBe(true);
   });
 
   it('carries the classes the panel CSS and the tokens are scoped to', async () => {
@@ -65,6 +67,8 @@ describe('mounting the side panel', () => {
 
   it('styles the panel from inside the shadow root, the page having no rules for it', async () => {
     const element = host();
+    // The width of Polarion's Document Properties pane, which is what the form lays itself out against.
+    element.style.width = '360px';
 
     mounted(element);
     await loaded(element);
@@ -72,7 +76,11 @@ describe('mounting the side panel', () => {
     // A rule that only side-panel.css states, checked as computed style: it proves the stylesheet is in
     // effect inside the root, not merely present as text.
     const row = element.shadowRoot!.querySelector('.property-wrapper')!;
-    expect(getComputedStyle(row).display).toBe('flex');
+    expect(getComputedStyle(row).display).toBe('grid');
+    // The pane is 360px wide, which is one column of the shared form - a container query on the form, so
+    // the panel gets there without a rule of its own.
+    const section = element.shadowRoot!.querySelector('.docx-section')!;
+    expect(getComputedStyle(section).gridTemplateColumns.split(' ')).toHaveLength(1);
   });
 
   it('says it is loading rather than showing an empty pane', async () => {

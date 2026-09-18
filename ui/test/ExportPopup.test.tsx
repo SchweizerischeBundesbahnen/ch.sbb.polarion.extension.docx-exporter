@@ -6,6 +6,7 @@ import type { ExportPopupDependencies } from '../src/popup/ExportPopupModal';
 import type { DocumentIdentity } from '../src/services/exportContext';
 import { SAMPLE_DOCUMENT, SAMPLE_POPUP_DATA, docxResult, popupDependencies } from './exportPopupSamples';
 import { SAMPLE_STYLE_PACKAGE_FULL, SAMPLE_STYLE_PACKAGE_HIDDEN } from './sidePanelSamples';
+import { clearToasts, toastText, toasted } from './toasts';
 
 // The "Export to DOCX" dialog the document editor toolbar button opens: what the selected style package puts
 // on screen, what the export sends, and what the user is told when something is wrong.
@@ -59,6 +60,7 @@ beforeEach(() => {
 
 afterEach(() => {
   cleanup();
+  clearToasts();
   vi.unstubAllGlobals();
   document.cookie = 'selected-style-package=; path=/; max-age=0';
 });
@@ -253,7 +255,9 @@ describe('exporting', () => {
     expect(sent.fileName).toBe('E-Library Cross Link Issue.docx');
     // Every DOCX export is a Live Document, and ExportParams.java has no field for a type
     expect('documentType' in sent).toBe(false);
-    expect(text('.notifications .alert-success')).toBe('DOCX was successfully generated');
+    expect(await toasted('success')).toBe('DOCX was successfully generated');
+    // Every kind of message can be sent away by hand, a success included
+    expect(field('[data-sonner-toast][data-type="success"] [data-close-button]')).not.toBeNull();
   });
 
   it('carries every switch and every typed value into the export', async () => {
@@ -420,7 +424,7 @@ describe('exporting', () => {
 
     await userEvent.click(exportButton());
 
-    await vi.waitFor(() => expect(text('.notifications .alert-warning')).toBe('One image\n\nwas not exported'));
+    expect(await toasted('warning')).toBe('One image\n\nwas not exported');
   });
 
   it('shows why a conversion failed', async () => {
@@ -429,11 +433,7 @@ describe('exporting', () => {
 
     await userEvent.click(exportButton());
 
-    await vi.waitFor(() =>
-      expect(text('.notifications .alert-error')).toBe(
-        'Error occurred during DOCX generation: The document has no content',
-      ),
-    );
+    expect(await toasted('error')).toBe('Error occurred during DOCX generation: The document has no content');
   });
 
   it('says only that it failed when the server gave no reason', async () => {
@@ -442,7 +442,7 @@ describe('exporting', () => {
 
     await userEvent.click(exportButton());
 
-    await vi.waitFor(() => expect(text('.notifications .alert-error')).toBe('Error occurred during DOCX generation'));
+    expect(await toasted('error')).toBe('Error occurred during DOCX generation');
   });
 
   it('covers the form and disables the Export button while an export runs', async () => {
@@ -464,7 +464,7 @@ describe('exporting', () => {
     await userEvent.fill(field<HTMLInputElement>('#popup-chapters')!, 'one, two');
     await userEvent.click(exportButton());
 
-    expect(text('.notifications .alert-error')).toContain('comma separated list of integer values');
+    expect(await toasted('error')).toContain('comma separated list of integer values');
     expect(field('#popup-chapters')!.className).toContain('error');
     // Nothing was started, so the dialog is still usable
     expect(exportButton().disabled).toBe(false);
@@ -487,8 +487,11 @@ describe('what the dialog says when it cannot load', () => {
       deps: popupDependencies({ loadError: new Error("No 'templates' configurations in scope 'project/elibrary/'") }),
     });
 
-    await vi.waitFor(() => expect(text('.notifications .alert-error')).toContain('Error occurred loading form data'));
-    expect(text('.notifications .alert-error')).toContain("No 'templates' configurations");
+    // A form that could not be loaded is a state, not an event, so it stays in the form rather than
+    // becoming a toast that comes and goes.
+    await vi.waitFor(() => expect(text('#popup-load-error')).toContain('Error occurred loading form data'));
+    expect(text('#popup-load-error')).toContain("No 'templates' configurations");
+    expect(toastText('error')).toBe('');
     expect(exportButton().disabled).toBe(true);
     expect(field('.in-progress-overlay.show')).toBeNull();
   });
@@ -497,7 +500,7 @@ describe('what the dialog says when it cannot load', () => {
     open({ deps: { ...popupDependencies(), loadPackage: () => Promise.reject(new Error('HTTP 500')) } });
 
     await vi.waitFor(() =>
-      expect(text('.notifications .alert-error')).toBe('Error occurred loading style package data: HTTP 500'),
+      expect(text('#popup-load-error')).toBe('Error occurred loading style package data: HTTP 500'),
     );
   });
 });

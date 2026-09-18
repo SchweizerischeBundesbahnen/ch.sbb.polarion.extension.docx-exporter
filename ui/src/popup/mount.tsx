@@ -1,5 +1,6 @@
 import { createRoot } from 'react-dom/client';
 import type { Root } from 'react-dom/client';
+import formStyle from '../export/export-form.css?inline';
 import type { DocumentIdentity } from '../services/exportContext';
 import { currentDocumentLocation, toDocumentIdentity } from '../services/exportContext';
 import { mountInShadow } from '../services/shadowMount';
@@ -55,7 +56,7 @@ export function openExportPopup(options: OpenExportPopupOptions = {}): Root {
     // `docx-exporter form-wrapper` so the form's own rules match, `sbb-ui` for the design tokens - the same
     // three classes the side panel's container carries.
     containerClassName: 'docx-exporter form-wrapper sbb-ui',
-    styleTexts: [popupStyle],
+    styleTexts: [formStyle, popupStyle],
   });
 
   const location = options.location ?? toDocumentIdentity(currentDocumentLocation());
