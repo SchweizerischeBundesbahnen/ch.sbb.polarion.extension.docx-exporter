@@ -23,6 +23,8 @@ import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.core.UriBuilder;
 import jakarta.ws.rs.core.UriInfo;
 import java.util.ArrayList;
+import java.util.List;
+import ch.sbb.polarion.extension.docx_exporter.util.ExportContext;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Optional;
@@ -136,11 +138,49 @@ class ConverterInternalControllerTest {
     @Test
     void getPdfConverterJobResult_success() {
         when(docxConverterJobService.getJobResult("testJobId")).thenReturn(Optional.of("test docx".getBytes()));
-        when(docxConverterJobService.getJobContext("testJobId")).thenReturn(DocxConverterJobsService.JobContext.builder().workItemIDsWithMissingAttachment(new ArrayList<String>()).build());
+        when(docxConverterJobService.getJobContext("testJobId")).thenReturn(DocxConverterJobsService.JobContext.builder().workItemIDsWithMissingAttachment(new ArrayList<String>()).blockedResources(new ArrayList<>()).build());
         Response jobResult = internalController.getPdfConverterJobResult("testJobId");
 
         assertThat(jobResult.getStatus()).isEqualTo(HttpStatus.OK.value());
         assertThat(jobResult.getEntity()).isEqualTo("test docx".getBytes());
+    }
+
+    @Test
+    void getPdfConverterJobResult_namesTheResourcesWhichWereNotEmbedded() {
+        // the PDF was produced without them, and nothing in it says so: the result of the conversion does
+        when(docxConverterJobService.getJobResult("testJobId")).thenReturn(Optional.of("test pdf".getBytes()));
+        when(docxConverterJobService.getJobContext("testJobId")).thenReturn(DocxConverterJobsService.JobContext.builder()
+                .workItemIDsWithMissingAttachment(new ArrayList<String>())
+                .blockedResources(new ArrayList<>(List.of(new ExportContext.BlockedResource("http://host/x.png", "it was refused"))))
+                .build());
+
+        Response jobResult = internalController.getPdfConverterJobResult("testJobId");
+
+        assertThat(jobResult.getHeaderString("Blocked-Resources-Count")).isEqualTo("1");
+        assertThat(jobResult.getHeaderString("Blocked-Resources")).isEqualTo("http://host/x.png");
+    }
+
+    @Test
+    void getPdfConverterJobResult_keepsTheBlockedResourcesHeaderWithinWhatAResponseCarries() {
+        // the urls come out of a document, so nothing caps how many there are or what they carry: a line
+        // break would end the header and a long enough list would carry the response past a container's limit
+        List<ExportContext.BlockedResource> blocked = new ArrayList<>();
+        blocked.add(new ExportContext.BlockedResource("http://host/with\r\na-line-break.png", "it was refused"));
+        for (int index = 1; index < 15; index++) {
+            blocked.add(new ExportContext.BlockedResource("http://host/" + "x".repeat(300) + index + ".png", "it was refused"));
+        }
+        when(docxConverterJobService.getJobResult("testJobId")).thenReturn(Optional.of("test pdf".getBytes()));
+        when(docxConverterJobService.getJobContext("testJobId")).thenReturn(DocxConverterJobsService.JobContext.builder()
+                .workItemIDsWithMissingAttachment(new ArrayList<String>())
+                .blockedResources(blocked)
+                .build());
+
+        Response jobResult = internalController.getPdfConverterJobResult("testJobId");
+
+        String header = jobResult.getHeaderString("Blocked-Resources");
+        assertThat(jobResult.getHeaderString("Blocked-Resources-Count")).isEqualTo("15");
+        assertThat(header).doesNotContain("\r").doesNotContain("\n").endsWith("and 5 more");
+        assertThat(header.length()).isLessThan(2500);
     }
 
     @Test

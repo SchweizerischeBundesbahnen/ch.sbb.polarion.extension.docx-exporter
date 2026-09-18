@@ -52,7 +52,10 @@ public class DocxConverterJobsService {
         String jobId = UUID.randomUUID().toString();
         Subject userSubject = securityService.getCurrentSubject();
         boolean isJobLogoutRequired = isJobLogoutRequired();
-        final JobContext jobContext = JobContext.builder().workItemIDsWithMissingAttachment(new ArrayList<>()).build();
+        final JobContext jobContext = JobContext.builder()
+                .workItemIDsWithMissingAttachment(new ArrayList<>())
+                .blockedResources(new ArrayList<>())
+                .build();
 
         CompletableFuture<byte[]> asyncConversionJob = CompletableFuture.supplyAsync(() -> {
             try {
@@ -68,6 +71,7 @@ public class DocxConverterJobsService {
                 // Clear current job ID
                 DebugDataStorage.clearCurrentJobId();
                 jobContext.workItemIDsWithMissingAttachment.addAll(ExportContext.getWorkItemIDsWithMissingAttachment());
+                jobContext.blockedResources.addAll(ExportContext.getBlockedResources());
                 ExportContext.clear();
                 if ((userSubject != null) && isJobLogoutRequired) {
                     securityService.logout(userSubject);
@@ -175,7 +179,8 @@ public class DocxConverterJobsService {
 
     @Builder
     public record JobContext(
-            List<String> workItemIDsWithMissingAttachment) {
+            List<String> workItemIDsWithMissingAttachment,
+            List<ExportContext.BlockedResource> blockedResources) {
     }
 
     @Builder
