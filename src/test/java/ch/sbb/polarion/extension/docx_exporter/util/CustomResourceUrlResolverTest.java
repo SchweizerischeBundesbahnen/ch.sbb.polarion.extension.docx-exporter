@@ -320,6 +320,27 @@ class CustomResourceUrlResolverTest {
 
     @Test
     @SneakyThrows
+    void doesNotReportAResourceTheOtherSchemeReadTest() {
+        // the first attempt is refused and the second one reads the resource: the document gets it, so the
+        // result of the export may not name it among the resources which were not embedded
+        ExportContext.clear();
+        respond("/img.png", "image/png", PNG_CONTENT, false);
+        // the allowed origin names http, so the https attempt is refused by the policy and records that,
+        // and the http attempt behind it reads the resource
+        String origin = "http://127.0.0.1:" + server.getAddress().getPort();
+        ResourceUrlPolicy policy = new ResourceUrlPolicy(Mode.ALLOWLIST_ONLY, List.of(origin), "https://localhost", 16);
+        CustomResourceUrlResolver resolver = new CustomResourceUrlResolver(policy);
+
+        try (InputStream stream = resolver.resolve("//127.0.0.1:" + server.getAddress().getPort() + "/img.png")) {
+            assertNotNull(stream);
+        }
+
+        assertTrue(ExportContext.getBlockedResources().isEmpty(), "reported " + ExportContext.getBlockedResources());
+        ExportContext.clear();
+    }
+
+    @Test
+    @SneakyThrows
     void fallsBackToTheOtherSchemeOfANetworkPathReference() {
         // the base url says https, the server speaks http: the second attempt has to find it
         respond("/img.png", "image/png", PNG_CONTENT, false);
