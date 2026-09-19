@@ -397,6 +397,14 @@ public class ConverterInternalController {
                                     @Header(name = EXPORT_FILENAME_HEADER,
                                             description = "File name for converted DOCX document",
                                             schema = @Schema(implementation = String.class)
+                                    ),
+                                    @Header(name = BLOCKED_RESOURCES_COUNT,
+                                            description = "Count of resources which were not embedded into the document",
+                                            schema = @Schema(implementation = String.class)
+                                    ),
+                                    @Header(name = BLOCKED_RESOURCES,
+                                            description = "Addresses of the resources which were not embedded, the Polarion log names the reason of each",
+                                            schema = @Schema(implementation = String.class)
                                     )
                             }
                     )
@@ -427,10 +435,13 @@ public class ConverterInternalController {
             byte[] docxBytes = htmlToDocxConverter.convert(new String(htmlBytes, StandardCharsets.UTF_8), templateBytes, pandocParams);
 
             String headerFileName = (fileName != null) ? fileName : "document.docx";
-            return Response.ok(docxBytes)
+            Response.ResponseBuilder responseBuilder = Response.ok(docxBytes)
                     .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + headerFileName)
-                    .header(EXPORT_FILENAME_HEADER, headerFileName)
-                    .build();
+                    .header(EXPORT_FILENAME_HEADER, headerFileName);
+            // html given to this endpoint names resources of its own, and the policy refuses them the same way:
+            // whoever sent the html has to learn what its document did not get
+            addBlockedResourcesHeaders(responseBuilder, ExportContext.getBlockedResources());
+            return responseBuilder.build();
         } catch (IOException e) {
             throw new BadRequestException("Error processing files", e);
         }
