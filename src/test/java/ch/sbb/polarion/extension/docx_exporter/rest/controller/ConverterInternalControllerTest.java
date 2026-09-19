@@ -2,10 +2,13 @@ package ch.sbb.polarion.extension.docx_exporter.rest.controller;
 
 import ch.sbb.polarion.extension.docx_exporter.converter.DocxConverterJobsService;
 import ch.sbb.polarion.extension.docx_exporter.converter.DocxConverterJobsService.JobState;
+import ch.sbb.polarion.extension.docx_exporter.converter.HtmlToDocxConverter;
 import ch.sbb.polarion.extension.docx_exporter.rest.model.conversion.ExportParams;
 import ch.sbb.polarion.extension.docx_exporter.rest.model.jobs.ConverterJobDetails;
 import ch.sbb.polarion.extension.docx_exporter.rest.model.jobs.ConverterJobStatus;
 import ch.sbb.polarion.extension.docx_exporter.service.DocxExporterPolarionService;
+import org.glassfish.jersey.media.multipart.FormDataBodyPart;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -22,6 +25,9 @@ import jakarta.ws.rs.core.HttpHeaders;
 import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.core.UriBuilder;
 import jakarta.ws.rs.core.UriInfo;
+import java.io.ByteArrayInputStream;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import ch.sbb.polarion.extension.docx_exporter.util.ExportContext;
@@ -32,9 +38,11 @@ import java.util.stream.Stream;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.nullable;
 import static org.mockito.Mockito.lenient;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -45,6 +53,8 @@ class ConverterInternalControllerTest {
     private UriInfo uriInfo;
     @Mock
     private DocxExporterPolarionService docxExporterPolarionService;
+    @Mock
+    private HtmlToDocxConverter htmlToDocxConverter;
 
     @InjectMocks
     private ConverterInternalController internalController;
@@ -52,6 +62,30 @@ class ConverterInternalControllerTest {
     @BeforeEach
     void authorizeExportByDefault() {
         lenient().when(docxExporterPolarionService.userAuthorizedForExport(nullable(String.class))).thenReturn(true);
+    }
+
+    @AfterEach
+    void clearExportContext() {
+        // the context is a thread local, and surefire hands the same thread to the next test: a case which
+        // fails between recording a blocked resource and clearing it would leave that resource behind
+        ExportContext.clear();
+    }
+
+    @Test
+    void convertHtmlToPdf_namesTheResourcesWhichWereNotEmbedded() {
+        // the html sent here names resources of its own and the policy refuses them the same way it does
+        // for a document: the answer is the only place where the sender learns what the file did not get
+        FormDataBodyPart html = mock(FormDataBodyPart.class);
+        when(html.getEntityAs(InputStream.class)).thenReturn(new ByteArrayInputStream("<html><body>text</body></html>".getBytes(StandardCharsets.UTF_8)));
+        when(htmlToDocxConverter.convert(anyString(), nullable(byte[].class), any())).thenAnswer(invocation -> {
+            ExportContext.addBlockedResource("http://host/x.png", "it was refused");
+            return "test docx".getBytes();
+        });
+
+        Response response = internalController.convertHtmlToPdf(html, null, null, null, null);
+
+        assertThat(response.getHeaderString("Blocked-Resources-Count")).isEqualTo("1");
+        assertThat(response.getHeaderString("Blocked-Resources")).isEqualTo("http://host/x.png");
     }
 
     @Test
