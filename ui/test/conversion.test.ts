@@ -44,6 +44,22 @@ describe('warningOf', () => {
     expect(warning).toContain('This image is not accessible');
   });
 
+  it('reports the resources which were not embedded', () => {
+    const warning = warningOf(
+      new Headers({
+        'Blocked-Resources-Count': '2',
+        'Blocked-Resources': 'http://host/a.png, http://host/b.css',
+      }),
+    );
+    expect(warning).toContain('2 resource(s)');
+    expect(warning).toContain('http://host/a.png, http://host/b.css');
+  });
+
+  it('ignores a zero or unparseable blocked resource count', () => {
+    expect(warningOf(new Headers({ 'Blocked-Resources-Count': '0' }))).toBeNull();
+    expect(warningOf(new Headers({ 'Blocked-Resources-Count': 'x' }))).toBeNull();
+  });
+
   it('ignores a zero or unparseable attachment count', () => {
     expect(warningOf(new Headers({ 'Missing-WorkItem-Attachments-Count': '0' }))).toBeNull();
     expect(warningOf(new Headers({ 'Missing-WorkItem-Attachments-Count': 'x' }))).toBeNull();

@@ -47,20 +47,33 @@ const failed = async (response: Response): Promise<Error> => new Error(await err
 /**
  * What a finished conversion warns about, from the headers of its result.
  *
- * One thing can be wrong with a DOCX that was still produced: work item images that could not be read,
- * for which the renderer substitutes a placeholder. There is no compliance check to report on - that is
- * a PDF variant concern and this extension has no variants.
+ * Two things can be wrong with a DOCX that was still produced: work item images that could not be read,
+ * for which the renderer substitutes a placeholder, and resources the resource policy did not let the export
+ * embed. There is no compliance check to report on - that is a PDF variant concern and this extension has no
+ * variants.
  */
 export function warningOf(headers: Headers): string | null {
+  const warnings: string[] = [];
+
   const missingAttachments = Number.parseInt(headers.get('Missing-WorkItem-Attachments-Count') ?? '', 10);
-  if (!(missingAttachments > 0)) {
-    return null;
+  if (missingAttachments > 0) {
+    const workItems = headers.get('WorkItem-IDs-With-Missing-Attachment') ?? '';
+    warnings.push(
+      `${missingAttachments} image(s) in WI(s) ${workItems} were not exported. ` +
+        "They were replaced with an image containing 'This image is not accessible'.",
+    );
   }
-  const workItems = headers.get('WorkItem-IDs-With-Missing-Attachment') ?? '';
-  return (
-    `${missingAttachments} image(s) in WI(s) ${workItems} were not exported. ` +
-    "They were replaced with an image containing 'This image is not accessible'."
-  );
+
+  const blocked = Number.parseInt(headers.get('Blocked-Resources-Count') ?? '', 10);
+  if (blocked > 0) {
+    const resources = headers.get('Blocked-Resources') ?? '';
+    warnings.push(
+      `${blocked} resource(s) named by the document or its style sheet were not embedded: ${resources}. ` +
+        'The Polarion log names the reason for each. Everything else was exported.',
+    );
+  }
+
+  return warnings.length === 0 ? null : warnings.join('\n\n');
 }
 
 /**

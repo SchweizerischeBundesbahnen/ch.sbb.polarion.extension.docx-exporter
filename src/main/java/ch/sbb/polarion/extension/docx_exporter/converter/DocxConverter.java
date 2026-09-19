@@ -17,6 +17,7 @@ import ch.sbb.polarion.extension.docx_exporter.settings.TemplatesSettings;
 import ch.sbb.polarion.extension.docx_exporter.settings.WebhooksSettings;
 import ch.sbb.polarion.extension.docx_exporter.util.DebugDataStorage;
 import ch.sbb.polarion.extension.docx_exporter.util.DocumentDataFactory;
+import ch.sbb.polarion.extension.docx_exporter.util.ExportContext;
 import ch.sbb.polarion.extension.docx_exporter.util.DocxExporterFileResourceProvider;
 import ch.sbb.polarion.extension.docx_exporter.util.DocxGenerationLog;
 import ch.sbb.polarion.extension.docx_exporter.util.DocxTemplateProcessor;
@@ -112,6 +113,7 @@ public class DocxConverter {
             generationLog.setDocxMetrics(bytes.length, 0);
 
             // Finalize timing
+            logBlockedResources(generationLog);
             generationLog.finish();
 
             // Log debug information if enabled
@@ -299,4 +301,19 @@ public class DocxConverter {
 
         DebugDataStorage.storeForCurrentJob(originalHtml, processedHtml, timingReport, currentUser, documentTitle);
     }
+
+    /**
+     * Writes the resources which were not embedded into the generation report, each with the reason it was
+     * refused. The response of the conversion names the addresses, and this is where the reason of each one
+     * is read back without going through the Polarion log.
+     */
+    private void logBlockedResources(@NotNull DocxGenerationLog generationLog) {
+        List<ExportContext.BlockedResource> blocked = ExportContext.getBlockedResources();
+        if (blocked.isEmpty()) {
+            return;
+        }
+        generationLog.log(blocked.size() + " resource(s) were not embedded into the document:");
+        blocked.forEach(resource -> generationLog.log("  " + resource.url() + ": " + resource.reason()));
+    }
+
 }
