@@ -32,7 +32,7 @@
                   parentNodeId="docx-export"
                   parentNodeName="DOCX Export"
                   parentNodeIconUrl="/polarion/docx-exporter-app/ui/images/menu/30x30/_parent.svg"
-                  iconUrl="/polarion/docx-exporter-app/ui/images/menu/16x16/about.svg"
+                  iconUrl="/polarion/docx-exporter-app/ui/images/menu/16x16/disclaimer.svg"
                   pageUrl="/polarion/docx-exporter-app/ui/app/index.html?feature=disclaimer&amp;embedded=true&amp;scope=$scope$"
                   projectScope="true"
                   projectGroupScope="false"
