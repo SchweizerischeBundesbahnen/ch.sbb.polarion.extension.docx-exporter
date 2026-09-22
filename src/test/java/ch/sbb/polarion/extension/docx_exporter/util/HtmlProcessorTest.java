@@ -509,11 +509,14 @@ class HtmlProcessorTest {
     void extractSuspectElementTest() {
         Element suspectIcon = Jsoup.parseBodyFragment("<span><img src=\"/polarion/ria/images/suspect.gif\"/></span>").body().firstElementChild();
         Element linkedWorkItem = Jsoup.parseBodyFragment("<span><a class=\"polarion-Hyperlink\"><img src=\"type.gif\"/>EL-1</a></span>").body().firstElementChild();
+        Element deletedWorkItem = Jsoup.parseBodyFragment("<span><span><img src=\"unresolvable.gif\"/></span><span style=\"font-style: italic;\">EL-1</span></span>").body().firstElementChild();
         Element withoutIcon = Jsoup.parseBodyFragment("<span>no icon here</span>").body().firstElementChild();
 
         assertEquals(suspectIcon, processor.extractSuspectElement(suspectIcon));
         // The linked WorkItem element also holds an image, only the absence of a hyperlink tells them apart
         assertNull(processor.extractSuspectElement(linkedWorkItem));
+        // A deleted WorkItem holds an image and no hyperlink either, only its text tells it apart from a suspect icon
+        assertNull(processor.extractSuspectElement(deletedWorkItem));
         assertNull(processor.extractSuspectElement(withoutIcon));
         assertNull(processor.extractSuspectElement(new TextNode(" : ")));
         assertNull(processor.extractSuspectElement(null));
@@ -534,6 +537,27 @@ class HtmlProcessorTest {
 
             // A suspect link renders an extra icon between the colon and the linked WorkItem. It must neither stop
             // the filtering of the remaining links nor stay behind when its own link is filtered out.
+            String fixedHtml = processor.processHtmlForExport(invalidHtml, exportParams, selectedRoleEnumValues);
+            String validHtml = new String(isValidHtml.readAllBytes(), StandardCharsets.UTF_8);
+            assertEquals(TestStringUtils.removeNonsensicalSymbols(validHtml), TestStringUtils.removeNonsensicalSymbols(fixedHtml));
+        }
+    }
+
+    @Test
+    @SneakyThrows
+    void deletedLinkedWorkItemTypesTest() {
+        try (InputStream isInvalidHtml = this.getClass().getResourceAsStream("/linkedWorkItemsWithDeletedBeforeProcessing.html");
+             InputStream isValidHtml = this.getClass().getResourceAsStream("/linkedWorkItemsWithDeletedAfterProcessing.html")) {
+
+            String invalidHtml = new String(isInvalidHtml.readAllBytes(), StandardCharsets.UTF_8);
+
+            ExportParams exportParams = getExportParams();
+            exportParams.setLinkedWorkitemRoles(List.of("has parent"));
+
+            List<String> selectedRoleEnumValues = Arrays.asList("has parent", "is parent of");
+
+            // A link to a deleted WorkItem is rendered without a hyperlink. It must neither stop the filtering of the
+            // remaining links nor leave their role labels as block-level divs, which DOCX renders on separate lines.
             String fixedHtml = processor.processHtmlForExport(invalidHtml, exportParams, selectedRoleEnumValues);
             String validHtml = new String(isValidHtml.readAllBytes(), StandardCharsets.UTF_8);
             assertEquals(TestStringUtils.removeNonsensicalSymbols(validHtml), TestStringUtils.removeNonsensicalSymbols(fixedHtml));
