@@ -826,7 +826,9 @@ public class HtmlProcessor {
         if (!element.select("> a.polarion-Hyperlink").isEmpty()) {
             return element;
         }
-        return element.selectFirst(HtmlTag.A) == null && !element.text().isBlank() ? element : null;
+        // Recognition is destructive, filterByRoles removes what it recognizes, so the deleted form is matched on its
+        // icon as well as its text rather than on the absence of an anchor alone.
+        return element.selectFirst(HtmlTag.A) == null && element.selectFirst(HtmlTag.IMG) != null && !element.text().isBlank() ? element : null;
     }
 
     /**

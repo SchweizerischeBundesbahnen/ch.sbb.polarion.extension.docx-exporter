@@ -566,6 +566,40 @@ class HtmlProcessorTest {
 
     @Test
     @SneakyThrows
+    void deletedLinkedWorkItemRolesAreInlinedWithoutFilteringTest() {
+        try (InputStream isInvalidHtml = this.getClass().getResourceAsStream("/linkedWorkItemsWithDeletedBeforeProcessing.html")) {
+            // Role filtering is off here, which is the configuration the reported bug occurs in: no group is removed
+            // beforehand, so every role label of the work item follows the deleted link and must still be inlined.
+            String fixedHtml = processor.processHtmlForExport(new String(isInvalidHtml.readAllBytes(), StandardCharsets.UTF_8),
+                    getExportParams(), Collections.emptyList());
+
+            Document document = JSoupUtils.parseHtml(fixedHtml);
+            assertTrue(document.select("div[style*=inline-block]").isEmpty(), "every role label must be inlined");
+            assertEquals(4, document.select("span[style*=inline-block]").size());
+        }
+    }
+
+    @Test
+    void unrecognizedGroupDoesNotStopLinkedWorkItemProcessingTest() {
+        // An unrecognized group placed before a valid one: aborting on it would leave the valid group untouched.
+        String html = """
+                <span id="polarion_editor_field=linkedWorkItems">
+                  <div style="display:inline-block;"><span>is related to</span></div>
+                  ; <span title="EL-2"><a class="polarion-Hyperlink" href="#EL-2">EL-2</a></span><br/>
+                  <div style="display:inline-block;"><span>duplicates</span></div>
+                  : <span title="EL-3"><a class="polarion-Hyperlink" href="#EL-3">EL-3</a></span>
+                </span>
+                """;
+
+        Document document = JSoupUtils.parseHtml(html);
+        processor.filterNonTabularLinkedWorkItems(document, List.of("has parent"));
+
+        assertEquals(1, document.select("div[style*=inline-block]").size(), "the unrecognized group must be left alone");
+        assertFalse(document.html().contains("duplicates"), "the group after it must still be filtered out");
+    }
+
+    @Test
+    @SneakyThrows
     void selectLinkedWorkItemTypesTest() {
         try (InputStream isInvalidHtml = this.getClass().getResourceAsStream("/linkedWorkItemsBeforeProcessing.html");
              InputStream isValidHtml = this.getClass().getResourceAsStream("/linkedWorkItemsAfterProcessing.html")) {
