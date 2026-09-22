@@ -1,6 +1,7 @@
 package ch.sbb.polarion.extension.docx_exporter;
 
 import ch.sbb.polarion.extension.docx_exporter.configuration.DocxExporterExtensionConfigurationExtension;
+import ch.sbb.polarion.extension.docx_exporter.util.BundleCacheKey;
 import ch.sbb.polarion.extension.generic.rest.model.Version;
 import ch.sbb.polarion.extension.generic.test_extensions.PlatformContextMockExtension;
 import ch.sbb.polarion.extension.generic.util.VersionUtils;
@@ -82,16 +83,18 @@ class DocxExporterFormExtensionTest {
     }
 
     @Test
-    void testFragmentCarriesTheBuild() {
-        Version version = Version.builder().bundleVersion("13.5.1").bundleBuildTimestamp("2026-09-22 14:23").build();
+    void testFragmentCarriesTheCacheKeyOfTheModule() {
+        Version version = Version.builder().bundleVersion("13.5.1").build();
         try (MockedStatic<VersionUtils> versionUtils = mockStatic(VersionUtils.class)) {
             versionUtils.when(VersionUtils::getVersion).thenReturn(version);
 
             String fragment = extension.getSidePanelFragment();
 
-            // The bundle is imported from a fixed URL, so the build is what busts the browser's cache of it
-            // when the extension is updated or rebuilt.
-            assertTrue(fragment.contains("side-panel.js?v=13.5.1-202609221423"), fragment);
+            // The bundle is imported from a fixed URL, so the module's own cache key is what busts the
+            // browser's cache of it when a build changes it.
+            String key = BundleCacheKey.forModule(DocxExporterFormExtension.SIDE_PANEL_MODULE_PATH);
+            assertTrue(key.startsWith("13.5.1"), key);
+            assertTrue(fragment.contains("side-panel.js?v=" + key + "\""), fragment);
             assertFalse(fragment.contains("{CACHE_KEY}"));
         }
     }
