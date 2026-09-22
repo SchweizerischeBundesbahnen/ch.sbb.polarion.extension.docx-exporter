@@ -600,6 +600,43 @@ class HtmlProcessorTest {
 
     @Test
     @SneakyThrows
+    void unrecognizedGroupDoesNotStopRoleInliningTest() {
+        // Role inlining runs with filtering off too, so the skip has to hold on that path as well: aborting here
+        // would leave the valid group behind it as a div, which DOCX puts on its own line.
+        String html = """
+                <span id="polarion_editor_field=linkedWorkItems">
+                  <div style="display:inline-block;"><span>is related to</span></div>
+                  ; <span title="EL-2"><a class="polarion-Hyperlink" href="#EL-2">EL-2</a></span><br/>
+                  <div style="display:inline-block;"><span>has parent</span></div>
+                  : <span title="EL-3"><a class="polarion-Hyperlink" href="#EL-3">EL-3</a></span>
+                </span>
+                """;
+
+        Document document = JSoupUtils.parseHtml(processor.processHtmlForExport(html, getExportParams(), Collections.emptyList()));
+
+        assertEquals(1, document.select("span[style*=inline-block]").size(), "the group after the unrecognized one must be inlined");
+        assertEquals(1, document.select("div[style*=inline-block]").size(), "the unrecognized group must be left alone");
+    }
+
+    @Test
+    void anchorlessElementWithoutIconIsNotRecognizedTest() {
+        // Polarion renders a deleted WorkItem as an icon plus its id. Text alone is not that form, and recognizing it
+        // would hand arbitrary markup to removeAll().
+        String html = """
+                <span id="polarion_editor_field=linkedWorkItems">
+                  <div style="display:inline-block;"><span>duplicates</span></div>
+                  : <span title="EL-2">some other markup</span>
+                </span>
+                """;
+
+        Document document = JSoupUtils.parseHtml(html);
+        processor.filterNonTabularLinkedWorkItems(document, List.of("has parent"));
+
+        assertTrue(document.html().contains("duplicates"), "an unexpected structure must be left in place, not removed");
+    }
+
+    @Test
+    @SneakyThrows
     void selectLinkedWorkItemTypesTest() {
         try (InputStream isInvalidHtml = this.getClass().getResourceAsStream("/linkedWorkItemsBeforeProcessing.html");
              InputStream isValidHtml = this.getClass().getResourceAsStream("/linkedWorkItemsAfterProcessing.html")) {
