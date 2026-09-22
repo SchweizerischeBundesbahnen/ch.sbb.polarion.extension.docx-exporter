@@ -636,6 +636,22 @@ class HtmlProcessorTest {
     }
 
     @Test
+    void roleAndColonWithNothingAfterIsNotRecognizedTest() {
+        // A truncated field: the colon is the last node, so there is no element at all to inspect after it.
+        String html = """
+                <span id="polarion_editor_field=linkedWorkItems">
+                  <div style="display:inline-block;"><span>duplicates</span></div>
+                  :
+                </span>
+                """;
+
+        Document document = JSoupUtils.parseHtml(html);
+        processor.filterNonTabularLinkedWorkItems(document, List.of("has parent"));
+
+        assertTrue(document.html().contains("duplicates"), "an incomplete group must be left in place, not removed");
+    }
+
+    @Test
     @SneakyThrows
     void selectLinkedWorkItemTypesTest() {
         try (InputStream isInvalidHtml = this.getClass().getResourceAsStream("/linkedWorkItemsBeforeProcessing.html");
