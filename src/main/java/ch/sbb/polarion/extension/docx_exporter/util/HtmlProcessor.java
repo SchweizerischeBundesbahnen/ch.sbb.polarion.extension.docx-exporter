@@ -726,7 +726,7 @@ public class HtmlProcessor {
                     linkedWorkitemNodesList.add(linkedWorkitemNodes);
                 }
             } else {
-                nextChild = null;
+                nextChild = nextChild.nextElementSibling(); // Unrecognized structure, skip this element but keep processing the rest
             }
         }
 
@@ -765,7 +765,7 @@ public class HtmlProcessor {
                 // We here are changing these divs on spans to allow them to be inlined.
                 linkedWorkitemNodes.roleElement.tagName(HtmlTag.SPAN);
             } else {
-                nextChild = null;
+                nextChild = nextChild.nextElementSibling(); // Unrecognized structure, skip this element but keep processing the rest
             }
         }
     }
@@ -781,22 +781,22 @@ public class HtmlProcessor {
             }
         }
         if (roleElement == null) {
-            return null; // Not expected elements structure, stop processing
+            return null; // Not expected elements structure
         }
 
         TextNode colonNode = extractColonNode(roleElement.nextSibling());
         if (colonNode == null) {
-            return null; // Not expected elements structure, stop processing
+            return null; // Not expected elements structure
         }
 
         // A link marked as suspect is rendered with an extra icon element placed between the colon and the linked
-        // WorkItem, so it must be skipped over (and removed together with the rest) instead of aborting processing.
+        // WorkItem, so it must be skipped over (and removed together with the rest) instead of failing recognition.
         Element suspectElement = extractSuspectElement(colonNode.nextSibling());
         Node nodeAfterColon = suspectElement != null ? suspectElement.nextSibling() : colonNode.nextSibling();
 
         Element linkedWorkItemElement = extractLinkedWorkItemElement(nodeAfterColon);
         if (linkedWorkItemElement == null) {
-            return null; // Not expected elements structure, stop processing
+            return null; // Not expected elements structure
         }
 
         // There will be no br-tag after last linked WorkItem, so not obligatory
@@ -813,21 +813,32 @@ public class HtmlProcessor {
         }
     }
 
+    /**
+     * Detects the element holding the linked WorkItem. A resolvable link is rendered as a hyperlink, while a link whose
+     * target no longer exists is rendered as an icon plus the plain item id, with no anchor at all - both forms must be
+     * recognized, otherwise a single deleted WorkItem leaves the role labels of all remaining links block-level.
+     * An anchor of any other kind means an unexpected structure rather than a deleted WorkItem.
+     */
     private Element extractLinkedWorkItemElement(@Nullable Node node) {
-        if (node instanceof Element element) {
-            return element.select("> a.polarion-Hyperlink").isEmpty() ? null : element;
-        } else {
+        if (!(node instanceof Element element)) {
             return null;
         }
+        if (!element.select("> a.polarion-Hyperlink").isEmpty()) {
+            return element;
+        }
+        // Recognition is destructive, filterByRoles removes what it recognizes, so the deleted form is matched on its
+        // icon as well as its text rather than on the absence of an anchor alone.
+        return element.selectFirst(HtmlTag.A) == null && element.selectFirst(HtmlTag.IMG) != null && !element.text().isBlank() ? element : null;
     }
 
     /**
-     * Detects the icon element which Polarion renders for a link marked as suspect. It is recognized structurally:
-     * unlike the linked WorkItem element it holds an image and no hyperlink at all.
+     * Detects the icon element which Polarion renders for a link marked as suspect. It is recognized structurally: it
+     * holds an image and no anchor at all. The element of a deleted WorkItem looks the same apart from carrying the id
+     * of the item as text, so only an element without text is a suspect icon.
      */
     @VisibleForTesting
     Element extractSuspectElement(@Nullable Node node) {
-        if (node instanceof Element element && element.selectFirst("a.polarion-Hyperlink") == null && element.selectFirst("img") != null) {
+        if (node instanceof Element element && element.selectFirst(HtmlTag.A) == null && element.selectFirst(HtmlTag.IMG) != null && element.text().isBlank()) {
             return element;
         } else {
             return null;

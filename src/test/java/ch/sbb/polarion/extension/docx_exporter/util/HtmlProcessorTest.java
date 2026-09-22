@@ -509,11 +509,14 @@ class HtmlProcessorTest {
     void extractSuspectElementTest() {
         Element suspectIcon = Jsoup.parseBodyFragment("<span><img src=\"/polarion/ria/images/suspect.gif\"/></span>").body().firstElementChild();
         Element linkedWorkItem = Jsoup.parseBodyFragment("<span><a class=\"polarion-Hyperlink\"><img src=\"type.gif\"/>EL-1</a></span>").body().firstElementChild();
+        Element deletedWorkItem = Jsoup.parseBodyFragment("<span><span><img src=\"unresolvable.gif\"/></span><span style=\"font-style: italic;\">EL-1</span></span>").body().firstElementChild();
         Element withoutIcon = Jsoup.parseBodyFragment("<span>no icon here</span>").body().firstElementChild();
 
         assertEquals(suspectIcon, processor.extractSuspectElement(suspectIcon));
         // The linked WorkItem element also holds an image, only the absence of a hyperlink tells them apart
         assertNull(processor.extractSuspectElement(linkedWorkItem));
+        // A deleted WorkItem holds an image and no hyperlink either, only its text tells it apart from a suspect icon
+        assertNull(processor.extractSuspectElement(deletedWorkItem));
         assertNull(processor.extractSuspectElement(withoutIcon));
         assertNull(processor.extractSuspectElement(new TextNode(" : ")));
         assertNull(processor.extractSuspectElement(null));
@@ -538,6 +541,114 @@ class HtmlProcessorTest {
             String validHtml = new String(isValidHtml.readAllBytes(), StandardCharsets.UTF_8);
             assertEquals(TestStringUtils.removeNonsensicalSymbols(validHtml), TestStringUtils.removeNonsensicalSymbols(fixedHtml));
         }
+    }
+
+    @Test
+    @SneakyThrows
+    void deletedLinkedWorkItemTypesTest() {
+        try (InputStream isInvalidHtml = this.getClass().getResourceAsStream("/linkedWorkItemsWithDeletedBeforeProcessing.html");
+             InputStream isValidHtml = this.getClass().getResourceAsStream("/linkedWorkItemsWithDeletedAfterProcessing.html")) {
+
+            String invalidHtml = new String(isInvalidHtml.readAllBytes(), StandardCharsets.UTF_8);
+
+            ExportParams exportParams = getExportParams();
+            exportParams.setLinkedWorkitemRoles(List.of("has parent"));
+
+            List<String> selectedRoleEnumValues = Arrays.asList("has parent", "is parent of");
+
+            // A link to a deleted WorkItem is rendered without a hyperlink. It must neither stop the filtering of the
+            // remaining links nor leave their role labels as block-level divs, which DOCX renders on separate lines.
+            String fixedHtml = processor.processHtmlForExport(invalidHtml, exportParams, selectedRoleEnumValues);
+            String validHtml = new String(isValidHtml.readAllBytes(), StandardCharsets.UTF_8);
+            assertEquals(TestStringUtils.removeNonsensicalSymbols(validHtml), TestStringUtils.removeNonsensicalSymbols(fixedHtml));
+        }
+    }
+
+    @Test
+    @SneakyThrows
+    void deletedLinkedWorkItemRolesAreInlinedWithoutFilteringTest() {
+        try (InputStream isInvalidHtml = this.getClass().getResourceAsStream("/linkedWorkItemsWithDeletedBeforeProcessing.html")) {
+            // Role filtering is off here, which is the configuration the reported bug occurs in: no group is removed
+            // beforehand, so every role label of the work item follows the deleted link and must still be inlined.
+            String fixedHtml = processor.processHtmlForExport(new String(isInvalidHtml.readAllBytes(), StandardCharsets.UTF_8),
+                    getExportParams(), Collections.emptyList());
+
+            Document document = JSoupUtils.parseHtml(fixedHtml);
+            assertTrue(document.select("div[style*=inline-block]").isEmpty(), "every role label must be inlined");
+            assertEquals(4, document.select("span[style*=inline-block]").size());
+        }
+    }
+
+    @Test
+    void unrecognizedGroupDoesNotStopLinkedWorkItemProcessingTest() {
+        // An unrecognized group placed before a valid one: aborting on it would leave the valid group untouched.
+        String html = """
+                <span id="polarion_editor_field=linkedWorkItems">
+                  <div style="display:inline-block;"><span>is related to</span></div>
+                  ; <span title="EL-2"><a class="polarion-Hyperlink" href="#EL-2">EL-2</a></span><br/>
+                  <div style="display:inline-block;"><span>duplicates</span></div>
+                  : <span title="EL-3"><a class="polarion-Hyperlink" href="#EL-3">EL-3</a></span>
+                </span>
+                """;
+
+        Document document = JSoupUtils.parseHtml(html);
+        processor.filterNonTabularLinkedWorkItems(document, List.of("has parent"));
+
+        assertEquals(1, document.select("div[style*=inline-block]").size(), "the unrecognized group must be left alone");
+        assertFalse(document.html().contains("duplicates"), "the group after it must still be filtered out");
+    }
+
+    @Test
+    @SneakyThrows
+    void unrecognizedGroupDoesNotStopRoleInliningTest() {
+        // Role inlining runs with filtering off too, so the skip has to hold on that path as well: aborting here
+        // would leave the valid group behind it as a div, which DOCX puts on its own line.
+        String html = """
+                <span id="polarion_editor_field=linkedWorkItems">
+                  <div style="display:inline-block;"><span>is related to</span></div>
+                  ; <span title="EL-2"><a class="polarion-Hyperlink" href="#EL-2">EL-2</a></span><br/>
+                  <div style="display:inline-block;"><span>has parent</span></div>
+                  : <span title="EL-3"><a class="polarion-Hyperlink" href="#EL-3">EL-3</a></span>
+                </span>
+                """;
+
+        Document document = JSoupUtils.parseHtml(processor.processHtmlForExport(html, getExportParams(), Collections.emptyList()));
+
+        assertEquals(1, document.select("span[style*=inline-block]").size(), "the group after the unrecognized one must be inlined");
+        assertEquals(1, document.select("div[style*=inline-block]").size(), "the unrecognized group must be left alone");
+    }
+
+    @Test
+    void anchorlessElementWithoutIconIsNotRecognizedTest() {
+        // Polarion renders a deleted WorkItem as an icon plus its id. Text alone is not that form, and recognizing it
+        // would hand arbitrary markup to removeAll().
+        String html = """
+                <span id="polarion_editor_field=linkedWorkItems">
+                  <div style="display:inline-block;"><span>duplicates</span></div>
+                  : <span title="EL-2">some other markup</span>
+                </span>
+                """;
+
+        Document document = JSoupUtils.parseHtml(html);
+        processor.filterNonTabularLinkedWorkItems(document, List.of("has parent"));
+
+        assertTrue(document.html().contains("duplicates"), "an unexpected structure must be left in place, not removed");
+    }
+
+    @Test
+    void roleAndColonWithNothingAfterIsNotRecognizedTest() {
+        // A truncated field: the colon is the last node, so there is no element at all to inspect after it.
+        String html = """
+                <span id="polarion_editor_field=linkedWorkItems">
+                  <div style="display:inline-block;"><span>duplicates</span></div>
+                  :
+                </span>
+                """;
+
+        Document document = JSoupUtils.parseHtml(html);
+        processor.filterNonTabularLinkedWorkItems(document, List.of("has parent"));
+
+        assertTrue(document.html().contains("duplicates"), "an incomplete group must be left in place, not removed");
     }
 
     @Test
