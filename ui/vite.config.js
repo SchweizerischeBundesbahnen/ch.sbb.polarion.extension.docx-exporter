@@ -97,8 +97,9 @@ export default defineConfig(({ command, mode }) => {
         },
         output: {
           // The two runtime entries' file names must stay predictable: their importers name them by URL and
-          // cannot know the hash Vite would append. They append the extension version instead, which is what
-          // busts the browser cache on an update.
+          // cannot know the hash Vite would append. They append a cache key instead: the side panel fragment the
+          // extension version and a hash of the module (BundleCacheKey), the toolbar injectors a per-page-load
+          // timestamp.
           entryFileNames: (chunk) =>
             chunk.name === 'side-panel' || chunk.name === 'export-popup'
               ? `assets/${chunk.name}.js`
