@@ -139,13 +139,15 @@ describe('accessibility', () => {
     render(<App />);
   };
 
+  // One synthetic article for every page, with the markup the docs frame rewrites (in-page and cross-article
+  // links). These cases check the frame around an article, not the generated content of each article.
   const ARTICLE =
     '<h1>Article</h1><p><a href="#setup">Setup</a></p><h2 id="setup">Setup</h2>' +
     '<p>See <a href="configuration.html">Configuration</a>.</p>' +
     '<table><thead><tr><th>Key</th><th>Value</th></tr></thead><tbody><tr><td>a</td><td>b</td></tr></tbody></table>' +
     '<pre><code>mvn install</code></pre>';
 
-  it.each(DOC_ORDER.map((doc) => doc.id))('has no WCAG A/AA violations on the %s article', async (id) => {
+  it.each(DOC_ORDER.map((doc) => doc.id))('has no WCAG A/AA violations in the %s page frame', async (id) => {
     openArticle(id, () => new Response(ARTICLE, { status: 200 }));
     await vi.waitFor(() => expect(document.querySelector('article.markdown-body h2')).not.toBeNull());
     expect(await pageViolations()).toEqual([]);
