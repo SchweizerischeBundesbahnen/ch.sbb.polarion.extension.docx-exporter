@@ -12,7 +12,7 @@
 # Polarion ALM extension to convert Documents to DOCX files
 
 This Polarion extension provides possibility to convert Polarion Documents to DOCX files.
-The extension uses [Pandoc](https://pandoc.org/) as a converter engine and requires it to run in [Docker as Service](#pandoc-configuration).
+The extension uses [Pandoc](https://pandoc.org/) as a converter engine and requires it to run in [Docker as Service](CONFIGURATION.md#pandoc-configuration).
 
 > [!IMPORTANT]
 > Only latest version of Polarion is supported.
@@ -21,11 +21,16 @@ The extension uses [Pandoc](https://pandoc.org/) as a converter engine and requi
 > [!IMPORTANT]
 > Please, read our [disclaimer](DISCLAIMER.md) before using this extension.
 
-## Quick start
+## Documentation
 
-Please see separate [quick start page](QUICK_START.md) where briefly summarized all most important and applicable steps and configurations.
-
-If you need deeper knowledge about all possible steps, configurations and their descriptions, please see sections below.
+| Page | Contents |
+| --- | --- |
+| [Quick start](QUICK_START.md) | The most important steps and configurations, briefly summarized |
+| [Configuration](CONFIGURATION.md) | Full configuration reference: Pandoc service, toolbar injection, webhooks, external resources, logging, workflow function, style packages and more |
+| [User guide](USER_GUIDE.md) | The export options in the DOCX Exporter dialog |
+| [Limitations and workarounds](LIMITATIONS.md) | By-design behaviour and how to work around it |
+| [Upgrade notes](UPGRADE.md) | Version-specific upgrade instructions |
+| [REST API](docs/openapi.json) | OpenAPI specification |
 
 ## Build
 
@@ -46,298 +51,6 @@ For automated installation with maven env variable `POLARION_HOME` should be def
 
 Changes only take effect after restart of Polarion.
 
-## Polarion configuration
-
-### Pandoc configuration
-
-This extension supports the use of Pandoc as a REST service within a Docker container, as implemented [here](https://github.com/SchweizerischeBundesbahnen/pandoc-service).
-To change Pandoc Service URL, adjust the following property in the `polarion.properties` file:
-
-```properties
-ch.sbb.polarion.extension.docx-exporter.pandoc.service=http://localhost:9082
-```
-
-### Pandoc API key
-
-The pandoc service can require an API key, which it does as soon as it is started with `API_KEY` set. It
-then protects the conversion endpoints and the template endpoint alike. The extension has to send that
-key, and it reads it from Polarion's secrets manager.
-
-The key itself is never written into `polarion.properties`. The property holds the **name** of a secret:
-
-```properties
-ch.sbb.polarion.extension.docx-exporter.pandoc.apiKeySecret=pandoc-api-key
-```
-
-Store the key under that name in the secrets manager of the Polarion installation. The properties file,
-its backups and the About page then carry a name, not a credential.
-
-An unset or empty property sends no key, which is what a service started without `API_KEY` expects.
-
-**The key is only sent over https.** Where a key is configured and `pandoc.service` names a plain
-`http` address, the export is refused instead: a key is a reusable credential, and on plain http
-everyone on the path keeps a copy of it. Give the service an `https` address, or clear the property
-where the service needs no key. Without a key nothing changes, `http` keeps working as before, and
-the rule holds for `localhost` too, since a certificate is what proves the transport rather than the
-address. The About page reports this combination before anyone exports, because the version endpoint
-carries no key and would otherwise look healthy.
-
-Five failures are reported apart, since each one has a different fix:
-
-| What the export says | What to do |
-| --- | --- |
-| requires an API key, none is configured | name the secret in the property above |
-| could not read the pandoc API key from the Polarion secret | check that the secret is readable for the Polarion process |
-| is empty or does not exist | store a non-empty key under that secret name |
-| rejected the configured API key | check the secret holds the key the service was started with |
-| not sent over plain http | name the service with an https address |
-
-### DOCX exporter extension to appear on a Document's properties pane
-
-1. Open a project where you wish DOCX Exporter to be available
-2. On the top of the project's navigation pane click ⚙ (Actions) ➙ 🔧 Administration. Project's administration page will be opened.
-3. On the administration's navigation pane select Documents & Pages ➙ Document Properties Sidebar.
-4. In opened Edit Project Configuration editor find `sections`-element:
-   ```xml
-   …
-   <sections>
-     <section id="fields"/>
-     …
-   </sections>
-   …
-   ```
-5. And insert following new line inside this element:
-   ```xml
-   …
-   <extension id="docx-exporter" label="DOCX Exporter" />
-   …
-   ```
-6. Save changes by clicking 💾 Save
-
-### DOCX Exporter view to open via button in toolbar
-
-Alternatively you can configure DOCX Exporter such a way that a button to open the DOCX Exporter view appears in the document editor's toolbar.
-
-1. Open "Default Repository".
-2. On the top of its navigation pane click ⚙ (Actions) ➙ 🔧 Administration. Global administration page will be opened.
-3. On the administration's navigation pane select Configuration Properties.
-4. In editor of opened page add following line:
-   ```properties
-   scriptInjection.dleEditorHead=<script src="/polarion/docx-exporter/js/dle-toolbar.js"></script>
-   ```
-   This adds the button into Polarion's native document toolbar. The button is re-injected automatically when Polarion re-renders the toolbar (for example when the document is saved), so it stays in place.
-5. Save changes by clicking 💾 Save
-
-> [!TIP]
-> **Adding more than one toolbar button.** `scriptInjection.dleEditorHead` is a single Polarion-wide property that holds exactly one value. To show several buttons in the document editor (for example the PDF, DOCX and StrictDoc exporters together, or this button alongside any other injected script), do **not** add separate `scriptInjection.dleEditorHead=` lines — the last one overrides the rest. Concatenate all the `<script>` tags into that single value instead:
-> ```properties
-> scriptInjection.dleEditorHead=<script src="/polarion/pdf-exporter/js/dle-toolbar.js"></script><script src="/polarion/docx-exporter/js/dle-toolbar.js"></script><script src="/polarion/strictdoc-exporter/js/dle-toolbar.js"></script>
-> ```
-
-#### Deprecated configuration
-
-The explicit `DocxExporterStarter.injectToolbar(...)` configuration still works but is **deprecated** in favor of the single-tag `dle-toolbar.js` form above (removal is planned for a future major version):
-
-```properties
-# Button in Polarion's native document toolbar — equivalent to the recommended dle-toolbar.js form above.
-scriptInjection.dleEditorHead=<script src="/polarion/docx-exporter/js/starter.js"></script><script>DocxExporterStarter.injectToolbar({alternate: true});</script>
-```
-```properties
-# A separate toolbar with the button placed above the document editing area.
-scriptInjection.dleEditorHead=<script src="/polarion/docx-exporter/js/starter.js"></script><script>DocxExporterStarter.injectToolbar();</script>
-```
-
-### Configuring logs
-
-For better problem analyses extended logging can be configured in Polarion. By default, Polarion log level is set to INFO. It can be changed to debug in `log4j2.xml` file.
-Find `/opt/polarion/polarion/plugins/com.polarion.core.util_<version>/log4j2.xml` file and add the following line into `Loggers`section:
-```xml
-<Logger name="ch.sbb.polarion.extension" level="debug"/>
-```
-
-It is also possible to write all messages of SBB extensions info separate log file which can be useful to report a problem. In this case new `Appender` should be added:
-```xml
-<RollingFile name="SBB" fileName="${sys:logDir}/log4j-sbb${fileNameSuffix}" filePattern="${sys:logDir}/log4j-sbb${filePatternSuffix}">
-    <PatternLayout pattern="${layoutPattern}"/>
-    <Policies>
-        <TimeBasedTriggeringPolicy interval="1"/>
-    </Policies>
-</RollingFile>
-```
-and the following `Logger`:
-```xml
-<Logger name="ch.sbb.polarion.extension" level="debug">
-    <AppenderRef ref="SBB"/>
-</Logger>
-```
-
-### Enabling CORS
-
-Cross-Origin Resource Sharing could be enabled using standard configuration of Polarion REST API. In `polarion.properties` the following lines should be added:
-```properties
-com.siemens.polarion.rest.enabled=true
-com.siemens.polarion.rest.cors.allowedOrigins=http://localhost:8888,https://anotherdomain.com
-```
-
-### Enabling webhooks
-
-By default, webhooks functionality is not enabled in DOCX Exporter. If you want to make it available the following line should be added in `polarion.properties`:
-```properties
-ch.sbb.polarion.extension.docx-exporter.webhooks.enabled=true
-```
-
-### Reference template size limit
-
-Saving a `templates` configuration rejects a reference template larger than 16 MB. To change the limit,
-add the following line in `polarion.properties`:
-```properties
-ch.sbb.polarion.extension.docx-exporter.templateMaxSizeMB=32
-```
-
-### External resources
-
-A document can reference an image, a font or a stylesheet by an absolute URL. The extension loads such a
-resource and embeds it into the exported DOCX. Because a document editor controls that URL, the request is
-restricted. By default the extension rejects every address which is not public: loopback, private ranges,
-link local addresses including the cloud metadata address `169.254.169.254`, and their IPv6 equivalents.
-The Polarion server itself, as configured by `base.url`, always stays reachable.
-
-To load resources from an internal host, list its origin explicitly:
-```properties
-ch.sbb.polarion.extension.docx-exporter.externalResources.allowedOrigins=cdn.intranet,https://images.intranet:8443
-```
-
-An entry is written `[scheme://]host[:port]`, and what it leaves out is not compared:
-
-| Entry | What it allows |
-| --- | --- |
-| `cdn.intranet` | that host under either scheme, on any port |
-| `cdn.intranet:8443` | that host on port 8443, under either scheme |
-| `https://cdn.intranet` | that host under https, on port 443 |
-| `https://cdn.intranet:8443` | that host under https, on port 8443 |
-
-A reference written `//host/path` takes the scheme of `base.url` first and the other one after, so it
-reaches the host under whichever scheme an entry names.
-
-The policy itself can be changed. The value is one of these three names, written exactly so:
-```properties
-# BLOCK_INTERNAL (default) - public addresses, the Polarion server and the allowed origins
-# ALLOWLIST_ONLY           - only the Polarion server and the allowed origins
-# ALLOW_ALL                - no restriction, this exposes the server's network to document editors
-ch.sbb.polarion.extension.docx-exporter.externalResources.policy=ALLOWLIST_ONLY
-```
-
-A loaded resource must be served as an image, a font or a stylesheet. Where the sender says nothing about
-the content, or calls it `application/octet-stream`, the content itself decides and must be recognizable as
-one of the three: a text of any other kind is refused, and so is a body nothing could be detected in.
-
-A resource may not exceed 16 MB. To change the size limit:
-```properties
-ch.sbb.polarion.extension.docx-exporter.externalResources.maxSizeMB=32
-```
-
-A resource which is not embedded is reported, not passed on silently. The Polarion log names it with the
-reason, and the export writes it into the result of the conversion, which is what the message at the end of
-an export shows. An image the policy refused becomes a transparent placeholder in the document.
-
-Every conversion endpoint reports the same way, the one which takes raw HTML among them: the answer carries
-`Blocked-Resources-Count` and `Blocked-Resources`, and carries neither when nothing was refused.
-
-A stylesheet keeps its declarations whatever happens to its resources. An address nothing in the stylesheet
-accounts for is replaced by `about:invalid`, so that the conversion service reads none of them: everything
-else the stylesheet says still applies. A custom property holding an address, `--api: https://service.example`,
-is such a case. Only an address written in CSS escapes which nothing accounts for still drops the whole
-stylesheet: it names no place in the text to replace.
-
-A CSS `@import` never survives, whatever it names and wherever it stands: it is removed where the stylesheet
-was read, and renamed to an at-rule no renderer knows where it was not. An at-rule cannot be embedded, so
-pandoc-service would have to load it itself, past every check above. Reference such a stylesheet with a
-`<link rel="stylesheet">` instead, the extension loads and embeds that one.
-
-A configured JVM proxy (`http.proxyHost` and friends) is used for these requests. A proxy resolves the
-host name itself, so a request routed through one cannot be pinned to a checked address. Such a request
-is therefore only made for a host the configuration trusts as such: the Polarion server and the origins
-listed above. Everything else is loaded directly, with the address check binding, or not at all. Hosts
-in `http.nonProxyHosts` are loaded directly and keep the address check.
-
-Note what this costs: where a proxy is configured for every destination, `BLOCK_INTERNAL` behaves
-as `ALLOWLIST_ONLY`, since a proxied request is made only for the Polarion server and the origins
-listed above.
-
-A SOCKS proxy needs no such gate. It is no route the client plans, the JVM applies it at the socket, and
-the socket is connected to the address the check approved, not to a host name the proxy would resolve.
-So a request does traverse the SOCKS proxy, and its destination is still the vetted address.
-
-Blocked resources are reported in the Polarion log. The document is exported without them.
-
-### Debug option
-
-This extension makes intensive HTML processing to extend similar standard Polarion functionality. There is a possibility to log
-original and resulting HTML to see potential problems in this processing. This logging can be switched on (`true` value)
-and off (`false` value) with help of following property in file `polarion.properties`:
-
-```properties
-ch.sbb.polarion.extension.docx-exporter.debug=true
-```
-
-If HTML logging is switched on, then in standard polarion log file there will be following lines:
-
-```text
-2023-09-20 08:42:13,911 [ForkJoinPool.commonPool-worker-2] INFO  util.ch.sbb.polarion.extension.docx_exporter.util.HtmlLogger - Original HTML fragment provided by Polarion was stored in file /tmp/docx-exporter10000032892830031969/original-4734772539141140796.html
-2023-09-20 08:42:13,914 [ForkJoinPool.commonPool-worker-2] INFO  util.ch.sbb.polarion.extension.docx_exporter.util.HtmlLogger - Final HTML page obtained as a result of DOCX exporter processing was stored in file /tmp/docx-exporter10000032892830031969/processed-5773281490308773124.html
-2023-09-20 08:42:14,015 [ForkJoinPool.commonPool-worker-2] INFO  util.ch.sbb.polarion.extension.docx_exporter.util.HtmlLogger - DOCX generation timing report was stored in file /tmp/docx-exporter10000032892830031969/timing-report-1234567890.txt
-```
-
-Here you can find out in which files HTML and timing report were stored.
-
-#### Timing report
-
-When debug mode is enabled, a detailed timing report is generated showing the duration of each DOCX generation stage.
-This helps identify performance bottlenecks. The report includes:
-
-- Summary statistics (HTML size, DOCX size, page count, throughput)
-- Timing breakdown with visual progress bars
-- Time by category (HTML Processing, Pandoc Conversion, DOCX Post-processing, Cover Page)
-- Slowest stages with performance indicators
-- Execution timeline
-
-### Workflow function configuration
-It is possible to configure the workflow function which exports a DOCX file and attaches it to a newly created or already existing work item.
-
-To create workflow functions do following:
-1. On the top of the project's navigation pane click ⚙ (Actions) ➙ 🔧 Administration. Project's administration pane will be opened.
-2. On the administration's navigation pane select Documents & Pages ➙ Document Workflow.
-3. On the opened page you will see a list of document types with their actions. Find type you are interested in and click `Edit` or `Create` button for it.
-4. On the opened page (Workflow Designer) find the section Actions, appropriate action in it, e.g. `archive` (or create a new one) and click `Edit` for it.
-5. A popup will be opened with title 'Details for Action: Archive', select 'DOCX Export' in 'Function' dropdown of 'Functions' section and then click
-   pencil button. Another popup will be opened with title 'Parameter for: DOCX Export', add appropriate parameters in table of this popup, then click `Close`.
-   Then again `Close` on previous popup and finally `Save` when you will be back on Workflow Designer page.
-
-Supported function parameters:
-
-| Parameter             | Required | Description                                                                 | Default value                                                                                                                     |
-|-----------------------|----------|-----------------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------|
-| existing_wi_id        | yes (*)  | Workitem ID to reuse                                                        | -                                                                                                                                 |
-| create_wi_type_id     | yes (*)  | Type ID of workitem to create                                               | -                                                                                                                                 |
-| create_wi_title       | no       | Value to set as a workitem title (used only with 'create_wi_type_id')       | Value like "modified document title with space -> target status name" (e.g., "Specification / Product Specification -> Archived") |
-| create_wi_description | no       | Value to set as a workitem description (used only with 'create_wi_type_id') | "This item was created automatically. Check 'Attachments' section for the generated DOCX document."                               |
-| project_id            | no       | Project ID where to create or search for the target work item               | Project ID of the modified document                                                                                               |
-| attachment_title      | no       | The title of the attached file                                              | The name of the generated file (without '.docx' at the end)                                                                       |
-| style_package         | no       | The name of the style package to use                                        | Default                                                                                                                           |
-| prefer_last_baseline  | no       | Use the last baseline revision instead of the last document's revision      | false                                                                                                                             |
-
-(*) - either 'existing_wi_id' or 'create_wi_type_id' parameter required.
-Providing the first one means reuse already existing workitem to attach the file whereas the second will create a new workitem with the specified type.
-In case if both of them specified 'existing_wi_id' has higher priority.
-
-## Extension configuration
-
-1. On the top of the project's navigation pane click ⚙ (Actions) ➙ 🔧 Administration. Project's administration page will be opened.
-2. On the administration's navigation pane select `DOCX Export`. There are expandable sub-menus with different configuration options for DOCX Exporter.
-3. For some of these options (Localization, Webhooks and Filename template) `Quick Help` section available with option short description. For the rest
-   (Style Package, Style Package Weights) there's no `Quick Help` section as their content is self-evident.
-4. To change configuration of DOCX Exporter extension just edit corresponding section and press `Save` button.
-
 ## Usage
 
 1. Open a document in Polarion.
@@ -348,30 +61,4 @@ In case if both of them specified 'existing_wi_id' has higher priority.
 ## REST API
 This extension provides REST API. OpenAPI Specification can be obtained [here](docs/openapi.json).
 
-## Advanced configuration
-
-### Asynchronous DOCX Export: export jobs timeout
-This extension provides REST API to export DOCX asynchronously. Using this API, it is possible to start export job, observe their status and get result.
-Finished (succeed or failed) and in-progress export jobs will be preserved in memory until configured timeout. To change this timeout, adjust the following property in the local `docx-converter-jobs.properties` file:
-```properties
-# Timeout in minutes to keep finished async conversion jobs results in memory
-jobs.timeout.finished.minutes=30
-# Timeout in minutes to wait until async conversion jobs is finished
-jobs.timeout.in-progress.minutes=60
-```
-
-## Known issues
-
-### Outline (chapter) numbers are displayed twice
-The outline (chapter) numbers are currently showing up twice because Word is adding its own numbering. To fix this, heading numbering should be disabled in the Word template used by Pandoc.
-
-### Style of table is not assigned automatically
-
-Styles were not applied because the table style in the Word template was defined incorrectly. When converting HTML to DOCX, Pandoc applies only the style named Table, which is considered the default table style. Even if the template contains other custom table styles, Pandoc ignores them unless they are directly linked to the Table style.
-To use a custom table style, the Word template must be configured so that the Table style inherits the formatting of the custom style. This can be done by redefining the default Table style within the template or by setting it to be based on the desired custom style.
-
-### Heading levels beyond h6
-
-HTML supports heading elements only from h1 to h6, but Polarion documents can contain deeper nesting levels. Added with [pandoc-service#152](https://github.com/SchweizerischeBundesbahnen/pandoc-service/pull/152), a Lua filter is included that handles heading levels beyond h6. It converts `<div class="heading-N">` elements (where N > 6) into proper Pandoc header blocks, enabling correct processing of deeply nested document structures. Heading levels are capped at 9 for compatibility with Word documents, and the Table of Contents depth has been extended to support levels 1–9.
-
-All good so far.
+For asynchronous export and job-timeout tuning, see [Advanced configuration](CONFIGURATION.md#advanced-configuration).

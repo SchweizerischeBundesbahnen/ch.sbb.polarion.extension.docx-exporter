@@ -12,10 +12,13 @@ There is one `index.html` / bundle. The page to render is chosen from the `featu
 
 - `/` (no param) renders a development landing page listing every feature.
 - `/?feature=about` - About (RSP's shared `About`).
-- `/?feature=disclaimer` - Usage Disclaimer. Reads the build-generated DISCLAIMER article from
-  generic's `/disclaimer` endpoint, the same way About and User Guide read theirs. An empty response
-  means the extension ships no disclaimer; the page then links to the online source.
-- `/?feature=user-guide` - User Guide (RSP's shared `UserGuide`).
+- `/?feature=disclaimer` - Usage Disclaimer (RSP's shared `Disclaimer`). Reads the build-generated
+  DISCLAIMER article from generic's `/disclaimer` endpoint, the same way About reads its own. An empty
+  response means the extension ships no disclaimer; the page then links to the online source. A failed
+  request is shown as an error.
+- `/?feature=quick-start`, `user-guide`, `configuration`, `limitations`, `upgrade` - the articles of the
+  [documentation site](#the-documentation-site), one per entry of `src/docs/docs.config.json`. The single
+  `documentation` admin node opens `quick-start`; the others have no menu entry of their own.
 - `/?feature=filename` - Filename template (RSP's `CodeEditor` with the Velocity grammar over the
   single `filename-template` setting; the Default button loads the built-in template into the editor).
 - `/?feature=style-package` - Style Package: everything one export is driven by. The three "Custom ..."
@@ -37,6 +40,35 @@ Features are declared in [`src/features.tsx`](src/features.tsx). Add a page comp
 `src/pages/`, register it there, and it appears on the landing page automatically. The ids must stay
 in sync with the `pageUrl`s in `src/main/resources/META-INF/hivemodule.xml` — a mismatch shows up as a
 blank page in Polarion and no test catches it.
+
+## The documentation site
+
+Quick Start, User Guide, Configuration, Limitations and Upgrade are the markdown files at the repository
+root, rendered as one documentation site: a sidebar, a search, a breadcrumb, prev/next and an "on this
+page" rail. The components are RSP's (`DocsProvider`, `DocPage`, `DocLinkInterceptor`, `createAdminNav`);
+this app supplies only its data.
+
+- **The manifest** is [`src/docs/docs.config.json`](src/docs/docs.config.json): one entry per article, in
+  reading order - the sidebar and prev/next follow it. Each `id` is the feature id, the basename of the
+  rendered `<id>.html` and the `source` markdown file. [`src/features.tsx`](src/features.tsx) builds one
+  `DocPage` feature per entry, so adding an article is a manifest entry, its markdown and its
+  markdown2html execution in the pom; nothing in `src/` changes.
+- **The articles** are rendered by the Maven build (markdown2html, in `generate-sources`) into
+  `src/main/resources/webapp/docx-exporter-app/html/`, and `DocPage` fetches `../../html/<id>.html` from
+  there. `npm run dev` serves that same directory at `/html/` (a plugin in `vite.config.js`), since Vite's SPA
+  fallback would otherwise answer every article with `index.html`. Their relative links stay relative: `DocLinkInterceptor` (wrapping the whole app in
+  [`App.tsx`](src/App.tsx)) turns a `.md`/`.html` link to another article into a `?feature=` switch and opens
+  any other relative link, e.g. `docs/openapi.json`, on GitHub.
+- **Admin-shell sync.** A link that leaves the page's admin node (an article linking to the README, which is
+  the About page, or the About page linking to Configuration) switches Polarion's own node too, so its breadcrumb and left menu
+  follow: [`src/services/adminNav.ts`](src/services/adminNav.ts) maps each feature to its node, and
+  [`src/main.tsx`](src/main.tsx) resumes the stashed target before the first render.
+- **The search index** `src/docs/search-index.json` is a build artifact and is **not committed**.
+  [`scripts/build-docs-index.mjs`](scripts/build-docs-index.mjs) builds it from the rendered articles, one
+  record per h2/h3 with the heading id the article carries, before every build (`prebuild`, where a missing
+  article fails the build), dev server (`predev`), typecheck (`pretypecheck`) and test run (Vitest
+  `globalSetup`). Without rendered articles it writes an empty index, and the search box is simply hidden -
+  run the Maven build once to get the articles, and with them the search, into `npm run dev`.
 
 ## The three entries
 
@@ -186,6 +218,12 @@ REST calls are proxied to the Polarion instance in `VITE_BASE_URL`; a personal a
 `VITE_BEARER_TOKEN` switches `useRemote` from the session `/internal` endpoints to the token `/api`
 ones.
 
+The documentation articles and their search come from the Maven build, see
+[The documentation site](#the-documentation-site): the dev server serves the articles it rendered, and until
+it has run once the article pages show their "not generated" message and there is no search box. After
+editing a markdown file, render it again (a Maven build, or its markdown2html execution alone) and restart
+`npm run dev` for the search to follow.
+
 ## Running the tests
 
 **One command, locally and in CI: `npm run test:coverage:docker`.** It runs the full suite (behavior +
@@ -239,8 +277,10 @@ it runs first in `npm run build`.
 
 ## Production build
 
-`npm run build` typechecks, emits the three entries to `ui/dist/app` with base path
-`/polarion/docx-exporter-app/ui/app/`, and then runs `scripts/check-runtime-entries.mjs` over the result.
+`npm run build` first builds the documentation search index from the rendered articles and fails when one is
+missing, so a production bundle never ships a stale or empty search. It then typechecks, emits the three entries
+to `ui/dist/app` with base path `/polarion/docx-exporter-app/ui/app/`, and runs `scripts/check-runtime-entries.mjs`
+over the result.
 The Maven build runs all of it automatically through the parent's `ui-build-react-app` profile - this pom declares no
 frontend plugin of its own - and copies the bundle into `src/main/resources/webapp/docx-exporter-app/app`,
 where `DocxExporterAppServlet` serves it at `/polarion/docx-exporter-app/ui/app/index.html`.
