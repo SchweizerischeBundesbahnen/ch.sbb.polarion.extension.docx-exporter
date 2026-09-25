@@ -7,12 +7,13 @@
 // The plugin renders each article to the shipped `webapp/docx-exporter-app/html/<id>.html` in generate-sources
 // (before this frontend build, with the Table of contents excluded); this reads those same shipped files -
 // there is no separate render - parsing each into one record per h2/h3 heading (its anchor id, title and the
-// plain text beneath it up to the next heading) and concatenates them in the docs.config.json reading order
-// into src/docs/search-index.json.
+// plain text beneath it, h4-h6 subsections included, up to the next h2/h3) and concatenates them in the
+// docs.config.json reading order into src/docs/search-index.json.
 //
 // Two modes:
-//   --require (used by `prebuild`, i.e. the real Maven/production build): the rendered article MUST be present;
-//      a missing article fails the build (exit 1) rather than silently shipping a stale index.
+//   --require (used by `prebuild`, i.e. the real Maven/production build): every rendered article MUST be present
+//      and yield at least one section, each with an anchor id; anything else fails the build (exit 1) rather
+//      than silently shipping an index with an article missing from the search.
 //   default  (used by `predev`/`pretest`/`pretypecheck`, i.e. runs without Maven): a missing article is a
 //      warning and an EMPTY index is written, so a fresh clone still typechecks, runs and tests - the
 //      documentation search is then simply hidden.
@@ -41,8 +42,9 @@ const outFile = resolve(uiDir, 'src/docs/search-index.json');
 const clean = (text) => text.replace(/\s+/g, ' ').trim();
 
 /**
- * One record per h2/h3 heading: its anchor id, title, and the plain text beneath it up to the next heading.
- * The text is kept whole: the search matches on it and never displays it (results show the titles), so a cap
+ * One record per h2/h3 heading: its anchor id, title, and the plain text beneath it up to the next h2/h3. An
+ * h4-h6 subsection is no record of its own - the "on this page" rail and the search both stop at h3 - so its
+ * heading and text stay in the enclosing section, and a search for a term in it leads there. The text is kept whole: the search matches on it and never displays it (results show the titles), so a cap
  * would only hide terms further down a section. All articles together are some 25 KB of text.
  */
 function sectionsOf(html) {
@@ -60,9 +62,10 @@ function sectionsOf(html) {
     if (tag === 'h2' || tag === 'h3') {
       current = { anchor: element.getAttribute('id') ?? '', title: clean(element.text), body: [] };
       sections.push(current);
-    } else if (/^h[1-6]$/.test(tag)) {
-      current = null; // h1 / h4-h6 end the current section but are not indexed themselves
+    } else if (tag === 'h1') {
+      current = null; // the article title: text before the first h2 belongs to no section
     } else if (current) {
+      // h4-h6 headings and every other block: part of the enclosing h2/h3 section
       current.body.push(element.text);
     }
   }
@@ -88,9 +91,19 @@ if (missing.length > 0) {
 }
 
 const records = [];
+const problems = [];
 for (const item of config.items) {
   const html = readFileSync(resolve(indexDir, `${item.id}.html`), 'utf8');
-  for (const section of sectionsOf(html)) {
+  const sections = sectionsOf(html);
+  // A present article that yields nothing searchable (no h2/h3 the parser recognizes), or a section whose
+  // heading carries no id to link to, would ship as a silent gap in the search - so it is checked here.
+  if (sections.length === 0) {
+    problems.push(`${item.id}.html has no h2/h3 section`);
+  }
+  for (const section of sections.filter((s) => !s.anchor)) {
+    problems.push(`${item.id}.html: section "${section.title}" has no heading id`);
+  }
+  for (const section of sections) {
     records.push({
       doc: item.id,
       docTitle: item.title,
@@ -99,6 +112,15 @@ for (const item of config.items) {
       text: section.text,
     });
   }
+}
+
+if (problems.length > 0) {
+  const message = `build-docs-index: ${problems.join('; ')}.`;
+  if (strict) {
+    console.error(message);
+    process.exit(1);
+  }
+  console.warn(`${message} Writing the index anyway (dev mode).`);
 }
 
 writeFileSync(outFile, `${JSON.stringify(records, null, 2)}\n`, 'utf8');

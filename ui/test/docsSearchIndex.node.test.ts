@@ -50,6 +50,13 @@ describe.skipIf(RECORDS.length === 0)('documentation search index', () => {
     expect(configuration.some((text) => text.includes('docx-exporter.pandoc.service=http'))).toBe(true);
   });
 
+  it('keeps the text of h4-h6 subsections in their enclosing section', () => {
+    // "Timing report" is an h4 under the configuration reference's "Debug option" h3: its text must stay
+    // searchable, folded into that h3 record, rather than be dropped at the h4.
+    const configuration = RECORDS.filter((r) => r.doc === 'configuration').map((r) => r.text);
+    expect(configuration.some((text) => text.includes('throughput'))).toBe(true);
+  });
+
   it('keeps the whole text of long sections', () => {
     // No section is cut short: a term further down a long section must stay searchable. Several sections of
     // the configuration reference run to thousands of characters; the former 400-character cap stayed below this.
