@@ -1,7 +1,9 @@
+import { pageViolations } from '@sbb-polarion/react-sbb-polarion/testing';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, render } from 'vitest-browser-react';
 import { userEvent } from 'vitest/browser';
 import App from '../src/App';
+import { dropdownsSettled } from './a11yHelpers';
 import { installFetchMock, jsonResponse } from './mockFetch';
 import type { FetchMock, Route } from './mockFetch';
 
@@ -438,5 +440,63 @@ describe('Style Packages page', () => {
     await answerDialog('OK');
 
     await vi.waitFor(() => expect(document.querySelector('.alert-error')).not.toBeNull());
+  });
+});
+
+describe('accessibility', () => {
+  it('has no WCAG A/AA violations with every setting overridden', async () => {
+    open();
+    await loaded();
+    await dropdownsSettled();
+    expect(await pageViolations()).toEqual([]);
+  });
+
+  it('has no WCAG A/AA violations on the Default package', async () => {
+    open();
+    await loaded();
+    await selectPackage('Default');
+    await vi.waitFor(() => expect(document.querySelector('#matching-query')).toBeNull());
+    await dropdownsSettled();
+    expect(await pageViolations()).toEqual([]);
+  });
+
+  it('has no WCAG A/AA violations with a configuration name being edited', async () => {
+    open();
+    await loaded();
+    await clickButton('Add new');
+    await vi.waitFor(() => expect(document.querySelector('.config-edit-row input')).not.toBeNull());
+    await dropdownsSettled();
+    expect(await pageViolations()).toEqual([]);
+  });
+
+  it('has no WCAG A/AA violations with the revisions shown', async () => {
+    open(
+      routesWith({
+        method: 'GET',
+        match: /\/settings\/style-package\/names\/[^/]+\/revisions/,
+        json: [{ name: '1234', date: '2024-06-13', baseline: null }],
+      }),
+    );
+    await loaded();
+    await clickButton('Revisions');
+    await vi.waitFor(() => expect(document.querySelector('.revisions-table tbody button')).not.toBeNull());
+    await dropdownsSettled();
+    expect(await pageViolations()).toEqual([]);
+  });
+
+  it('has no WCAG A/AA violations with a confirmation open', async () => {
+    open();
+    await loaded();
+    await clickButton('Default');
+    await vi.waitFor(() => expect(document.querySelector('.rsp-modal')).not.toBeNull());
+    await dropdownsSettled();
+    expect(await pageViolations()).toEqual([]);
+  });
+
+  it('has no WCAG A/AA violations with a load error shown', async () => {
+    open(routesWith({ method: 'GET', match: /\/link-role-names/, status: 500, json: {} }));
+    await vi.waitFor(() => expect(document.body.textContent).toContain('error loading link role names'));
+    await dropdownsSettled();
+    expect(await pageViolations()).toEqual([]);
   });
 });

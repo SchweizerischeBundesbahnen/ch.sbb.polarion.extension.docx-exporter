@@ -160,6 +160,7 @@ export default function ExportFormView({
                 <FieldCell shown={form.webhooksEnabled}>
                   <SearchableSelect
                     id={id('webhooks-selector')}
+                    ariaLabel="Webhooks"
                     options={childOptions('webhooks')}
                     value={childValue(childOptions('webhooks'), form.webhooks)}
                     onChange={(value) => onPatch({ webhooks: value })}
@@ -187,6 +188,7 @@ export default function ExportFormView({
                 <FieldCell>
                   <SearchableSelect
                     id={id('paper-size-selector')}
+                    ariaLabel="Paper size"
                     options={PAPER_SIZES}
                     value={form.paperSize}
                     onChange={(value) => onPatch({ paperSize: value })}
@@ -205,6 +207,7 @@ export default function ExportFormView({
                 <FieldCell>
                   <SearchableSelect
                     id={id('orientation-selector')}
+                    ariaLabel="Orientation"
                     options={ORIENTATIONS}
                     value={form.orientation}
                     onChange={(value) => onPatch({ orientation: value })}
@@ -223,6 +226,7 @@ export default function ExportFormView({
                 <FieldCell>
                   <SearchableSelect
                     id={id('image-density-selector')}
+                    ariaLabel="Image density"
                     options={IMAGE_DENSITIES}
                     value={form.imageDensity}
                     onChange={(value) => onPatch({ imageDensity: value })}
@@ -272,6 +276,7 @@ export default function ExportFormView({
               <FieldCell shown={form.localizeEnums}>
                 <SearchableSelect
                   id={id('language')}
+                  ariaLabel="Language"
                   options={LANGUAGES}
                   value={form.language}
                   onChange={(value) => onPatch({ language: value })}
@@ -294,6 +299,7 @@ export default function ExportFormView({
               <FieldCell shown={form.renderCommentsEnabled}>
                 <SearchableSelect
                   id={id('render-comments-selector')}
+                  ariaLabel="Comments rendering"
                   options={COMMENTS_RENDER_TYPES}
                   value={form.renderComments}
                   onChange={(value) => onPatch({ renderComments: value })}
@@ -337,6 +343,7 @@ export default function ExportFormView({
                     <div className="option-pair">
                       <SearchableSelect
                         id={id('roles-selector')}
+                        ariaLabel="Workitem roles"
                         multiple
                         options={data.roles}
                         value={form.linkedWorkitemRoles}
@@ -345,6 +352,7 @@ export default function ExportFormView({
                       />
                       <SearchableSelect
                         id={id('roles-direction-selector')}
+                        ariaLabel="Link role direction"
                         options={LINK_ROLE_DIRECTIONS}
                         value={form.linkRoleDirection}
                         onChange={(value) => onPatch({ linkRoleDirection: value })}

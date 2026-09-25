@@ -249,6 +249,21 @@ npm run test:update:docker     # regenerate the committed reference PNGs after a
 > Docker wrapper invokes; the visual suites detect that they are not in the reference environment and
 > skip themselves, so a run there proves nothing about the screenshots.
 
+### Accessibility checks
+
+Each page's own test file ends with an `accessibility` block. Each case renders one state of the page and
+asserts `pageViolations()` (or `a11yViolations(host)` for a shadow root) from
+`@sbb-polarion/react-sbb-polarion/testing` to be `[]`. That is axe-core with the WCAG A/AA rules; RSP turns off
+`color-contrast` and `target-size`. Follow the RSP README section "Where the axe cases go in an extension":
+
+1. Give a new page, or a new state that renders more markup, a case of its own in the page's test file.
+2. Before the scan, `await dropdownsSettled()` from `test/a11yHelpers.ts`: a scan taken before the dropdowns
+   upgrade checks the native `<select>` and passes for nothing.
+3. Run the new case once against the unfixed component, to prove that it fails.
+
+The docs search case skips itself until the Maven build has rendered the articles, since the search index is
+built from them (see [The documentation site](#the-documentation-site)).
+
 ## Formatting, linting & typechecking
 
 ```bash
@@ -258,6 +273,11 @@ npm run lint            # ESLint: report problems
 npm run lint:fix        # ESLint: auto-fix what it can
 npm run typecheck       # tsc --noEmit over src/ and test/
 ```
+
+`eslint.config.js` is RSP's shared `polarionEslintConfig`, which includes `eslint-plugin-jsx-a11y` for `src/`.
+That plugin declares peers only up to ESLint 9, so `package.json` overrides its `eslint` peer with
+`"$eslint"`. Keep the override until [jsx-eslint/eslint-plugin-jsx-a11y#1075](https://github.com/jsx-eslint/eslint-plugin-jsx-a11y/issues/1075)
+is fixed. Do not use `--legacy-peer-deps` instead: it drops auto-installed peers from the lock file.
 
 `typecheck` runs first in `npm run build`, so the Maven build fails on a type error rather than only the
 IDE showing one. `tsconfig.json` covers `src` **and** `test`: a test is code, and while it was left out

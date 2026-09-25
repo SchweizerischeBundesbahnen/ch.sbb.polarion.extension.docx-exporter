@@ -504,6 +504,7 @@ export default function StylePackages() {
               <div className={`value-select${reserved(form.orientationEnabled)}`}>
                 <SearchableSelect
                   id="orientation-select"
+                  ariaLabel="Orientation"
                   options={ORIENTATIONS}
                   value={form.orientation}
                   disabled={!form.orientationEnabled}
@@ -529,6 +530,7 @@ export default function StylePackages() {
               <div className={`value-select${reserved(form.paperSizeEnabled)}`}>
                 <SearchableSelect
                   id="paper-size-select"
+                  ariaLabel="Paper size"
                   options={PAPER_SIZES}
                   value={form.paperSize}
                   disabled={!form.paperSizeEnabled}
@@ -554,6 +556,7 @@ export default function StylePackages() {
               <div className={`value-select${reserved(form.imageDensityEnabled)}`}>
                 <SearchableSelect
                   id="image-density-select"
+                  ariaLabel="Image density"
                   options={IMAGE_DENSITIES}
                   value={form.imageDensity}
                   disabled={!form.imageDensityEnabled}
@@ -596,6 +599,7 @@ export default function StylePackages() {
                 {form.webhooksEnabled && (
                   <SearchableSelect
                     id="webhooks-select"
+                    ariaLabel="Webhooks"
                     options={childNames.webhooks}
                     value={childValue('webhooks', form.webhooks)}
                     onChange={(value) => patch({ webhooks: value })}
@@ -627,6 +631,7 @@ export default function StylePackages() {
               <div className={`value-select${reserved(form.renderCommentsEnabled)}`}>
                 <SearchableSelect
                   id="render-comments-select"
+                  ariaLabel="Comments rendering"
                   options={COMMENTS_RENDER_TYPES}
                   value={form.renderComments}
                   disabled={!form.renderCommentsEnabled}
@@ -722,6 +727,7 @@ export default function StylePackages() {
                   <div className="roles-select">
                     <SearchableSelect
                       id="roles-select"
+                      ariaLabel="Workitem roles"
                       multiple
                       options={roleOptions}
                       value={form.linkedWorkitemRoles}
@@ -731,6 +737,7 @@ export default function StylePackages() {
                   <div className="roles-select">
                     <SearchableSelect
                       id="link-role-direction-select"
+                      ariaLabel="Link role direction"
                       options={LINK_ROLE_DIRECTIONS}
                       value={form.linkRoleDirection}
                       onChange={(value) => patch({ linkRoleDirection: value })}
@@ -754,6 +761,7 @@ export default function StylePackages() {
               <div className={`value-select${reserved(form.localizeEnums)}`}>
                 <SearchableSelect
                   id="language-select"
+                  ariaLabel="Language"
                   options={LANGUAGES}
                   value={form.language}
                   disabled={!form.localizeEnums}

@@ -1,9 +1,11 @@
+import { pageViolations } from '@sbb-polarion/react-sbb-polarion/testing';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, render } from 'vitest-browser-react';
 import { userEvent } from 'vitest/browser';
 import type { StylePackageSettings } from '../src/services/stylePackage';
 import SidePanel from '../src/sidepanel/SidePanel';
 import type { SidePanelDependencies } from '../src/sidepanel/SidePanel';
+import { dropdownsSettled } from './a11yHelpers';
 import {
   SAMPLE_PANEL_DATA,
   SAMPLE_STYLE_PACKAGE,
@@ -479,5 +481,48 @@ describe('exporting', () => {
     expect(exportButton.disabled).toBe(true);
     expect(exportButton.title).toBe('Could not check whether you are allowed to export. Please, reload the page.');
     expect(exportButton.title).not.toContain('not allowed');
+  });
+});
+
+describe('accessibility', () => {
+  it.each([
+    ['a package that exposes its settings', sampleDependencies()],
+    [
+      'every optional setting on',
+      sampleDependencies({ stylePackage: SAMPLE_STYLE_PACKAGE_FULL, data: { webhooksEnabled: true } }),
+    ],
+    ['a package that exposes none', sampleDependencies({ stylePackage: SAMPLE_STYLE_PACKAGE_HIDDEN })],
+    ['a user who may not export', sampleDependencies({ data: { exportPermission: 'denied' } })],
+  ])('has no WCAG A/AA violations with %s', async (_state, deps) => {
+    open(deps);
+    await settled();
+    await dropdownsSettled();
+    expect(await pageViolations()).toEqual([]);
+  });
+
+  it('has no WCAG A/AA violations with a load error shown', async () => {
+    open({ ...sampleDependencies(), loadPackage: () => Promise.reject(new Error('HTTP 500')) });
+    await vi.waitFor(() => expect(text('#load-error')).toContain('error loading style package settings'));
+    await dropdownsSettled();
+    expect(await pageViolations()).toEqual([]);
+  });
+
+  it('has no WCAG A/AA violations while an export runs', async () => {
+    open(sampleDependencies());
+    await settled();
+    await dropdownsSettled();
+    await userEvent.click(field<HTMLButtonElement>('#export-docx')!);
+    await vi.waitFor(() => expect(field('#export-docx')!.matches(':disabled')).toBe(true));
+    expect(await pageViolations()).toEqual([]);
+  });
+
+  it('has no WCAG A/AA violations with a refused field marked', async () => {
+    open(sampleDependencies({ stylePackage: SAMPLE_STYLE_PACKAGE_FULL }));
+    await settled();
+    await dropdownsSettled();
+    await userEvent.fill(field<HTMLInputElement>('#chapters')!, 'one, two');
+    await userEvent.click(field<HTMLButtonElement>('#export-docx')!);
+    await toasted('error');
+    expect(await pageViolations()).toEqual([]);
   });
 });

@@ -83,7 +83,10 @@ export interface SwitchRowProps extends RowBase {
   onChange: (checked: boolean) => void;
 }
 
-/** A row the user switches on, with whatever value it carries beside it. */
+/**
+ * A row the user switches on, with whatever value it carries beside it. The label names the checkbox, so a
+ * control among the children has no name of its own: give it one (`ariaLabel` on a `SearchableSelect`).
+ */
 export function SwitchRow({
   id,
   label,

@@ -1,7 +1,9 @@
+import { pageViolations } from '@sbb-polarion/react-sbb-polarion/testing';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, render } from 'vitest-browser-react';
 import { userEvent } from 'vitest/browser';
 import App from '../src/App';
+import { dropdownsSettled } from './a11yHelpers';
 import { installFetchMock } from './mockFetch';
 import type { Route } from './mockFetch';
 
@@ -480,5 +482,48 @@ describe('Localization page', () => {
     expect(rows().length).toBe(0);
     expect(fetchMock.mock.calls.some(([, init]) => init?.method === 'PUT')).toBe(false);
     expect(fetchMock.mock.calls.some(([u]) => String(u).includes('/download'))).toBe(false);
+  });
+});
+
+describe('accessibility', () => {
+  it('has no WCAG A/AA violations', async () => {
+    open();
+    await loaded();
+    await dropdownsSettled();
+    expect(await pageViolations()).toEqual([]);
+  });
+
+  it('has no WCAG A/AA violations with the revisions shown', async () => {
+    open(
+      routesWith({
+        method: 'GET',
+        match: /\/settings\/localization\/names\/[^/]+\/revisions/,
+        json: [{ name: '4242', date: '2026-07-01 10:00' }],
+      }),
+    );
+    await loaded();
+    await clickButton('Revisions');
+    await vi.waitFor(() => expect(document.querySelector('.revisions-table tbody button')).not.toBeNull());
+    await dropdownsSettled();
+    expect(await pageViolations()).toEqual([]);
+  });
+
+  it('has no WCAG A/AA violations with a confirmation open', async () => {
+    open();
+    await loaded();
+    await clickButton('Default');
+    await vi.waitFor(() => expect(document.querySelector('.rsp-modal')).not.toBeNull());
+    await dropdownsSettled();
+    expect(await pageViolations()).toEqual([]);
+  });
+
+  it('has no WCAG A/AA violations with an error shown', async () => {
+    open(routesWith({ method: 'GET', match: /\/settings\/localization\/default-content/, json: {}, status: 500 }));
+    await loaded();
+    await clickButton('Default');
+    await answerDialog('OK');
+    await vi.waitFor(() => expect(document.querySelector('.notifications .alert-error')).not.toBeNull());
+    await dropdownsSettled();
+    expect(await pageViolations()).toEqual([]);
   });
 });

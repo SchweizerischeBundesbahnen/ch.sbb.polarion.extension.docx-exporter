@@ -1,3 +1,4 @@
+import { pageViolations } from '@sbb-polarion/react-sbb-polarion/testing';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, render } from 'vitest-browser-react';
 import { userEvent } from 'vitest/browser';
@@ -273,5 +274,35 @@ describe('Filename template page', () => {
     await clickButton('Save');
 
     await vi.waitFor(() => expect(document.body.textContent).toContain('read-only scope'));
+  });
+});
+
+describe('accessibility', () => {
+  const REVISIONS: Route = {
+    method: 'GET',
+    match: /\/settings\/filename-template\/names\/[^/]+\/revisions/,
+    json: [{ name: '1234', date: '2024-06-13', baseline: null }],
+  };
+
+  it('has no WCAG A/AA violations', async () => {
+    open();
+    await vi.waitFor(() => expect(editor().value).toBe(STORED));
+    expect(await pageViolations()).toEqual([]);
+  });
+
+  it('has no WCAG A/AA violations with the revisions shown', async () => {
+    open(routes([REVISIONS]));
+    await vi.waitFor(() => expect(editor().value).toBe(STORED));
+    await clickButton('Revisions');
+    await vi.waitFor(() => expect(document.querySelector('.revisions-table tbody button')).not.toBeNull());
+    expect(await pageViolations()).toEqual([]);
+  });
+
+  it('has no WCAG A/AA violations with a confirmation open', async () => {
+    open();
+    await vi.waitFor(() => expect(editor().value).toBe(STORED));
+    await clickButton('Default');
+    await vi.waitFor(() => expect(document.querySelector('.rsp-modal')).not.toBeNull());
+    expect(await pageViolations()).toEqual([]);
   });
 });

@@ -1,6 +1,8 @@
+import { pageViolations } from '@sbb-polarion/react-sbb-polarion/testing';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, render } from 'vitest-browser-react';
 import SidePanelPreview from '../src/pages/SidePanelPreview';
+import { dropdownsSettled } from './a11yHelpers';
 import { installFetchMock, jsonResponse } from './mockFetch';
 import type { Route } from './mockFetch';
 
@@ -177,5 +179,49 @@ describe('the side panel development harness', () => {
     ]);
 
     await vi.waitFor(() => expect(text()).toContain('the list was cut off there'));
+  });
+});
+
+describe('accessibility', () => {
+  it('has no WCAG A/AA violations before a project is picked', async () => {
+    open('');
+    await vi.waitFor(() => expect(text()).toContain('Pick a project on the'));
+    expect(await pageViolations()).toEqual([]);
+  });
+
+  it('has no WCAG A/AA violations with the panel mounted', async () => {
+    open();
+    await documentsLoaded();
+    pick('Default Space/Cross Link Issue');
+    const host = await vi.waitFor(() => {
+      const found = document.querySelector<HTMLElement>('#side-panel-preview-host');
+      expect(found?.shadowRoot?.querySelector('#filename')).toBeTruthy();
+      return found!;
+    });
+    await dropdownsSettled();
+    await dropdownsSettled(host.shadowRoot!);
+    expect(await pageViolations()).toEqual([]);
+  });
+
+  it('has no WCAG A/AA violations with the document list cut off', async () => {
+    open('project/elibrary/', [
+      {
+        method: 'GET',
+        match: /\/documents|\/next/,
+        respond: () =>
+          jsonResponse({ data: DOCUMENTS, links: { next: 'http://polarion.example/polarion/rest/v1/next' } }),
+      },
+      ...panelRoutes(),
+    ]);
+    await vi.waitFor(() => expect(text()).toContain('the list was cut off there'));
+    await dropdownsSettled();
+    expect(await pageViolations()).toEqual([]);
+  });
+
+  it('has no WCAG A/AA violations when the document list cannot be read', async () => {
+    open('project/elibrary/', [{ method: 'GET', match: /\/documents/, status: 401 }, ...panelRoutes()]);
+    await vi.waitFor(() => expect(text()).toContain('Could not load the documents'));
+    await dropdownsSettled();
+    expect(await pageViolations()).toEqual([]);
   });
 });
