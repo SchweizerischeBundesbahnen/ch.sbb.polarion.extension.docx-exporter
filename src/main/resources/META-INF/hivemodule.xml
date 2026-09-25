@@ -38,11 +38,14 @@
                   projectGroupScope="false"
                   repositoryScope="true"/>
 
-        <extender id="user-guide"
-                  name="User Guide"
+        <!-- Single entry point to the documentation site (Quick Start, User Guide, Configuration,
+             Limitations, Upgrade). It opens at Quick Start; the sidebar, search and cross-document links
+             reach every other article without a menu entry of its own. -->
+        <extender id="documentation"
+                  name="Documentation"
                   parentNodeId="docx-export"
                   iconUrl="/polarion/docx-exporter-app/ui/images/menu/16x16/user_guide.svg"
-                  pageUrl="/polarion/docx-exporter-app/ui/app/index.html?feature=user-guide&amp;embedded=true&amp;scope=$scope$"
+                  pageUrl="/polarion/docx-exporter-app/ui/app/index.html?feature=quick-start&amp;embedded=true&amp;scope=$scope$"
                   projectScope="true"
                   projectGroupScope="false"
                   repositoryScope="true"/>

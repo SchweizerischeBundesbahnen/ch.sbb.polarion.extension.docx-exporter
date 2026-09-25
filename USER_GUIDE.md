@@ -1,6 +1,11 @@
+# User Guide
+
+## Table of contents
+
 * [Export panel layout](#export-panel-layout)
 * [Style packages](#style-packages)
 * [Options](#options)
+    * [Template](#template)
     * [Localization](#localization)
     * [Webhooks](#webhooks)
     * [Custom page orientation](#custom-page-orientation)

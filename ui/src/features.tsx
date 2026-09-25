@@ -1,4 +1,5 @@
-import type { ComponentType } from 'react';
+import { DocPage, type Feature as RoutedFeature, findFeature as findIn } from '@sbb-polarion/react-sbb-polarion';
+import { DOC_ORDER } from './docs/manifest';
 import About from './pages/About';
 import Authorization from './pages/Authorization';
 import Disclaimer from './pages/Disclaimer';
@@ -9,7 +10,6 @@ import SidePanelPreview from './pages/SidePanelPreview';
 import StylePackageWeights from './pages/StylePackageWeights';
 import StylePackages from './pages/StylePackages';
 import Templates from './pages/Templates';
-import UserGuide from './pages/UserGuide';
 import Webhooks from './pages/Webhooks';
 
 /**
@@ -20,13 +20,30 @@ import Webhooks from './pages/Webhooks';
  * Every administration entry of the extension is served from here; the legacy `docx-exporter-admin`
  * webapp no longer exists. The one menu entry with no feature of its own is REST API, which opens the
  * generated Swagger UI.
+ *
+ * Extends RSP's routed `Feature` (`id` + `component`, all FeatureRouter needs) with what the Landing page lists.
  */
-export interface Feature {
-  id: string;
+export interface Feature extends RoutedFeature {
   label: string;
   description: string;
-  component: ComponentType;
 }
+
+// The documentation-site articles, derived from the shared manifest (docs.config.json) rather than listed by
+// hand: each renders through the single DocPage bound to its manifest entry, in the manifest's reading order.
+// Adding an article is a docs.config.json item (plus its markdown and the pom render) - nothing here changes.
+// They carry no hivemodule.xml menu entry of their own: they are reached from the single `documentation` node
+// and the articles' cross-document links (rewritten to ?feature=<id> by the interceptor in App.tsx); the ids
+// equal the generated html basenames those links point at.
+const DOC_FEATURES: Feature[] = DOC_ORDER.map((doc) => {
+  const Component = () => <DocPage doc={doc} />;
+  Component.displayName = `DocPage(${doc.id})`;
+  return {
+    id: doc.id,
+    label: doc.title,
+    description: `${doc.title}, generated from ${doc.source}.`,
+    component: Component,
+  };
+});
 
 export const FEATURES: Feature[] = [
   {
@@ -41,12 +58,8 @@ export const FEATURES: Feature[] = [
     description: 'The terms this extension is provided under.',
     component: Disclaimer,
   },
-  {
-    id: 'user-guide',
-    label: 'User Guide',
-    description: 'How to use the extension, generated from USER_GUIDE.md.',
-    component: UserGuide,
-  },
+  // The documentation site, in manifest reading order (Quick Start, User Guide, Configuration, ...).
+  ...DOC_FEATURES,
   {
     id: 'filename',
     label: 'Filename template',
@@ -107,5 +120,5 @@ export const FEATURES: Feature[] = [
 ];
 
 export function findFeature(id: string | null): Feature | undefined {
-  return FEATURES.find((f) => f.id === id);
+  return findIn(FEATURES, id);
 }

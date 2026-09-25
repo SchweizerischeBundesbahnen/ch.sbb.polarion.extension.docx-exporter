@@ -12,33 +12,33 @@ import java.util.List;
 @Discoverable
 public class DocxExporterExtensionConfiguration extends ExtensionConfiguration {
 
-    public static final String DEBUG_DESCRIPTION = "Enable <a href='#debug-option'>debug mode</a>";
+    public static final String DEBUG_DESCRIPTION = "Enable <a href='configuration.html#debug-option'>debug mode</a>";
 
     public static final String PANDOC_SERVICE = "pandoc.service";
     public static final String PANDOC_SERVICE_DEFAULT_VALUE = "http://localhost:9082";
 
     public static final String PANDOC_API_KEY_SECRET = "pandoc.apiKeySecret";
-    public static final String PANDOC_API_KEY_SECRET_DESCRIPTION = "Name of the Polarion secret holding the <a href='#pandoc-api-key'>API key of the pandoc service</a>";
+    public static final String PANDOC_API_KEY_SECRET_DESCRIPTION = "Name of the Polarion secret holding the <a href='configuration.html#pandoc-api-key'>API key of the pandoc service</a>";
     public static final String PANDOC_API_KEY_SECRET_DEFAULT_VALUE = "";
 
     public static final String WEBHOOKS_ENABLED = "webhooks.enabled";
-    public static final String WEBHOOKS_ENABLED_DESCRIPTION = "Enable <a href='#enabling-webhooks'>webhooks</a>";
+    public static final String WEBHOOKS_ENABLED_DESCRIPTION = "Enable <a href='configuration.html#enabling-webhooks'>webhooks</a>";
     public static final Boolean WEBHOOKS_ENABLED_DEFAULT_VALUE = false;
 
     public static final String TEMPLATE_MAX_SIZE_MB = "templateMaxSizeMB";
-    public static final String TEMPLATE_MAX_SIZE_MB_DESCRIPTION = "Size in MB an uploaded <a href='#reference-template-size-limit'>reference template</a> may reach";
+    public static final String TEMPLATE_MAX_SIZE_MB_DESCRIPTION = "Size in MB an uploaded <a href='configuration.html#reference-template-size-limit'>reference template</a> may reach";
     public static final int TEMPLATE_MAX_SIZE_MB_DEFAULT_VALUE = 16;
 
     public static final String EXTERNAL_RESOURCES_POLICY = "externalResources.policy";
-    public static final String EXTERNAL_RESOURCES_POLICY_DESCRIPTION = "BLOCK_INTERNAL, ALLOWLIST_ONLY or ALLOW_ALL: where a document may load <a href='#external-resources'>images, fonts and stylesheets</a> from";
+    public static final String EXTERNAL_RESOURCES_POLICY_DESCRIPTION = "BLOCK_INTERNAL, ALLOWLIST_ONLY or ALLOW_ALL: where a document may load <a href='configuration.html#external-resources'>images, fonts and stylesheets</a> from";
     public static final String EXTERNAL_RESOURCES_POLICY_DEFAULT_VALUE = "BLOCK_INTERNAL";
 
     public static final String EXTERNAL_RESOURCES_ALLOWED_ORIGINS = "externalResources.allowedOrigins";
-    public static final String EXTERNAL_RESOURCES_ALLOWED_ORIGINS_DESCRIPTION = "Comma separated origins, [scheme://]host[:port], which are always allowed as a source of <a href='#external-resources'>external resources</a>";
+    public static final String EXTERNAL_RESOURCES_ALLOWED_ORIGINS_DESCRIPTION = "Comma separated origins, [scheme://]host[:port], which are always allowed as a source of <a href='configuration.html#external-resources'>external resources</a>";
     public static final String EXTERNAL_RESOURCES_ALLOWED_ORIGINS_DEFAULT_VALUE = "";
 
     public static final String EXTERNAL_RESOURCES_MAX_SIZE_MB = "externalResources.maxSizeMB";
-    public static final String EXTERNAL_RESOURCES_MAX_SIZE_MB_DESCRIPTION = "Size in MB a single loaded <a href='#external-resources'>external resource</a> may reach";
+    public static final String EXTERNAL_RESOURCES_MAX_SIZE_MB_DESCRIPTION = "Size in MB a single loaded <a href='configuration.html#external-resources'>external resource</a> may reach";
     public static final int EXTERNAL_RESOURCES_MAX_SIZE_MB_DEFAULT_VALUE = 16;
 
     @Override
