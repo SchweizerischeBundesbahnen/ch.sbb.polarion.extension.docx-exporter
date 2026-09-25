@@ -1,13 +1,16 @@
+import { pageViolations } from '@sbb-polarion/react-sbb-polarion/testing';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, render } from 'vitest-browser-react';
 import { userEvent } from 'vitest/browser';
 import App from '../src/App';
+import { DOC_ORDER } from '../src/docs/manifest';
+import searchIndex from '../src/docs/search-index.json';
 import { installFetchMock } from './mockFetch';
 
-// The two pages this app wires from shared components: the User Guide (RSP `UserGuide` over generic's
-// /user-guide endpoint) and Authorization (RSP `AuthorizationSettings` over this extension's
-// `authorization` setting). What is worth asserting here is the wiring - which endpoints are called
-// and with which setting name - since the components themselves are covered in the library.
+// The pages this app wires from shared components: the documentation-site articles (RSP `DocPage` over the
+// `html/<id>.html` files the Maven build renders) and Authorization (RSP `AuthorizationSettings` over this
+// extension's `authorization` setting). What is worth asserting here is the wiring - which endpoints are
+// called and with which setting name - since the components themselves are covered in the library.
 
 const origUrl = window.location.pathname + window.location.search;
 
@@ -126,5 +129,59 @@ describe('Authorization page', () => {
     render(<App />);
 
     await vi.waitFor(() => expect(document.querySelector('.alert-error, .alert')).not.toBeNull());
+  });
+});
+
+describe('accessibility', () => {
+  const openArticle = (id: string, respond: () => Response) => {
+    installFetchMock([{ method: 'GET', match: new RegExp(`/html/${id}\\.html$`), respond }]);
+    window.history.replaceState({}, '', `?feature=${id}&embedded=true`);
+    render(<App />);
+  };
+
+  // One synthetic article for every page, with the markup the docs frame rewrites (in-page and cross-article
+  // links). These cases check the frame around an article, not the generated content of each article.
+  const ARTICLE =
+    '<h1>Article</h1><p><a href="#setup">Setup</a></p><h2 id="setup">Setup</h2>' +
+    '<p>See <a href="configuration.html">Configuration</a>.</p>' +
+    '<table><thead><tr><th>Key</th><th>Value</th></tr></thead><tbody><tr><td>a</td><td>b</td></tr></tbody></table>' +
+    '<pre><code>mvn install</code></pre>';
+
+  it.each(DOC_ORDER.map((doc) => doc.id))('has no WCAG A/AA violations in the %s page frame', async (id) => {
+    openArticle(id, () => new Response(ARTICLE, { status: 200 }));
+    await vi.waitFor(() => expect(document.querySelector('article.markdown-body h2')).not.toBeNull());
+    expect(await pageViolations()).toEqual([]);
+  });
+
+  // The index is built from the articles Maven renders, so without them there is no search box to scan.
+  it.skipIf(searchIndex.length === 0)('has no WCAG A/AA violations with search results open', async () => {
+    openArticle('user-guide', () => new Response(ARTICLE, { status: 200 }));
+    await vi.waitFor(() => expect(document.querySelector('article.markdown-body h2')).not.toBeNull());
+    await userEvent.fill(document.querySelector<HTMLInputElement>('.docs-search-input')!, 'Pandoc');
+    await vi.waitFor(() => expect(document.querySelector('.docs-search-result')).not.toBeNull());
+    expect(await pageViolations()).toEqual([]);
+  });
+
+  // A failed request shows the same fallback, so one case covers both.
+  it('has no WCAG A/AA violations on an article that was not generated', async () => {
+    openArticle('user-guide', () => new Response('', { status: 200 }));
+    await vi.waitFor(() => expect(document.body.textContent).toContain('This article has not been generated'));
+    expect(await pageViolations()).toEqual([]);
+  });
+
+  it('has no WCAG A/AA violations on the Authorization page', async () => {
+    installFetchMock(authorizationRoutes(['admin', 'developer'], ['project_admin'], ['admin']));
+    window.history.replaceState({}, '', '?feature=authorization&embedded=true&scope=project/elibrary/');
+    render(<App />);
+    await vi.waitFor(() => expect(document.querySelectorAll('.roles-group .sd-trigger-multi')).toHaveLength(2));
+    expect(await pageViolations()).toEqual([]);
+  });
+
+  it('has no WCAG A/AA violations on the Authorization page with its error shown', async () => {
+    installFetchMock([{ method: 'GET', match: /\/roles\?/, json: { message: 'no such scope' }, status: 400 }]);
+    window.history.replaceState({}, '', '?feature=authorization&embedded=true');
+    render(<App />);
+    await vi.waitFor(() => expect(document.querySelector('.alert-error, .alert')).not.toBeNull());
+    expect(await pageViolations()).toEqual([]);
   });
 });

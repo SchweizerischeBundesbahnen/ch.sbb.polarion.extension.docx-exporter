@@ -1,3 +1,4 @@
+import { pageViolations } from '@sbb-polarion/react-sbb-polarion/testing';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, render } from 'vitest-browser-react';
 import Disclaimer from '../src/pages/Disclaimer';
@@ -69,5 +70,28 @@ describe('Disclaimer', () => {
       expect(document.querySelector('.alert.alert-error')?.textContent).toContain('Failed to load the disclaimer'),
     );
     expect(document.body.textContent).not.toContain('No disclaimer has been generated');
+  });
+});
+
+describe('accessibility', () => {
+  it('has no WCAG A/AA violations with the article shown', async () => {
+    installFetchMock([article('<h1>Usage Disclaimer</h1><p>Provided as is.</p>')]);
+    render(<Disclaimer />);
+    await vi.waitFor(() => expect(document.querySelector('article.markdown-body')).not.toBeNull());
+    expect(await pageViolations()).toEqual([]);
+  });
+
+  it('has no WCAG A/AA violations when the extension ships no disclaimer', async () => {
+    installFetchMock([article('')]);
+    render(<Disclaimer />);
+    await vi.waitFor(() => expect(document.body.textContent).toContain('No disclaimer has been generated'));
+    expect(await pageViolations()).toEqual([]);
+  });
+
+  it('has no WCAG A/AA violations with its error shown', async () => {
+    installFetchMock([article('<p>ignored</p>', 500)]);
+    render(<Disclaimer />);
+    await vi.waitFor(() => expect(document.querySelector('.alert.alert-error')).not.toBeNull());
+    expect(await pageViolations()).toEqual([]);
   });
 });

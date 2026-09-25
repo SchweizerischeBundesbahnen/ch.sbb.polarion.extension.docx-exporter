@@ -1,9 +1,11 @@
+import { pageViolations } from '@sbb-polarion/react-sbb-polarion/testing';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, render } from 'vitest-browser-react';
 import { userEvent } from 'vitest/browser';
 import ExportPopupModal from '../src/popup/ExportPopupModal';
 import type { ExportPopupDependencies } from '../src/popup/ExportPopupModal';
 import type { DocumentIdentity } from '../src/services/exportContext';
+import { dropdownsSettled } from './a11yHelpers';
 import { SAMPLE_DOCUMENT, SAMPLE_POPUP_DATA, docxResult, popupDependencies } from './exportPopupSamples';
 import { SAMPLE_STYLE_PACKAGE_FULL, SAMPLE_STYLE_PACKAGE_HIDDEN } from './sidePanelSamples';
 import { clearToasts, toastText, toasted } from './toasts';
@@ -502,5 +504,47 @@ describe('what the dialog says when it cannot load', () => {
     await vi.waitFor(() =>
       expect(text('#popup-load-error')).toBe('Error occurred loading style package data: HTTP 500'),
     );
+  });
+});
+
+describe('accessibility', () => {
+  it.each([
+    ['a package that exposes its settings', popupDependencies()],
+    [
+      'every optional setting on',
+      popupDependencies({ stylePackage: SAMPLE_STYLE_PACKAGE_FULL, data: { webhooksEnabled: true } }),
+    ],
+    ['a package that exposes none', popupDependencies({ stylePackage: SAMPLE_STYLE_PACKAGE_HIDDEN })],
+  ])('has no WCAG A/AA violations with %s', async (_state, deps) => {
+    open({ deps });
+    await settled();
+    await dropdownsSettled();
+    expect(await pageViolations()).toEqual([]);
+  });
+
+  it('has no WCAG A/AA violations with a load error shown', async () => {
+    open({ deps: { ...popupDependencies(), loadPackage: () => Promise.reject(new Error('HTTP 500')) } });
+    await vi.waitFor(() => expect(text('#popup-load-error')).toContain('HTTP 500'));
+    await dropdownsSettled();
+    expect(await pageViolations()).toEqual([]);
+  });
+
+  it('has no WCAG A/AA violations while an export runs', async () => {
+    open();
+    await settled();
+    await dropdownsSettled();
+    await userEvent.click(exportButton());
+    await vi.waitFor(() => expect(field('.in-progress-overlay.show')).not.toBeNull());
+    expect(await pageViolations()).toEqual([]);
+  });
+
+  it('has no WCAG A/AA violations with a refused field marked', async () => {
+    open({ deps: popupDependencies({ stylePackage: SAMPLE_STYLE_PACKAGE_FULL }) });
+    await settledWithSettings();
+    await dropdownsSettled();
+    await userEvent.fill(field<HTMLInputElement>('#popup-chapters')!, 'one, two');
+    await userEvent.click(exportButton());
+    await toasted('error');
+    expect(await pageViolations()).toEqual([]);
   });
 });

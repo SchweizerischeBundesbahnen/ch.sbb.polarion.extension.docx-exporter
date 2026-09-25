@@ -1,7 +1,9 @@
+import { pageViolations } from '@sbb-polarion/react-sbb-polarion/testing';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, render } from 'vitest-browser-react';
 import { userEvent } from 'vitest/browser';
 import App from '../src/App';
+import { dropdownsSettled } from './a11yHelpers';
 import { installFetchMock } from './mockFetch';
 import type { Route } from './mockFetch';
 
@@ -303,5 +305,50 @@ describe('Webhooks page', () => {
 
     expect(rows().length).toBe(0);
     expect(fetchMock.mock.calls.some(([, init]) => init?.method === 'PUT')).toBe(false);
+  });
+});
+
+describe('accessibility', () => {
+  it('has no WCAG A/AA violations', async () => {
+    open();
+    await loaded();
+    await dropdownsSettled();
+    expect(await pageViolations()).toEqual([]);
+  });
+
+  it('has no WCAG A/AA violations with the revisions shown', async () => {
+    open(
+      routesWith({
+        method: 'GET',
+        match: /\/settings\/webhooks\/names\/[^/]+\/revisions/,
+        json: [{ name: '4242', date: '2026-07-01 10:00' }],
+      }),
+    );
+    await loaded();
+    await clickButton('Revisions');
+    await vi.waitFor(() => expect(document.querySelector('.revisions-table tbody button')).not.toBeNull());
+    await dropdownsSettled();
+    expect(await pageViolations()).toEqual([]);
+  });
+
+  it('has no WCAG A/AA violations with a confirmation open', async () => {
+    open();
+    await loaded();
+    await clickButton('Default');
+    await vi.waitFor(() => expect(document.querySelector('.rsp-modal')).not.toBeNull());
+    await dropdownsSettled();
+    expect(await pageViolations()).toEqual([]);
+  });
+
+  it('has no WCAG A/AA violations when webhooks are switched off', async () => {
+    open(routesWith({ method: 'GET', match: /\/webhooks\/status/, json: { enabled: false } }));
+    await vi.waitFor(() => expect(document.querySelector('.webhooks-disabled')).not.toBeNull());
+    expect(await pageViolations()).toEqual([]);
+  });
+
+  it('has no WCAG A/AA violations with an error shown', async () => {
+    open(routesWith({ method: 'GET', match: /\/webhooks\/status/, json: {}, status: 500 }));
+    await vi.waitFor(() => expect(document.querySelector('.notifications .alert-error')).not.toBeNull());
+    expect(await pageViolations()).toEqual([]);
   });
 });

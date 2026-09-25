@@ -1,7 +1,9 @@
 import type { Root } from 'react-dom/client';
+import { a11yViolations } from '@sbb-polarion/react-sbb-polarion/testing';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { page, userEvent } from 'vitest/browser';
 import { openExportPopup } from '../src/popup/mount';
+import { dropdownsSettled } from './a11yHelpers';
 import { popupRoutes } from './exportPopupSamples';
 import { installFetchMock } from './mockFetch';
 import { SAMPLE_STYLE_PACKAGE_FULL } from './sidePanelSamples';
@@ -309,5 +311,14 @@ describe('mounting the export dialog', () => {
     expect([...document.querySelectorAll('body > div')].filter((element) => element.shadowRoot)).toHaveLength(1);
     // The first root was already unmounted by the second open() call
     roots.splice(roots.indexOf(firstRoot), 1);
+  });
+});
+
+describe('accessibility', () => {
+  it('has no WCAG A/AA violations inside the shadow root', async () => {
+    open({ location: location() });
+    await loaded();
+    await dropdownsSettled(shadow()!);
+    expect(await a11yViolations(shadow()!.host)).toEqual([]);
   });
 });

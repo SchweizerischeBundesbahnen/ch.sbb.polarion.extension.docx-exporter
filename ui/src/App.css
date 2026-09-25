@@ -421,6 +421,10 @@
 
 /* Clicking the document icon downloads what is attached. */
 .docx-panel .docx-download {
+  display: flex;
+  padding: 0;
+  border: none;
+  background: none;
   cursor: pointer;
 }
 

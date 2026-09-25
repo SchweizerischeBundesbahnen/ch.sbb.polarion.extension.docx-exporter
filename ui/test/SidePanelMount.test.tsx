@@ -1,5 +1,7 @@
+import { a11yViolations } from '@sbb-polarion/react-sbb-polarion/testing';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { mountSidePanel } from '../src/sidepanel/mount';
+import { dropdownsSettled } from './a11yHelpers';
 import { sampleDependencies } from './sidePanelSamples';
 
 // How the panel gets into the document editor: DocxExporterFormExtension emits a fragment whose <link>
@@ -148,5 +150,15 @@ describe('mounting the side panel', () => {
     expect(error).toHaveBeenCalledWith(expect.stringContaining('#no-such-panel'));
 
     error.mockRestore();
+  });
+});
+
+describe('accessibility', () => {
+  it('has no WCAG A/AA violations inside the shadow root', async () => {
+    const element = host();
+    mounted(element);
+    await loaded(element);
+    await dropdownsSettled(element.shadowRoot!);
+    expect(await a11yViolations(element)).toEqual([]);
   });
 });

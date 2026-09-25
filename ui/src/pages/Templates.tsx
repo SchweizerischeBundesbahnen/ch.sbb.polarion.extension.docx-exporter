@@ -193,21 +193,14 @@ export default function Templates() {
 
         {template ? (
           <div className="docx-panel">
-            <img
+            <button
+              type="button"
               className="docx-download"
-              src={wordDocBlue}
-              alt="Download the attached template"
               title="Download the attached template"
-              role="button"
-              tabIndex={0}
               onClick={handleDownload}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' || e.key === ' ') {
-                  e.preventDefault();
-                  handleDownload();
-                }
-              }}
-            />
+            >
+              <img src={wordDocBlue} alt="Download the attached template" />
+            </button>
             <span className="file-info">File size: {formatFileSize(template.length)}</span>
             <button type="button" className="toolbar-button" title="Delete template" onClick={handleDelete}>
               <span className="button-image sbb-icon-cancel" role="img" aria-label="Cancel" />

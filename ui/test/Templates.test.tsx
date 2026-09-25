@@ -1,7 +1,9 @@
+import { pageViolations } from '@sbb-polarion/react-sbb-polarion/testing';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, render } from 'vitest-browser-react';
 import { userEvent } from 'vitest/browser';
 import App from '../src/App';
+import { dropdownsSettled } from './a11yHelpers';
 import { installFetchMock, jsonResponse } from './mockFetch';
 import type { Route } from './mockFetch';
 
@@ -341,5 +343,51 @@ describe('Templates page', () => {
     );
 
     await vi.waitFor(() => expect(document.querySelector('.alert-error')).not.toBeNull());
+  });
+});
+
+describe('accessibility', () => {
+  it('has no WCAG A/AA violations with a template attached', async () => {
+    open();
+    await loadedWithTemplate();
+    await dropdownsSettled();
+    expect(await pageViolations()).toEqual([]);
+  });
+
+  it('has no WCAG A/AA violations offering the picker', async () => {
+    open(
+      routesWith({ method: 'GET', match: /\/settings\/templates\/names\/[^/]+\/content/, json: { template: null } }),
+    );
+    await vi.waitFor(() => expect(panel().textContent).toContain('No file provided'));
+    await dropdownsSettled();
+    expect(await pageViolations()).toEqual([]);
+  });
+
+  it('has no WCAG A/AA violations with the revisions shown', async () => {
+    open(
+      routesWith({
+        method: 'GET',
+        match: /\/settings\/templates\/names\/[^/]+\/revisions/,
+        json: [{ name: '1234', date: '2024-06-13', baseline: null }],
+      }),
+    );
+    await loadedWithTemplate();
+    await clickButton('Revisions');
+    await revertButton();
+    await dropdownsSettled();
+    expect(await pageViolations()).toEqual([]);
+  });
+
+  it('has no WCAG A/AA violations with a load error shown', async () => {
+    open(
+      routesWith({
+        method: 'GET',
+        match: /\/settings\/templates\/names\/[^/]+\/content/,
+        respond: () => jsonResponse({ errorMessage: 'boom' }, 500),
+      }),
+    );
+    await vi.waitFor(() => expect(document.querySelector('.alert-error')).not.toBeNull());
+    await dropdownsSettled();
+    expect(await pageViolations()).toEqual([]);
   });
 });
