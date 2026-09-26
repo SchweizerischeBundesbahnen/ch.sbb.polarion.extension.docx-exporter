@@ -1,5 +1,52 @@
 # Changelog
 
+## [5.6.0](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/compare/v5.5.0...v5.6.0) (2026-09-26)
+
+
+### Features
+
+* documentation site over the shared RSP components ([#395](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/issues/395)) ([de1cb73](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/commit/de1cb73e031d3165008d79a290fca51dbb70c7ef)), closes [#394](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/issues/394)
+* improve and share the same layout for export popup and side pane ([#378](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/issues/378)) ([36534d7](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/commit/36534d7f1a029d5b77e608352e02864c0d5714fc))
+* upgrade authorization settings page where roles selection is implemented as dropdowns instead of checkboxes ([#373](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/issues/373)) ([a8cf975](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/commit/a8cf975816cfdbc641d4fb771ae0ebbe980a8386))
+
+
+### Bug Fixes
+
+* bust the side panel cache by the build timestamp ([#393](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/issues/393)) ([84a545a](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/commit/84a545a67af0e2edf6c2a8fddfbc66c57f4d0db6)), closes [#392](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/issues/392)
+* **deps:** pin dependency node-html-parser to 9.0.4 ([b6b9366](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/commit/b6b93661ca446efacfb1dbb6f764c7dc4cbc160f))
+* **deps:** update dependency @types/node to v24.13.4 ([000de23](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/commit/000de23e003f0850c8877cfe9e43b14a13f5cdb2))
+* **deps:** update dependency @types/node to v24.13.5 ([aad24bc](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/commit/aad24bc2e5d230905c6e65df3f1ab59b5b64a117))
+* **deps:** update dependency @types/node to v24.13.6 ([08a3463](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/commit/08a34632be182d438a05f24348666f976dae5d16))
+* **deps:** update dependency @types/react-dom to v19.2.7 ([e26541f](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/commit/e26541f57fc4448486b8f7f0aba55251908ec2aa))
+* **deps:** update dependency ch.sbb.polarion.extensions:ch.sbb.polarion.extension.generic to v16.1.0 ([6a1dbe5](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/commit/6a1dbe5b67f34b983c42cd17ec4db0c91937ac0c))
+* **deps:** update dependency com.fasterxml.jackson.core:jackson-databind to v2.22.3 ([e280af1](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/commit/e280af1ca3dc7b6ed91c4a89c8c2b9464a0e3fd1))
+* **deps:** update dependency eslint to v10.10.0 ([c998880](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/commit/c99888072c2b0b36942c2a8b3a9adc6d67c1aab7))
+* **deps:** update dependency eslint to v10.11.0 ([2b09693](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/commit/2b09693babcd785c55c7eacb2ac76fceacb41510))
+* **deps:** update dependency globals to v17.12.0 ([04ee146](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/commit/04ee146327a155f7666fcd2fbdc654bda5c8182c))
+* **deps:** update dependency jsdom to v30.1.0 ([efa4e39](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/commit/efa4e397e5189f9b15bab7604e26842fbdf867e6))
+* **deps:** update dependency jsdom to v30.1.1 ([1bbd834](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/commit/1bbd834ce05ef1e1e1612c5809825e3fcbd4b70a))
+* **deps:** update dependency playwright to v1.63.0 ([b767db0](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/commit/b767db0b6b25f2c08769453fea6ad1b2808125ab))
+* **deps:** update dependency prettier to v3.9.7 ([40c0f47](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/commit/40c0f47994d613fe6bde7c4aeede480f38fb0230))
+* **deps:** update dependency prettier to v3.9.8 ([ea833eb](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/commit/ea833ebc159e0600427dacce737577eb77be066a))
+* **deps:** update dependency prettier to v3.9.9 ([711e972](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/commit/711e9723ed994e38953bfa08fb782c97fa26d370))
+* **deps:** update dependency typescript-eslint to v8.69.0 ([c206bce](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/commit/c206bced78febbc943456085c8ec47b20778cf7f))
+* **deps:** update dependency typescript-eslint to v8.70.0 ([8ca85e4](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/commit/8ca85e457ae1b6ecdf839e18280c97cd1955b86e))
+* **deps:** update dependency typescript-eslint to v8.70.1 ([0ea22f3](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/commit/0ea22f32c44a85f864b3074c69725f55c4d62167))
+* **deps:** update dependency vite to v8.3.0 ([a1a6756](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/commit/a1a6756b7cdd99c408ecc56ef325aab28532240b))
+* **deps:** update dependency vitest-browser-react to v2.3.0 ([ac7f616](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/commit/ac7f616f9bdccdb9c28bcb3301c11c4c04f96157))
+* **deps:** update docx4j.version to v17.0.4 ([#376](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/issues/376)) ([f9abad5](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/commit/f9abad5a9a4b8293c7640c432fe3d115718365a5))
+* **deps:** update docx4j.version to v17.1.0 ([d3edc47](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/commit/d3edc477427587185891bc381bebb8abe0719ef6))
+* **deps:** update docx4j.version to v17.2.0 ([22c357f](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/commit/22c357f80c9b666a60d948409d30e1583a0cbe9f))
+* **deps:** update npm to v12.1.0 ([e005875](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/commit/e005875e69d5348c67a2b0ade4ba8cbc4dca717e))
+* **deps:** update react monorepo to v19.3.0 ([d69485c](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/commit/d69485cae3ee9e76f29fe2d0dfcfedf4873e3ead))
+* **deps:** update slf4j monorepo to v2.0.19 ([d384722](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/commit/d3847221f9102f1fbf0efd98e351540602d690ae))
+* **deps:** update slf4j monorepo to v2.0.20 ([97fd7e6](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/commit/97fd7e65a61dbc043c3bb1726b21d552a1da924a))
+* **deps:** update vitest monorepo to v5.0.1 ([e2ec6d9](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/commit/e2ec6d98ff874c6ea92a8ea09f19c63869a4bf32))
+* give usage disclaimer its own menu icon ([#386](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/issues/386)) ([48cfd86](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/commit/48cfd867b3f0e6581479cb3328612a0dce3c5298))
+* inline linked WorkItem roles when a link target was deleted ([#390](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/issues/390)) ([0c2960a](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/commit/0c2960aaf0f9fda5414616b79c4b2af7878ccf5b)), closes [#389](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/issues/389)
+* keep the styles when a resource is refused ([#383](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/issues/383)) ([bac3dda](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/commit/bac3dda20b03bfdf318b8a5505799913d131ff01)), closes [#382](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/issues/382)
+* report the refused resources from the html endpoint ([#385](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/issues/385)) ([7863c3e](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/commit/7863c3e425c7829bb2bc8dc1e78e6653e43aadc5)), closes [#384](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/issues/384)
+
 ## [5.5.0](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/compare/v5.4.0...v5.5.0) (2026-08-31)
 
 
