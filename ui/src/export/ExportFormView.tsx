@@ -11,6 +11,7 @@ import {
   ORIENTATIONS,
   PAPER_SIZES,
   REMOVAL_SELECTOR_HELP,
+  REMOVE_HEADING_NUMBERS_HELP,
   UNREFERENCED_COMMENTS_HELP,
 } from '../services/stylePackage';
 import type { ExportForm } from './exportForm';
@@ -266,6 +267,13 @@ export default function ExportFormView({
               label="Cut empty Workitem attributes"
               checked={form.cutEmptyWorkitemAttributes}
               onChange={(checked) => onPatch({ cutEmptyWorkitemAttributes: checked })}
+            />
+            <SwitchRow
+              id={id('remove-heading-numbers')}
+              label="Remove heading numbers"
+              title={REMOVE_HEADING_NUMBERS_HELP}
+              checked={form.removeHeadingNumbers}
+              onChange={(checked) => onPatch({ removeHeadingNumbers: checked })}
             />
             <SwitchRow
               id={id('localization')}

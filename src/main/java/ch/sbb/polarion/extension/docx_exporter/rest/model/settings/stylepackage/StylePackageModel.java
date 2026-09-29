@@ -42,6 +42,7 @@ public class StylePackageModel extends SettingsModel {
     private static final String CUT_EMPTY_CHAPTERS_ENTRY_NAME = "CUT EMPTY CHAPTERS";
     private static final String CUT_EMPTY_WORKITEM_ATTRIBUTES_ENTRY_NAME = "CUT EMPTY WORKITEM ATTRIBUTES";
     private static final String CUT_LOCAL_URLS_ENTRY_NAME= "CUT LOCAL URLS";
+    private static final String REMOVE_HEADING_NUMBERS_ENTRY_NAME = "REMOVE HEADING NUMBERS";
     private static final String SPECIFIC_CHAPTERS_ENTRY_NAME = "SPECIFIC CHAPTERS";
     private static final String CUSTOM_NUMBERED_LIST_STYLES_ENTRY_NAME = "CUSTOM NUMBERED LIST STYLES";
     private static final String LANGUAGE_ENTRY_NAME = "LANGUAGE";
@@ -67,6 +68,7 @@ public class StylePackageModel extends SettingsModel {
     private boolean cutEmptyChapters;
     private boolean cutEmptyWorkitemAttributes;
     private boolean cutLocalURLs;
+    private boolean removeHeadingNumbers;
     private String specificChapters;
     private String language;
     private List<String> linkedWorkitemRoles;
@@ -90,6 +92,7 @@ public class StylePackageModel extends SettingsModel {
                 serializeEntry(CUT_EMPTY_CHAPTERS_ENTRY_NAME, cutEmptyChapters) +
                 serializeEntry(CUT_EMPTY_WORKITEM_ATTRIBUTES_ENTRY_NAME, cutEmptyWorkitemAttributes) +
                 serializeEntry(CUT_LOCAL_URLS_ENTRY_NAME, cutLocalURLs) +
+                serializeEntry(REMOVE_HEADING_NUMBERS_ENTRY_NAME, removeHeadingNumbers) +
                 serializeEntry(SPECIFIC_CHAPTERS_ENTRY_NAME, specificChapters) +
                 serializeEntry(LANGUAGE_ENTRY_NAME, language) +
                 serializeEntry(LINKED_WORKITEM_ROLES_ENTRY_NAME, linkedWorkitemRoles) +
@@ -116,6 +119,7 @@ public class StylePackageModel extends SettingsModel {
         cutEmptyChapters = Boolean.parseBoolean(deserializeEntry(CUT_EMPTY_CHAPTERS_ENTRY_NAME, serializedString));
         cutEmptyWorkitemAttributes = Boolean.parseBoolean(deserializeEntry(CUT_EMPTY_WORKITEM_ATTRIBUTES_ENTRY_NAME, serializedString));
         cutLocalURLs = Boolean.parseBoolean(deserializeEntry(CUT_LOCAL_URLS_ENTRY_NAME, serializedString));
+        removeHeadingNumbers = Boolean.parseBoolean(deserializeEntry(REMOVE_HEADING_NUMBERS_ENTRY_NAME, serializedString));
         specificChapters = deserializeEntry(SPECIFIC_CHAPTERS_ENTRY_NAME, serializedString);
         language = deserializeEntry(LANGUAGE_ENTRY_NAME, serializedString);
         linkedWorkitemRoles = deserializeListEntry(LINKED_WORKITEM_ROLES_ENTRY_NAME, serializedString, String.class);

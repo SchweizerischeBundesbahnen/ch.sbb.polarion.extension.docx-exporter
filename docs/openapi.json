@@ -1834,6 +1834,10 @@
             "description": "CSS-like selector for elements to remove",
             "type": "string"
           },
+          "removeHeadingNumbers": {
+            "description": "Outline numbers of headings should not be exported as text, so that the numbering is left to the heading styles of the template",
+            "type": "boolean"
+          },
           "renderComments": {
             "description": "Which comments should be rendered in the exported document",
             "enum": [

@@ -34,6 +34,7 @@ import {
   ORIENTATIONS,
   PAPER_SIZES,
   REMOVAL_SELECTOR_HELP,
+  REMOVE_HEADING_NUMBERS_HELP,
   type StylePackageSettings,
   UNREFERENCED_COMMENTS_HELP,
   WEIGHT_HELP,
@@ -68,6 +69,7 @@ interface Form {
   cutEmptyChapters: boolean;
   cutEmptyWorkitemAttributes: boolean;
   cutLocalURLs: boolean;
+  removeHeadingNumbers: boolean;
   specificChaptersEnabled: boolean;
   specificChapters: string;
   localizeEnums: boolean;
@@ -99,6 +101,7 @@ const EMPTY_FORM: Form = {
   cutEmptyChapters: false,
   cutEmptyWorkitemAttributes: false,
   cutLocalURLs: false,
+  removeHeadingNumbers: false,
   specificChaptersEnabled: false,
   specificChapters: '',
   localizeEnums: false,
@@ -156,6 +159,7 @@ function toForm(content: StylePackageSettings): Form {
     cutEmptyChapters: !!content.cutEmptyChapters,
     cutEmptyWorkitemAttributes: !!content.cutEmptyWorkitemAttributes,
     cutLocalURLs: !!content.cutLocalURLs,
+    removeHeadingNumbers: !!content.removeHeadingNumbers,
     specificChaptersEnabled: !!content.specificChapters,
     specificChapters: content.specificChapters ?? '',
     localizeEnums: !!content.language,
@@ -324,6 +328,7 @@ export default function StylePackages() {
       cutEmptyChapters: form.cutEmptyChapters,
       cutEmptyWorkitemAttributes: form.cutEmptyWorkitemAttributes,
       cutLocalURLs: form.cutLocalURLs,
+      removeHeadingNumbers: form.removeHeadingNumbers,
       specificChapters: form.specificChaptersEnabled ? form.specificChapters : null,
       language: form.localizeEnums ? form.language : null,
       linkedWorkitemRoles: form.rolesEnabled ? form.linkedWorkitemRoles : null,
@@ -685,6 +690,17 @@ export default function StylePackages() {
                   onChange={(e) => patch({ cutLocalURLs: e.target.checked })}
                 />
                 Cut local Polarion URLs
+              </label>
+            </div>
+            <div className="checkbox input-group">
+              <label htmlFor="remove-heading-numbers" title={REMOVE_HEADING_NUMBERS_HELP}>
+                <input
+                  id="remove-heading-numbers"
+                  type="checkbox"
+                  checked={form.removeHeadingNumbers}
+                  onChange={(e) => patch({ removeHeadingNumbers: e.target.checked })}
+                />
+                Remove heading numbers
               </label>
             </div>
           </div>

@@ -123,6 +123,7 @@ class StylePackageSettingsTest {
             StylePackageModel savedModel = StylePackageModel.builder()
                     .linkedWorkitemRoles(List.of("has parent"))
                     .linkRoleDirection(LinkRoleDirection.DIRECT.toString())
+                    .removeHeadingNumbers(true)
                     .build();
             savedModel.setBundleTimestamp("custom");
             when(mockedSettingsService.read(eq(mockProjectLocation), any())).thenReturn(savedModel.serialize());
@@ -133,6 +134,7 @@ class StylePackageSettingsTest {
             StylePackageModel loadedModel = stylePackageSettings.load(projectName, SettingId.fromName("Any setting name"));
             assertEquals(LinkRoleDirection.DIRECT.toString(), loadedModel.getLinkRoleDirection());
             assertEquals(List.of("has parent"), loadedModel.getLinkedWorkitemRoles());
+            assertTrue(loadedModel.isRemoveHeadingNumbers());
         }
     }
 

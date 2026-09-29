@@ -287,6 +287,7 @@ describe('exporting', () => {
       'popup-cut-empty-chapters',
       'popup-cut-empty-wi-attributes',
       'popup-cut-urls',
+      'popup-remove-heading-numbers',
       'popup-specific-chapters',
       'popup-localization',
       'popup-selected-roles',
@@ -332,6 +333,7 @@ describe('exporting', () => {
     // The package had this one on, so a click turns it off
     expect(sent.cutEmptyWIAttributes).toBe(false);
     expect(sent.cutLocalUrls).toBe(true);
+    expect(sent.removeHeadingNumbers).toBe(true);
     expect(sent.chapters).toEqual(['3']);
     expect(sent.language).toBe('it');
     expect(sent.linkedWorkitemRoles).toEqual(['relates_to', 'verifies']);
