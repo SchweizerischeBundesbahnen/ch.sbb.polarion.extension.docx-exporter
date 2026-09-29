@@ -242,36 +242,32 @@ class HtmlProcessorTest {
         assertEquals(expected, document.body().html());
     }
 
+    private static final String NUMBER_START = "<span id=\"polarion_editor_fields_container_start\"><span id=\"polarion_editor_field=outlineNumber\">";
+    private static final String NUMBER_END = "</span> </span>";
+
     private static Stream<Arguments> headingNumbers() {
         return Stream.of(
-                // the markup of an export
-                Arguments.of("<h2 id=\"ch1\"><span><span>1.2</span> </span>Chapter</h2>", "<h2 id=\"ch1\">Chapter</h2>"),
-                Arguments.of("<h1><span><span>3</span></span>Chapter</h1>", "<h1>Chapter</h1>"),
-                Arguments.of("<h6><span><span>1.2.3.4.5.6</span></span>Chapter</h6>", "<h6>Chapter</h6>"),
+                Arguments.of("<h2 id=\"ch1\">" + NUMBER_START + "1.2" + NUMBER_END + "Chapter</h2>", "<h2 id=\"ch1\">Chapter</h2>"),
+                Arguments.of("<h6>" + NUMBER_START + "1.2.3.4.5.6" + NUMBER_END + "Chapter</h6>", "<h6>Chapter</h6>"),
                 // a numbering prefix of the document
-                Arguments.of("<h2><span><span>REQ-1.2</span></span>Chapter</h2>", "<h2>Chapter</h2>"),
+                Arguments.of("<h2>" + NUMBER_START + "REQ-1.2" + NUMBER_END + "Chapter</h2>", "<h2>Chapter</h2>"),
                 // the work item anchor precedes the number
-                Arguments.of("<h2><a id=\"work-item-anchor-elibrary/EL-1\"></a><span><span>1.1</span></span>Chapter</h2>",
+                Arguments.of("<h2><a id=\"work-item-anchor-elibrary/EL-1\"></a>" + NUMBER_START + "1.1" + NUMBER_END + "Chapter</h2>",
                         "<h2><a id=\"work-item-anchor-elibrary/EL-1\"></a>Chapter</h2>"),
-                // the markup of the editor
-                Arguments.of("<h2><a id=\"work-item-anchor-elibrary/EL-187\"></a><span id=\"polarion_editor_fields_container_start\" class=\"polarion-dle-workitem-fields-start\">"
-                                + "<span id=\"polarion_editor_field=outlineNumber\">1.1</span> </span>Purpose</h2>",
-                        "<h2><a id=\"work-item-anchor-elibrary/EL-187\"></a>Purpose</h2>"),
-                // the markup of the editor as an export renders it, with line breaks and indentation
+                // the markup as an export renders it, with line breaks and indentation
                 Arguments.of("<h1 id=\"EL-124\">\n    <a id=\"work-item-anchor-elibrary/EL-124\"></a>\n"
                                 + "    <span class=\"polarion-dle-workitem-fields-start\" contenteditable=\"false\" id=\"polarion_editor_fields_container_start\" onmousedown=\"return false;\">\n"
                                 + "        <span contenteditable=\"false\" id=\"polarion_editor_field=outlineNumber\" onmousedown=\"return false;\">1</span>\n         \n    </span>\n    Introduction\n</h1>",
                         "<h1 id=\"EL-124\">\n    <a id=\"work-item-anchor-elibrary/EL-124\"></a>\n    \n    Introduction\n</h1>"),
-                // not a number
-                Arguments.of("<h2><span><span>Chapter</span></span> one</h2>", "<h2><span><span>Chapter</span></span> one</h2>"),
-                Arguments.of("<h2><span><span>1.2 Chapter</span></span></h2>", "<h2><span><span>1.2 Chapter</span></span></h2>"),
-                // formatted by a user
-                Arguments.of("<h2><span style=\"color: red\"><span>2024</span></span> results</h2>", "<h2><span style=\"color: red\"><span>2024</span></span> results</h2>"),
-                Arguments.of("<h2><span><span style=\"font-weight: bold\">2024</span></span> results</h2>", "<h2><span><span style=\"font-weight: bold\">2024</span></span> results</h2>"),
+                // nested spans which are not marked as the outline number are content of the heading, whatever they contain
+                Arguments.of("<h2><span><span>2024</span></span> results</h2>", "<h2><span><span>2024</span></span> results</h2>"),
+                Arguments.of("<h2><span><span>1.2</span></span>Chapter</h2>", "<h2><span><span>1.2</span></span>Chapter</h2>"),
+                Arguments.of("<h2><span id=\"polarion_editor_fields_container_start\"><span id=\"polarion_editor_field=id\">EL-1</span> - </span>Chapter</h2>",
+                        "<h2><span id=\"polarion_editor_fields_container_start\"><span id=\"polarion_editor_field=id\">EL-1</span> - </span>Chapter</h2>"),
                 // not in front of the heading
-                Arguments.of("<h2>Chapter <span><span>1.2</span></span></h2>", "<h2>Chapter <span><span>1.2</span></span></h2>"),
+                Arguments.of("<h2>Chapter " + NUMBER_START + "1.2" + NUMBER_END + "</h2>", "<h2>Chapter " + NUMBER_START + "1.2" + NUMBER_END + "</h2>"),
                 // not a heading
-                Arguments.of("<p><span><span>1.2</span></span>Text</p>", "<p><span><span>1.2</span></span>Text</p>"),
+                Arguments.of("<p>" + NUMBER_START + "1.2" + NUMBER_END + "Text</p>", "<p>" + NUMBER_START + "1.2" + NUMBER_END + "Text</p>"),
                 // a heading without a number
                 Arguments.of("<h2>Chapter</h2>", "<h2>Chapter</h2>")
         );
@@ -287,7 +283,7 @@ class HtmlProcessorTest {
         exportParams.setRemoveHeadingNumbers(true);
 
         // Polarion's h2 is a first level heading, chapters are selected by their numbers before the numbers are removed
-        String html = "<h2><span><span>1</span></span>First</h2><p>first text</p><h2><span><span>2</span></span>Second</h2><p>second text</p>";
+        String html = "<h2>" + NUMBER_START + "1" + NUMBER_END + "First</h2><p>first text</p><h2>" + NUMBER_START + "2" + NUMBER_END + "Second</h2><p>second text</p>";
         String fixedHtml = processor.processHtmlForExport(html, exportParams, List.of());
 
         assertFalse(fixedHtml.contains("First"));

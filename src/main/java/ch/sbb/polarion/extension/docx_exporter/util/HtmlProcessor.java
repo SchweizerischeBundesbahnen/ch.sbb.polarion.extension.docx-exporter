@@ -38,7 +38,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
-import java.util.regex.Pattern;
 
 import static ch.sbb.polarion.extension.docx_exporter.util.exporter.Constants.*;
 
@@ -68,8 +67,6 @@ public class HtmlProcessor {
     private static final String RIGHT_ALIGNMENT_MARGIN = "auto 0px auto auto";
     private static final String ANCHORS_WITH_HREF_SELECTOR = "a[href]";
     private static final String OUTLINE_NUMBER_FIELD_ID = "polarion_editor_field=outlineNumber";
-    // An outline number is a sequence of dot-separated numbers, optionally preceded by the document's numbering prefix
-    private static final Pattern OUTLINE_NUMBER_PATTERN = Pattern.compile("\\S*\\d+(\\.\\d+)*");
 
     private static final String LOCALHOST = "localhost";
     public static final String HTTP_PROTOCOL_PREFIX = "http://";
@@ -265,7 +262,9 @@ public class HtmlProcessor {
     /**
      * Removes the outline numbers Polarion writes as text in front of each heading of a document with outline numbering on,
      * leaving the numbering of headings to the heading styles of the template. Polarion wraps the number into two spans:
-     * {@code <h2><span><span>1.2</span> </span>Title</h2>}, marked with {@code polarion_editor_field=outlineNumber} in the editor flavour of the markup.
+     * {@code <h2><span id="polarion_editor_fields_container_start"><span id="polarion_editor_field=outlineNumber">1.2</span> </span>Title</h2>}.
+     * Only a span marked as the outline number field is taken for the number: nested spans without this mark are content of the heading,
+     * e.g. {@code <h2><span><span>2024</span></span> results</h2>} in a document without outline numbering.
      */
     @VisibleForTesting
     void removeHeadingNumbers(@NotNull Document document) {
@@ -293,13 +292,11 @@ public class HtmlProcessor {
     }
 
     private boolean isOutlineNumberWrapper(@NotNull Element element) {
-        // Spans styled by a user are formatted content of the heading, never the number Polarion writes
-        if (!element.tagName().equals(SPAN) || element.hasAttr(HtmlTagAttr.STYLE) || element.children().size() != 1 || !element.ownText().isBlank()) {
+        if (!element.tagName().equals(SPAN) || element.children().size() != 1 || !element.ownText().isBlank()) {
             return false;
         }
         Element number = element.child(0);
-        return number.tagName().equals(SPAN) && !number.hasAttr(HtmlTagAttr.STYLE) && number.children().isEmpty()
-                && (number.id().equals(OUTLINE_NUMBER_FIELD_ID) || OUTLINE_NUMBER_PATTERN.matcher(number.text().trim()).matches());
+        return number.tagName().equals(SPAN) && number.id().equals(OUTLINE_NUMBER_FIELD_ID);
     }
 
     @NotNull
