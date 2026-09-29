@@ -1141,7 +1141,25 @@ public class HtmlProcessor {
             Element placeholder = new Element("p");
             placeholder.text("TOC_PLACEHOLDER");
             tocElement.before(placeholder);
+            removeLineBreakAfterTable(tocElement);
             tocElement.remove();
+        }
+    }
+
+    /**
+     * Drops the line break Polarion writes behind the table of contents, which becomes an empty paragraph.
+     * <p>
+     * The tables of figures and of tables carry none, and the editor shows no gap after any of the three, so
+     * the exported document gets none either. Reported in #399.
+     * </p>
+     */
+    private void removeLineBreakAfterTable(@NotNull Element tocElement) {
+        Node next = tocElement.nextSibling();
+        while (next instanceof TextNode textNode && textNode.isBlank()) {
+            next = next.nextSibling();
+        }
+        if (next instanceof Element element && HtmlTag.BR.equals(element.tagName())) {
+            element.remove();
         }
     }
 
