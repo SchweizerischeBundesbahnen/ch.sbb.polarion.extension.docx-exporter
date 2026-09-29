@@ -1439,6 +1439,21 @@ class HtmlProcessorTest {
     }
 
     @Test
+    void tableOfContentDropsTheLineBreakBehindIt() {
+        // Polarion writes a line break behind the table of contents, which becomes an empty paragraph the
+        // editor does not show and which the tables of figures and of tables do not carry; #399.
+        Document document = JSoupUtils.parseHtml("""
+                <pd4ml:toc numlen="4"></pd4ml:toc><br/><p id="after">text<br/>and more</p>""");
+
+        processor.addTableOfContent(document);
+
+        String html = document.body().html();
+        assertTrue(html.contains("TOC_PLACEHOLDER</p><p id=\"after\">"), html);
+        // and a line break which belongs to the content stays
+        assertEquals(1, document.select("p#after br").size(), html);
+    }
+
+    @Test
     @SneakyThrows
     void tableOfTablesTest() {
         try (InputStream isInvalidHtml = this.getClass().getResourceAsStream("/tableOfTablesBeforeProcessing.html");
