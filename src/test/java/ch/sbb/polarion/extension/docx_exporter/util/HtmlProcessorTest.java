@@ -270,6 +270,20 @@ class HtmlProcessorTest {
                                    \s
                                     Introduction
                                 </h1>"""),
+                // a non-breaking space separates the number from the heading's text
+                Arguments.of("<h1><a id=\"a1\"></a><span id=\"polarion_editor_fields_container_start\" class=\"polarion-dle-workitem-fields-start\">"
+                                + "<span id=\"polarion_editor_field=outlineNumber\">1</span>&nbsp; </span> Table of Figures</h1>",
+                        "<h1><a id=\"a1\"></a> Table of Figures</h1>"),
+                // Polarion leaves the outline number mark out on some headings, the fields container marks the number then
+                Arguments.of("<h1><a id=\"a2\"></a><span class=\"polarion-dle-workitem-fields-start\" contenteditable=\"false\">"
+                                + "<span contenteditable=\"false\">2</span>&nbsp; </span> System Components</h1>",
+                        "<h1><a id=\"a2\"></a> System Components</h1>"),
+                Arguments.of("<h2><span class=\"polarion-dle-workitem-fields-start\"><span>REQ-2.1</span>&nbsp;</span>Terms</h2>", "<h2>Terms</h2>"),
+                // the fields container holding something else than a number
+                Arguments.of("<h2><span class=\"polarion-dle-workitem-fields-start\"><span>EL-1</span> - </span>Chapter</h2>",
+                        "<h2><span class=\"polarion-dle-workitem-fields-start\"><span>EL-1</span> - </span>Chapter</h2>"),
+                Arguments.of("<h2><span class=\"polarion-dle-workitem-fields-start\"><span>Draft</span> </span>Chapter</h2>",
+                        "<h2><span class=\"polarion-dle-workitem-fields-start\"><span>Draft</span> </span>Chapter</h2>"),
                 // nested spans which are not marked as the outline number are content of the heading, whatever they contain
                 Arguments.of("<h2><span><span>2024</span></span> results</h2>", "<h2><span><span>2024</span></span> results</h2>"),
                 Arguments.of("<h2><span><span>1.2</span></span>Chapter</h2>", "<h2><span><span>1.2</span></span>Chapter</h2>"),
@@ -282,6 +296,20 @@ class HtmlProcessorTest {
                 // a heading without a number
                 Arguments.of("<h2>Chapter</h2>", "<h2>Chapter</h2>")
         );
+    }
+
+    @Test
+    @SneakyThrows
+    void cutHeadingNumbersOfRenderedDocumentTest() {
+        // A document as Polarion renders it, where only the first heading carries the outline number mark
+        try (InputStream html = this.getClass().getResourceAsStream("/pandoc/html/tableOfFigures.html")) {
+            Document document = JSoupUtils.parseHtml(new String(html.readAllBytes(), StandardCharsets.UTF_8));
+
+            processor.cutHeadingNumbers(document);
+
+            List<String> headings = document.select("h1, h2, h3, h4, h5, h6").eachText();
+            assertEquals(List.of("Table of Figures", "System Components", "Network Topology", "Security Model"), headings);
+        }
     }
 
     @Test
