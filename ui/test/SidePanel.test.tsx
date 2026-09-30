@@ -201,7 +201,7 @@ describe('what the style package puts on screen', () => {
       'cut-empty-chapters',
       'cut-empty-wi-attributes',
       'cut-urls',
-      'remove-heading-numbers',
+      'cut-heading-numbers',
       'specific-chapters',
       'localization',
       'selected-roles',
@@ -223,7 +223,7 @@ describe('what the style package puts on screen', () => {
     // The package had this one on, so a click turns it off
     expect(sent.cutEmptyWIAttributes).toBe(false);
     expect(sent.cutLocalUrls).toBe(true);
-    expect(sent.removeHeadingNumbers).toBe(true);
+    expect(sent.cutHeadingNumbers).toBe(true);
     expect(sent.chapters).toEqual(['3']);
     expect(sent.language).toBe('de');
     expect(sent.removalSelector).toBe('table.unwanted');

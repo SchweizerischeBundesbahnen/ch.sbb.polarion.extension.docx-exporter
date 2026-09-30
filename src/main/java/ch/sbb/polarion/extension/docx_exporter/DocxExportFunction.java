@@ -119,7 +119,7 @@ public class DocxExportFunction implements IFunction<IModule> {
                 .cutEmptyChapters(stylePackage.isCutEmptyChapters())
                 .cutEmptyWIAttributes(stylePackage.isCutEmptyWorkitemAttributes())
                 .cutLocalUrls(stylePackage.isCutLocalURLs())
-                .removeHeadingNumbers(stylePackage.isRemoveHeadingNumbers())
+                .cutHeadingNumbers(stylePackage.isCutHeadingNumbers())
                 .chapters(stylePackage.getSpecificChapters() == null ? null : List.of(stylePackage.getSpecificChapters().split(",")))
                 .language(stylePackage.getLanguage())
                 .linkedWorkitemRoles(stylePackage.getLinkedWorkitemRoles())

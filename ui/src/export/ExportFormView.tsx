@@ -3,6 +3,7 @@ import { SearchableSelect } from '@sbb-polarion/react-sbb-polarion';
 import type { SelectOption } from '@sbb-polarion/react-sbb-polarion';
 import {
   COMMENTS_RENDER_TYPES,
+  CUT_HEADING_NUMBERS_HELP,
   type ChildNames,
   type ChildSetting,
   IMAGE_DENSITIES,
@@ -11,7 +12,6 @@ import {
   ORIENTATIONS,
   PAPER_SIZES,
   REMOVAL_SELECTOR_HELP,
-  REMOVE_HEADING_NUMBERS_HELP,
   UNREFERENCED_COMMENTS_HELP,
 } from '../services/stylePackage';
 import type { ExportForm } from './exportForm';
@@ -269,11 +269,11 @@ export default function ExportFormView({
               onChange={(checked) => onPatch({ cutEmptyWorkitemAttributes: checked })}
             />
             <SwitchRow
-              id={id('remove-heading-numbers')}
-              label="Remove heading numbers"
-              title={REMOVE_HEADING_NUMBERS_HELP}
-              checked={form.removeHeadingNumbers}
-              onChange={(checked) => onPatch({ removeHeadingNumbers: checked })}
+              id={id('cut-heading-numbers')}
+              label="Cut heading numbers"
+              title={CUT_HEADING_NUMBERS_HELP}
+              checked={form.cutHeadingNumbers}
+              onChange={(checked) => onPatch({ cutHeadingNumbers: checked })}
             />
             <SwitchRow
               id={id('localization')}

@@ -16,7 +16,7 @@
     * [Cut empty chapters](#cut-empty-chapters)
     * [Cut empty Workitem attributes](#cut-empty-workitem-attributes)
     * [Cut local Polarion URLs](#cut-local-polarion-urls)
-    * [Remove heading numbers](#remove-heading-numbers)
+    * [Cut heading numbers](#cut-heading-numbers)
     * [Specific higher level chapters](#specific-higher-level-chapters)
     * [Localize enums](#localize-enums)
     * [Specific Workitem roles](#specific-workitem-roles)
@@ -107,7 +107,7 @@ If you select this checkbox all anchors which link to local Polarion resources w
 
 ![Cut local Polarion URLs](docs/user_guide/img/cut_urls.png)
 
-### Remove heading numbers
+### Cut heading numbers
 When outline numbering is switched on in a Polarion document, Polarion writes the number of each heading ("1.2", "3.1.4") in front of its text, and by default
 it is exported this way: as a part of the heading's text. If you select this checkbox the numbers are left out, and only the text of the heading is exported
 with its heading style ("Heading 1", "Heading 2" etc.). The numbering can then be done by Word, if the heading styles of the selected template are numbered

@@ -16,6 +16,7 @@ import useNamedSettings from '../services/settings';
 import {
   CHILD_SETTINGS,
   COMMENTS_RENDER_TYPES,
+  CUT_HEADING_NUMBERS_HELP,
   type ChildNames,
   type ChildSetting,
   DEFAULT_IMAGE_DENSITY,
@@ -34,7 +35,6 @@ import {
   ORIENTATIONS,
   PAPER_SIZES,
   REMOVAL_SELECTOR_HELP,
-  REMOVE_HEADING_NUMBERS_HELP,
   type StylePackageSettings,
   UNREFERENCED_COMMENTS_HELP,
   WEIGHT_HELP,
@@ -69,7 +69,7 @@ interface Form {
   cutEmptyChapters: boolean;
   cutEmptyWorkitemAttributes: boolean;
   cutLocalURLs: boolean;
-  removeHeadingNumbers: boolean;
+  cutHeadingNumbers: boolean;
   specificChaptersEnabled: boolean;
   specificChapters: string;
   localizeEnums: boolean;
@@ -101,7 +101,7 @@ const EMPTY_FORM: Form = {
   cutEmptyChapters: false,
   cutEmptyWorkitemAttributes: false,
   cutLocalURLs: false,
-  removeHeadingNumbers: false,
+  cutHeadingNumbers: false,
   specificChaptersEnabled: false,
   specificChapters: '',
   localizeEnums: false,
@@ -159,7 +159,7 @@ function toForm(content: StylePackageSettings): Form {
     cutEmptyChapters: !!content.cutEmptyChapters,
     cutEmptyWorkitemAttributes: !!content.cutEmptyWorkitemAttributes,
     cutLocalURLs: !!content.cutLocalURLs,
-    removeHeadingNumbers: !!content.removeHeadingNumbers,
+    cutHeadingNumbers: !!content.cutHeadingNumbers,
     specificChaptersEnabled: !!content.specificChapters,
     specificChapters: content.specificChapters ?? '',
     localizeEnums: !!content.language,
@@ -328,7 +328,7 @@ export default function StylePackages() {
       cutEmptyChapters: form.cutEmptyChapters,
       cutEmptyWorkitemAttributes: form.cutEmptyWorkitemAttributes,
       cutLocalURLs: form.cutLocalURLs,
-      removeHeadingNumbers: form.removeHeadingNumbers,
+      cutHeadingNumbers: form.cutHeadingNumbers,
       specificChapters: form.specificChaptersEnabled ? form.specificChapters : null,
       language: form.localizeEnums ? form.language : null,
       linkedWorkitemRoles: form.rolesEnabled ? form.linkedWorkitemRoles : null,
@@ -693,14 +693,14 @@ export default function StylePackages() {
               </label>
             </div>
             <div className="checkbox input-group">
-              <label htmlFor="remove-heading-numbers" title={REMOVE_HEADING_NUMBERS_HELP}>
+              <label htmlFor="cut-heading-numbers" title={CUT_HEADING_NUMBERS_HELP}>
                 <input
-                  id="remove-heading-numbers"
+                  id="cut-heading-numbers"
                   type="checkbox"
-                  checked={form.removeHeadingNumbers}
-                  onChange={(e) => patch({ removeHeadingNumbers: e.target.checked })}
+                  checked={form.cutHeadingNumbers}
+                  onChange={(e) => patch({ cutHeadingNumbers: e.target.checked })}
                 />
-                Remove heading numbers
+                Cut heading numbers
               </label>
             </div>
           </div>

@@ -128,9 +128,9 @@ public class HtmlProcessor {
             // Leave only chapters explicitly selected by user
             timedIfNotNull(generationLog, "Cut not needed chapters", () -> cutNotNeededChapters(document, exportParams.getChapters()));
         }
-        if (exportParams.isRemoveHeadingNumbers()) {
+        if (exportParams.isCutHeadingNumbers()) {
             // Must follow cutting chapters: chapters are selected by the outline numbers removed here
-            timedIfNotNull(generationLog, "Remove heading numbers", () -> removeHeadingNumbers(document));
+            timedIfNotNull(generationLog, "Cut heading numbers", () -> cutHeadingNumbers(document));
         }
 
         // Moves WorkItem content out of table wrapping it
@@ -267,7 +267,7 @@ public class HtmlProcessor {
      * e.g. {@code <h2><span><span>2024</span></span> results</h2>} in a document without outline numbering.
      */
     @VisibleForTesting
-    void removeHeadingNumbers(@NotNull Document document) {
+    void cutHeadingNumbers(@NotNull Document document) {
         for (Element heading : document.select("h1, h2, h3, h4, h5, h6")) {
             Element numberWrapper = getOutlineNumberWrapper(heading);
             if (numberWrapper != null) {
@@ -279,16 +279,16 @@ public class HtmlProcessor {
     @Nullable
     private Element getOutlineNumberWrapper(@NotNull Element heading) {
         // The number is the first content of a heading, only anchors of the work item may precede it
-        for (Node child : heading.childNodes()) {
-            if (child instanceof TextNode textNode && textNode.isBlank()) {
-                continue;
-            }
-            if (child instanceof Element element && element.tagName().equals(HtmlTag.A) && element.text().isBlank()) {
-                continue;
-            }
-            return child instanceof Element element && isOutlineNumberWrapper(element) ? element : null;
-        }
-        return null;
+        Node firstContent = heading.childNodes().stream()
+                .filter(child -> !mayPrecedeOutlineNumber(child))
+                .findFirst()
+                .orElse(null);
+        return firstContent instanceof Element element && isOutlineNumberWrapper(element) ? element : null;
+    }
+
+    private boolean mayPrecedeOutlineNumber(@NotNull Node node) {
+        return (node instanceof TextNode textNode && textNode.isBlank())
+                || (node instanceof Element element && element.tagName().equals(HtmlTag.A) && element.text().isBlank());
     }
 
     private boolean isOutlineNumberWrapper(@NotNull Element element) {

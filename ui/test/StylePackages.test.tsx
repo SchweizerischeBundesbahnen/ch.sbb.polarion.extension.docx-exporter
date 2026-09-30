@@ -38,7 +38,7 @@ const STORED = {
   cutEmptyChapters: true,
   cutEmptyWorkitemAttributes: true,
   cutLocalURLs: true,
-  removeHeadingNumbers: true,
+  cutHeadingNumbers: true,
   specificChapters: '1,2',
   language: 'fr',
   linkedWorkitemRoles: ['relates_to'],

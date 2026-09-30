@@ -68,7 +68,7 @@ public class ExportParams {
     private boolean cutLocalUrls;
 
     @Schema(description = "Outline numbers of headings should not be exported as text, so that the numbering is left to the heading styles of the template")
-    private boolean removeHeadingNumbers;
+    private boolean cutHeadingNumbers;
 
     @Schema(description = "Specific higher level chapters")
     private List<String> chapters;

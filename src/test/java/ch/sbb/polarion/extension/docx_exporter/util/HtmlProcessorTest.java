@@ -236,9 +236,9 @@ class HtmlProcessorTest {
 
     @ParameterizedTest
     @MethodSource("headingNumbers")
-    void removeHeadingNumbersTest(String html, String expected) {
+    void cutHeadingNumbersTest(String html, String expected) {
         Document document = JSoupUtils.parseHtml(html);
-        processor.removeHeadingNumbers(document);
+        processor.cutHeadingNumbers(document);
         assertEquals(expected, document.body().html());
     }
 
@@ -255,10 +255,21 @@ class HtmlProcessorTest {
                 Arguments.of("<h2><a id=\"work-item-anchor-elibrary/EL-1\"></a>" + NUMBER_START + "1.1" + NUMBER_END + "Chapter</h2>",
                         "<h2><a id=\"work-item-anchor-elibrary/EL-1\"></a>Chapter</h2>"),
                 // the markup as an export renders it, with line breaks and indentation
-                Arguments.of("<h1 id=\"EL-124\">\n    <a id=\"work-item-anchor-elibrary/EL-124\"></a>\n"
-                                + "    <span class=\"polarion-dle-workitem-fields-start\" contenteditable=\"false\" id=\"polarion_editor_fields_container_start\" onmousedown=\"return false;\">\n"
-                                + "        <span contenteditable=\"false\" id=\"polarion_editor_field=outlineNumber\" onmousedown=\"return false;\">1</span>\n         \n    </span>\n    Introduction\n</h1>",
-                        "<h1 id=\"EL-124\">\n    <a id=\"work-item-anchor-elibrary/EL-124\"></a>\n    \n    Introduction\n</h1>"),
+                Arguments.of("""
+                                <h1 id="EL-124">
+                                    <a id="work-item-anchor-elibrary/EL-124"></a>
+                                    <span class="polarion-dle-workitem-fields-start" contenteditable="false" id="polarion_editor_fields_container_start" onmousedown="return false;">
+                                        <span contenteditable="false" id="polarion_editor_field=outlineNumber" onmousedown="return false;">1</span>
+                                         \s
+                                    </span>
+                                    Introduction
+                                </h1>""",
+                        """
+                                <h1 id="EL-124">
+                                    <a id="work-item-anchor-elibrary/EL-124"></a>
+                                   \s
+                                    Introduction
+                                </h1>"""),
                 // nested spans which are not marked as the outline number are content of the heading, whatever they contain
                 Arguments.of("<h2><span><span>2024</span></span> results</h2>", "<h2><span><span>2024</span></span> results</h2>"),
                 Arguments.of("<h2><span><span>1.2</span></span>Chapter</h2>", "<h2><span><span>1.2</span></span>Chapter</h2>"),
@@ -275,12 +286,12 @@ class HtmlProcessorTest {
 
     @Test
     @SneakyThrows
-    void removeHeadingNumbersKeepsSelectedChaptersTest() {
+    void cutHeadingNumbersKeepsSelectedChaptersTest() {
         when(localizationSettings.load(any(), any(SettingId.class))).thenReturn(new LocalizationModel(Collections.emptyMap(), Collections.emptyMap(), Collections.emptyMap()));
 
         ExportParams exportParams = getExportParams();
         exportParams.setChapters(List.of("2"));
-        exportParams.setRemoveHeadingNumbers(true);
+        exportParams.setCutHeadingNumbers(true);
 
         // Polarion's h2 is a first level heading, chapters are selected by their numbers before the numbers are removed
         String html = "<h2>" + NUMBER_START + "1" + NUMBER_END + "First</h2><p>first text</p><h2>" + NUMBER_START + "2" + NUMBER_END + "Second</h2><p>second text</p>";
