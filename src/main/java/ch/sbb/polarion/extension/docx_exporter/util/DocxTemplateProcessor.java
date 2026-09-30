@@ -32,9 +32,8 @@ public class DocxTemplateProcessor {
     }
 
     @NotNull
-    public String processUsing(@NotNull String documentName, @NotNull String content) {
+    public String processUsing(@NotNull String content) {
         return ScopeUtils.getFileContent("webapp/docx-exporter/html/docxTemplate.html")
-                .replace("{DOC_NAME}", documentName)
                 .replace("{DOC_CONTENT}", content);
     }
 

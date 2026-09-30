@@ -252,7 +252,8 @@ public class HtmlProcessor {
         for (Element heading : headings) {
             if (JSoupUtils.isH1(heading)) {
                 heading.tagName(HtmlTag.DIV);
-                heading.addClass("title");
+                // Pandoc gives the div with data-custom-style="Title" the Title style declared in the template
+                heading.attr("data-custom-style", "Title");
             } else {
                 int level = heading.tagName().charAt(1) - '0';
                 int newLevel = Math.clamp((long) level - 1, 1, 6);

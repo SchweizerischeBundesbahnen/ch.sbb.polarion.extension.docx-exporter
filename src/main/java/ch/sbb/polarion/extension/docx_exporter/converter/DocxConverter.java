@@ -5,7 +5,6 @@ import ch.sbb.polarion.extension.docx_exporter.pandoc.service.model.PandocParams
 import ch.sbb.polarion.extension.docx_exporter.properties.DocxExporterExtensionConfiguration;
 import ch.sbb.polarion.extension.docx_exporter.rest.model.conversion.ExportParams;
 import ch.sbb.polarion.extension.docx_exporter.rest.model.conversion.ImageDensity;
-import ch.sbb.polarion.extension.docx_exporter.rest.model.conversion.LinkRoleDirection;
 import ch.sbb.polarion.extension.docx_exporter.rest.model.documents.DocumentData;
 import ch.sbb.polarion.extension.docx_exporter.rest.model.settings.templates.TemplatesModel;
 import ch.sbb.polarion.extension.docx_exporter.rest.model.settings.webhooks.AuthType;
@@ -160,7 +159,7 @@ public class DocxConverter {
 
     private @NotNull String prepareHtmlContent(@NotNull ExportParams exportParams, @Nullable ITrackerProject project, @NotNull DocumentData<? extends IUniqueObject> documentData, @Nullable DocxGenerationLog generationLog) {
         String preparedDocumentContent = postProcessDocumentContent(exportParams, project, documentData.getContent(), generationLog);
-        String composedHtml = timedIfNotNull(generationLog, "Compose HTML", () -> composeHtml(documentData.getTitle(), preparedDocumentContent));
+        String composedHtml = timedIfNotNull(generationLog, "Compose HTML", () -> composeHtml(preparedDocumentContent));
         String internalizedHtml = timedIfNotNull(generationLog, "Internalize links", () -> htmlProcessor.internalizeLinks(composedHtml));
         return timedIfNotNull(generationLog, "Apply webhooks", () -> applyWebhooks(exportParams, internalizedHtml));
     }
@@ -279,9 +278,9 @@ public class DocxConverter {
 
     @NotNull
     @VisibleForTesting
-    String composeHtml(@NotNull String documentName, String documentContent) {
+    String composeHtml(String documentContent) {
         String content = "<div class='content'>" + documentContent + "</div>";
-        return docxTemplateProcessor.processUsing(documentName, content);
+        return docxTemplateProcessor.processUsing(content);
     }
 
     private void saveDebugDataToStorage(@Nullable String originalHtml,
