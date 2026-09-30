@@ -66,6 +66,9 @@ public class HtmlProcessor {
     private static final String ROWSPAN_ATTR = "rowspan";
     private static final String RIGHT_ALIGNMENT_MARGIN = "auto 0px auto auto";
     private static final String ANCHORS_WITH_HREF_SELECTOR = "a[href]";
+    private static final String OUTLINE_NUMBER_FIELD_ID = "polarion_editor_field=outlineNumber";
+    private static final String WORK_ITEM_FIELDS_START_CLASS = "polarion-dle-workitem-fields-start";
+    private static final char NON_BREAKING_SPACE = '\u00A0';
 
     private static final String LOCALHOST = "localhost";
     public static final String HTTP_PROTOCOL_PREFIX = "http://";
@@ -126,6 +129,10 @@ public class HtmlProcessor {
         if (exportParams.getChapters() != null) {
             // Leave only chapters explicitly selected by user
             timedIfNotNull(generationLog, "Cut not needed chapters", () -> cutNotNeededChapters(document, exportParams.getChapters()));
+        }
+        if (exportParams.isCutHeadingNumbers()) {
+            // Must follow cutting chapters: chapters are selected by the outline numbers removed here
+            timedIfNotNull(generationLog, "Cut heading numbers", () -> cutHeadingNumbers(document));
         }
 
         // Moves WorkItem content out of table wrapping it
@@ -252,6 +259,64 @@ public class HtmlProcessor {
                 heading.tagName("h" + newLevel);
             }
         }
+    }
+
+    /**
+     * Removes the outline numbers Polarion writes as text in front of each heading of a document with outline numbering on,
+     * leaving the numbering of headings to the heading styles of the template. Polarion wraps the number into two spans:
+     * {@code <h2><span class="polarion-dle-workitem-fields-start"><span id="polarion_editor_field=outlineNumber">1.2</span>&nbsp;</span>Title</h2>}.
+     * The inner span is not always marked as the outline number field: Polarion leaves the mark out on some headings of a document.
+     * Such a span is taken for the number only inside the work item fields container Polarion renders, since nested spans outside it
+     * are content of the heading, e.g. {@code <h2><span><span>2024</span></span> results</h2>} in a document without outline numbering.
+     */
+    @VisibleForTesting
+    void cutHeadingNumbers(@NotNull Document document) {
+        for (Element heading : document.select("h1, h2, h3, h4, h5, h6")) {
+            Element numberWrapper = getOutlineNumberWrapper(heading);
+            if (numberWrapper != null) {
+                numberWrapper.remove();
+            }
+        }
+    }
+
+    @Nullable
+    private Element getOutlineNumberWrapper(@NotNull Element heading) {
+        // The number is the first content of a heading, only anchors of the work item may precede it
+        Node firstContent = heading.childNodes().stream()
+                .filter(child -> !mayPrecedeOutlineNumber(child))
+                .findFirst()
+                .orElse(null);
+        return firstContent instanceof Element element && isOutlineNumberWrapper(element) ? element : null;
+    }
+
+    private boolean mayPrecedeOutlineNumber(@NotNull Node node) {
+        return (node instanceof TextNode textNode && textNode.isBlank())
+                || (node instanceof Element element && element.tagName().equals(HtmlTag.A) && element.text().isBlank());
+    }
+
+    private boolean isOutlineNumberWrapper(@NotNull Element element) {
+        if (!element.tagName().equals(SPAN) || element.children().size() != 1 || !isBlankText(element.ownText())) {
+            return false;
+        }
+        Element number = element.child(0);
+        if (!number.tagName().equals(SPAN)) {
+            return false;
+        }
+        return number.id().equals(OUTLINE_NUMBER_FIELD_ID)
+                || (element.hasClass(WORK_ITEM_FIELDS_START_CLASS) && number.children().isEmpty() && looksLikeOutlineNumber(number.text()));
+    }
+
+    private boolean isBlankText(@NotNull String text) {
+        // Polarion separates the number from the heading's text with a non-breaking space, which String.isBlank() does not count as blank
+        return text.replace(NON_BREAKING_SPACE, ' ').isBlank();
+    }
+
+    /**
+     * An outline number is a single word ending with a digit: "3", "1.2.1", or with the numbering prefix of the document, "REQ-1.2".
+     */
+    private boolean looksLikeOutlineNumber(@NotNull String text) {
+        String number = text.replace(NON_BREAKING_SPACE, ' ').trim();
+        return !number.isEmpty() && number.chars().noneMatch(Character::isWhitespace) && Character.isDigit(number.charAt(number.length() - 1));
     }
 
     @NotNull

@@ -16,6 +16,7 @@ import useNamedSettings from '../services/settings';
 import {
   CHILD_SETTINGS,
   COMMENTS_RENDER_TYPES,
+  CUT_HEADING_NUMBERS_HELP,
   type ChildNames,
   type ChildSetting,
   DEFAULT_IMAGE_DENSITY,
@@ -68,6 +69,7 @@ interface Form {
   cutEmptyChapters: boolean;
   cutEmptyWorkitemAttributes: boolean;
   cutLocalURLs: boolean;
+  cutHeadingNumbers: boolean;
   specificChaptersEnabled: boolean;
   specificChapters: string;
   localizeEnums: boolean;
@@ -99,6 +101,7 @@ const EMPTY_FORM: Form = {
   cutEmptyChapters: false,
   cutEmptyWorkitemAttributes: false,
   cutLocalURLs: false,
+  cutHeadingNumbers: false,
   specificChaptersEnabled: false,
   specificChapters: '',
   localizeEnums: false,
@@ -156,6 +159,7 @@ function toForm(content: StylePackageSettings): Form {
     cutEmptyChapters: !!content.cutEmptyChapters,
     cutEmptyWorkitemAttributes: !!content.cutEmptyWorkitemAttributes,
     cutLocalURLs: !!content.cutLocalURLs,
+    cutHeadingNumbers: !!content.cutHeadingNumbers,
     specificChaptersEnabled: !!content.specificChapters,
     specificChapters: content.specificChapters ?? '',
     localizeEnums: !!content.language,
@@ -324,6 +328,7 @@ export default function StylePackages() {
       cutEmptyChapters: form.cutEmptyChapters,
       cutEmptyWorkitemAttributes: form.cutEmptyWorkitemAttributes,
       cutLocalURLs: form.cutLocalURLs,
+      cutHeadingNumbers: form.cutHeadingNumbers,
       specificChapters: form.specificChaptersEnabled ? form.specificChapters : null,
       language: form.localizeEnums ? form.language : null,
       linkedWorkitemRoles: form.rolesEnabled ? form.linkedWorkitemRoles : null,
@@ -685,6 +690,17 @@ export default function StylePackages() {
                   onChange={(e) => patch({ cutLocalURLs: e.target.checked })}
                 />
                 Cut local Polarion URLs
+              </label>
+            </div>
+            <div className="checkbox input-group">
+              <label htmlFor="cut-heading-numbers" title={CUT_HEADING_NUMBERS_HELP}>
+                <input
+                  id="cut-heading-numbers"
+                  type="checkbox"
+                  checked={form.cutHeadingNumbers}
+                  onChange={(e) => patch({ cutHeadingNumbers: e.target.checked })}
+                />
+                Cut heading numbers
               </label>
             </div>
           </div>
