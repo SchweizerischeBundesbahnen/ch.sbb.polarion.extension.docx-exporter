@@ -16,6 +16,7 @@
     * [Cut empty chapters](#cut-empty-chapters)
     * [Cut empty Workitem attributes](#cut-empty-workitem-attributes)
     * [Cut local Polarion URLs](#cut-local-polarion-urls)
+    * [Cut heading numbers](#cut-heading-numbers)
     * [Specific higher level chapters](#specific-higher-level-chapters)
     * [Localize enums](#localize-enums)
     * [Specific Workitem roles](#specific-workitem-roles)
@@ -105,6 +106,14 @@ This option which is on by default tells DOCX Exporter to exclude empty WorkItem
 If you select this checkbox all anchors which link to local Polarion resources will be cut off leaving only text they contain:
 
 ![Cut local Polarion URLs](docs/user_guide/img/cut_urls.png)
+
+### Cut heading numbers
+When outline numbering is switched on in a Polarion document, Polarion writes the number of each heading ("1.2", "3.1.4") in front of its text, and by default
+it is exported this way: as a part of the heading's text. If you select this checkbox the numbers are left out, and only the text of the heading is exported
+with its heading style ("Heading 1", "Heading 2" etc.). The numbering can then be done by Word, if the heading styles of the selected template are numbered
+(a multilevel list linked to the heading styles). Please note that with a template whose heading styles are not numbered, the exported headings have no numbers at all.
+
+This option does not affect [Specific higher level chapters](#specific-higher-level-chapters): chapters are still selected by their numbers in the Polarion document.
 
 ### Specific higher level chapters
 If you select this checkbox an input field will appear where you can specify which high-level chapters (as comma separated list of numbers) to be exported:

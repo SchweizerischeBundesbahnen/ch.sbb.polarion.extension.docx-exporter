@@ -234,6 +234,102 @@ class HtmlProcessorTest {
         }
     }
 
+    @ParameterizedTest
+    @MethodSource("headingNumbers")
+    void cutHeadingNumbersTest(String html, String expected) {
+        Document document = JSoupUtils.parseHtml(html);
+        processor.cutHeadingNumbers(document);
+        assertEquals(expected, document.body().html());
+    }
+
+    private static final String NUMBER_START = "<span id=\"polarion_editor_fields_container_start\"><span id=\"polarion_editor_field=outlineNumber\">";
+    private static final String NUMBER_END = "</span> </span>";
+
+    private static Stream<Arguments> headingNumbers() {
+        return Stream.of(
+                Arguments.of("<h2 id=\"ch1\">" + NUMBER_START + "1.2" + NUMBER_END + "Chapter</h2>", "<h2 id=\"ch1\">Chapter</h2>"),
+                Arguments.of("<h6>" + NUMBER_START + "1.2.3.4.5.6" + NUMBER_END + "Chapter</h6>", "<h6>Chapter</h6>"),
+                // a numbering prefix of the document
+                Arguments.of("<h2>" + NUMBER_START + "REQ-1.2" + NUMBER_END + "Chapter</h2>", "<h2>Chapter</h2>"),
+                // the work item anchor precedes the number
+                Arguments.of("<h2><a id=\"work-item-anchor-elibrary/EL-1\"></a>" + NUMBER_START + "1.1" + NUMBER_END + "Chapter</h2>",
+                        "<h2><a id=\"work-item-anchor-elibrary/EL-1\"></a>Chapter</h2>"),
+                // the markup as an export renders it, with line breaks and indentation
+                Arguments.of("""
+                                <h1 id="EL-124">
+                                    <a id="work-item-anchor-elibrary/EL-124"></a>
+                                    <span class="polarion-dle-workitem-fields-start" contenteditable="false" id="polarion_editor_fields_container_start" onmousedown="return false;">
+                                        <span contenteditable="false" id="polarion_editor_field=outlineNumber" onmousedown="return false;">1</span>
+                                         \s
+                                    </span>
+                                    Introduction
+                                </h1>""",
+                        """
+                                <h1 id="EL-124">
+                                    <a id="work-item-anchor-elibrary/EL-124"></a>
+                                   \s
+                                    Introduction
+                                </h1>"""),
+                // a non-breaking space separates the number from the heading's text
+                Arguments.of("<h1><a id=\"a1\"></a><span id=\"polarion_editor_fields_container_start\" class=\"polarion-dle-workitem-fields-start\">"
+                                + "<span id=\"polarion_editor_field=outlineNumber\">1</span>&nbsp; </span> Table of Figures</h1>",
+                        "<h1><a id=\"a1\"></a> Table of Figures</h1>"),
+                // Polarion leaves the outline number mark out on some headings, the fields container marks the number then
+                Arguments.of("<h1><a id=\"a2\"></a><span class=\"polarion-dle-workitem-fields-start\" contenteditable=\"false\">"
+                                + "<span contenteditable=\"false\">2</span>&nbsp; </span> System Components</h1>",
+                        "<h1><a id=\"a2\"></a> System Components</h1>"),
+                Arguments.of("<h2><span class=\"polarion-dle-workitem-fields-start\"><span>REQ-2.1</span>&nbsp;</span>Terms</h2>", "<h2>Terms</h2>"),
+                // the fields container holding something else than a number
+                Arguments.of("<h2><span class=\"polarion-dle-workitem-fields-start\"><span>EL-1</span> - </span>Chapter</h2>",
+                        "<h2><span class=\"polarion-dle-workitem-fields-start\"><span>EL-1</span> - </span>Chapter</h2>"),
+                Arguments.of("<h2><span class=\"polarion-dle-workitem-fields-start\"><span>Draft</span> </span>Chapter</h2>",
+                        "<h2><span class=\"polarion-dle-workitem-fields-start\"><span>Draft</span> </span>Chapter</h2>"),
+                // nested spans which are not marked as the outline number are content of the heading, whatever they contain
+                Arguments.of("<h2><span><span>2024</span></span> results</h2>", "<h2><span><span>2024</span></span> results</h2>"),
+                Arguments.of("<h2><span><span>1.2</span></span>Chapter</h2>", "<h2><span><span>1.2</span></span>Chapter</h2>"),
+                Arguments.of("<h2><span id=\"polarion_editor_fields_container_start\"><span id=\"polarion_editor_field=id\">EL-1</span> - </span>Chapter</h2>",
+                        "<h2><span id=\"polarion_editor_fields_container_start\"><span id=\"polarion_editor_field=id\">EL-1</span> - </span>Chapter</h2>"),
+                // not in front of the heading
+                Arguments.of("<h2>Chapter " + NUMBER_START + "1.2" + NUMBER_END + "</h2>", "<h2>Chapter " + NUMBER_START + "1.2" + NUMBER_END + "</h2>"),
+                // not a heading
+                Arguments.of("<p>" + NUMBER_START + "1.2" + NUMBER_END + "Text</p>", "<p>" + NUMBER_START + "1.2" + NUMBER_END + "Text</p>"),
+                // a heading without a number
+                Arguments.of("<h2>Chapter</h2>", "<h2>Chapter</h2>")
+        );
+    }
+
+    @Test
+    @SneakyThrows
+    void cutHeadingNumbersOfRenderedDocumentTest() {
+        // A document as Polarion renders it, where only the first heading carries the outline number mark
+        try (InputStream html = this.getClass().getResourceAsStream("/pandoc/html/tableOfFigures.html")) {
+            Document document = JSoupUtils.parseHtml(new String(html.readAllBytes(), StandardCharsets.UTF_8));
+
+            processor.cutHeadingNumbers(document);
+
+            List<String> headings = document.select("h1, h2, h3, h4, h5, h6").eachText();
+            assertEquals(List.of("Table of Figures", "System Components", "Network Topology", "Security Model"), headings);
+        }
+    }
+
+    @Test
+    @SneakyThrows
+    void cutHeadingNumbersKeepsSelectedChaptersTest() {
+        when(localizationSettings.load(any(), any(SettingId.class))).thenReturn(new LocalizationModel(Collections.emptyMap(), Collections.emptyMap(), Collections.emptyMap()));
+
+        ExportParams exportParams = getExportParams();
+        exportParams.setChapters(List.of("2"));
+        exportParams.setCutHeadingNumbers(true);
+
+        // Polarion's h2 is a first level heading, chapters are selected by their numbers before the numbers are removed
+        String html = "<h2>" + NUMBER_START + "1" + NUMBER_END + "First</h2><p>first text</p><h2>" + NUMBER_START + "2" + NUMBER_END + "Second</h2><p>second text</p>";
+        String fixedHtml = processor.processHtmlForExport(html, exportParams, List.of());
+
+        assertFalse(fixedHtml.contains("First"));
+        assertTrue(fixedHtml.contains("<h1>Second</h1>"), fixedHtml);
+        assertTrue(fixedHtml.contains("second text"));
+    }
+
     @Test
     @SneakyThrows
     void cutEmptyWIAttributesTest() {
@@ -1387,7 +1483,8 @@ class HtmlProcessorTest {
 
     @ParameterizedTest
     @CsvSource({
-            "<h1>First level heading</h1>, <div class=\"title\">First level heading</div>",
+            "<h1>First level heading</h1>, <div data-custom-style=\"Title\">First level heading</div>",
+            "<h1>Title</h1><h2>Chapter</h2><h1>Another title</h1>, <div data-custom-style=\"Title\">Title</div><h1>Chapter</h1><div data-custom-style=\"Title\">Another title</div>",
             "<h2>Second level heading</h2>, <h1>Second level heading</h1>",
             "<h3>Third level heading</h3>, <h2>Third level heading</h2>"
     })
@@ -1436,6 +1533,21 @@ class HtmlProcessorTest {
             // Spaces and new lines are removed to exclude difference in space characters
             assertEquals(TestStringUtils.removeNonsensicalSymbols(expectedHtml), TestStringUtils.removeNonsensicalSymbols(processedHtml));
         }
+    }
+
+    @Test
+    void tableOfContentDropsTheLineBreakBehindIt() {
+        // Polarion writes a line break behind the table of contents, which becomes an empty paragraph the
+        // editor does not show and which the tables of figures and of tables do not carry; #399.
+        Document document = JSoupUtils.parseHtml("""
+                <pd4ml:toc numlen="4"></pd4ml:toc><br/><p id="after">text<br/>and more</p>""");
+
+        processor.addTableOfContent(document);
+
+        String html = document.body().html();
+        assertTrue(html.contains("TOC_PLACEHOLDER</p><p id=\"after\">"), html);
+        // and a line break which belongs to the content stays
+        assertEquals(1, document.select("p#after br").size(), html);
     }
 
     @Test

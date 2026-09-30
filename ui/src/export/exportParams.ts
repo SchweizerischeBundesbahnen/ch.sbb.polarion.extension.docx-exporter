@@ -29,6 +29,7 @@ export interface ExportParamsJson {
   cutEmptyChapters?: boolean;
   cutEmptyWIAttributes?: boolean;
   cutLocalUrls?: boolean;
+  cutHeadingNumbers?: boolean;
   chapters?: string[] | null;
   language?: string | null;
   linkedWorkitemRoles?: string[];
@@ -95,6 +96,7 @@ export function buildExportParams(form: ExportForm, context: DocumentContext, fi
       cutEmptyChapters: form.cutEmptyChapters,
       cutEmptyWIAttributes: form.cutEmptyWorkitemAttributes,
       cutLocalUrls: form.cutLocalURLs,
+      cutHeadingNumbers: form.cutHeadingNumbers,
       chapters,
       language: form.localizeEnums ? form.language : null,
       linkedWorkitemRoles: roles,

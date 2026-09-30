@@ -3,6 +3,7 @@ import { SearchableSelect } from '@sbb-polarion/react-sbb-polarion';
 import type { SelectOption } from '@sbb-polarion/react-sbb-polarion';
 import {
   COMMENTS_RENDER_TYPES,
+  CUT_HEADING_NUMBERS_HELP,
   type ChildNames,
   type ChildSetting,
   IMAGE_DENSITIES,
@@ -266,6 +267,13 @@ export default function ExportFormView({
               label="Cut empty Workitem attributes"
               checked={form.cutEmptyWorkitemAttributes}
               onChange={(checked) => onPatch({ cutEmptyWorkitemAttributes: checked })}
+            />
+            <SwitchRow
+              id={id('cut-heading-numbers')}
+              label="Cut heading numbers"
+              title={CUT_HEADING_NUMBERS_HELP}
+              checked={form.cutHeadingNumbers}
+              onChange={(checked) => onPatch({ cutHeadingNumbers: checked })}
             />
             <SwitchRow
               id={id('localization')}
