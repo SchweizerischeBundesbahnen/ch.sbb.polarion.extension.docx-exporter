@@ -40,6 +40,7 @@ class TableOfFiguresTest extends BaseDocxConverterTest {
     private static final String TOF_FIELD_CODE = "TOC \\h \\z \\f F";
     private static final String TOT_FIELD_CODE = "TOC \\h \\z \\f T";
     private static final String TOC_ENTRY_STYLE = "TOC1";
+    private static final String WITHIN_FIELD = "(?:(?!fldCharType=\"end\").)*?";
 
     private static Stream<Arguments> provideTableOfFiguresTestCases() {
         return Stream.of(
@@ -291,8 +292,9 @@ class TableOfFiguresTest extends BaseDocxConverterTest {
      * The caption text may continue after the given prefix, e.g. "Figure 1" matches "Figure 1 -- Diagram".
      */
     private String findTcFlag(String documentXml, String caption) {
-        Pattern tcField = Pattern.compile("TC \"</w:instrText>.*?<w:instrText[^>]*>" + Pattern.quote(caption)
-                + "[^<]*</w:instrText>.*?<w:instrText[^>]*>\" \\\\f ([FT])", Pattern.DOTALL);
+        // WITHIN_FIELD never crosses the end of a field, so a caption without a flag cannot borrow the next one's
+        Pattern tcField = Pattern.compile("TC \"</w:instrText>" + WITHIN_FIELD + "<w:instrText[^>]*>" + Pattern.quote(caption)
+                + "[^<]*</w:instrText>" + WITHIN_FIELD + "<w:instrText[^>]*>\" \\\\f ([FT])", Pattern.DOTALL);
         Matcher matcher = tcField.matcher(documentXml);
         return matcher.find() ? matcher.group(1) : null;
     }
