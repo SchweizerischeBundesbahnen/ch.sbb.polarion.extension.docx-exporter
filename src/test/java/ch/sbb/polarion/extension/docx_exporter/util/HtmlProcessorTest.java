@@ -1483,7 +1483,8 @@ class HtmlProcessorTest {
 
     @ParameterizedTest
     @CsvSource({
-            "<h1>First level heading</h1>, <div class=\"title\">First level heading</div>",
+            "<h1>First level heading</h1>, <div data-custom-style=\"Title\">First level heading</div>",
+            "<h1>Title</h1><h2>Chapter</h2><h1>Another title</h1>, <div data-custom-style=\"Title\">Title</div><h1>Chapter</h1><div data-custom-style=\"Title\">Another title</div>",
             "<h2>Second level heading</h2>, <h1>Second level heading</h1>",
             "<h3>Third level heading</h3>, <h2>Third level heading</h2>"
     })
