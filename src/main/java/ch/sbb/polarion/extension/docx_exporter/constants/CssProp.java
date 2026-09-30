@@ -9,6 +9,8 @@ public class CssProp {
     public static final String FLOAT = "float";
     public static final String FLOAT_LEFT_VALUE = "left";
     public static final String FONT_SIZE = "font-size";
+    public static final String FONT_WEIGHT = "font-weight";
+    public static final String FONT_WEIGHT_BOLD_VALUE = "bold";
     public static final String HEIGHT = "height";
     public static final String MARGIN = "margin";
     public static final String MAX_HEIGHT = "max-height";

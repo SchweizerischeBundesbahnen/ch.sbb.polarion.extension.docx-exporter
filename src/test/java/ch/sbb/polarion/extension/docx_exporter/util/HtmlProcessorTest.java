@@ -326,7 +326,7 @@ class HtmlProcessorTest {
         String fixedHtml = processor.processHtmlForExport(html, exportParams, List.of());
 
         assertFalse(fixedHtml.contains("First"));
-        assertTrue(fixedHtml.contains("<h1>Second</h1>"), fixedHtml);
+        assertTrue(fixedHtml.contains("<h1 style=\"font-weight:bold;\">Second</h1>"), fixedHtml);
         assertTrue(fixedHtml.contains("second text"));
     }
 
@@ -450,6 +450,23 @@ class HtmlProcessorTest {
         processor.convertPolarionFormulas(document);
 
         assertEquals(html, document.body().html());
+    }
+
+    @Test
+    @SneakyThrows
+    void applyBoldStylesTest() {
+        try (InputStream isInvalidHtml = this.getClass().getResourceAsStream("/boldStylesBeforeProcessing.html");
+             InputStream isValidHtml = this.getClass().getResourceAsStream("/boldStylesAfterProcessing.html")) {
+
+            Document document = JSoupUtils.parseHtml(new String(isInvalidHtml.readAllBytes(), StandardCharsets.UTF_8));
+
+            processor.applyBoldStyles(document);
+            String fixedHtml = document.body().html();
+            String validHtml = new String(isValidHtml.readAllBytes(), StandardCharsets.UTF_8);
+
+            // Spaces and new lines are removed to exclude difference in space characters
+            assertEquals(TestStringUtils.removeNonsensicalSymbols(validHtml), TestStringUtils.removeNonsensicalSymbols(fixedHtml));
+        }
     }
 
     @Test
@@ -1483,9 +1500,9 @@ class HtmlProcessorTest {
 
     @ParameterizedTest
     @CsvSource({
-            "<h1>First level heading</h1>, <div class=\"title\">First level heading</div>",
-            "<h2>Second level heading</h2>, <h1>Second level heading</h1>",
-            "<h3>Third level heading</h3>, <h2>Third level heading</h2>"
+            "<h1>First level heading</h1>, <div class=\"title\" style=\"font-weight:bold;\">First level heading</div>",
+            "<h2>Second level heading</h2>, <h1 style=\"font-weight:bold;\">Second level heading</h1>",
+            "<h3>Third level heading</h3>, <h2 style=\"font-weight:bold;\">Third level heading</h2>"
     })
     void adjustHeadingForExportTest(String inputHtml, String expectedHtml) {
         String result = processor.processHtmlForExport(inputHtml, getExportParams(), List.of());
