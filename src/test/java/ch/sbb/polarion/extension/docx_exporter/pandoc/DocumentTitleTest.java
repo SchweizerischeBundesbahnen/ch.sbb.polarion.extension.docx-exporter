@@ -50,8 +50,9 @@ class DocumentTitleTest extends BaseDocxConverterTest {
         List<DocxStructureInspector.Paragraph> paragraphs = DocxStructureInspector.paragraphs(export(
                 "<h2>Chapter</h2><p>Some content</p>"));
 
-        assertThat(paragraphs).noneMatch(paragraph -> TITLE_STYLE.equals(paragraph.styleId()));
-        assertThat(paragraphs).noneMatch(paragraph -> text(paragraph).contains(DOCUMENT_NAME));
+        assertThat(paragraphs)
+                .noneMatch(paragraph -> TITLE_STYLE.equals(paragraph.styleId()))
+                .noneMatch(paragraph -> text(paragraph).contains(DOCUMENT_NAME));
     }
 
     private byte[] export(String content) {
