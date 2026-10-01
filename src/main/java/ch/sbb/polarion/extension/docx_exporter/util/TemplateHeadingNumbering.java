@@ -12,9 +12,9 @@ import javax.xml.XMLConstants;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
@@ -40,6 +40,8 @@ public class TemplateHeadingNumbering {
     private static final String NO_NUMBERING = "0";
     private static final String NUMBER_FORMAT_NONE = "none";
     private static final int MAX_HEADING_LEVEL = 9;
+    // Far beyond the styles or numbering of any real template, which take some hundred kilobytes
+    private static final int MAX_ENTRY_SIZE = 10 * 1024 * 1024;
     // Guards against a template with a cycle in its basedOn chain
     private static final int MAX_STYLE_INHERITANCE_DEPTH = 32;
 
@@ -141,48 +143,63 @@ public class TemplateHeadingNumbering {
             abstractNums.put(abstractNum.getAttributeNS(W_NS, "abstractNumId"), abstractNum);
         }
 
-        Map<String, Element> abstractNumByNumId = new HashMap<>();
+        Map<String, ListInstance> listsByNumId = new HashMap<>();
         NodeList numElements = numbering.getElementsByTagNameNS(W_NS, "num");
         for (int i = 0; i < numElements.getLength(); i++) {
             Element num = (Element) numElements.item(i);
             Element abstractNum = abstractNums.get(childVal(num, "abstractNumId"));
             if (abstractNum != null) {
-                abstractNumByNumId.put(num.getAttributeNS(W_NS, "numId"), abstractNum);
+                listsByNumId.put(num.getAttributeNS(W_NS, "numId"), new ListInstance(abstractNum, readLevelOverrides(num)));
             }
         }
-        return new Numbering(abstractNumByNumId);
+        return new Numbering(listsByNumId);
+    }
+
+    /**
+     * Levels a list instance redefines with a {@code w:lvl} of its own inside {@code w:lvlOverride}. An override with a start value only
+     * ({@code w:startOverride}) keeps the level of the abstract list.
+     */
+    private @NotNull Map<String, Element> readLevelOverrides(@NotNull Element num) {
+        Map<String, Element> overrides = new HashMap<>();
+        NodeList children = num.getChildNodes();
+        for (int i = 0; i < children.getLength(); i++) {
+            if (children.item(i) instanceof Element override && W_NS.equals(override.getNamespaceURI()) && "lvlOverride".equals(override.getLocalName())) {
+                Element level = firstChild(override, "lvl");
+                if (level != null) {
+                    overrides.put(override.getAttributeNS(W_NS, "ilvl"), level);
+                }
+            }
+        }
+        return overrides;
     }
 
     private record StyleInfo(@NotNull String id, @Nullable String name, @Nullable String basedOn, @Nullable String numId, @Nullable String ilvl) {
     }
 
-    private record Numbering(@NotNull Map<String, Element> abstractNumByNumId) {
+    /**
+     * A list instance ({@code w:num}): an abstract list ({@code w:abstractNum}) and the levels the instance overrides.
+     */
+    private record ListInstance(@NotNull Element abstractNum, @NotNull Map<String, Element> overrides) {
 
-        boolean showsNumber(@NotNull String numId, @Nullable String ilvl) {
-            Element abstractNum = abstractNumByNumId.get(numId);
-            if (abstractNum == null) {
-                return false;
-            }
-            Element level = findLevel(abstractNum, ilvl == null ? NO_NUMBERING : ilvl);
-            // A level without an explicit format is decimal, one with the format "none" shows no number
-            return level == null || !NUMBER_FORMAT_NONE.equals(childVal(level, "numFmt"));
+        @Nullable Element level(@NotNull String ilvl) {
+            Element override = overrides.get(ilvl);
+            return override != null ? override : findLevel(abstractNum, ilvl);
         }
 
-        @Nullable String levelLinkedToStyle(@NotNull String numId, @NotNull String styleId) {
-            Element abstractNum = abstractNumByNumId.get(numId);
-            Element level = abstractNum == null ? null : findLevelLinkedTo(abstractNum, styleId);
+        @Nullable String levelLinkedTo(@NotNull String styleId) {
+            for (Map.Entry<String, Element> override : overrides.entrySet()) {
+                if (styleId.equals(childVal(override.getValue(), "pStyle"))) {
+                    return override.getKey();
+                }
+            }
+            Element level = findLevelLinkedTo(abstractNum, styleId);
             return level == null ? null : level.getAttributeNS(W_NS, "ilvl");
         }
 
-        boolean isLinkedToStyle(@NotNull String styleId) {
-            Set<Element> distinctAbstractNums = new HashSet<>(abstractNumByNumId.values());
-            for (Element abstractNum : distinctAbstractNums) {
-                Element level = findLevelLinkedTo(abstractNum, styleId);
-                if (level != null && !NUMBER_FORMAT_NONE.equals(childVal(level, "numFmt"))) {
-                    return true;
-                }
-            }
-            return false;
+        boolean showsNumber(@NotNull String ilvl) {
+            Element level = level(ilvl);
+            // A level the list does not define supplies no number. A level without an explicit format is decimal, one with the format "none" shows no number
+            return level != null && !NUMBER_FORMAT_NONE.equals(childVal(level, "numFmt"));
         }
 
         private static @Nullable Element findLevel(@NotNull Element abstractNum, @NotNull String ilvl) {
@@ -205,6 +222,29 @@ public class TemplateHeadingNumbering {
                 }
             }
             return null;
+        }
+    }
+
+    private record Numbering(@NotNull Map<String, ListInstance> listsByNumId) {
+
+        boolean showsNumber(@NotNull String numId, @Nullable String ilvl) {
+            ListInstance list = listsByNumId.get(numId);
+            return list != null && list.showsNumber(ilvl == null ? NO_NUMBERING : ilvl);
+        }
+
+        @Nullable String levelLinkedToStyle(@NotNull String numId, @NotNull String styleId) {
+            ListInstance list = listsByNumId.get(numId);
+            return list == null ? null : list.levelLinkedTo(styleId);
+        }
+
+        boolean isLinkedToStyle(@NotNull String styleId) {
+            for (ListInstance list : listsByNumId.values()) {
+                String ilvl = list.levelLinkedTo(styleId);
+                if (ilvl != null && list.showsNumber(ilvl)) {
+                    return true;
+                }
+            }
+            return false;
         }
     }
 
@@ -235,11 +275,28 @@ public class TemplateHeadingNumbering {
             ZipEntry entry;
             while ((entry = zip.getNextEntry()) != null) {
                 if (STYLES_ENTRY.equals(entry.getName()) || NUMBERING_ENTRY.equals(entry.getName())) {
-                    entries.put(entry.getName(), zip.readAllBytes());
+                    entries.put(entry.getName(), readLimited(zip, entry.getName()));
                 }
             }
         }
         return entries;
+    }
+
+    /**
+     * The size limit of a template applies to the compressed file, so an entry is read only up to {@link #MAX_ENTRY_SIZE} expanded bytes:
+     * a small entry which expands into a huge one must not exhaust the memory of the server.
+     */
+    private byte @NotNull [] readLimited(@NotNull ZipInputStream zip, @NotNull String entryName) throws IOException {
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        byte[] buffer = new byte[8192];
+        int read;
+        while ((read = zip.read(buffer)) != -1) {
+            if (out.size() + read > MAX_ENTRY_SIZE) {
+                throw new IOException("Entry '%s' of the template expands beyond %d bytes".formatted(entryName, MAX_ENTRY_SIZE));
+            }
+            out.write(buffer, 0, read);
+        }
+        return out.toByteArray();
     }
 
     private @NotNull Document parse(byte @NotNull [] xml) throws Exception {

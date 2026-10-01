@@ -11,6 +11,7 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class TemplateHeadingNumberingTest {
 
@@ -87,6 +88,43 @@ class TemplateHeadingNumberingTest {
                 // there is no numbering with this ID
                 headingStyle("Heading2", "heading 2", numPr("42", "0"))), NUMBERING);
 
+        assertEquals(Set.of(), TemplateHeadingNumbering.getNumberedHeadingLevels(template));
+    }
+
+    @Test
+    void levelOverriddenByTheListInstance() {
+        String numbering = "<w:numbering " + W + ">"
+                + "<w:abstractNum w:abstractNumId=\"7\">"
+                + "<w:lvl w:ilvl=\"0\"><w:numFmt w:val=\"decimal\"/></w:lvl>"
+                + "<w:lvl w:ilvl=\"1\"><w:numFmt w:val=\"decimal\"/></w:lvl>"
+                + "</w:abstractNum>"
+                // the instance redefines level 1 to show no number, and only restarts level 0
+                + "<w:num w:numId=\"5\"><w:abstractNumId w:val=\"7\"/>"
+                + "<w:lvlOverride w:ilvl=\"0\"><w:startOverride w:val=\"3\"/></w:lvlOverride>"
+                + "<w:lvlOverride w:ilvl=\"1\"><w:lvl w:ilvl=\"1\"><w:numFmt w:val=\"none\"/><w:lvlText w:val=\"\"/></w:lvl></w:lvlOverride>"
+                + "</w:num>"
+                + "</w:numbering>";
+        byte[] template = template(styles(
+                headingStyle("Heading1", "heading 1", numPr("5", "0")),
+                headingStyle("Heading2", "heading 2", numPr("5", "1"))), numbering);
+
+        assertEquals(Set.of(1), TemplateHeadingNumbering.getNumberedHeadingLevels(template));
+    }
+
+    @Test
+    void levelTheListDoesNotDefineShowsNoNumber() {
+        byte[] template = template(styles(headingStyle("Heading1", "heading 1", numPr("5", "4"))), NUMBERING);
+
+        assertEquals(Set.of(), TemplateHeadingNumbering.getNumberedHeadingLevels(template));
+    }
+
+    @Test
+    void entryExpandingBeyondTheLimitIsNotRead() {
+        // Spaces compress to almost nothing, the entry is far smaller than the template size limit but expands to 11 MB
+        String hugeStyles = styles(headingStyle("Heading1", "heading 1", numPr("5", "0"))).replace("</w:styles>", " ".repeat(11 * 1024 * 1024) + "</w:styles>");
+        byte[] template = template(hugeStyles, NUMBERING);
+
+        assertTrue(template.length < 100 * 1024);
         assertEquals(Set.of(), TemplateHeadingNumbering.getNumberedHeadingLevels(template));
     }
 
