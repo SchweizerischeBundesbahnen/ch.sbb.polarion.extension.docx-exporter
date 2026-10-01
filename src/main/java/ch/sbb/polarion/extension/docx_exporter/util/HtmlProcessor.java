@@ -1061,14 +1061,15 @@ public class HtmlProcessor {
         for (Element table : wiAttrTables) {
             table.attr(HtmlTagAttr.STYLE, "width: 100%");
 
+            // vertical-align is explicit because the reference document's table style bottom-aligns the first row
             Elements attrNameCells = table.select("td.polarion-dle-workitem-fields-end-table-label");
             for (Element attrNameCell : attrNameCells) {
-                attrNameCell.attr(HtmlTagAttr.STYLE, "width: 20%");
+                attrNameCell.attr(HtmlTagAttr.STYLE, "width: 20%; vertical-align: top");
             }
 
             Elements attrNameValues = table.select("td.polarion-dle-workitem-fields-end-table-value");
             for (Element attrNameValue : attrNameValues) {
-                attrNameValue.attr(HtmlTagAttr.STYLE, "width: 80%");
+                attrNameValue.attr(HtmlTagAttr.STYLE, "width: 80%; vertical-align: top");
             }
         }
     }
