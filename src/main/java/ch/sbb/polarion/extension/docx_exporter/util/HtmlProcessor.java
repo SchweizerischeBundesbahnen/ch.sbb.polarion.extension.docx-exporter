@@ -69,6 +69,10 @@ public class HtmlProcessor {
     private static final String OUTLINE_NUMBER_FIELD_ID = "polarion_editor_field=outlineNumber";
     private static final String WORK_ITEM_FIELDS_START_CLASS = "polarion-dle-workitem-fields-start";
     private static final char NON_BREAKING_SPACE = '\u00A0';
+    private static final String DEEP_HEADING_SELECTOR_PREFIX = "div.heading-";
+    private static final int DEEP_HEADING_MIN_LEVEL = 7;
+    private static final int DEEP_HEADING_MAX_LEVEL = 31;
+    private static final String BOLD_SELECTOR = boldSelector();
 
     private static final String LOCALHOST = "localhost";
     public static final String HTTP_PROTOCOL_PREFIX = "http://";
@@ -205,6 +209,8 @@ public class HtmlProcessor {
         if (!StringUtils.isEmptyTrimmed(exportParams.getRemovalSelector())) {
             timedIfNotNull(generationLog, "Clear selectors", () -> clearSelectors(document, exportParams.getRemovalSelector()));
         }
+
+        timedIfNotNull(generationLog, "Apply bold styles", () -> applyBoldStyles(document));
 
         html = LatexUtils.unwrapMathScriptCdata(document.body().html());
 
@@ -989,6 +995,26 @@ public class HtmlProcessor {
                 img.before(new TextNode("\u200B"));
             }
             img.replaceWith(script);
+        }
+    }
+
+    private static @NotNull String boldSelector() {
+        List<String> selectors = new ArrayList<>(List.of("span.polarion-dle-workitem-title", "span." + WORK_ITEM_FIELDS_START_CLASS,
+                "h1", "h2", "h3", "h4", "h5", "h6"));
+        for (int level = DEEP_HEADING_MIN_LEVEL; level <= DEEP_HEADING_MAX_LEVEL; level++) {
+            selectors.add(DEEP_HEADING_SELECTOR_PREFIX + level);
+        }
+        return String.join(COMMA_SEPARATOR, selectors);
+    }
+
+    @VisibleForTesting
+    void applyBoldStyles(@NotNull Document document) {
+        for (Element element : document.select(BOLD_SELECTOR)) {
+            CSSDeclarationList cssStyles = parseCss(element.attr(HtmlTagAttr.STYLE));
+            if (CssUtils.getPropertyValue(cssStyles, CssProp.FONT_WEIGHT).isEmpty()) {
+                CssUtils.setPropertyValue(cssStyles, CssProp.FONT_WEIGHT, CssProp.FONT_WEIGHT_BOLD_VALUE);
+                element.attr(HtmlTagAttr.STYLE, cssStyles.getAsCSSString());
+            }
         }
     }
 

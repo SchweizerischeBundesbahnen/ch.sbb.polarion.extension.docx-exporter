@@ -319,7 +319,7 @@ class HtmlProcessorTest {
         String html = "<h2>" + NUMBER_START + "1" + NUMBER_END + "First</h2><h3>" + NUMBER_START + "1.1" + NUMBER_END + "Second</h3>";
 
         String onlyFirstLevel = processor.processHtmlForExport(html, getExportParams(), List.of(), Set.of(1), null);
-        assertTrue(onlyFirstLevel.contains("<h1>First</h1>"), onlyFirstLevel);
+        assertTrue(onlyFirstLevel.contains("<h1 style=\"font-weight:bold;\">First</h1>"), onlyFirstLevel);
         assertTrue(onlyFirstLevel.contains("1.1"), onlyFirstLevel);
 
         String noLevel = processor.processHtmlForExport(html, getExportParams(), List.of(), Set.of(), null);
@@ -339,7 +339,7 @@ class HtmlProcessorTest {
         String fixedHtml = processor.processHtmlForExport(html, exportParams, List.of(), Set.of(1), null);
 
         assertFalse(fixedHtml.contains("First"));
-        assertTrue(fixedHtml.contains("<h1>Second</h1>"), fixedHtml);
+        assertTrue(fixedHtml.contains("<h1 style=\"font-weight:bold;\">Second</h1>"), fixedHtml);
         assertTrue(fixedHtml.contains("second text"));
     }
 
@@ -463,6 +463,23 @@ class HtmlProcessorTest {
         processor.convertPolarionFormulas(document);
 
         assertEquals(html, document.body().html());
+    }
+
+    @Test
+    @SneakyThrows
+    void applyBoldStylesTest() {
+        try (InputStream isInvalidHtml = this.getClass().getResourceAsStream("/boldStylesBeforeProcessing.html");
+             InputStream isValidHtml = this.getClass().getResourceAsStream("/boldStylesAfterProcessing.html")) {
+
+            Document document = JSoupUtils.parseHtml(new String(isInvalidHtml.readAllBytes(), StandardCharsets.UTF_8));
+
+            processor.applyBoldStyles(document);
+            String fixedHtml = document.body().html();
+            String validHtml = new String(isValidHtml.readAllBytes(), StandardCharsets.UTF_8);
+
+            // Spaces and new lines are removed to exclude difference in space characters
+            assertEquals(TestStringUtils.removeNonsensicalSymbols(validHtml), TestStringUtils.removeNonsensicalSymbols(fixedHtml));
+        }
     }
 
     @Test
@@ -1497,9 +1514,9 @@ class HtmlProcessorTest {
     @ParameterizedTest
     @CsvSource({
             "<h1>First level heading</h1>, <div data-custom-style=\"Title\">First level heading</div>",
-            "<h1>Title</h1><h2>Chapter</h2><h1>Another title</h1>, <div data-custom-style=\"Title\">Title</div><h1>Chapter</h1><div data-custom-style=\"Title\">Another title</div>",
-            "<h2>Second level heading</h2>, <h1>Second level heading</h1>",
-            "<h3>Third level heading</h3>, <h2>Third level heading</h2>"
+            "<h1>Title</h1><h2>Chapter</h2><h1>Another title</h1>, <div data-custom-style=\"Title\">Title</div><h1 style=\"font-weight:bold;\">Chapter</h1><div data-custom-style=\"Title\">Another title</div>",
+            "<h2>Second level heading</h2>, <h1 style=\"font-weight:bold;\">Second level heading</h1>",
+            "<h3>Third level heading</h3>, <h2 style=\"font-weight:bold;\">Third level heading</h2>"
     })
     void adjustHeadingForExportTest(String inputHtml, String expectedHtml) {
         String result = processor.processHtmlForExport(inputHtml, getExportParams(), List.of());
