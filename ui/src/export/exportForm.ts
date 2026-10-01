@@ -39,7 +39,6 @@ export interface ExportForm {
   cutEmptyChapters: boolean;
   cutEmptyWorkitemAttributes: boolean;
   cutLocalURLs: boolean;
-  cutHeadingNumbers: boolean;
   specificChaptersEnabled: boolean;
   specificChapters: string;
   localizeEnums: boolean;
@@ -99,7 +98,6 @@ export function toExportForm(content: StylePackageSettings, context: ExportFormC
     cutEmptyChapters: !!content.cutEmptyChapters,
     cutEmptyWorkitemAttributes: !!content.cutEmptyWorkitemAttributes,
     cutLocalURLs: !!content.cutLocalURLs,
-    cutHeadingNumbers: !!content.cutHeadingNumbers,
     specificChaptersEnabled: !!content.specificChapters,
     specificChapters: content.specificChapters ?? '',
     localizeEnums: !!content.language,

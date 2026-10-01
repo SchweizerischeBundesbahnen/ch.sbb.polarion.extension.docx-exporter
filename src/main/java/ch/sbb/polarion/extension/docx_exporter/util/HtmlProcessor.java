@@ -89,6 +89,14 @@ public class HtmlProcessor {
     }
 
     public String processHtmlForExport(@NotNull String html, @NotNull ExportParams exportParams, @NotNull List<String> selectedRoleEnumValues, @Nullable DocxGenerationLog generationLog) {
+        return processHtmlForExport(html, exportParams, selectedRoleEnumValues, Set.of(), generationLog);
+    }
+
+    /**
+     * @param headingLevelsNumberedByTemplate levels of the headings the DOCX template numbers by itself, see {@link TemplateHeadingNumbering}
+     */
+    public String processHtmlForExport(@NotNull String html, @NotNull ExportParams exportParams, @NotNull List<String> selectedRoleEnumValues,
+                                       @NotNull Set<Integer> headingLevelsNumberedByTemplate, @Nullable DocxGenerationLog generationLog) {
         // I. FIRST SECTION - manipulate HTML as a String. These changes are either not possible or not made easier with JSoup
         // ----------------
 
@@ -130,9 +138,9 @@ public class HtmlProcessor {
             // Leave only chapters explicitly selected by user
             timedIfNotNull(generationLog, "Cut not needed chapters", () -> cutNotNeededChapters(document, exportParams.getChapters()));
         }
-        if (exportParams.isCutHeadingNumbers()) {
-            // Must follow cutting chapters: chapters are selected by the outline numbers removed here
-            timedIfNotNull(generationLog, "Cut heading numbers", () -> cutHeadingNumbers(document));
+        if (!headingLevelsNumberedByTemplate.isEmpty()) {
+            // Headings the template numbers would show the number twice. Must follow cutting chapters: chapters are selected by the outline numbers removed here
+            timedIfNotNull(generationLog, "Cut heading numbers", () -> cutHeadingNumbers(document, headingLevelsNumberedByTemplate));
         }
 
         // Moves WorkItem content out of table wrapping it
@@ -263,16 +271,19 @@ public class HtmlProcessor {
     }
 
     /**
-     * Removes the outline numbers Polarion writes as text in front of each heading of a document with outline numbering on,
-     * leaving the numbering of headings to the heading styles of the template. Polarion wraps the number into two spans:
+     * Removes the outline numbers Polarion writes as text in front of the headings of the given levels (a document with outline numbering on),
+     * leaving the numbering of these headings to the heading styles of the template. Polarion wraps the number into two spans:
      * {@code <h2><span class="polarion-dle-workitem-fields-start"><span id="polarion_editor_field=outlineNumber">1.2</span>&nbsp;</span>Title</h2>}.
      * The inner span is not always marked as the outline number field: Polarion leaves the mark out on some headings of a document.
      * Such a span is taken for the number only inside the work item fields container Polarion renders, since nested spans outside it
      * are content of the heading, e.g. {@code <h2><span><span>2024</span></span> results</h2>} in a document without outline numbering.
      */
     @VisibleForTesting
-    void cutHeadingNumbers(@NotNull Document document) {
+    void cutHeadingNumbers(@NotNull Document document, @NotNull Set<Integer> headingLevels) {
         for (Element heading : document.select("h1, h2, h3, h4, h5, h6")) {
+            if (!headingLevels.contains(heading.tagName().charAt(1) - '0')) {
+                continue;
+            }
             Element numberWrapper = getOutlineNumberWrapper(heading);
             if (numberWrapper != null) {
                 numberWrapper.remove();
