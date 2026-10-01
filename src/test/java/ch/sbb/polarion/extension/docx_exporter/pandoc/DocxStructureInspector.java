@@ -112,7 +112,12 @@ final class DocxStructureInspector {
     record Paragraph(String styleId, List<Segment> segments, List<Extent> imageExtents) {
     }
 
-    record Cell(String text, String vMerge, Integer gridSpan) {
+    /** {@code vAlign} is the cell's own {@code <w:vAlign>}, {@code null} when it inherits the table style's alignment. */
+    record Cell(String text, String vMerge, Integer gridSpan, String vAlign) {
+
+        Cell(String text, String vMerge, Integer gridSpan) {
+            this(text, vMerge, gridSpan, null);
+        }
     }
 
     record Table(String widthType, long width, String jc, List<List<Cell>> rows) {
@@ -243,7 +248,9 @@ final class DocxStructureInspector {
                 Element tcPr = child(tc, "tcPr");
                 String vMerge = null;
                 Integer gridSpan = null;
+                String vAlign = null;
                 if (tcPr != null) {
+                    vAlign = wAttr(child(tcPr, "vAlign"), "val");
                     Element vMergeElement = child(tcPr, "vMerge");
                     if (vMergeElement != null) {
                         String value = wAttr(vMergeElement, "val");
@@ -255,7 +262,7 @@ final class DocxStructureInspector {
                         gridSpan = span;
                     }
                 }
-                cells.add(new Cell(textOf(tc), vMerge, gridSpan));
+                cells.add(new Cell(textOf(tc), vMerge, gridSpan, vAlign));
             }
             rows.add(cells);
         }
