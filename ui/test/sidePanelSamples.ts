@@ -74,7 +74,6 @@ export const SAMPLE_STYLE_PACKAGE_FULL: StylePackageSettings = {
   includeUnreferencedComments: true,
   cutEmptyChapters: true,
   cutLocalURLs: true,
-  cutHeadingNumbers: true,
   specificChapters: '1,2',
   language: 'de',
   linkedWorkitemRoles: ['relates_to'],
