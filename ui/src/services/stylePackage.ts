@@ -25,7 +25,6 @@ export interface StylePackageSettings {
   cutEmptyChapters?: boolean;
   cutEmptyWorkitemAttributes?: boolean;
   cutLocalURLs?: boolean;
-  cutHeadingNumbers?: boolean;
   specificChapters?: string | null;
   language?: string | null;
   linkedWorkitemRoles?: string[] | null;
@@ -111,5 +110,3 @@ export const REMOVAL_SELECTOR_HELP =
   'Separate multiple selectors with commas, e.g. img.specificClass, table.unwanted, div#ad-banner.';
 
 export const UNREFERENCED_COMMENTS_HELP = 'Unreferenced comments will be rendered at the end of the document';
-export const CUT_HEADING_NUMBERS_HELP =
-  'Outline numbers of the document are not written into the headings, the heading styles of the template number them instead';

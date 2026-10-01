@@ -35,6 +35,7 @@ import java.util.Base64;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Stream;
 import java.util.Map;
 
@@ -238,7 +239,7 @@ class HtmlProcessorTest {
     @MethodSource("headingNumbers")
     void cutHeadingNumbersTest(String html, String expected) {
         Document document = JSoupUtils.parseHtml(html);
-        processor.cutHeadingNumbers(document);
+        processor.cutHeadingNumbers(document, Set.of(1, 2, 3, 4, 5, 6));
         assertEquals(expected, document.body().html());
     }
 
@@ -305,11 +306,24 @@ class HtmlProcessorTest {
         try (InputStream html = this.getClass().getResourceAsStream("/pandoc/html/tableOfFigures.html")) {
             Document document = JSoupUtils.parseHtml(new String(html.readAllBytes(), StandardCharsets.UTF_8));
 
-            processor.cutHeadingNumbers(document);
+            processor.cutHeadingNumbers(document, Set.of(1));
 
             List<String> headings = document.select("h1, h2, h3, h4, h5, h6").eachText();
             assertEquals(List.of("Table of Figures", "System Components", "Network Topology", "Security Model"), headings);
         }
+    }
+
+    @Test
+    void cutHeadingNumbersOnlyOfLevelsNumberedByTemplateTest() {
+        // Polarion's h2 and h3 are first and second level headings
+        String html = "<h2>" + NUMBER_START + "1" + NUMBER_END + "First</h2><h3>" + NUMBER_START + "1.1" + NUMBER_END + "Second</h3>";
+
+        String onlyFirstLevel = processor.processHtmlForExport(html, getExportParams(), List.of(), Set.of(1), null);
+        assertTrue(onlyFirstLevel.contains("<h1>First</h1>"), onlyFirstLevel);
+        assertTrue(onlyFirstLevel.contains("1.1"), onlyFirstLevel);
+
+        String noLevel = processor.processHtmlForExport(html, getExportParams(), List.of(), Set.of(), null);
+        assertTrue(noLevel.contains(">1<") && noLevel.contains("1.1"), noLevel);
     }
 
     @Test
@@ -319,11 +333,10 @@ class HtmlProcessorTest {
 
         ExportParams exportParams = getExportParams();
         exportParams.setChapters(List.of("2"));
-        exportParams.setCutHeadingNumbers(true);
 
         // Polarion's h2 is a first level heading, chapters are selected by their numbers before the numbers are removed
         String html = "<h2>" + NUMBER_START + "1" + NUMBER_END + "First</h2><p>first text</p><h2>" + NUMBER_START + "2" + NUMBER_END + "Second</h2><p>second text</p>";
-        String fixedHtml = processor.processHtmlForExport(html, exportParams, List.of());
+        String fixedHtml = processor.processHtmlForExport(html, exportParams, List.of(), Set.of(1), null);
 
         assertFalse(fixedHtml.contains("First"));
         assertTrue(fixedHtml.contains("<h1>Second</h1>"), fixedHtml);
