@@ -7,10 +7,12 @@ import org.jetbrains.annotations.Nullable;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
+import org.xml.sax.SAXException;
 
 import javax.xml.XMLConstants;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -60,7 +62,8 @@ public class TemplateHeadingNumbering {
                 return Set.of();
             }
             return getNumberedHeadingLevels(parse(styles), parse(numbering));
-        } catch (Exception e) {
+        } catch (IOException | ParserConfigurationException | SAXException | RuntimeException e) {
+            // A template whose structure is unexpected must not fail the export either
             logger.warn("Could not read heading numbering of the DOCX template, heading numbers are left as they are", e);
             return Set.of();
         }
@@ -299,7 +302,7 @@ public class TemplateHeadingNumbering {
         return out.toByteArray();
     }
 
-    private @NotNull Document parse(byte @NotNull [] xml) throws Exception {
+    private @NotNull Document parse(byte @NotNull [] xml) throws ParserConfigurationException, SAXException, IOException {
         DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
         factory.setNamespaceAware(true);
         // The template is uploaded by users: no DTDs and no external entities
