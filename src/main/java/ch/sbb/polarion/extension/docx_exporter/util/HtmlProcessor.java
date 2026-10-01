@@ -258,7 +258,8 @@ public class HtmlProcessor {
         for (Element heading : headings) {
             if (JSoupUtils.isH1(heading)) {
                 heading.tagName(HtmlTag.DIV);
-                heading.addClass("title");
+                // Pandoc gives the div with data-custom-style="Title" the Title style declared in the template
+                heading.attr("data-custom-style", "Title");
             } else {
                 int level = heading.tagName().charAt(1) - '0';
                 int newLevel = Math.clamp((long) level - 1, 1, 6);
@@ -988,7 +989,7 @@ public class HtmlProcessor {
 
     private static @NotNull String boldSelector() {
         List<String> selectors = new ArrayList<>(List.of("span.polarion-dle-workitem-title", "span." + WORK_ITEM_FIELDS_START_CLASS,
-                "div.title", "h1", "h2", "h3", "h4", "h5", "h6"));
+                "div[data-custom-style=Title]", "h1", "h2", "h3", "h4", "h5", "h6"));
         for (int level = DEEP_HEADING_MIN_LEVEL; level <= DEEP_HEADING_MAX_LEVEL; level++) {
             selectors.add(DEEP_HEADING_SELECTOR_PREFIX + level);
         }

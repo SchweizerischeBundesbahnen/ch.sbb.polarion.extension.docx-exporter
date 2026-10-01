@@ -40,7 +40,6 @@ class DocxTemplateProcessorTest {
                         <!DOCTYPE html PUBLIC '-//W3C//DTD XHTML 1.0 Strict//EN' 'http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd'>
                         <html lang='en' xml:lang='en' xmlns='http://www.w3.org/1999/xhtml'>
                         <head>
-                            <title>testDocumentName</title>
                             <meta content='text/html; charset=UTF-8' http-equiv='Content-Type'/>
                         </head>
                         <body>
@@ -53,7 +52,6 @@ class DocxTemplateProcessorTest {
                         <!DOCTYPE html PUBLIC '-//W3C//DTD XHTML 1.0 Strict//EN' 'http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd'>
                         <html lang='en' xml:lang='en' xmlns='http://www.w3.org/1999/xhtml'>
                         <head>
-                            <title>testDocumentName</title>
                             <meta content='text/html; charset=UTF-8' http-equiv='Content-Type'/>
                         </head>
                         <body>
@@ -68,7 +66,7 @@ class DocxTemplateProcessorTest {
     void shouldProcessHtmlTemplate(String expectedResult) {
 
         // Act
-        String resultHtml = new DocxTemplateProcessor(velocityEvaluator, placeholderProcessor).processUsing("testDocumentName", "test html content");
+        String resultHtml = new DocxTemplateProcessor(velocityEvaluator, placeholderProcessor).processUsing("test html content");
 
         // Assert
         assertThat(TestStringUtils.removeNonsensicalSymbols(resultHtml).replaceAll(" ", ""))

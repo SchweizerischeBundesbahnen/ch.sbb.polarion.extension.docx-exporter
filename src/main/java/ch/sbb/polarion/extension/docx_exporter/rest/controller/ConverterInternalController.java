@@ -3,16 +3,15 @@ package ch.sbb.polarion.extension.docx_exporter.rest.controller;
 import ch.sbb.polarion.extension.docx_exporter.converter.HtmlToDocxConverter;
 import ch.sbb.polarion.extension.docx_exporter.converter.DocxConverter;
 import ch.sbb.polarion.extension.docx_exporter.converter.DocxConverterJobsService;
-import ch.sbb.polarion.extension.docx_exporter.converter.DocxConverterJobsService.JobState;
-import ch.sbb.polarion.extension.docx_exporter.converter.PropertiesUtility;
 import ch.sbb.polarion.extension.docx_exporter.pandoc.service.model.PandocParams;
 import ch.sbb.polarion.extension.docx_exporter.rest.filter.RolesRestricted;
 import ch.sbb.polarion.extension.docx_exporter.rest.model.conversion.ExportParams;
-import ch.sbb.polarion.extension.docx_exporter.rest.model.jobs.ConverterJobDetails;
-import ch.sbb.polarion.extension.docx_exporter.rest.model.jobs.ConverterJobStatus;
 import ch.sbb.polarion.extension.docx_exporter.service.DocxExporterPolarionService;
 import ch.sbb.polarion.extension.docx_exporter.util.DocumentFileNameHelper;
 import ch.sbb.polarion.extension.docx_exporter.util.ExportContext;
+import ch.sbb.polarion.extension.generic.jobs.JobsProperties;
+import ch.sbb.polarion.extension.generic.rest.JobResponses;
+import ch.sbb.polarion.extension.generic.rest.model.jobs.JobDetails;
 import com.polarion.core.util.StringUtils;
 import com.polarion.platform.core.PlatformContext;
 import com.polarion.platform.security.ISecurityService;
@@ -79,7 +78,7 @@ public class ConverterInternalController {
 
     private final DocxConverter docxConverter;
     private final DocxConverterJobsService pdfConverterJobService;
-    private final PropertiesUtility propertiesUtility;
+    private final JobsProperties jobsProperties;
     private final HtmlToDocxConverter htmlToDocxConverter;
     private final DocxExporterPolarionService docxExporterPolarionService;
 
@@ -90,7 +89,7 @@ public class ConverterInternalController {
         this.docxConverter = new DocxConverter();
         ISecurityService securityService = PlatformContext.getPlatform().lookupService(ISecurityService.class);
         this.pdfConverterJobService = new DocxConverterJobsService(docxConverter, securityService);
-        this.propertiesUtility = new PropertiesUtility();
+        this.jobsProperties = DocxConverterJobsService.jobsProperties();
         this.htmlToDocxConverter = new HtmlToDocxConverter();
         this.docxExporterPolarionService = new DocxExporterPolarionService();
     }
@@ -100,7 +99,7 @@ public class ConverterInternalController {
         this.docxConverter = docxConverter;
         this.pdfConverterJobService = pdfConverterJobService;
         this.uriInfo = uriInfo;
-        this.propertiesUtility = new PropertiesUtility();
+        this.jobsProperties = DocxConverterJobsService.jobsProperties();
         this.htmlToDocxConverter = htmlToDocxConverter;
         this.docxExporterPolarionService = docxExporterPolarionService;
     }
@@ -239,7 +238,7 @@ public class ConverterInternalController {
     public Response startPdfConverterJob(ExportParams exportParams) {
         validateExportParameters(exportParams);
 
-        String jobId = pdfConverterJobService.startJob(exportParams, propertiesUtility.getInProgressJobTimeout());
+        String jobId = pdfConverterJobService.startJob(exportParams, jobsProperties.getInProgressJobTimeout());
 
         URI jobUri = UriBuilder.fromUri(uriInfo.getRequestUri().getPath()).path(jobId).build();
         return Response.accepted().location(jobUri).build();
@@ -253,11 +252,11 @@ public class ConverterInternalController {
                     // OpenAPI response MediaTypes for 303 and 202 response codes are generic to satisfy automatic redirect in SwaggerUI
                     @ApiResponse(responseCode = "303",
                             description = "Conversion job is finished successfully, Location header contains result URL",
-                            content = {@Content(mediaType = "application/*", schema = @Schema(implementation = ConverterJobDetails.class))}
+                            content = {@Content(mediaType = "application/*", schema = @Schema(implementation = JobDetails.class))}
                     ),
                     @ApiResponse(responseCode = "202",
                             description = "Conversion job is still in progress",
-                            content = {@Content(mediaType = "application/*", schema = @Schema(implementation = ConverterJobDetails.class))}
+                            content = {@Content(mediaType = "application/*", schema = @Schema(implementation = JobDetails.class))}
                     ),
                     @ApiResponse(responseCode = "409",
                             description = "Conversion job is failed or cancelled"
@@ -267,23 +266,7 @@ public class ConverterInternalController {
                     )
             })
     public Response getPdfConverterJobStatus(@PathParam("id") String jobId) {
-        JobState jobState = pdfConverterJobService.getJobState(jobId);
-
-        ConverterJobStatus converterJobStatus = convertToJobStatus(jobState);
-        ConverterJobDetails jobDetails = ConverterJobDetails.builder()
-                .status(converterJobStatus)
-                .errorMessage(jobState.errorMessage()).build();
-
-        Response.ResponseBuilder responseBuilder;
-        switch (converterJobStatus) {
-            case IN_PROGRESS -> responseBuilder = Response.accepted();
-            case SUCCESSFULLY_FINISHED -> {
-                URI jobUri = UriBuilder.fromUri(uriInfo.getRequestUri().getPath()).path("result").build();
-                responseBuilder = Response.status(HttpStatus.SEE_OTHER.value()).location(jobUri);
-            }
-            default -> responseBuilder = Response.status(HttpStatus.CONFLICT.value());
-        }
-        return responseBuilder.entity(jobDetails).build();
+        return JobResponses.jobStatus(JobDetails.from(pdfConverterJobService.getJobState(jobId)), uriInfo);
     }
 
     @GET
@@ -370,13 +353,8 @@ public class ConverterInternalController {
                     )
             })
     public Response getAllPdfConverterJobs() {
-        Map<String, JobState> jobsStates = pdfConverterJobService.getAllJobsStates();
-        Map<String, ConverterJobDetails> jobsDetails = jobsStates.entrySet().stream()
-                .collect(Collectors.toMap(Map.Entry::getKey, entry ->
-                        ConverterJobDetails.builder()
-                                .status(convertToJobStatus(entry.getValue()))
-                                .errorMessage(entry.getValue().errorMessage())
-                                .build()));
+        Map<String, JobDetails> jobsDetails = pdfConverterJobService.getAllJobsStates().entrySet().stream()
+                .collect(Collectors.toMap(Map.Entry::getKey, entry -> JobDetails.from(entry.getValue())));
         return Response.ok(jobsDetails).build();
     }
 
@@ -497,18 +475,6 @@ public class ConverterInternalController {
                     : exportParams.getFileName();
         } else {
             return "document.docx";
-        }
-    }
-
-    private ConverterJobStatus convertToJobStatus(JobState jobState) {
-        if (!jobState.isDone()) {
-            return ConverterJobStatus.IN_PROGRESS;
-        } else if (!jobState.isCancelled() && !jobState.isCompletedExceptionally()) {
-            return ConverterJobStatus.SUCCESSFULLY_FINISHED;
-        } else if (jobState.isCancelled()) {
-            return ConverterJobStatus.CANCELLED;
-        } else {
-            return ConverterJobStatus.FAILED;
         }
     }
 }
