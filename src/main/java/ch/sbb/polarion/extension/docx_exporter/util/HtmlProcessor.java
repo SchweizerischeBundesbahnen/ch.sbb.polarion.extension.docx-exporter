@@ -989,7 +989,7 @@ public class HtmlProcessor {
 
     private static @NotNull String boldSelector() {
         List<String> selectors = new ArrayList<>(List.of("span.polarion-dle-workitem-title", "span." + WORK_ITEM_FIELDS_START_CLASS,
-                "div[data-custom-style=Title]", "h1", "h2", "h3", "h4", "h5", "h6"));
+                "h1", "h2", "h3", "h4", "h5", "h6"));
         for (int level = DEEP_HEADING_MIN_LEVEL; level <= DEEP_HEADING_MAX_LEVEL; level++) {
             selectors.add(DEEP_HEADING_SELECTOR_PREFIX + level);
         }
