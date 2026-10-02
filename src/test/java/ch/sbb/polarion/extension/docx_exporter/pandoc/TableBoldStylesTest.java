@@ -14,8 +14,11 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Stream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
@@ -37,7 +40,10 @@ import static org.mockito.ArgumentMatchers.eq;
 class TableBoldStylesTest extends BaseDocxConverterTest {
 
     private static final Pattern CELL_PROPERTIES = Pattern.compile("<w:tcPr/>|<w:tcPr>.*?</w:tcPr>");
-    private static final String GRAY_BORDER_COLOR = "w:color=\"CCCCCC\"";
+    private static final List<Pattern> GRAY_BORDER_SIDES = Stream.of("top", "left", "bottom", "right")
+            .map(side -> Pattern.compile("<w:" + side + " [^>]*w:color=\"CCCCCC\""))
+            .toList();
+    private static final int TABLE_CELL_COUNT = 13; // 9 in the test steps table, 4 in the fields table
 
     @ParameterizedTest
     @CsvSource({
@@ -68,7 +74,9 @@ class TableBoldStylesTest extends BaseDocxConverterTest {
         assertNotNull(docx);
         writeReportDocx(testName + "_generated", docx);
         if (preserveTableStyles) {
-            assertEquals(0, countCellsWithoutGrayBorder(docx));
+            List<String> cells = cellProperties(docx);
+            assertEquals(TABLE_CELL_COUNT, cells.size());
+            assertEquals(List.of(), cells.stream().filter(cell -> !hasGrayBorderOnEverySide(cell)).toList());
         }
 
         File docxFile = getTestFile();
@@ -80,15 +88,17 @@ class TableBoldStylesTest extends BaseDocxConverterTest {
         }
     }
 
-    private static int countCellsWithoutGrayBorder(byte[] docx) throws IOException {
-        int count = 0;
+    private static List<String> cellProperties(byte[] docx) throws IOException {
+        List<String> cells = new ArrayList<>();
         Matcher matcher = CELL_PROPERTIES.matcher(readDocumentXml(docx));
         while (matcher.find()) {
-            if (!matcher.group().contains(GRAY_BORDER_COLOR)) {
-                count++;
-            }
+            cells.add(matcher.group());
         }
-        return count;
+        return cells;
+    }
+
+    private static boolean hasGrayBorderOnEverySide(String cell) {
+        return GRAY_BORDER_SIDES.stream().allMatch(side -> side.matcher(cell).find());
     }
 
     private static String readDocumentXml(byte[] docx) throws IOException {
