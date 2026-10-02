@@ -4,6 +4,7 @@ import lombok.experimental.UtilityClass;
 
 @UtilityClass
 public class CssProp {
+    public static final String BORDER = "border";
     public static final String DISPLAY = "display";
     public static final String DISPLAY_BLOCK_VALUE = "block";
     public static final String FLOAT = "float";

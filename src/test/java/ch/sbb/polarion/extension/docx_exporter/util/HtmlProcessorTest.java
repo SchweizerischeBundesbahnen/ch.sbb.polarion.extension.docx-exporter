@@ -483,6 +483,25 @@ class HtmlProcessorTest {
     }
 
     @Test
+    void adjustStylesTest() {
+        Document document = JSoupUtils.parseHtml("""
+                <table class="polarion-dle-workitem-fields-end-table"><tbody><tr>
+                <td class="polarion-dle-workitem-fields-end-table-label" style="width: 20%">Priority</td>
+                <td class="polarion-dle-workitem-fields-end-table-value">Medium</td>
+                <td class="polarion-dle-workitem-fields-end-table-value" style="border: 2px dashed red">Own border</td>
+                <td>Other cell</td>
+                </tr></tbody></table>""");
+
+        processor.adjustStyles(document);
+
+        Elements cells = document.select("td");
+        assertEquals("width:20%;border:1px solid #CCCCCC;", cells.get(0).attr("style").replace("\n", ""));
+        assertEquals("border:1px solid #CCCCCC;", cells.get(1).attr("style"));
+        assertEquals("border: 2px dashed red", cells.get(2).attr("style"));
+        assertFalse(cells.get(3).hasAttr("style"));
+    }
+
+    @Test
     @SneakyThrows
     void adjustImageAlignmentTest() {
         try (InputStream isInvalidHtml = this.getClass().getResourceAsStream("/imageAlignmentBeforeProcessing.html");
@@ -1502,6 +1521,8 @@ class HtmlProcessorTest {
             ExportParams exportParams = getExportParams();
             // to avoid changing input html and check with regular equals
             doNothing().when(spyHtmlProcessor).adjustCellWidth(any());
+            doNothing().when(spyHtmlProcessor).applyBoldStyles(any());
+            doNothing().when(spyHtmlProcessor).adjustStyles(any());
             exportParams.setCutEmptyChapters(false);
             exportParams.setCutEmptyWIAttributes(false); // this test asserts the input is left unchanged, so disable WI-attribute cutting (defaults to true)
 
