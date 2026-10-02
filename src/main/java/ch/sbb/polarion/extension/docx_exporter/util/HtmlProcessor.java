@@ -68,6 +68,10 @@ public class HtmlProcessor {
     private static final String ANCHORS_WITH_HREF_SELECTOR = "a[href]";
     private static final String OUTLINE_NUMBER_FIELD_ID = "polarion_editor_field=outlineNumber";
     private static final String WORK_ITEM_FIELDS_START_CLASS = "polarion-dle-workitem-fields-start";
+    private static final String WORK_ITEM_FIELDS_END_TABLE_CLASS = "polarion-dle-workitem-fields-end-table";
+    private static final String WORK_ITEM_FIELDS_END_TABLE_LABEL_CLASS = "polarion-dle-workitem-fields-end-table-label";
+    private static final String WORK_ITEM_FIELDS_END_TABLE_VALUE_CLASS = "polarion-dle-workitem-fields-end-table-value";
+    private static final String WORK_ITEM_FIELDS_END_TABLE_BORDER_VALUE = "1px solid #CCCCCC";
     private static final char NON_BREAKING_SPACE = '\u00A0';
     private static final String DEEP_HEADING_SELECTOR_PREFIX = "div.heading-";
     private static final int DEEP_HEADING_MIN_LEVEL = 7;
@@ -176,6 +180,9 @@ public class HtmlProcessor {
         // Adjusts WorkItem attributes tables to stretch to full page width for better usage of page space and better readability.
         // Also changes absolute widths of normal table cells from absolute values to "auto" if "Fit tables and images to page" is on
         timedIfNotNull(generationLog, "Adjust cell width", () -> adjustCellWidth(document));
+
+        // Gives WorkItem attributes table cells the gray borders Polarion draws through its stylesheet, which pandoc never sees.
+        timedIfNotNull(generationLog, "Adjust styles", () -> adjustStyles(document));
 
         // ----
         // This sequence is important! We need first filter out Linked WorkItems and only then cut empty attributes,
@@ -940,7 +947,7 @@ public class HtmlProcessor {
 
     private void cutEmptyWIAttributesInTables(@NotNull Document document) {
         // Iterates through <td class="polarion-dle-workitem-fields-end-table-value"> elements and if they are empty (no value) removes enclosing them tr-elements
-        Elements attributeValueCells = document.select("td.polarion-dle-workitem-fields-end-table-value");
+        Elements attributeValueCells = document.select("td." + WORK_ITEM_FIELDS_END_TABLE_VALUE_CLASS);
         for (Element attributeValueCell : attributeValueCells) {
             if (attributeValueCell.text().isEmpty()) {
                 Element parent = attributeValueCell.parent();
@@ -999,8 +1006,12 @@ public class HtmlProcessor {
     }
 
     private static @NotNull String boldSelector() {
-        List<String> selectors = new ArrayList<>(List.of("span.polarion-dle-workitem-title", "span." + WORK_ITEM_FIELDS_START_CLASS,
-                "h1", "h2", "h3", "h4", "h5", "h6"));
+        List<String> selectors = new ArrayList<>(List.of(
+                "span.polarion-dle-workitem-title",
+                "span." + WORK_ITEM_FIELDS_START_CLASS,
+                "td." + WORK_ITEM_FIELDS_END_TABLE_LABEL_CLASS,
+                "h1", "h2", "h3", "h4", "h5", "h6"
+        ));
         for (int level = DEEP_HEADING_MIN_LEVEL; level <= DEEP_HEADING_MAX_LEVEL; level++) {
             selectors.add(DEEP_HEADING_SELECTOR_PREFIX + level);
         }
@@ -1057,19 +1068,33 @@ public class HtmlProcessor {
     void adjustCellWidth(@NotNull Document document) {
         autoCellWidth(document);
 
-        Elements wiAttrTables = document.select("table.polarion-dle-workitem-fields-end-table");
+        Elements wiAttrTables = document.select("table." + WORK_ITEM_FIELDS_END_TABLE_CLASS);
         for (Element table : wiAttrTables) {
             table.attr(HtmlTagAttr.STYLE, "width: 100%");
 
             // vertical-align is explicit because the reference document's table style bottom-aligns the first row
-            Elements attrNameCells = table.select("td.polarion-dle-workitem-fields-end-table-label");
+            Elements attrNameCells = table.select("td." + WORK_ITEM_FIELDS_END_TABLE_LABEL_CLASS);
             for (Element attrNameCell : attrNameCells) {
                 attrNameCell.attr(HtmlTagAttr.STYLE, "width: 20%; vertical-align: top");
             }
 
-            Elements attrNameValues = table.select("td.polarion-dle-workitem-fields-end-table-value");
+            Elements attrNameValues = table.select("td." + WORK_ITEM_FIELDS_END_TABLE_VALUE_CLASS);
             for (Element attrNameValue : attrNameValues) {
                 attrNameValue.attr(HtmlTagAttr.STYLE, "width: 80%; vertical-align: top");
+            }
+        }
+    }
+
+    @VisibleForTesting
+    void adjustStyles(@NotNull Document document) {
+        // workitems fields table
+        // "Preserve table styles" draws a cell without a border of its own in solid black.
+        Elements cells = document.select("td." + WORK_ITEM_FIELDS_END_TABLE_LABEL_CLASS + COMMA_SEPARATOR + "td." + WORK_ITEM_FIELDS_END_TABLE_VALUE_CLASS);
+        for (Element cell : cells) {
+            CSSDeclarationList cssStyles = parseCss(cell.attr(HtmlTagAttr.STYLE));
+            if (CssUtils.getPropertyValue(cssStyles, CssProp.BORDER).isEmpty()) {
+                CssUtils.setPropertyValue(cssStyles, CssProp.BORDER, WORK_ITEM_FIELDS_END_TABLE_BORDER_VALUE);
+                cell.attr(HtmlTagAttr.STYLE, cssStyles.getAsCSSString());
             }
         }
     }
