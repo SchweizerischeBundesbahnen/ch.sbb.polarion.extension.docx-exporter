@@ -7,7 +7,7 @@ import ch.sbb.polarion.extension.generic.rest.GenericRestApplication;
 import ch.sbb.polarion.extension.generic.rest.controller.roles.RolesApiController;
 import ch.sbb.polarion.extension.generic.rest.controller.roles.RolesInternalController;
 import ch.sbb.polarion.extension.generic.settings.NamedSettingsRegistry;
-import ch.sbb.polarion.extension.docx_exporter.converter.DocxConverterJobsCleaner;
+import ch.sbb.polarion.extension.docx_exporter.converter.DocxConverterJobsService;
 import ch.sbb.polarion.extension.docx_exporter.rest.controller.CollectionApiController;
 import ch.sbb.polarion.extension.docx_exporter.rest.controller.CollectionInternalController;
 import ch.sbb.polarion.extension.docx_exporter.rest.controller.ConverterApiController;
@@ -58,7 +58,7 @@ public class DocxExporterRestApplication extends GenericRestApplication {
         }
 
         try {
-            DocxConverterJobsCleaner.startCleaningJob();
+            DocxConverterJobsService.startCleaner();
         } catch (Exception e) {
             logger.error("Error during starting of clearing job", e);
         }

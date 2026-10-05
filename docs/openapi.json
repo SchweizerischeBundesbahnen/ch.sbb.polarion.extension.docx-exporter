@@ -415,7 +415,7 @@
             "content": {
               "application/*": {
                 "schema": {
-                  "$ref": "#/components/schemas/ConverterJobDetails"
+                  "$ref": "#/components/schemas/JobDetails"
                 }
               }
             },
@@ -425,7 +425,7 @@
             "content": {
               "application/*": {
                 "schema": {
-                  "$ref": "#/components/schemas/ConverterJobDetails"
+                  "$ref": "#/components/schemas/JobDetails"
                 }
               }
             },
@@ -1672,27 +1672,6 @@
         },
         "type": "object"
       },
-      "ConverterJobDetails": {
-        "description": "Details of the converter job including status and error message if any",
-        "properties": {
-          "errorMessage": {
-            "description": "Error message if the conversion failed",
-            "type": "string"
-          },
-          "status": {
-            "description": "Status of the converter job",
-            "enum": [
-              "IN_PROGRESS",
-              "SUCCESSFULLY_FINISHED",
-              "FAILED",
-              "CANCELLED"
-            ],
-            "example": "IN_PROGRESS",
-            "type": "string"
-          }
-        },
-        "type": "object"
-      },
       "DocIdentifier": {
         "description": "Unique document identifier data",
         "properties": {
@@ -1755,10 +1734,6 @@
           "cutEmptyWIAttributes": {
             "default": true,
             "description": "Empty work item attributes should be removed from the document",
-            "type": "boolean"
-          },
-          "cutHeadingNumbers": {
-            "description": "Outline numbers of headings should not be exported as text, so that the numbering is left to the heading styles of the template",
             "type": "boolean"
           },
           "cutLocalUrls": {
@@ -1864,6 +1839,31 @@
           },
           "webhooks": {
             "description": "Webhooks settings name",
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "JobDetails": {
+        "description": "Details of an asynchronous job: its status, its progress and the error message if it failed",
+        "properties": {
+          "errorMessage": {
+            "description": "Error message if the job failed or was cancelled",
+            "type": "string"
+          },
+          "progressMessage": {
+            "description": "What the job is doing right now, as long as it is running",
+            "type": "string"
+          },
+          "status": {
+            "description": "Status of an asynchronous job",
+            "enum": [
+              "IN_PROGRESS",
+              "SUCCESSFULLY_FINISHED",
+              "FAILED",
+              "CANCELLED"
+            ],
+            "example": "IN_PROGRESS",
             "type": "string"
           }
         },

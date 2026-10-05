@@ -5,7 +5,6 @@ import ch.sbb.polarion.extension.docx_exporter.pandoc.service.model.PandocParams
 import ch.sbb.polarion.extension.docx_exporter.properties.DocxExporterExtensionConfiguration;
 import ch.sbb.polarion.extension.docx_exporter.rest.model.conversion.ExportParams;
 import ch.sbb.polarion.extension.docx_exporter.rest.model.conversion.ImageDensity;
-import ch.sbb.polarion.extension.docx_exporter.rest.model.conversion.LinkRoleDirection;
 import ch.sbb.polarion.extension.docx_exporter.rest.model.documents.DocumentData;
 import ch.sbb.polarion.extension.docx_exporter.rest.model.settings.templates.TemplatesModel;
 import ch.sbb.polarion.extension.docx_exporter.rest.model.settings.webhooks.AuthType;
@@ -24,6 +23,7 @@ import ch.sbb.polarion.extension.docx_exporter.util.DocxTemplateProcessor;
 import ch.sbb.polarion.extension.docx_exporter.util.EnumValuesProvider;
 import ch.sbb.polarion.extension.docx_exporter.util.HtmlLogger;
 import ch.sbb.polarion.extension.docx_exporter.util.HtmlProcessor;
+import ch.sbb.polarion.extension.docx_exporter.util.TemplateHeadingNumbering;
 import ch.sbb.polarion.extension.docx_exporter.util.html.HtmlLinksHelper;
 import ch.sbb.polarion.extension.generic.settings.SettingId;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -53,6 +53,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 
 @AllArgsConstructor
 @SuppressWarnings("java:S1200")
@@ -81,9 +82,13 @@ public class DocxConverter {
             @Nullable ITrackerProject project = getTrackerProject(exportParams);
             @NotNull final DocumentData<? extends IUniqueObject> documentData = DocumentDataFactory.getDocumentData(exportParams, true);
 
+            // The template decides which heading numbers are left to Word, so it is read before the HTML is prepared
+            byte[] templateSource = generationLog.timed("Load template", () -> loadTemplate(exportParams));
+            Set<Integer> headingLevelsNumberedByTemplate = getHeadingLevelsNumberedByTemplate(templateSource, generationLog);
+
             // Prepare HTML content
             @NotNull String htmlContent = generationLog.timed("Prepare HTML content",
-                    () -> prepareHtmlContent(exportParams, project, documentData, generationLog),
+                    () -> prepareHtmlContent(exportParams, project, documentData, headingLevelsNumberedByTemplate, generationLog),
                     html -> String.format("html_size=%d bytes", html.length()));
 
             // Set HTML size metric
@@ -93,14 +98,8 @@ public class DocxConverter {
 
             // Process template if specified
             byte[] template = null;
-            if (exportParams.getTemplate() != null) {
-                template = generationLog.timed("Process template", () -> {
-                    TemplatesModel templatesModel = new TemplatesSettings().load(exportParams.getProjectId(), SettingId.fromName(exportParams.getTemplate()));
-                    if (templatesModel.getTemplate() != null) {
-                        return docxTemplateProcessor.processDocxTemplate(templatesModel.getTemplate(), documentData, exportParams);
-                    }
-                    return null;
-                });
+            if (templateSource != null) {
+                template = generationLog.timed("Process template", () -> docxTemplateProcessor.processDocxTemplate(templateSource, documentData, exportParams));
             }
 
             // Generate DOCX
@@ -147,7 +146,27 @@ public class DocxConverter {
     public @NotNull String prepareHtmlContent(@NotNull ExportParams exportParams) {
         @Nullable ITrackerProject project = getTrackerProject(exportParams);
         @NotNull final DocumentData<? extends IUniqueObject> documentData = DocumentDataFactory.getDocumentData(exportParams, true);
-        return prepareHtmlContent(exportParams, project, documentData, null);
+        Set<Integer> headingLevelsNumberedByTemplate = getHeadingLevelsNumberedByTemplate(loadTemplate(exportParams), null);
+        return prepareHtmlContent(exportParams, project, documentData, headingLevelsNumberedByTemplate, null);
+    }
+
+    private byte @Nullable [] loadTemplate(@NotNull ExportParams exportParams) {
+        if (exportParams.getTemplate() == null) {
+            return null;
+        }
+        TemplatesModel templatesModel = new TemplatesSettings().load(exportParams.getProjectId(), SettingId.fromName(exportParams.getTemplate()));
+        return templatesModel.getTemplate();
+    }
+
+    private @NotNull Set<Integer> getHeadingLevelsNumberedByTemplate(byte @Nullable [] template, @Nullable DocxGenerationLog generationLog) {
+        // Without a template of its own pandoc takes its default one, whose heading styles are not numbered
+        Set<Integer> levels = TemplateHeadingNumbering.getNumberedHeadingLevels(template);
+        if (generationLog != null) {
+            generationLog.log(levels.isEmpty()
+                    ? "Template does not number headings, heading numbers are kept"
+                    : "Template numbers headings of levels " + levels + ", their heading numbers are cut");
+        }
+        return levels;
     }
 
     private @Nullable ITrackerProject getTrackerProject(@NotNull ExportParams exportParams) {
@@ -158,9 +177,10 @@ public class DocxConverter {
         return project;
     }
 
-    private @NotNull String prepareHtmlContent(@NotNull ExportParams exportParams, @Nullable ITrackerProject project, @NotNull DocumentData<? extends IUniqueObject> documentData, @Nullable DocxGenerationLog generationLog) {
-        String preparedDocumentContent = postProcessDocumentContent(exportParams, project, documentData.getContent(), generationLog);
-        String composedHtml = timedIfNotNull(generationLog, "Compose HTML", () -> composeHtml(documentData.getTitle(), preparedDocumentContent));
+    private @NotNull String prepareHtmlContent(@NotNull ExportParams exportParams, @Nullable ITrackerProject project, @NotNull DocumentData<? extends IUniqueObject> documentData,
+                                               @NotNull Set<Integer> headingLevelsNumberedByTemplate, @Nullable DocxGenerationLog generationLog) {
+        String preparedDocumentContent = postProcessDocumentContent(exportParams, project, documentData.getContent(), headingLevelsNumberedByTemplate, generationLog);
+        String composedHtml = timedIfNotNull(generationLog, "Compose HTML", () -> composeHtml(preparedDocumentContent));
         String internalizedHtml = timedIfNotNull(generationLog, "Internalize links", () -> htmlProcessor.internalizeLinks(composedHtml));
         return timedIfNotNull(generationLog, "Apply webhooks", () -> applyWebhooks(exportParams, internalizedHtml));
     }
@@ -265,13 +285,14 @@ public class DocxConverter {
 
     @VisibleForTesting
     String postProcessDocumentContent(@NotNull ExportParams exportParams, @Nullable ITrackerProject project, @Nullable String documentContent) {
-        return postProcessDocumentContent(exportParams, project, documentContent, null);
+        return postProcessDocumentContent(exportParams, project, documentContent, Set.of(), null);
     }
 
-    String postProcessDocumentContent(@NotNull ExportParams exportParams, @Nullable ITrackerProject project, @Nullable String documentContent, @Nullable DocxGenerationLog generationLog) {
+    String postProcessDocumentContent(@NotNull ExportParams exportParams, @Nullable ITrackerProject project, @Nullable String documentContent,
+                                      @NotNull Set<Integer> headingLevelsNumberedByTemplate, @Nullable DocxGenerationLog generationLog) {
         if (documentContent != null) {
             List<String> selectedRoleEnumValues = project == null ? Collections.emptyList() : EnumValuesProvider.getLinkRoleNames(project, exportParams.getLinkedWorkitemRoles(), exportParams.getLinkRoleDirection());
-            return htmlProcessor.processHtmlForExport(documentContent, exportParams, selectedRoleEnumValues, generationLog);
+            return htmlProcessor.processHtmlForExport(documentContent, exportParams, selectedRoleEnumValues, headingLevelsNumberedByTemplate, generationLog);
         } else {
             return "";
         }
@@ -279,9 +300,9 @@ public class DocxConverter {
 
     @NotNull
     @VisibleForTesting
-    String composeHtml(@NotNull String documentName, String documentContent) {
+    String composeHtml(String documentContent) {
         String content = "<div class='content'>" + documentContent + "</div>";
-        return docxTemplateProcessor.processUsing(documentName, content);
+        return docxTemplateProcessor.processUsing(content);
     }
 
     private void saveDebugDataToStorage(@Nullable String originalHtml,

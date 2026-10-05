@@ -1,236 +1,117 @@
 package ch.sbb.polarion.extension.docx_exporter.converter;
 
-import ch.sbb.polarion.extension.generic.rest.filter.LogoutFilter;
 import ch.sbb.polarion.extension.docx_exporter.rest.model.conversion.ExportParams;
 import ch.sbb.polarion.extension.docx_exporter.util.DebugDataStorage;
 import ch.sbb.polarion.extension.docx_exporter.util.ExportContext;
-import com.polarion.core.util.StringUtils;
-import com.polarion.core.util.logging.Logger;
+import ch.sbb.polarion.extension.generic.jobs.AsyncJobsService;
+import ch.sbb.polarion.extension.generic.jobs.JobsProperties;
+import ch.sbb.polarion.extension.generic.jobs.JobsRegistry;
+import ch.sbb.polarion.extension.generic.jobs.TimeoutPolicy;
 import com.polarion.platform.security.ISecurityService;
 import lombok.Builder;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.VisibleForTesting;
-import org.springframework.web.context.request.RequestAttributes;
-import org.springframework.web.context.request.RequestContextHolder;
 
-import javax.security.auth.Subject;
-import java.security.PrivilegedAction;
-import java.time.Instant;
-import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
-import java.util.NoSuchElementException;
 import java.util.Objects;
-import java.util.Optional;
-import java.util.UUID;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.CompletionException;
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
-import java.util.stream.Collectors;
 
-public class DocxConverterJobsService {
-    private final Logger logger = Logger.getLogger(DocxConverterJobsService.class);
-    // Static maps are necessary for per-request scoped InternalController and ApiController. In case of singletons static can be removed
-    private static final Map<String, JobDetails> jobs = new ConcurrentHashMap<>();
-    private static final Map<String, String> failedJobsReasons = new ConcurrentHashMap<>();
-    private static final String UNKNOWN_JOB_MESSAGE = "Converter Job is unknown: %s";
+/**
+ * Runs DOCX conversions in the background. The job mechanics are generic's {@link AsyncJobsService}; this class adds
+ * the debug data and the export context of a conversion.
+ */
+public class DocxConverterJobsService extends AsyncJobsService<DocxConverterJobsService.JobPayload, byte[]> {
+
+    public static final String JOBS_PROPERTIES_FILE = "/docx-converter-jobs.properties";
+
+    // Static, so that the jobs survive the controller instance which started them
+    private static final JobsRegistry<JobPayload, byte[]> REGISTRY = registryBuilder().build();
 
     private final DocxConverter docxConverter;
-    private final ISecurityService securityService;
 
-    public DocxConverterJobsService(DocxConverter docxConverter, ISecurityService securityService) {
-        this.docxConverter = docxConverter;
-        this.securityService = securityService;
-    }
-
-    public String startJob(ExportParams exportParams, int timeoutInMinutes) {
-        String jobId = UUID.randomUUID().toString();
-        Subject userSubject = securityService.getCurrentSubject();
-        boolean isJobLogoutRequired = isJobLogoutRequired();
-        final JobContext jobContext = JobContext.builder()
-                .workItemIDsWithMissingAttachment(new ArrayList<>())
-                .blockedResources(new ArrayList<>())
-                .build();
-
-        CompletableFuture<byte[]> asyncConversionJob = CompletableFuture.supplyAsync(() -> {
-            try {
-                // Set current job ID for debug data storage
-                DebugDataStorage.setCurrentJobId(jobId);
-                return securityService.doAsUser(userSubject, (PrivilegedAction<byte[]>) () -> docxConverter.convertToDocx(exportParams));
-            } catch (Exception e) {
-                String errorMessage = String.format("DOCX conversion job '%s' is failed with error: %s", jobId, e.getMessage());
-                logger.error(errorMessage, e);
-                failedJobsReasons.put(jobId, StringUtils.getEmptyIfNull(e.getMessage()));
-                throw e;
-            } finally {
-                // Clear current job ID
-                DebugDataStorage.clearCurrentJobId();
-                jobContext.workItemIDsWithMissingAttachment.addAll(ExportContext.getWorkItemIDsWithMissingAttachment());
-                jobContext.blockedResources.addAll(ExportContext.getBlockedResources());
-                ExportContext.clear();
-                if ((userSubject != null) && isJobLogoutRequired) {
-                    securityService.logout(userSubject);
-                }
-            }
-        }, Executors.newSingleThreadExecutor());
-        asyncConversionJob
-                .orTimeout(timeoutInMinutes, TimeUnit.MINUTES)
-                .exceptionally(e -> {
-                    // the future hands over a CompletionException whose message is "<class>: <text>",
-                    // and this text is what the export dialog shows, so the cause speaks for itself
-                    String failedReason = describeFailure(e);
-                    if (e instanceof TimeoutException) {
-                        failedReason = String.format("Timeout after %d min", timeoutInMinutes);
-                    }
-                    failedJobsReasons.put(jobId, failedReason);
-                    logger.error(String.format("DOCX conversion job '%s' is failed with error: %s", jobId, failedReason), e);
-                    asyncConversionJob.completeExceptionally(e);
-                    return null;
-                });
-        JobDetails jobDetails = JobDetails.builder()
-                .future(asyncConversionJob)
-                .user(securityService.getCurrentUser())
-                .exportParams(exportParams)
-                .startingTime(Instant.now())
-                .jobContext(jobContext).build();
-        jobs.put(jobId, jobDetails);
-        return jobId;
-    }
-
-    public JobState getJobState(String jobId) {
-        CompletableFuture<byte[]> future = getJobDetails(jobId).future();
-        return JobState.builder()
-                .isDone(future.isDone())
-                .isCompletedExceptionally(future.isCompletedExceptionally())
-                .isCancelled(future.isCancelled())
-                .errorMessage(failedJobsReasons.get(jobId)).build();
-    }
-
-    public Optional<byte[]> getJobResult(String jobId) {
-        CompletableFuture<byte[]> future = getJobDetails(jobId).future();
-        if (!future.isDone()) {
-            return Optional.empty();
-        }
-        if (future.isCancelled() || future.isCompletedExceptionally()) {
-            throw new IllegalStateException("Job was cancelled or failed: " + failedJobsReasons.get(jobId));
-        }
-        try {
-            return Optional.of(future.get());
-        } catch (InterruptedException | ExecutionException e) {
-            Thread.currentThread().interrupt();
-            throw new IllegalStateException("Cannot extract result for job " + jobId + " :" + e.getMessage(), e);
-        } catch (Exception e) {
-            throw new IllegalStateException("Cannot extract result for job " + jobId + " :" + e.getMessage(), e);
-        }
-    }
-
-    public ExportParams getJobParams(String jobId) {
-        return getJobDetails(jobId).exportParams;
-    }
-
-    public JobContext getJobContext(String jobId) {
-        return getJobDetails(jobId).jobContext;
-    }
-
-    public Map<String, JobState> getAllJobsStates() {
-        return jobs.entrySet().stream()
-                .filter(entry -> Objects.equals(entry.getValue().user, securityService.getCurrentUser()))
-                .collect(Collectors.toMap(Map.Entry::getKey, entry -> getJobState(entry.getKey())));
-    }
-
-    public static void cleanupExpiredJobs(int timeout) {
-        Instant currentTime = Instant.now();
-
-        jobs.entrySet().stream()
-                .filter(entry -> entry.getValue().future.isDone()
-                        && entry.getValue().startingTime.plus(timeout, ChronoUnit.MINUTES).isBefore(currentTime))
-                .map(Map.Entry::getKey)
-                .forEach(DocxConverterJobsService::removeKeyFromJobMaps);
-
-        // Also cleanup expired debug data
-        DebugDataStorage.cleanupExpired(timeout);
-    }
-
-    private static void removeKeyFromJobMaps(String id) {
-        jobs.remove(id);
-        failedJobsReasons.remove(id);
-        DebugDataStorage.remove(id);
+    public DocxConverterJobsService(@NotNull DocxConverter docxConverter, @NotNull ISecurityService securityService) {
+        this(docxConverter, securityService, REGISTRY);
     }
 
     @VisibleForTesting
-    void cancelJobsAndCleanMap() {
-        jobs.values().forEach(j -> j.future().cancel(true));
-        jobs.clear();
+    DocxConverterJobsService(@NotNull DocxConverter docxConverter, @NotNull ISecurityService securityService,
+                             @NotNull JobsRegistry<JobPayload, byte[]> registry) {
+        super(registry, securityService);
+        this.docxConverter = docxConverter;
     }
 
-    @Builder
-    public record JobDetails(
-            CompletableFuture<byte[]> future,
-            String user,
-            ExportParams exportParams,
-            Instant startingTime,
-            JobContext jobContext) {
+    /**
+     * @return the job timeouts of this extension
+     */
+    public static @NotNull JobsProperties jobsProperties() {
+        return new JobsProperties(DocxConverterJobsService.class, JOBS_PROPERTIES_FILE);
+    }
+
+    /**
+     * Starts dropping finished conversions, and their debug data, once they are older than the finished job timeout.
+     */
+    public static void startCleaner() {
+        REGISTRY.startCleaner(jobsProperties().getFinishedJobTimeout());
+    }
+
+    /**
+     * Stops the cleaner and the conversion threads. Called when the bundle stops.
+     */
+    public static void shutdown() {
+        REGISTRY.shutdown();
+    }
+
+    public @NotNull String startJob(@NotNull ExportParams exportParams, int timeoutInMinutes) {
+        JobContext jobContext = JobContext.builder()
+                .workItemIDsWithMissingAttachment(new ArrayList<>())
+                .blockedResources(new ArrayList<>())
+                .build();
+        return startJob(new JobPayload(exportParams, jobContext), timeoutInMinutes, control -> {
+            try {
+                DebugDataStorage.setCurrentJobId(control.jobId());
+                return docxConverter.convertToDocx(exportParams);
+            } finally {
+                DebugDataStorage.clearCurrentJobId();
+                jobContext.workItemIDsWithMissingAttachment().addAll(ExportContext.getWorkItemIDsWithMissingAttachment());
+                jobContext.blockedResources().addAll(ExportContext.getBlockedResources());
+                ExportContext.clear();
+            }
+        });
+    }
+
+    public @NotNull ExportParams getJobParams(@NotNull String jobId) {
+        return payload(jobId).exportParams();
+    }
+
+    public @NotNull JobContext getJobContext(@NotNull String jobId) {
+        return payload(jobId).jobContext();
+    }
+
+    private @NotNull JobPayload payload(@NotNull String jobId) {
+        return Objects.requireNonNull(getJobPayload(jobId), "Job payload is always set by startJob");
+    }
+
+    /**
+     * A conversion only reads, so it is declared over at its timeout and its thread is interrupted.
+     * Its debug data goes together with the job.
+     */
+    @VisibleForTesting
+    static @NotNull JobsRegistry.Builder<JobPayload, byte[]> registryBuilder() {
+        return JobsRegistry.<JobPayload, byte[]>builder("DOCX conversion")
+                .timeoutPolicy(TimeoutPolicy.INTERRUPT)
+                .onJobRemoved(DebugDataStorage::remove)
+                .onCleanup(DebugDataStorage::cleanupExpired);
+    }
+
+    /**
+     * What a conversion keeps next to its result: its parameters, and what its export context collected.
+     */
+    public record JobPayload(@NotNull ExportParams exportParams, @NotNull JobContext jobContext) {
     }
 
     @Builder
     public record JobContext(
             List<String> workItemIDsWithMissingAttachment,
             List<ExportContext.BlockedResource> blockedResources) {
-    }
-
-    @Builder
-    public record JobState(
-            boolean isDone,
-            boolean isCompletedExceptionally,
-            boolean isCancelled,
-            String errorMessage) {
-    }
-
-    private JobDetails getJobDetails(String jobId) {
-        JobDetails jobDetails = jobs.get(jobId);
-        if (jobDetails == null || !Objects.equals(jobDetails.user, securityService.getCurrentUser())) {
-            throw new NoSuchElementException(String.format(UNKNOWN_JOB_MESSAGE, jobId));
-        }
-        return jobDetails;
-    }
-
-    private boolean isJobLogoutRequired() {
-        RequestAttributes requestAttributes = RequestContextHolder.getRequestAttributes();
-        if (requestAttributes != null) {
-            if (requestAttributes.getAttribute(LogoutFilter.XSRF_SKIP_LOGOUT, RequestAttributes.SCOPE_REQUEST) == Boolean.TRUE) {
-                return false;
-            }
-            return requestAttributes.getAttribute(LogoutFilter.ASYNC_SKIP_LOGOUT, RequestAttributes.SCOPE_REQUEST) == Boolean.TRUE;
-        }
-        return false;
-    }
-
-    /**
-     * @return what the export dialog shows: the message of the failure itself, or its class where it
-     *         carries no message, since an empty reason tells the reader nothing
-     */
-    @VisibleForTesting
-    static @NotNull String describeFailure(@NotNull Throwable thrown) {
-        Throwable reason = rootReason(thrown);
-        String message = StringUtils.getEmptyIfNull(reason.getMessage());
-        return message.isBlank() ? reason.getClass().getName() : message;
-    }
-
-    /**
-     * @return the failure worth showing: a future wraps what was thrown, and the wrapper says only
-     *         which class it was
-     */
-    @VisibleForTesting
-    static @NotNull Throwable rootReason(@NotNull Throwable thrown) {
-        Throwable reason = thrown;
-        while ((reason instanceof CompletionException || reason instanceof ExecutionException) && reason.getCause() != null) {
-            reason = reason.getCause();
-        }
-        return reason;
     }
 }

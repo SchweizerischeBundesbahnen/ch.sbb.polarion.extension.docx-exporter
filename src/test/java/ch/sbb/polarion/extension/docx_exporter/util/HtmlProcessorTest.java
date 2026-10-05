@@ -35,6 +35,7 @@ import java.util.Base64;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Stream;
 import java.util.Map;
 
@@ -238,7 +239,7 @@ class HtmlProcessorTest {
     @MethodSource("headingNumbers")
     void cutHeadingNumbersTest(String html, String expected) {
         Document document = JSoupUtils.parseHtml(html);
-        processor.cutHeadingNumbers(document);
+        processor.cutHeadingNumbers(document, Set.of(1, 2, 3, 4, 5, 6));
         assertEquals(expected, document.body().html());
     }
 
@@ -305,11 +306,24 @@ class HtmlProcessorTest {
         try (InputStream html = this.getClass().getResourceAsStream("/pandoc/html/tableOfFigures.html")) {
             Document document = JSoupUtils.parseHtml(new String(html.readAllBytes(), StandardCharsets.UTF_8));
 
-            processor.cutHeadingNumbers(document);
+            processor.cutHeadingNumbers(document, Set.of(1));
 
             List<String> headings = document.select("h1, h2, h3, h4, h5, h6").eachText();
             assertEquals(List.of("Table of Figures", "System Components", "Network Topology", "Security Model"), headings);
         }
+    }
+
+    @Test
+    void cutHeadingNumbersOnlyOfLevelsNumberedByTemplateTest() {
+        // Polarion's h2 and h3 are first and second level headings
+        String html = "<h2>" + NUMBER_START + "1" + NUMBER_END + "First</h2><h3>" + NUMBER_START + "1.1" + NUMBER_END + "Second</h3>";
+
+        String onlyFirstLevel = processor.processHtmlForExport(html, getExportParams(), List.of(), Set.of(1), null);
+        assertTrue(onlyFirstLevel.contains("<h1 style=\"font-weight:bold;\">First</h1>"), onlyFirstLevel);
+        assertTrue(onlyFirstLevel.contains("1.1"), onlyFirstLevel);
+
+        String noLevel = processor.processHtmlForExport(html, getExportParams(), List.of(), Set.of(), null);
+        assertTrue(noLevel.contains(">1<") && noLevel.contains("1.1"), noLevel);
     }
 
     @Test
@@ -319,14 +333,13 @@ class HtmlProcessorTest {
 
         ExportParams exportParams = getExportParams();
         exportParams.setChapters(List.of("2"));
-        exportParams.setCutHeadingNumbers(true);
 
         // Polarion's h2 is a first level heading, chapters are selected by their numbers before the numbers are removed
         String html = "<h2>" + NUMBER_START + "1" + NUMBER_END + "First</h2><p>first text</p><h2>" + NUMBER_START + "2" + NUMBER_END + "Second</h2><p>second text</p>";
-        String fixedHtml = processor.processHtmlForExport(html, exportParams, List.of());
+        String fixedHtml = processor.processHtmlForExport(html, exportParams, List.of(), Set.of(1), null);
 
         assertFalse(fixedHtml.contains("First"));
-        assertTrue(fixedHtml.contains("<h1>Second</h1>"), fixedHtml);
+        assertTrue(fixedHtml.contains("<h1 style=\"font-weight:bold;\">Second</h1>"), fixedHtml);
         assertTrue(fixedHtml.contains("second text"));
     }
 
@@ -450,6 +463,42 @@ class HtmlProcessorTest {
         processor.convertPolarionFormulas(document);
 
         assertEquals(html, document.body().html());
+    }
+
+    @Test
+    @SneakyThrows
+    void applyBoldStylesTest() {
+        try (InputStream isInvalidHtml = this.getClass().getResourceAsStream("/boldStylesBeforeProcessing.html");
+             InputStream isValidHtml = this.getClass().getResourceAsStream("/boldStylesAfterProcessing.html")) {
+
+            Document document = JSoupUtils.parseHtml(new String(isInvalidHtml.readAllBytes(), StandardCharsets.UTF_8));
+
+            processor.applyBoldStyles(document);
+            String fixedHtml = document.body().html();
+            String validHtml = new String(isValidHtml.readAllBytes(), StandardCharsets.UTF_8);
+
+            // Spaces and new lines are removed to exclude difference in space characters
+            assertEquals(TestStringUtils.removeNonsensicalSymbols(validHtml), TestStringUtils.removeNonsensicalSymbols(fixedHtml));
+        }
+    }
+
+    @Test
+    void adjustStylesTest() {
+        Document document = JSoupUtils.parseHtml("""
+                <table class="polarion-dle-workitem-fields-end-table"><tbody><tr>
+                <td class="polarion-dle-workitem-fields-end-table-label" style="width: 20%">Priority</td>
+                <td class="polarion-dle-workitem-fields-end-table-value">Medium</td>
+                <td class="polarion-dle-workitem-fields-end-table-value" style="border: 2px dashed red">Own border</td>
+                <td>Other cell</td>
+                </tr></tbody></table>""");
+
+        processor.adjustStyles(document);
+
+        Elements cells = document.select("td");
+        assertEquals("width:20%;border:1px solid #CCCCCC;", cells.get(0).attr("style").replace("\n", ""));
+        assertEquals("border:1px solid #CCCCCC;", cells.get(1).attr("style"));
+        assertEquals("border: 2px dashed red", cells.get(2).attr("style"));
+        assertFalse(cells.get(3).hasAttr("style"));
     }
 
     @Test
@@ -1472,6 +1521,8 @@ class HtmlProcessorTest {
             ExportParams exportParams = getExportParams();
             // to avoid changing input html and check with regular equals
             doNothing().when(spyHtmlProcessor).adjustCellWidth(any());
+            doNothing().when(spyHtmlProcessor).applyBoldStyles(any());
+            doNothing().when(spyHtmlProcessor).adjustStyles(any());
             exportParams.setCutEmptyChapters(false);
             exportParams.setCutEmptyWIAttributes(false); // this test asserts the input is left unchanged, so disable WI-attribute cutting (defaults to true)
 
@@ -1483,9 +1534,10 @@ class HtmlProcessorTest {
 
     @ParameterizedTest
     @CsvSource({
-            "<h1>First level heading</h1>, <div class=\"title\">First level heading</div>",
-            "<h2>Second level heading</h2>, <h1>Second level heading</h1>",
-            "<h3>Third level heading</h3>, <h2>Third level heading</h2>"
+            "<h1>First level heading</h1>, <div data-custom-style=\"Title\">First level heading</div>",
+            "<h1>Title</h1><h2>Chapter</h2><h1>Another title</h1>, <div data-custom-style=\"Title\">Title</div><h1 style=\"font-weight:bold;\">Chapter</h1><div data-custom-style=\"Title\">Another title</div>",
+            "<h2>Second level heading</h2>, <h1 style=\"font-weight:bold;\">Second level heading</h1>",
+            "<h3>Third level heading</h3>, <h2 style=\"font-weight:bold;\">Third level heading</h2>"
     })
     void adjustHeadingForExportTest(String inputHtml, String expectedHtml) {
         String result = processor.processHtmlForExport(inputHtml, getExportParams(), List.of());

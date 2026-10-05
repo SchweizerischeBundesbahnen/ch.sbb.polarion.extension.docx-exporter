@@ -33,6 +33,7 @@ import org.mockito.MockedStatic;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.List;
+import java.util.Set;
 import java.util.Properties;
 
 import static ch.sbb.polarion.extension.docx_exporter.pandoc.BasePandocTest.readTemplate;
@@ -92,7 +93,7 @@ class DocxConverterTest {
                 .build();
 
         documentDataFactoryMockedStatic.when(() -> DocumentDataFactory.getDocumentData(eq(exportParams), anyBoolean())).thenReturn(documentData);
-        when(docxTemplateProcessor.processUsing(eq("testDocument"), anyString())).thenReturn("test html content");
+        when(docxTemplateProcessor.processUsing(anyString())).thenReturn("test html content");
         PandocParams params = PandocParams.builder().orientation("LANDSCAPE").paperSize("A3").build();
         when(pandocServiceConnector.convertToDocx(eq("test html content"), isNull(), eq(params))).thenReturn("test document content".getBytes());
         when(htmlProcessor.internalizeLinks(anyString())).thenAnswer(a -> a.getArgument(0));
@@ -175,14 +176,14 @@ class DocxConverterTest {
         when(typeEnum.getAllOptions()).thenReturn(List.of(typeOption));
         when(project.getWorkItemTypeEnum()).thenReturn(typeEnum);
         when(project.getWorkItemLinkRoleEnum()).thenReturn(roleEnum);
-        when(htmlProcessor.processHtmlForExport(anyString(), eq(exportParams), any(List.class), any())).thenReturn("result string");
+        when(htmlProcessor.processHtmlForExport(anyString(), eq(exportParams), any(List.class), anySet(), any())).thenReturn("result string");
 
         DocxConverter docxConverter = new DocxConverter(null, null, htmlProcessor, null);
         String resultContent = docxConverter.postProcessDocumentContent(exportParams, project, "test content");
 
         assertThat(resultContent).isEqualTo("result string");
         ArgumentCaptor<List<String>> rolesCaptor = ArgumentCaptor.forClass(List.class);
-        verify(htmlProcessor).processHtmlForExport(eq("test content"), eq(exportParams), rolesCaptor.capture(), any());
+        verify(htmlProcessor).processHtmlForExport(eq("test content"), eq(exportParams), rolesCaptor.capture(), eq(Set.of()), any());
         return rolesCaptor.getValue();
     }
 
