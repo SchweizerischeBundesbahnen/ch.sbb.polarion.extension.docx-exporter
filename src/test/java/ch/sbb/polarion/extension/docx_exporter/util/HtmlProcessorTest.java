@@ -38,6 +38,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Stream;
 import java.util.Map;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -516,6 +517,68 @@ class HtmlProcessorTest {
         assertEquals("vertical-align:middle;margin-right:2px;", images.get(1).attr("style").replace("\n", ""));
         assertEquals("vertical-align:top;margin-right:5px;", images.get(2).attr("style").replace("\n", ""));
         assertEquals("vertical-align: bottom", images.get(3).attr("style"));
+    }
+
+    @Test
+    void convertFontAwesomeIconsTest() {
+        String chartColumn = "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 512 512\"><path d=\"M0 0\"/></svg>";
+        String bell = "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 448 512\"><path d=\"M0 0\"/></svg>";
+        when(fileResourceProvider.getResourceAsBytes(anyString())).thenReturn(new byte[0]);
+        when(fileResourceProvider.getResourceAsBytes("/polarion/ria/fontawesome-6.2.0/svgs/solid/chart-column.svg")).thenReturn(chartColumn.getBytes(StandardCharsets.UTF_8));
+        when(fileResourceProvider.getResourceAsBytes("/polarion/ria/fontawesome-6.2.0/svgs/regular/bell.svg")).thenReturn(bell.getBytes(StandardCharsets.UTF_8));
+        when(fileResourceProvider.getResourceAsBytes("/polarion/ria/fontawesome-6.2.0/svgs/solid/malformed.svg"))
+                .thenReturn("<svg viewBox=\"0 0 1.2.3 512\"></svg>".getBytes(StandardCharsets.UTF_8));
+        when(fileResourceProvider.getResourceAsBytes("/polarion/ria/fontawesome-6.2.0/svgs/solid/flat.svg"))
+                .thenReturn("<svg viewBox=\"0 0 512 0\"></svg>".getBytes(StandardCharsets.UTF_8));
+        when(fileResourceProvider.getResourceAsBytes("/polarion/ria/fontawesome-6.2.0/svgs/solid/nothing.svg")).thenReturn(null);
+        Document document = JSoupUtils.parseHtml("""
+                <span class="polarion-Plan"><i id="plan-icon" class="fa-solid fa-chart-column polarion-font-icon-relative" style="color: #16A085"></i>Version 1.0</span>
+                <span style="color: red"><i class="fa-fw far fa-bell" style="color: inherit"></i>Inherited</span>
+                <i class="fa fa-chart-column"></i>
+                <i class="fa-solid fa-unknown"></i>
+                <i class="fa-solid fa-chart-column">text</i>
+                <span style="color: blue"><i class="fa-solid fa-chart-column" style="color: 'red'"></i></span>
+                <i class="fa fa-regular fa-bell"></i>
+                <i class="fa-solid fa-malformed"></i>
+                <i class="fa-solid fa-chart-column"><span></span></i>
+                <i class="fa-solid fa-flat"></i>
+                <i class="fa-solid fa-nothing"></i>""");
+
+        processor.convertFontAwesomeIcons(document);
+
+        Elements images = document.select("img");
+        assertEquals(5, images.size());
+        assertEquals("<svg fill=\"#16A085\"" + chartColumn.substring(4), decodeSvg(images.get(0)));
+        assertEquals("width: 16px; height: 16px;", images.get(0).attr("style"));
+        assertEquals("fa-solid fa-chart-column polarion-font-icon-relative polarion-Icons", images.get(0).className());
+        assertEquals("plan-icon", images.get(0).id());
+        assertEquals("Version 1.0", images.get(0).parent().text());
+        assertEquals("<svg fill=\"red\"" + bell.substring(4), decodeSvg(images.get(1)));
+        assertEquals("width: 14px; height: 16px;", images.get(1).attr("style"));
+        assertEquals(chartColumn, decodeSvg(images.get(2)));
+        assertEquals(chartColumn, decodeSvg(images.get(3)));
+        assertEquals(bell, decodeSvg(images.get(4)));
+        assertEquals(6, document.select("i").size());
+        assertEquals("fa-solid fa-unknown", document.select("i").get(0).className());
+        assertEquals("text", document.select("i").get(1).text());
+        assertEquals("fa-solid fa-malformed", document.select("i").get(2).className());
+        assertEquals(1, document.select("i").get(3).childrenSize());
+        assertEquals("fa-solid fa-flat", document.select("i").get(4).className());
+        assertEquals("fa-solid fa-nothing", document.select("i").get(5).className());
+        // Each folder and name read once: chart-column, fw in vain, bell, unknown, malformed, flat and nothing
+        verify(fileResourceProvider, times(7)).getResourceAsBytes(anyString());
+    }
+
+    @ParameterizedTest
+    @CsvSource(value = {"448, 512, 0.875", "512, 512, 1.0", "512, 0, NULL", "abc, 512, NULL", "512, abc, NULL"}, nullValues = "NULL")
+    void viewBoxAspectRatioTest(String width, String height, Double expected) {
+        assertEquals(Optional.ofNullable(expected), HtmlProcessor.viewBoxAspectRatio(width, height));
+    }
+
+    private static String decodeSvg(Element image) {
+        String src = image.attr("src");
+        assertTrue(src.startsWith("data:image/svg+xml;base64,"));
+        return new String(Base64.getDecoder().decode(src.substring(src.indexOf(',') + 1)), StandardCharsets.UTF_8);
     }
 
     @Test
