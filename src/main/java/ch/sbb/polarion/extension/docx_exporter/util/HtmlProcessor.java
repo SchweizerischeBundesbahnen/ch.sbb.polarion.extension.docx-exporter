@@ -37,6 +37,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
@@ -87,10 +88,12 @@ public class HtmlProcessor {
             "far", "regular", "fa-regular", "regular",
             "fab", "brands", "fa-brands", "brands");
     private static final String FONT_AWESOME_DEFAULT_FOLDER = "solid";
+    private static final String FONT_AWESOME_GENERIC_CLASS = "fa";
     private static final String FONT_AWESOME_CLASS_PREFIX = "fa-";
+    private static final Set<String> FONT_AWESOME_PARENT_COLOR_VALUES = Set.of("inherit", "unset", "currentcolor");
     // Polarion draws these icons at 1.23em of its 13px text, the size of its other 16px icons
     private static final int FONT_AWESOME_ICON_HEIGHT_PX = 16;
-    private static final Pattern SVG_VIEW_BOX_PATTERN = Pattern.compile("viewBox=\"[-\\d.]+\\s+[-\\d.]+\\s+([\\d.]+)\\s+([\\d.]+)\"");
+    private static final Pattern SVG_VIEW_BOX_PATTERN = Pattern.compile("viewBox=\"-?\\d+(?:\\.\\d+)?\\s+-?\\d+(?:\\.\\d+)?\\s+(\\d+(?:\\.\\d+)?)\\s+(\\d+(?:\\.\\d+)?)\"");
     // A color goes into an attribute of the svg, so only the characters a css color is written with are let through
     private static final Pattern SAFE_COLOR_PATTERN = Pattern.compile("[#\\w(),.%\\s-]+");
     private static final char NON_BREAKING_SPACE = '\u00A0';
@@ -1160,7 +1163,9 @@ public class HtmlProcessor {
             if (!icon.children().isEmpty() || !icon.text().isBlank()) {
                 continue;
             }
-            String folder = icon.classNames().stream().map(FONT_AWESOME_STYLE_FOLDERS::get).filter(Objects::nonNull)
+            // A browser lets an explicit style class win over the generic fa, whatever their order
+            String folder = icon.classNames().stream().filter(className -> !FONT_AWESOME_GENERIC_CLASS.equals(className))
+                    .map(FONT_AWESOME_STYLE_FOLDERS::get).filter(Objects::nonNull)
                     .findFirst().orElse(FONT_AWESOME_DEFAULT_FOLDER);
             // A class like fa-fw is no icon, and only the SVG of a real icon name is found
             Optional<String> svg = icon.classNames().stream()
@@ -1169,7 +1174,13 @@ public class HtmlProcessor {
                     .flatMap(Optional::stream)
                     .findFirst();
             if (svg.isPresent()) {
-                icon.replaceWith(fontAwesomeIconImage(svg.get(), getFontAwesomeIconColor(icon)));
+                Element image = fontAwesomeIconImage(svg.get(), getFontAwesomeIconColor(icon));
+                // A removal selector written for the icon's classes or id still finds its image
+                image.attr(CLASS, icon.className()).addClass(POLARION_ICONS_CLASS);
+                if (!icon.id().isEmpty()) {
+                    image.id(icon.id());
+                }
+                icon.replaceWith(image);
             } else {
                 logger.warn("No Font Awesome SVG found for the icon with the classes '" + icon.className() + "', it is left out of the export");
             }
@@ -1187,7 +1198,8 @@ public class HtmlProcessor {
     private String getFontAwesomeIconColor(@NotNull Element icon) {
         for (Element element = icon; element != null; element = element.parent()) {
             String color = getCssValue(element, CssProp.COLOR).trim();
-            if (!color.isEmpty()) {
+            // The SVG is a separate document, so it cannot take a color from the HTML around it
+            if (!color.isEmpty() && !FONT_AWESOME_PARENT_COLOR_VALUES.contains(color.toLowerCase(Locale.ROOT))) {
                 return SAFE_COLOR_PATTERN.matcher(color).matches() ? color : null;
             }
         }
@@ -1200,7 +1212,6 @@ public class HtmlProcessor {
         String coloredSvg = color == null ? svg : svg.replaceFirst("<svg", "<svg fill=\"" + color + "\"");
         String width = Math.round(FONT_AWESOME_ICON_HEIGHT_PX * aspectRatio) + "px";
         return new Element(HtmlTag.IMG)
-                .addClass(POLARION_ICONS_CLASS)
                 .attr(HtmlTagAttr.SRC, "data:" + MIME_TYPE_SVG + ";base64," + Base64.getEncoder().encodeToString(coloredSvg.getBytes(StandardCharsets.UTF_8)))
                 .attr(HtmlTagAttr.STYLE, CssProp.WIDTH + ": " + width + "; " + CssProp.HEIGHT + ": " + FONT_AWESOME_ICON_HEIGHT_PX + "px;");
     }
