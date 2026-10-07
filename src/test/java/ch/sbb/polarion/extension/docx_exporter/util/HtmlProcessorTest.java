@@ -519,6 +519,46 @@ class HtmlProcessorTest {
     }
 
     @Test
+    void convertFontAwesomeIconsTest() {
+        String chartColumn = "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 512 512\"><path d=\"M0 0\"/></svg>";
+        String bell = "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 448 512\"><path d=\"M0 0\"/></svg>";
+        when(fileResourceProvider.getResourceAsBytes(anyString())).thenReturn(new byte[0]);
+        when(fileResourceProvider.getResourceAsBytes("/polarion/ria/fontawesome-6.2.0/svgs/solid/chart-column.svg")).thenReturn(chartColumn.getBytes(StandardCharsets.UTF_8));
+        when(fileResourceProvider.getResourceAsBytes("/polarion/ria/fontawesome-6.2.0/svgs/regular/bell.svg")).thenReturn(bell.getBytes(StandardCharsets.UTF_8));
+        Document document = JSoupUtils.parseHtml("""
+                <span class="polarion-Plan"><i class="fa-solid fa-chart-column polarion-font-icon-relative" style="color: #16A085"></i>Version 1.0</span>
+                <span style="color: red"><i class="fa-fw far fa-bell"></i>Inherited</span>
+                <i class="fa fa-chart-column"></i>
+                <i class="fa-solid fa-unknown"></i>
+                <i class="fa-solid fa-chart-column">text</i>
+                <i class="fa-solid fa-chart-column" style="color: &quot;x"></i>""");
+
+        processor.convertFontAwesomeIcons(document);
+
+        Elements images = document.select("img");
+        assertEquals(4, images.size());
+        assertEquals("<svg fill=\"#16A085\"" + chartColumn.substring(4), decodeSvg(images.get(0)));
+        assertEquals("width: 16px; height: 16px;", images.get(0).attr("style"));
+        assertTrue(images.get(0).hasClass("polarion-Icons"));
+        assertEquals("Version 1.0", images.get(0).parent().text());
+        assertEquals("<svg fill=\"red\"" + bell.substring(4), decodeSvg(images.get(1)));
+        assertEquals("width: 14px; height: 16px;", images.get(1).attr("style"));
+        assertEquals(chartColumn, decodeSvg(images.get(2)));
+        assertEquals(chartColumn, decodeSvg(images.get(3)));
+        assertEquals(2, document.select("i").size());
+        assertEquals("fa-solid fa-unknown", document.select("i").get(0).className());
+        assertEquals("text", document.select("i").get(1).text());
+        // Each folder and name read once: chart-column, fw in vain, bell and unknown
+        verify(fileResourceProvider, times(4)).getResourceAsBytes(anyString());
+    }
+
+    private static String decodeSvg(Element image) {
+        String src = image.attr("src");
+        assertTrue(src.startsWith("data:image/svg+xml;base64,"));
+        return new String(Base64.getDecoder().decode(src.substring(src.indexOf(',') + 1)), StandardCharsets.UTF_8);
+    }
+
+    @Test
     @SneakyThrows
     void adjustImageAlignmentTest() {
         try (InputStream isInvalidHtml = this.getClass().getResourceAsStream("/imageAlignmentBeforeProcessing.html");

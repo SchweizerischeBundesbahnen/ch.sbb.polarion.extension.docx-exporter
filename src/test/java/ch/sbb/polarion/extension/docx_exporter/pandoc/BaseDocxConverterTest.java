@@ -45,6 +45,7 @@ public abstract class BaseDocxConverterTest extends BasePandocTest {
     protected PandocServiceConnector pandocServiceConnector;
     protected DocxTemplateProcessor docxTemplateProcessor;
     protected PlaceholderProcessor placeholderProcessor;
+    protected FileResourceProvider fileResourceProvider;
     protected HtmlProcessor htmlProcessor;
     protected VelocityEvaluator velocityEvaluator;
     protected DocxConverter converter;
@@ -111,7 +112,7 @@ public abstract class BaseDocxConverterTest extends BasePandocTest {
         HtmlLinksHelper htmlLinksHelper = mock(HtmlLinksHelper.class);
         when(htmlLinksHelper.internalizeLinks(anyString())).thenAnswer(invocation -> invocation.getArgument(0));
 
-        FileResourceProvider fileResourceProvider = mock(FileResourceProvider.class);
+        fileResourceProvider = mock(FileResourceProvider.class);
         htmlProcessor = new HtmlProcessor(fileResourceProvider, localizationSettings, htmlLinksHelper);
     }
 
