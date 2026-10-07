@@ -38,6 +38,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Stream;
 import java.util.Map;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -566,6 +567,12 @@ class HtmlProcessorTest {
         assertEquals("fa-solid fa-nothing", document.select("i").get(5).className());
         // Each folder and name read once: chart-column, fw in vain, bell, unknown, malformed, flat and nothing
         verify(fileResourceProvider, times(7)).getResourceAsBytes(anyString());
+    }
+
+    @ParameterizedTest
+    @CsvSource(value = {"448, 512, 0.875", "512, 512, 1.0", "512, 0, NULL", "abc, 512, NULL", "512, abc, NULL"}, nullValues = "NULL")
+    void viewBoxAspectRatioTest(String width, String height, Double expected) {
+        assertEquals(Optional.ofNullable(expected), HtmlProcessor.viewBoxAspectRatio(width, height));
     }
 
     private static String decodeSvg(Element image) {

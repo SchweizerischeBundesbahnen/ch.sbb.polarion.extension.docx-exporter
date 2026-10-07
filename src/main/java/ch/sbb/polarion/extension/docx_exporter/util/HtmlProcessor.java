@@ -1194,8 +1194,17 @@ public class HtmlProcessor {
         if (!svg.contains("<svg") || !viewBox.find()) {
             return Optional.empty();
         }
-        double height = Double.parseDouble(viewBox.group(2));
-        return height > 0 ? Optional.of(new FontAwesomeSvg(svg, Double.parseDouble(viewBox.group(1)) / height)) : Optional.empty();
+        return viewBoxAspectRatio(viewBox.group(1), viewBox.group(2)).map(aspectRatio -> new FontAwesomeSvg(svg, aspectRatio));
+    }
+
+    @VisibleForTesting
+    static Optional<Double> viewBoxAspectRatio(@NotNull String width, @NotNull String height) {
+        try {
+            double heightValue = Double.parseDouble(height);
+            return heightValue > 0 ? Optional.of(Double.parseDouble(width) / heightValue) : Optional.empty();
+        } catch (NumberFormatException e) {
+            return Optional.empty();
+        }
     }
 
     @Nullable
