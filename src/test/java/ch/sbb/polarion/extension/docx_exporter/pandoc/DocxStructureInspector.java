@@ -123,6 +123,10 @@ final class DocxStructureInspector {
     record Table(String widthType, long width, String jc, List<List<Cell>> rows) {
     }
 
+    /** A picture's {@code <w:position>} in half-points and the left and right of its {@code <wp:effectExtent>} in EMU. */
+    record PictureLayout(int position, long left, long right) {
+    }
+
     /** Starts a fluent formatting spec for building an expected segment. */
     static Fmt fmt() {
         return new Fmt();
@@ -153,6 +157,25 @@ final class DocxStructureInspector {
         NodeList tbls = body.getElementsByTagNameNS(W_NS, "tbl");
         for (int i = 0; i < tbls.getLength(); i++) {
             result.add(toTable((Element) tbls.item(i)));
+        }
+        return result;
+    }
+
+    /** The layout of every inline picture of the body, in document order. */
+    static List<PictureLayout> pictureLayouts(byte[] docx) throws IOException {
+        Element body = body(docx);
+        List<PictureLayout> result = new ArrayList<>();
+        NodeList inlines = body.getElementsByTagNameNS(WP_NS, "inline");
+        for (int i = 0; i < inlines.getLength(); i++) {
+            Element inline = (Element) inlines.item(i);
+            // <wp:inline> sits in <w:drawing>, which sits in the picture's run
+            Element run = (Element) inline.getParentNode().getParentNode();
+            int position = parseIntOrDefault(wAttr(child(child(run, "rPr"), "position"), "val"), 0);
+            NodeList effectExtents = inline.getElementsByTagNameNS(WP_NS, "effectExtent");
+            Element effectExtent = effectExtents.getLength() > 0 ? (Element) effectExtents.item(0) : null;
+            long left = effectExtent != null ? parseLongOrDefault(effectExtent.getAttribute("l"), 0L) : 0L;
+            long right = effectExtent != null ? parseLongOrDefault(effectExtent.getAttribute("r"), 0L) : 0L;
+            result.add(new PictureLayout(position, left, right));
         }
         return result;
     }

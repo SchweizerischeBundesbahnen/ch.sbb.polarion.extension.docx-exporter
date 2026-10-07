@@ -14,6 +14,7 @@ public class CssProp {
     public static final String FONT_WEIGHT_BOLD_VALUE = "bold";
     public static final String HEIGHT = "height";
     public static final String MARGIN = "margin";
+    public static final String MARGIN_RIGHT = "margin-right";
     public static final String MAX_HEIGHT = "max-height";
     public static final String MAX_WIDTH = "max-width";
     public static final String PAGE_BREAK_INSIDE = "page-break-inside";
@@ -22,6 +23,8 @@ public class CssProp {
     public static final String TEXT_ALIGN_CENTER_VALUE = "center";
     public static final String TEXT_ALIGN_RIGHT_VALUE = "right";
     public static final String TOP = "top";
+    public static final String VERTICAL_ALIGN = "vertical-align";
+    public static final String VERTICAL_ALIGN_MIDDLE_VALUE = "middle";
     public static final String WIDTH = "width";
     public static final String WIDTH_AUTO_VALUE = "auto";
 }

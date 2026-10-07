@@ -502,6 +502,23 @@ class HtmlProcessorTest {
     }
 
     @Test
+    void alignIconsTest() {
+        Document document = JSoupUtils.parseHtml("""
+                <span class="polarion-JSEnumOption" title="Draft"><img style="vertical-align:bottom;border:0px;margin-right:2px;" src="draft.gif" alt="">Draft</span>
+                <a href="#"><span style="white-space:nowrap;"><img src="doc.png" class="polarion-Icons polarion-no-style-cleanup"></span>Specification</a>
+                <img src="own.png" class="polarion-Icons" style="vertical-align: top; margin-right: 5px">
+                <img src="other.png" style="vertical-align: bottom">""");
+
+        processor.alignIcons(document);
+
+        Elements images = document.select("img");
+        assertEquals("vertical-align:middle;border:0px;margin-right:2px;", images.get(0).attr("style").replace("\n", ""));
+        assertEquals("vertical-align:middle;margin-right:2px;", images.get(1).attr("style").replace("\n", ""));
+        assertEquals("vertical-align:top;margin-right:5px;", images.get(2).attr("style").replace("\n", ""));
+        assertEquals("vertical-align: bottom", images.get(3).attr("style"));
+    }
+
+    @Test
     @SneakyThrows
     void adjustImageAlignmentTest() {
         try (InputStream isInvalidHtml = this.getClass().getResourceAsStream("/imageAlignmentBeforeProcessing.html");
@@ -1523,6 +1540,7 @@ class HtmlProcessorTest {
             doNothing().when(spyHtmlProcessor).adjustCellWidth(any());
             doNothing().when(spyHtmlProcessor).applyBoldStyles(any());
             doNothing().when(spyHtmlProcessor).adjustStyles(any());
+            doNothing().when(spyHtmlProcessor).alignIcons(any());
             exportParams.setCutEmptyChapters(false);
             exportParams.setCutEmptyWIAttributes(false); // this test asserts the input is left unchanged, so disable WI-attribute cutting (defaults to true)
 

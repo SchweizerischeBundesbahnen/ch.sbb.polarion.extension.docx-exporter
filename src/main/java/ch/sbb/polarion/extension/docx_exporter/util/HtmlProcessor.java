@@ -72,6 +72,9 @@ public class HtmlProcessor {
     private static final String WORK_ITEM_FIELDS_END_TABLE_LABEL_CLASS = "polarion-dle-workitem-fields-end-table-label";
     private static final String WORK_ITEM_FIELDS_END_TABLE_VALUE_CLASS = "polarion-dle-workitem-fields-end-table-value";
     private static final String WORK_ITEM_FIELDS_END_TABLE_BORDER_VALUE = "1px solid #CCCCCC";
+    private static final String POLARION_ICONS_CLASS = "polarion-Icons";
+    private static final String ENUM_OPTION_CLASS = "polarion-JSEnumOption";
+    private static final String ICON_GAP = "2px";
     private static final char NON_BREAKING_SPACE = '\u00A0';
     private static final String DEEP_HEADING_SELECTOR_PREFIX = "div.heading-";
     private static final int DEEP_HEADING_MIN_LEVEL = 7;
@@ -183,6 +186,9 @@ public class HtmlProcessor {
 
         // Gives WorkItem attributes table cells the gray borders Polarion draws through its stylesheet, which pandoc never sees.
         timedIfNotNull(generationLog, "Adjust styles", () -> adjustStyles(document));
+
+        // Gives Polarion's icons the alignment and gap pdf-exporter's stylesheet gives them, which pandoc never sees.
+        timedIfNotNull(generationLog, "Align icons", () -> alignIcons(document));
 
         // ----
         // This sequence is important! We need first filter out Linked WorkItems and only then cut empty attributes,
@@ -1096,6 +1102,26 @@ public class HtmlProcessor {
                 CssUtils.setPropertyValue(cssStyles, CssProp.BORDER, WORK_ITEM_FIELDS_END_TABLE_BORDER_VALUE);
                 cell.attr(HtmlTagAttr.STYLE, cssStyles.getAsCSSString());
             }
+        }
+    }
+
+    /**
+     * Mirrors the icon rules of pdf-exporter's dle-pdf-export.css, as inline style: pandoc reads no stylesheet.
+     * A document or work item type icon is centered unless its own style says otherwise. An enum icon is centered
+     * although Polarion writes "vertical-align: bottom" into it, as pdf-exporter overrides that with !important.
+     */
+    @VisibleForTesting
+    void alignIcons(@NotNull Document document) {
+        for (Element icon : document.select("img." + POLARION_ICONS_CLASS + COMMA_SEPARATOR + "." + ENUM_OPTION_CLASS + " img")) {
+            CSSDeclarationList cssStyles = parseCss(icon.attr(HtmlTagAttr.STYLE));
+            boolean enumIcon = icon.parents().stream().anyMatch(parent -> parent.hasClass(ENUM_OPTION_CLASS));
+            if (enumIcon || CssUtils.getPropertyValue(cssStyles, CssProp.VERTICAL_ALIGN).isEmpty()) {
+                CssUtils.setPropertyValue(cssStyles, CssProp.VERTICAL_ALIGN, CssProp.VERTICAL_ALIGN_MIDDLE_VALUE);
+            }
+            if (icon.hasClass(POLARION_ICONS_CLASS) && CssUtils.getPropertyValue(cssStyles, CssProp.MARGIN_RIGHT).isEmpty()) {
+                CssUtils.setPropertyValue(cssStyles, CssProp.MARGIN_RIGHT, ICON_GAP);
+            }
+            icon.attr(HtmlTagAttr.STYLE, cssStyles.getAsCSSString());
         }
     }
 
