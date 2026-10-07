@@ -527,15 +527,21 @@ class HtmlProcessorTest {
         when(fileResourceProvider.getResourceAsBytes("/polarion/ria/fontawesome-6.2.0/svgs/regular/bell.svg")).thenReturn(bell.getBytes(StandardCharsets.UTF_8));
         when(fileResourceProvider.getResourceAsBytes("/polarion/ria/fontawesome-6.2.0/svgs/solid/malformed.svg"))
                 .thenReturn("<svg viewBox=\"0 0 1.2.3 512\"></svg>".getBytes(StandardCharsets.UTF_8));
+        when(fileResourceProvider.getResourceAsBytes("/polarion/ria/fontawesome-6.2.0/svgs/solid/flat.svg"))
+                .thenReturn("<svg viewBox=\"0 0 512 0\"></svg>".getBytes(StandardCharsets.UTF_8));
+        when(fileResourceProvider.getResourceAsBytes("/polarion/ria/fontawesome-6.2.0/svgs/solid/nothing.svg")).thenReturn(null);
         Document document = JSoupUtils.parseHtml("""
                 <span class="polarion-Plan"><i id="plan-icon" class="fa-solid fa-chart-column polarion-font-icon-relative" style="color: #16A085"></i>Version 1.0</span>
                 <span style="color: red"><i class="fa-fw far fa-bell" style="color: inherit"></i>Inherited</span>
                 <i class="fa fa-chart-column"></i>
                 <i class="fa-solid fa-unknown"></i>
                 <i class="fa-solid fa-chart-column">text</i>
-                <i class="fa-solid fa-chart-column" style="color: &quot;x"></i>
+                <span style="color: blue"><i class="fa-solid fa-chart-column" style="color: 'red'"></i></span>
                 <i class="fa fa-regular fa-bell"></i>
-                <i class="fa-solid fa-malformed"></i>""");
+                <i class="fa-solid fa-malformed"></i>
+                <i class="fa-solid fa-chart-column"><span></span></i>
+                <i class="fa-solid fa-flat"></i>
+                <i class="fa-solid fa-nothing"></i>""");
 
         processor.convertFontAwesomeIcons(document);
 
@@ -551,12 +557,15 @@ class HtmlProcessorTest {
         assertEquals(chartColumn, decodeSvg(images.get(2)));
         assertEquals(chartColumn, decodeSvg(images.get(3)));
         assertEquals(bell, decodeSvg(images.get(4)));
-        assertEquals(3, document.select("i").size());
+        assertEquals(6, document.select("i").size());
         assertEquals("fa-solid fa-unknown", document.select("i").get(0).className());
         assertEquals("text", document.select("i").get(1).text());
         assertEquals("fa-solid fa-malformed", document.select("i").get(2).className());
-        // Each folder and name read once: chart-column, fw in vain, bell, unknown and malformed
-        verify(fileResourceProvider, times(5)).getResourceAsBytes(anyString());
+        assertEquals(1, document.select("i").get(3).childrenSize());
+        assertEquals("fa-solid fa-flat", document.select("i").get(4).className());
+        assertEquals("fa-solid fa-nothing", document.select("i").get(5).className());
+        // Each folder and name read once: chart-column, fw in vain, bell, unknown, malformed, flat and nothing
+        verify(fileResourceProvider, times(7)).getResourceAsBytes(anyString());
     }
 
     private static String decodeSvg(Element image) {

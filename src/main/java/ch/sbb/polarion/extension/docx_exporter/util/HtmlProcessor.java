@@ -94,7 +94,7 @@ public class HtmlProcessor {
     private static final Set<String> FONT_AWESOME_PARENT_COLOR_VALUES = Set.of("inherit", "unset", "currentcolor");
     // Polarion draws these icons at 1.23em of its 13px text, the size of its other 16px icons
     private static final int FONT_AWESOME_ICON_HEIGHT_PX = 16;
-    private static final Pattern SVG_VIEW_BOX_PATTERN = Pattern.compile("viewBox=\"-?\\d+(?:\\.\\d+)?\\s+-?\\d+(?:\\.\\d+)?\\s+(\\d+(?:\\.\\d+)?)\\s+(\\d+(?:\\.\\d+)?)\"");
+    private static final Pattern SVG_VIEW_BOX_PATTERN = Pattern.compile("viewBox=\"[^\\s\"]+\\s+[^\\s\"]+\\s+(\\d+(?:\\.\\d+)?)\\s+(\\d+(?:\\.\\d+)?)\"");
     // A color goes into an attribute of the svg, so only the characters a css color is written with are let through
     private static final Pattern SAFE_COLOR_PATTERN = Pattern.compile("[#\\w(),.%\\s-]+");
     private static final char NON_BREAKING_SPACE = '\u00A0';
@@ -1159,7 +1159,7 @@ public class HtmlProcessor {
      */
     @VisibleForTesting
     void convertFontAwesomeIcons(@NotNull Document document) {
-        Map<String, Optional<String>> svgCache = new HashMap<>();
+        Map<String, Optional<FontAwesomeSvg>> svgCache = new HashMap<>();
         for (Element icon : document.select(HtmlTag.I + "[class*=" + FONT_AWESOME_CLASS_PREFIX + "]")) {
             if (!icon.children().isEmpty() || !icon.text().isBlank()) {
                 continue;
@@ -1167,7 +1167,7 @@ public class HtmlProcessor {
             String folder = icon.classNames().stream().map(FONT_AWESOME_STYLE_FOLDERS::get).filter(Objects::nonNull)
                     .findFirst().orElse(FONT_AWESOME_SOLID_FOLDER);
             // A class like fa-fw is no icon, and only the SVG of a real icon name is found
-            Optional<String> svg = icon.classNames().stream()
+            Optional<FontAwesomeSvg> svg = icon.classNames().stream()
                     .filter(className -> className.startsWith(FONT_AWESOME_CLASS_PREFIX) && !FONT_AWESOME_STYLE_FOLDERS.containsKey(className))
                     .map(className -> svgCache.computeIfAbsent(folder + "/" + className.substring(FONT_AWESOME_CLASS_PREFIX.length()), this::readFontAwesomeSvg))
                     .flatMap(Optional::stream)
@@ -1186,11 +1186,16 @@ public class HtmlProcessor {
         }
     }
 
-    private Optional<String> readFontAwesomeSvg(@NotNull String folderAndName) {
+    private Optional<FontAwesomeSvg> readFontAwesomeSvg(@NotNull String folderAndName) {
         byte[] bytes = fileResourceProvider.getResourceAsBytes(FONT_AWESOME_SVGS_PATH + folderAndName + ".svg");
         String svg = bytes == null ? "" : new String(bytes, StandardCharsets.UTF_8);
+        Matcher viewBox = SVG_VIEW_BOX_PATTERN.matcher(svg);
         // A missing file can come back as Polarion's login page instead of nothing
-        return svg.contains("<svg") && SVG_VIEW_BOX_PATTERN.matcher(svg).find() ? Optional.of(svg) : Optional.empty();
+        if (!svg.contains("<svg") || !viewBox.find()) {
+            return Optional.empty();
+        }
+        double height = Double.parseDouble(viewBox.group(2));
+        return height > 0 ? Optional.of(new FontAwesomeSvg(svg, Double.parseDouble(viewBox.group(1)) / height)) : Optional.empty();
     }
 
     @Nullable
@@ -1205,11 +1210,9 @@ public class HtmlProcessor {
         return null;
     }
 
-    private Element fontAwesomeIconImage(@NotNull String svg, @Nullable String color) {
-        Matcher viewBox = SVG_VIEW_BOX_PATTERN.matcher(svg);
-        double aspectRatio = viewBox.find() ? Double.parseDouble(viewBox.group(1)) / Double.parseDouble(viewBox.group(2)) : 1;
-        String coloredSvg = color == null ? svg : svg.replaceFirst("<svg", "<svg fill=\"" + color + "\"");
-        String width = Math.round(FONT_AWESOME_ICON_HEIGHT_PX * aspectRatio) + "px";
+    private Element fontAwesomeIconImage(@NotNull FontAwesomeSvg svg, @Nullable String color) {
+        String coloredSvg = color == null ? svg.content() : svg.content().replaceFirst("<svg", "<svg fill=\"" + color + "\"");
+        String width = Math.round(FONT_AWESOME_ICON_HEIGHT_PX * svg.aspectRatio()) + "px";
         return new Element(HtmlTag.IMG)
                 .attr(HtmlTagAttr.SRC, "data:" + MIME_TYPE_SVG + ";base64," + Base64.getEncoder().encodeToString(coloredSvg.getBytes(StandardCharsets.UTF_8)))
                 .attr(HtmlTagAttr.STYLE, CssProp.WIDTH + ": " + width + "; " + CssProp.HEIGHT + ": " + FONT_AWESOME_ICON_HEIGHT_PX + "px;");
@@ -1482,6 +1485,9 @@ public class HtmlProcessor {
 
     private CSSDeclarationList parseCss(@NotNull String styleAttributeValue) {
         return Optional.ofNullable(CSSReaderDeclarationList.readFromString(styleAttributeValue)).orElse(new CSSDeclarationList());
+    }
+
+    private record FontAwesomeSvg(@NotNull String content, double aspectRatio) {
     }
 
     /**
