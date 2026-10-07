@@ -82,13 +82,14 @@ public class HtmlProcessor {
     private static final String ENUM_OPTION_CLASS = "polarion-JSEnumOption";
     private static final String ICON_GAP = "2px";
     // The Font Awesome Polarion bundles, at the path pdf-exporter's template loads its stylesheet from
+    @SuppressWarnings("java:S1075")
     private static final String FONT_AWESOME_SVGS_PATH = "/polarion/ria/fontawesome-6.2.0/svgs/";
+    private static final String FONT_AWESOME_SOLID_FOLDER = "solid";
+    // The generic fa class is not here: a browser lets an explicit style class win over it, whatever their order
     private static final Map<String, String> FONT_AWESOME_STYLE_FOLDERS = Map.of(
-            "fa", "solid", "fas", "solid", "fa-solid", "solid",
+            "fas", FONT_AWESOME_SOLID_FOLDER, "fa-solid", FONT_AWESOME_SOLID_FOLDER,
             "far", "regular", "fa-regular", "regular",
             "fab", "brands", "fa-brands", "brands");
-    private static final String FONT_AWESOME_DEFAULT_FOLDER = "solid";
-    private static final String FONT_AWESOME_GENERIC_CLASS = "fa";
     private static final String FONT_AWESOME_CLASS_PREFIX = "fa-";
     private static final Set<String> FONT_AWESOME_PARENT_COLOR_VALUES = Set.of("inherit", "unset", "currentcolor");
     // Polarion draws these icons at 1.23em of its 13px text, the size of its other 16px icons
@@ -1163,10 +1164,8 @@ public class HtmlProcessor {
             if (!icon.children().isEmpty() || !icon.text().isBlank()) {
                 continue;
             }
-            // A browser lets an explicit style class win over the generic fa, whatever their order
-            String folder = icon.classNames().stream().filter(className -> !FONT_AWESOME_GENERIC_CLASS.equals(className))
-                    .map(FONT_AWESOME_STYLE_FOLDERS::get).filter(Objects::nonNull)
-                    .findFirst().orElse(FONT_AWESOME_DEFAULT_FOLDER);
+            String folder = icon.classNames().stream().map(FONT_AWESOME_STYLE_FOLDERS::get).filter(Objects::nonNull)
+                    .findFirst().orElse(FONT_AWESOME_SOLID_FOLDER);
             // A class like fa-fw is no icon, and only the SVG of a real icon name is found
             Optional<String> svg = icon.classNames().stream()
                     .filter(className -> className.startsWith(FONT_AWESOME_CLASS_PREFIX) && !FONT_AWESOME_STYLE_FOLDERS.containsKey(className))
