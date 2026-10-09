@@ -10,6 +10,7 @@ public class HtmlTag {
     public static final String CANVAS = "canvas";
     public static final String DIV = "div";
     public static final String EMBED = "embed";
+    public static final String I = "i";
     public static final String IMG = "img";
     public static final String INPUT = "input";
     public static final String H1 = "h1";

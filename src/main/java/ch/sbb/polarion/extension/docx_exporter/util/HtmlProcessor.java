@@ -14,6 +14,7 @@ import com.helger.css.reader.CSSReaderDeclarationList;
 import com.polarion.alm.shared.util.StringUtils;
 import com.polarion.core.boot.PolarionProperties;
 import com.polarion.core.config.Configuration;
+import com.polarion.core.util.logging.Logger;
 import lombok.SneakyThrows;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -29,15 +30,20 @@ import org.jsoup.select.Elements;
 
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import static ch.sbb.polarion.extension.docx_exporter.util.exporter.Constants.*;
 
@@ -72,6 +78,25 @@ public class HtmlProcessor {
     private static final String WORK_ITEM_FIELDS_END_TABLE_LABEL_CLASS = "polarion-dle-workitem-fields-end-table-label";
     private static final String WORK_ITEM_FIELDS_END_TABLE_VALUE_CLASS = "polarion-dle-workitem-fields-end-table-value";
     private static final String WORK_ITEM_FIELDS_END_TABLE_BORDER_VALUE = "1px solid #CCCCCC";
+    private static final String POLARION_ICONS_CLASS = "polarion-Icons";
+    private static final String ENUM_OPTION_CLASS = "polarion-JSEnumOption";
+    private static final String ICON_GAP = "2px";
+    // The Font Awesome Polarion bundles, at the path pdf-exporter's template loads its stylesheet from
+    @SuppressWarnings("java:S1075")
+    private static final String FONT_AWESOME_SVGS_PATH = "/polarion/ria/fontawesome-6.2.0/svgs/";
+    private static final String FONT_AWESOME_SOLID_FOLDER = "solid";
+    // The generic fa class is not here: a browser lets an explicit style class win over it, whatever their order
+    private static final Map<String, String> FONT_AWESOME_STYLE_FOLDERS = Map.of(
+            "fas", FONT_AWESOME_SOLID_FOLDER, "fa-solid", FONT_AWESOME_SOLID_FOLDER,
+            "far", "regular", "fa-regular", "regular",
+            "fab", "brands", "fa-brands", "brands");
+    private static final String FONT_AWESOME_CLASS_PREFIX = "fa-";
+    private static final Set<String> FONT_AWESOME_PARENT_COLOR_VALUES = Set.of("inherit", "unset", "currentcolor");
+    // Polarion draws these icons at 1.23em of its 13px text, the size of its other 16px icons
+    private static final int FONT_AWESOME_ICON_HEIGHT_PX = 16;
+    private static final Pattern SVG_VIEW_BOX_PATTERN = Pattern.compile("viewBox=\"[^\\s\"]+\\s+[^\\s\"]+\\s+(\\d+(?:\\.\\d+)?)\\s+(\\d+(?:\\.\\d+)?)\"");
+    // A color goes into an attribute of the svg, so only the characters a css color is written with are let through
+    private static final Pattern SAFE_COLOR_PATTERN = Pattern.compile("[#\\w(),.%\\s-]+");
     private static final char NON_BREAKING_SPACE = '\u00A0';
     private static final String DEEP_HEADING_SELECTOR_PREFIX = "div.heading-";
     private static final int DEEP_HEADING_MIN_LEVEL = 7;
@@ -81,6 +106,8 @@ public class HtmlProcessor {
     private static final String LOCALHOST = "localhost";
     public static final String HTTP_PROTOCOL_PREFIX = "http://";
     public static final String HTTPS_PROTOCOL_PREFIX = "https://";
+
+    private static final Logger logger = Logger.getLogger(HtmlProcessor.class);
 
     private final FileResourceProvider fileResourceProvider;
     private final LocalizationSettings localizationSettings;
@@ -183,6 +210,12 @@ public class HtmlProcessor {
 
         // Gives WorkItem attributes table cells the gray borders Polarion draws through its stylesheet, which pandoc never sees.
         timedIfNotNull(generationLog, "Adjust styles", () -> adjustStyles(document));
+
+        // Font Awesome icons are empty <i> elements drawn by a web font, which pandoc never sees. Must precede aligning icons.
+        timedIfNotNull(generationLog, "Convert Font Awesome icons", () -> convertFontAwesomeIcons(document));
+
+        // Gives Polarion's icons the alignment and gap pdf-exporter's stylesheet gives them, which pandoc never sees.
+        timedIfNotNull(generationLog, "Align icons", () -> alignIcons(document));
 
         // ----
         // This sequence is important! We need first filter out Linked WorkItems and only then cut empty attributes,
@@ -1099,6 +1132,101 @@ public class HtmlProcessor {
         }
     }
 
+    /**
+     * Mirrors the icon rules of pdf-exporter's dle-pdf-export.css, as inline style: pandoc reads no stylesheet.
+     * A document or work item type icon is centered unless its own style says otherwise. An enum icon is centered
+     * although Polarion writes "vertical-align: bottom" into it, as pdf-exporter overrides that with !important.
+     */
+    @VisibleForTesting
+    void alignIcons(@NotNull Document document) {
+        for (Element icon : document.select("img." + POLARION_ICONS_CLASS + COMMA_SEPARATOR + "." + ENUM_OPTION_CLASS + " img")) {
+            CSSDeclarationList cssStyles = parseCss(icon.attr(HtmlTagAttr.STYLE));
+            boolean enumIcon = icon.parents().stream().anyMatch(parent -> parent.hasClass(ENUM_OPTION_CLASS));
+            if (enumIcon || CssUtils.getPropertyValue(cssStyles, CssProp.VERTICAL_ALIGN).isEmpty()) {
+                CssUtils.setPropertyValue(cssStyles, CssProp.VERTICAL_ALIGN, CssProp.VERTICAL_ALIGN_MIDDLE_VALUE);
+            }
+            if (icon.hasClass(POLARION_ICONS_CLASS) && CssUtils.getPropertyValue(cssStyles, CssProp.MARGIN_RIGHT).isEmpty()) {
+                CssUtils.setPropertyValue(cssStyles, CssProp.MARGIN_RIGHT, ICON_GAP);
+            }
+            icon.attr(HtmlTagAttr.STYLE, cssStyles.getAsCSSString());
+        }
+    }
+
+    /**
+     * Replaces each empty Font Awesome {@code <i>} with an image of its glyph, read from the SVGs Polarion bundles and
+     * filled with the color the icon is drawn in. pandoc-service rasterizes the SVG. The image takes the class of Polarion's
+     * other icons, so {@link #alignIcons} aligns it like them. An icon whose SVG cannot be read stays as it was.
+     */
+    @VisibleForTesting
+    void convertFontAwesomeIcons(@NotNull Document document) {
+        Map<String, Optional<FontAwesomeSvg>> svgCache = new HashMap<>();
+        for (Element icon : document.select(HtmlTag.I + "[class*=" + FONT_AWESOME_CLASS_PREFIX + "]")) {
+            if (!icon.children().isEmpty() || !icon.text().isBlank()) {
+                continue;
+            }
+            String folder = icon.classNames().stream().map(FONT_AWESOME_STYLE_FOLDERS::get).filter(Objects::nonNull)
+                    .findFirst().orElse(FONT_AWESOME_SOLID_FOLDER);
+            // A class like fa-fw is no icon, and only the SVG of a real icon name is found
+            Optional<FontAwesomeSvg> svg = icon.classNames().stream()
+                    .filter(className -> className.startsWith(FONT_AWESOME_CLASS_PREFIX) && !FONT_AWESOME_STYLE_FOLDERS.containsKey(className))
+                    .map(className -> svgCache.computeIfAbsent(folder + "/" + className.substring(FONT_AWESOME_CLASS_PREFIX.length()), this::readFontAwesomeSvg))
+                    .flatMap(Optional::stream)
+                    .findFirst();
+            if (svg.isPresent()) {
+                Element image = fontAwesomeIconImage(svg.get(), getFontAwesomeIconColor(icon));
+                // A removal selector written for the icon's classes or id still finds its image
+                image.attr(CLASS, icon.className()).addClass(POLARION_ICONS_CLASS);
+                if (!icon.id().isEmpty()) {
+                    image.id(icon.id());
+                }
+                icon.replaceWith(image);
+            } else {
+                logger.warn("No Font Awesome SVG found for the icon with the classes '" + icon.className() + "', it is left out of the export");
+            }
+        }
+    }
+
+    private Optional<FontAwesomeSvg> readFontAwesomeSvg(@NotNull String folderAndName) {
+        byte[] bytes = fileResourceProvider.getResourceAsBytes(FONT_AWESOME_SVGS_PATH + folderAndName + ".svg");
+        String svg = bytes == null ? "" : new String(bytes, StandardCharsets.UTF_8);
+        Matcher viewBox = SVG_VIEW_BOX_PATTERN.matcher(svg);
+        // A missing file can come back as Polarion's login page instead of nothing
+        if (!svg.contains("<svg") || !viewBox.find()) {
+            return Optional.empty();
+        }
+        return viewBoxAspectRatio(viewBox.group(1), viewBox.group(2)).map(aspectRatio -> new FontAwesomeSvg(svg, aspectRatio));
+    }
+
+    @VisibleForTesting
+    static Optional<Double> viewBoxAspectRatio(@NotNull String width, @NotNull String height) {
+        try {
+            double heightValue = Double.parseDouble(height);
+            return heightValue > 0 ? Optional.of(Double.parseDouble(width) / heightValue) : Optional.empty();
+        } catch (NumberFormatException e) {
+            return Optional.empty();
+        }
+    }
+
+    @Nullable
+    private String getFontAwesomeIconColor(@NotNull Element icon) {
+        for (Element element = icon; element != null; element = element.parent()) {
+            String color = getCssValue(element, CssProp.COLOR).trim();
+            // The SVG is a separate document, so it cannot take a color from the HTML around it
+            if (!color.isEmpty() && !FONT_AWESOME_PARENT_COLOR_VALUES.contains(color.toLowerCase(Locale.ROOT))) {
+                return SAFE_COLOR_PATTERN.matcher(color).matches() ? color : null;
+            }
+        }
+        return null;
+    }
+
+    private Element fontAwesomeIconImage(@NotNull FontAwesomeSvg svg, @Nullable String color) {
+        String coloredSvg = color == null ? svg.content() : svg.content().replaceFirst("<svg", "<svg fill=\"" + color + "\"");
+        String width = Math.round(FONT_AWESOME_ICON_HEIGHT_PX * svg.aspectRatio()) + "px";
+        return new Element(HtmlTag.IMG)
+                .attr(HtmlTagAttr.SRC, "data:" + MIME_TYPE_SVG + ";base64," + Base64.getEncoder().encodeToString(coloredSvg.getBytes(StandardCharsets.UTF_8)))
+                .attr(HtmlTagAttr.STYLE, CssProp.WIDTH + ": " + width + "; " + CssProp.HEIGHT + ": " + FONT_AWESOME_ICON_HEIGHT_PX + "px;");
+    }
+
     private void autoCellWidth(@NotNull Document document) {
         // Searches for <td> or <th> elements of regular tables whose width in styles specified not in percentage.
         // If they contain absolute values we replace them with auto, otherwise tables containing them can easily go outside boundaries of a page.
@@ -1366,6 +1494,9 @@ public class HtmlProcessor {
 
     private CSSDeclarationList parseCss(@NotNull String styleAttributeValue) {
         return Optional.ofNullable(CSSReaderDeclarationList.readFromString(styleAttributeValue)).orElse(new CSSDeclarationList());
+    }
+
+    private record FontAwesomeSvg(@NotNull String content, double aspectRatio) {
     }
 
     /**

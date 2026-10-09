@@ -18,7 +18,7 @@ jobs:
       contents: read
     services:
       pandoc:
-        image: ghcr.io/schweizerischebundesbahnen/pandoc-service:2.6.0@sha256:57e8dea31a54c006f70b516b928a653f21785c21be34b880a3de23e2efe408b3
+        image: ghcr.io/schweizerischebundesbahnen/pandoc-service:2.7.0@sha256:5da68602c17c7c893e2dbad3403dc2c758694dfed4575593d11cf5cad950754c
         ports: [9082:9082]
     outputs:
       project_version: ${{ steps.project_metadata.outputs.version }}
