@@ -92,6 +92,8 @@
         <frontend-maven-plugin.version>2.0.2</frontend-maven-plugin.version>
 
         <apache-poi.version>5.5.1</apache-poi.version>
+        <!-- How many test classes run at once with pandoc -->
+        <tests.parallelism>4</tests.parallelism>
     </properties>
 
     <profiles>
@@ -107,6 +109,17 @@
                         <configuration>
                             <!-- hide unwanted exceptions logging -->
                             <redirectTestOutputToFile>true</redirectTestOutputToFile>
+                            <!-- JUnit runs the test classes in parallel, in this one JVM, so they share the container. The
+                                 methods of a class still run one after another. -->
+                            <properties>
+                                <configurationParameters>
+                                    junit.jupiter.execution.parallel.enabled = true
+                                    junit.jupiter.execution.parallel.mode.default = same_thread
+                                    junit.jupiter.execution.parallel.mode.classes.default = concurrent
+                                    junit.jupiter.execution.parallel.config.strategy = fixed
+                                    junit.jupiter.execution.parallel.config.fixed.parallelism = ${tests.parallelism}
+                                </configurationParameters>
+                            </properties>
                             <systemPropertyVariables>
                                 <docxExporterImpl>docker</docxExporterImpl>
                             </systemPropertyVariables>
