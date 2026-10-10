@@ -4,7 +4,10 @@
    Properties side panel, through export-form.css in their shadow roots, and the Style Packages administration
    page, which renders the same settings (export/StylePackageSettingsView.tsx) and imports this file alone. What
    only a shadow root may carry - the toast width and the alerts - stays in export-form.css, as the
-   administration page shares one document with everything else on it. */
+   administration page shares one document with everything else on it. For the same reason every row rule is
+   scoped to `.docx-export-form`: on the page, a `.property-wrapper` outside the form keeps its own look. The
+   scope is a `:where()`, which adds nothing to a selector's specificity, so each rule still weighs against
+   react-sbb-polarion's control system exactly as it did in the dialog and the pane. */
 
 /* --- The form ------------------------------------------------------------------------------------ */
 
@@ -104,7 +107,7 @@
    starts. A row without a control lets its label take the rest of the line, which is what the long switch
    texts ("Follow HTML presentational hints") need. `min-height` keeps such a row as tall as a row with a
    control, so the vertical rhythm does not change from one to the next. */
-.property-wrapper {
+:where(.docx-export-form) .property-wrapper {
   display: grid;
   grid-template-columns: var(--docx-switch-column) var(--docx-label-column) minmax(0, 1fr);
   align-items: center;
@@ -113,17 +116,17 @@
   min-height: var(--sbb-control-height, 23px);
 }
 
-.property-wrapper > input[type='checkbox'] {
+:where(.docx-export-form) .property-wrapper > input[type='checkbox'] {
   grid-column: 1;
   justify-self: center;
   margin: 0;
 }
 
-.property-wrapper > label {
+:where(.docx-export-form) .property-wrapper > label {
   grid-column: 2;
 }
 
-.property-wrapper > label:last-child {
+:where(.docx-export-form) .property-wrapper > label:last-child {
   grid-column: 2 / -1;
 }
 
@@ -133,25 +136,25 @@
    column wide enough for it would push every aligned control on the form halfway across it. Every other switch that reveals a field keeps the shared column, so its
    dropdown or its text field lines up with the rest. The value column is what is left of the row: a control
    sits right after the text, a text field runs to the end of the row. */
-.property-wrapper.tight {
+:where(.docx-export-form) .property-wrapper.tight {
   grid-template-columns: var(--docx-switch-column) auto minmax(0, 1fr);
 }
 
 /* The cell the control sits in. Always an element of its own, never the control itself: a SearchableSelect
    renders the native `<select>` it upgrades *and* the visible `.searchable-dropdown` next to it, and two
    grid items in one track would place the second one on a row of its own. */
-.property-wrapper > .field {
+:where(.docx-export-form) .property-wrapper > .field {
   grid-column: 3;
   justify-self: start;
   min-width: 0;
 }
 
 /* A field that takes whatever the label leaves, rather than its natural width. */
-.property-wrapper > .field.grows {
+:where(.docx-export-form) .property-wrapper > .field.grows {
   justify-self: stretch;
 }
 
-.property-wrapper > .field.grows > input {
+:where(.docx-export-form) .property-wrapper > .field.grows > input {
   width: 100%;
   box-sizing: border-box;
   min-width: 0;
@@ -159,7 +162,7 @@
 
 /* A cell that replaces the label rather than following it: the options a switch reveals, indented to the
    label column so they read as belonging to the row above. */
-.property-wrapper > .field.field-wide {
+:where(.docx-export-form) .property-wrapper > .field.field-wide {
   grid-column: 2 / -1;
   justify-self: stretch;
 }
@@ -172,7 +175,7 @@
 
 /* The pair of comment options, and the workitem-roles selectors: side by side, wrapping where a narrow
    pane cannot hold both. */
-.property-wrapper .option-pair {
+:where(.docx-export-form) .property-wrapper .option-pair {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
@@ -180,12 +183,12 @@
   row-gap: 4px;
 }
 
-.property-wrapper .option-pair label {
+:where(.docx-export-form) .property-wrapper .option-pair label {
   display: inline-flex;
   align-items: center;
 }
 
-.property-wrapper .more-info {
+:where(.docx-export-form) .property-wrapper .more-info {
   background: var(--sbb-info-icon) no-repeat;
   width: 16px;
   height: 16px;
@@ -200,8 +203,8 @@
 /* The baseline every control of this form falls back on. What a control looks like otherwise is owned by
    the shared control system in react-sbb-polarion's stylesheet (scoped to `.form-wrapper`), which both
    roots carry - these rules only state what it does not. */
-.property-wrapper select,
-.property-wrapper input {
+:where(.docx-export-form) .property-wrapper select,
+:where(.docx-export-form) .property-wrapper input {
   font-weight: 600;
   font-family: 'Segoe UI', 'Selawik', 'Open Sans', Arial, sans-serif;
   font-size: 13px;
@@ -211,7 +214,7 @@
 
 /* Every dropdown here is a SearchableSelect, which hides its native <select> once it has upgraded it.
    These rules are what the <select> falls back to if that upgrade ever throws. */
-.property-wrapper select {
+:where(.docx-export-form) .property-wrapper select {
   appearance: none !important;
   -webkit-appearance: none !important;
   -moz-appearance: none !important;
@@ -221,7 +224,7 @@
   padding: 2px 2rem 4px 0.4rem;
 }
 
-.property-wrapper input {
+:where(.docx-export-form) .property-wrapper input {
   padding: 2px 4px 4px 0.4rem;
 }
 
@@ -232,9 +235,9 @@
    notification said anything. `[type='text']` is what brings these selectors to the same specificity, and
    being later in the shadow root is what makes them win. The `:focus` variant is restated because the
    shared system raises its own there, and the field is usually still focused when the export is refused. */
-.docx-exporter .property-wrapper input[type='text'].error,
-.docx-exporter .property-wrapper input[type='text'].error:hover,
-.docx-exporter .property-wrapper input[type='text'].error:focus {
+.docx-exporter :where(.docx-export-form) .property-wrapper input[type='text'].error,
+.docx-exporter :where(.docx-export-form) .property-wrapper input[type='text'].error:hover,
+.docx-exporter :where(.docx-export-form) .property-wrapper input[type='text'].error:focus {
   border-color: red;
   color: red;
 }
@@ -255,6 +258,6 @@
 
 /* Ensure the dropdown popup is combobox-width + 35px here too (high specificity so a Polarion .options
    rule in the page context cannot flatten it back to the trigger width). */
-.property-wrapper .searchable-dropdown .options {
+:where(.docx-export-form) .property-wrapper .searchable-dropdown .options {
   min-width: calc(100% + 35px);
 }

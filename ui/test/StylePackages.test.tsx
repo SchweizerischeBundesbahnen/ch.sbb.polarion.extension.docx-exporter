@@ -250,6 +250,22 @@ describe('Style Packages page', () => {
     }
   });
 
+  it('keeps the rows of the export form to the form, the page sharing one document with everything else', async () => {
+    open();
+    await loaded();
+
+    const inside = input('style-package-weight').closest('.property-wrapper')!;
+    const outside = document.createElement('div');
+    outside.className = 'property-wrapper';
+    document.body.append(outside);
+    try {
+      expect(getComputedStyle(inside).display).toBe('grid');
+      expect(getComputedStyle(outside).display).toBe('block');
+    } finally {
+      outside.remove();
+    }
+  });
+
   it('keeps the place of a value that is switched off, as the export dialog does', async () => {
     open();
     await loaded();
