@@ -44,7 +44,9 @@
   differ only in the chrome around it (a `<fieldset>` with its own button, or RSP's `Modal` with its footer).
   Its layout follows the width it is given through a container query on `.docx-export-form` - one column in
   the 360px properties pane, two in the dialog - so neither surface has a layout of its own to keep in step.
-  This mirrors pdf-exporter's form deliberately: the two are looked at side by side, so a change to one is
+  Its settings block is `ui/src/export/StylePackageSettingsView.tsx`, which the Style Packages administration
+  page renders too, with the row layout of `export-form-layout.css`, so a style package reads the same in all
+  three. This mirrors pdf-exporter's form deliberately: the two are looked at side by side, so a change to one is
   worth making in the other.
 - **A toast inside a shadow root needs its stylesheet brought in, and one host.** `sonner` (through RSP's
   `Toaster`) injects its CSS into `document.head` when its module loads, which neither shadow-mounted

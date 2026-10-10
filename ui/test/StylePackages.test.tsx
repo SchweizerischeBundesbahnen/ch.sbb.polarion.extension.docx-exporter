@@ -135,18 +135,18 @@ describe('Style Packages page', () => {
 
     expect(input('matching-query').value).toBe('type:testrun');
     expect(input('exposeSettings').checked).toBe(true);
-    expect(select('template-select')!.value).toBe('With logo');
-    expect(select('localization-select')!.value).toBe('German');
+    expect(select('template-selector')!.value).toBe('With logo');
+    expect(select('localization-selector')!.value).toBe('German');
     expect(input('orientation').checked).toBe(true);
-    expect(select('orientation-select')!.value).toBe('LANDSCAPE');
+    expect(select('orientation-selector')!.value).toBe('LANDSCAPE');
     expect(input('paper-size').checked).toBe(true);
-    expect(select('paper-size-select')!.value).toBe('A3');
+    expect(select('paper-size-selector')!.value).toBe('A3');
     expect(input('image-density').checked).toBe(true);
-    expect(select('image-density-select')!.value).toBe('DPI_300');
+    expect(select('image-density-selector')!.value).toBe('DPI_300');
     expect(input('preserve-table-styles').checked).toBe(true);
     expect(input('webhooks-checkbox').checked).toBe(true);
     expect(input('render-comments').checked).toBe(true);
-    expect(select('render-comments-select')!.value).toBe('ALL');
+    expect(select('render-comments-selector')!.value).toBe('ALL');
     expect(input('include-unreferenced-comments').checked).toBe(true);
     expect(input('cut-empty-chapters').checked).toBe(true);
     expect(input('cut-empty-wi-attributes').checked).toBe(true);
@@ -154,10 +154,10 @@ describe('Style Packages page', () => {
     expect(input('specific-chapters').checked).toBe(true);
     expect(input('chapters').value).toBe('1,2');
     expect(input('localization').checked).toBe(true);
-    expect(select('language-select')!.value).toBe('fr');
+    expect(select('language')!.value).toBe('fr');
     expect(input('selected-roles').checked).toBe(true);
-    expect(select('link-role-direction-select')!.value).toBe('DIRECT');
-    expect(input('removal-selector-input').value).toBe('img.decoration');
+    expect(select('roles-direction-selector')!.value).toBe('DIRECT');
+    expect(input('removal-selector').value).toBe('img.decoration');
   });
 
   it('saves the document it loaded, field for field', async () => {
@@ -225,6 +225,57 @@ describe('Style Packages page', () => {
     await vi.waitFor(() => expect(document.querySelector('#include-unreferenced-comments')).toBeNull());
   });
 
+  it('lays the package out with the rows of the export form', async () => {
+    open();
+    await loaded();
+
+    const form = document.querySelector('.style-packages-page .docx-export-form')!;
+    for (const id of [
+      'style-package-weight',
+      'matching-query',
+      'exposeSettings',
+      'template-selector',
+      'localization-selector',
+      'webhooks-checkbox',
+      'paper-size',
+      'orientation',
+      'image-density',
+      'preserve-table-styles',
+      'render-comments',
+      'selected-roles',
+      'specific-chapters',
+      'removal-selector',
+    ]) {
+      expect(form.querySelector(`#${id}`)?.closest('.property-wrapper'), id).not.toBeNull();
+    }
+  });
+
+  it('keeps the place of a value that is switched off, as the export dialog does', async () => {
+    open();
+    await loaded();
+
+    const cell = select('language')!.closest<HTMLElement>('.field')!;
+    expect(cell.style.visibility).toBe('');
+
+    await userEvent.click(input('localization'));
+
+    await vi.waitFor(() => expect(cell.style.visibility).toBe('hidden'));
+    expect(select('language')!.closest('.property-wrapper')).toBe(input('localization').closest('.property-wrapper'));
+  });
+
+  it('offers the link roles of a package when no role could be read, so that they can be switched off', async () => {
+    const fetchMock = open(routesWith({ method: 'GET', match: /\/link-role-names/, json: [] }));
+    await loaded();
+
+    expect(input('selected-roles').checked).toBe(true);
+    await userEvent.click(input('selected-roles'));
+    await clickButton('Save');
+
+    const body = await savedBody(fetchMock);
+    expect(body.linkedWorkitemRoles).toBeNull();
+    expect(body.linkRoleDirection).toBeNull();
+  });
+
   it('offers no matching query on the Default package, which applies to every document', async () => {
     open();
     await loaded();
@@ -262,7 +313,7 @@ describe('Style Packages page', () => {
     );
     await loaded();
 
-    await vi.waitFor(() => expect(select('template-select')!.value).toBe('Default'));
+    await vi.waitFor(() => expect(select('template-selector')!.value).toBe('Default'));
 
     await clickButton('Save');
     expect((await savedBody(fetchMock)).template).toBe('Default');
@@ -272,7 +323,7 @@ describe('Style Packages page', () => {
     open();
     await loaded();
 
-    const options = Array.from(select('template-select')!.options);
+    const options = Array.from(select('template-selector')!.options);
     // The name stays plain: the marker is the `parent` class, which the shared dropdown paints as a
     // small italic "global" on the right of the option.
     expect(options.map((o) => o.textContent)).toEqual(['Default', 'With logo']);
@@ -283,10 +334,10 @@ describe('Style Packages page', () => {
     const fetchMock = open();
     await loaded();
 
-    await pick('template-select', 'Default');
-    await pick('render-comments-select', 'OPEN');
-    await pick('language-select', 'it');
-    await pick('link-role-direction-select', 'REVERSE');
+    await pick('template-selector', 'Default');
+    await pick('render-comments-selector', 'OPEN');
+    await pick('language', 'it');
+    await pick('roles-direction-selector', 'REVERSE');
     await clickButton('Save');
 
     const body = await savedBody(fetchMock);
