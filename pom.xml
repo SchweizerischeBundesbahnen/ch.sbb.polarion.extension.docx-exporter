@@ -236,7 +236,8 @@
                         <artifactId>maven-surefire-plugin</artifactId>
                         <version>${maven-surefire-plugin.version}</version>
                         <configuration>
-                            <redirectTestOutputToFile>true</redirectTestOutputToFile>
+                            <!-- The test output stays in the log: the report and the ::warning annotations belong there -->
+                            <redirectTestOutputToFile>false</redirectTestOutputToFile>
                             <systemPropertyVariables>
                                 <docxExporterImpl>docker</docxExporterImpl>
                             </systemPropertyVariables>

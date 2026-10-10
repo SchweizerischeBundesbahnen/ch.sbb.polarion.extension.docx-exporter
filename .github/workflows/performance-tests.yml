@@ -38,10 +38,19 @@ jobs:
           cache: maven
       - name: ⏱️ Run the performance tests
         run: mvn --batch-mode -s "${SETTINGS_XML}" verify -P performance-tests-with-pandoc-docker -Dpandoc.service.url="${PANDOC_SERVICE_URL}"
-      - name: 📋 Upload the reports
+      - name: 📊 Show the table of the run
+        if: always()
+        run: |
+          if [ -f target/surefire-reports/performance-summary.md ]; then
+            cat target/surefire-reports/performance-summary.md >> "${GITHUB_STEP_SUMMARY}"
+          fi
+      - name: 📋 Upload the timing reports
         if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7.0.1
         with:
           name: performance-reports
-          path: target/surefire-reports/
+          path: |
+            target/surefire-reports/performance-*.txt
+            target/surefire-reports/performance-summary.md
+            target/surefire-reports/performance-reference-times.properties
           retention-days: 7

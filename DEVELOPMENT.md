@@ -128,6 +128,80 @@ Docker-less run of the behavior tests:
 mvn clean install -DjsTestsNoDocker -DinstallPlaywrightNoDeps -DskipVisualJsTests
 ```
 
+### Performance Tests
+
+The performance tests export documents of a known shape and fail when an export takes far longer than it does today.
+They are tagged `performance` and run in a profile of their own, not in the regular build:
+
+```bash
+mvn verify -P performance-tests-with-pandoc-docker
+```
+
+The profile runs these tests alone and takes the UI, its tests, coverage, the source and javadoc jars and the Polarion
+compatibility check out of the build. Pass `-Dpandoc.service.url=http://localhost:9082` to use a running pandoc service
+instead of a container.
+
+`ExportPerformanceTest` exports one shape each: a small document, a large table, cells running across pages, many
+images, many work items, sections which page breaks turn landscape, cramped tables, and a large document of some 10 MB
+with photographs and SVG diagrams. The small document takes the exporter little but what every export costs, so a cost
+added to every export shows there. The large document shows a cost which grows with the document.
+
+The exporter and pandoc are timed apart, read from the generation log, so a failure names the slow side. Each document
+is exported three times, and the time of each part is the average.
+
+The reference times depend on the architecture, as pandoc runs in a container of the same architecture.
+`src/test/resources/performance/reference-times-arm64.properties` holds those of an arm64 Mac,
+`reference-times-amd64.properties` those of the amd64 runners of CI, and a run takes the file of its own architecture.
+Each file holds the average time of each part over runs on that architecture, and the time those runs took for a fixed
+piece of JDK work which runs no code of the exporter. A run expects each part to take its reference time scaled to the
+run:
+
+- The pandoc part is scaled by how much longer or shorter than its reference the small document took in pandoc in this
+  run. The small document is exported first. A slower service or a busy neighbor cancels out.
+- The exporter part, and the small document itself, are scaled by the fixed JDK work, timed before the first test. The
+  exporter is Java, as that work is. The exporter part of the small document takes some 30 ms, too short to scale by.
+  A slowdown of every export shows in the small document.
+
+Each part is judged against its expected time:
+
+| Part | Warning above | Fails above |
+|---|---|---|
+| Exporter | 1.2 times | 1.5 times |
+| Pandoc | 1.35 times | 2 times |
+
+Leaving one run out at a time, no part came more than 35 % above its expected time over five runs of CI, nor 24 %
+over seven runs on a Mac. A part over its limit fails its test and the build. A warning only marks the part in the
+report and writes a `::warning` line, which GitHub Actions shows as an annotation of the run.
+
+After the last test, the log shows the report: the reference times, what each is scaled by, and each part with its
+expected time, its time, its warning level, its limit and its result. The report is also written to
+`target/surefire-reports/performance-summary.md`, which CI adds to the summary of the run.
+
+Each run also writes its times to `target/surefire-reports/performance-reference-times.properties`, which CI uploads.
+To take new reference times, average them over at least five runs, and propose the result in a pull request. For amd64,
+take the runs of CI on `main`:
+
+```bash
+gh run list --workflow "Performance Tests" --branch main --status success --limit 10 --json databaseId -q '.[].databaseId' \
+  | xargs -I{} gh run download {} -n performance-reports -D runs/{}
+java src/test/java/ch/sbb/polarion/extension/docx_exporter/pandoc/performance/AverageReferenceTimes.java \
+  runs/*/performance-reference-times.properties > src/test/resources/performance/reference-times-amd64.properties
+```
+
+For arm64, run the tests on a Mac five times:
+
+```bash
+mkdir -p runs
+for run in 1 2 3 4 5; do
+  mvn clean verify -P performance-tests-with-pandoc-docker
+  cp target/surefire-reports/performance-reference-times.properties runs/arm64-$run.properties
+done
+java src/test/java/ch/sbb/polarion/extension/docx_exporter/pandoc/performance/AverageReferenceTimes.java \
+  runs/arm64-*.properties > src/test/resources/performance/reference-times-arm64.properties
+```
+
+A pull request, never the build itself, so that a regression merged into `main` cannot become its own reference.
+
 ## Debugging
 
 ### Remote Debugging
