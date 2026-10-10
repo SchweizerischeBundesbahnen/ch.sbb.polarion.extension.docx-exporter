@@ -74,7 +74,14 @@ public class DocxConverter {
     }
 
     public byte[] convertToDocx(@NotNull ExportParams exportParams) {
-        DocxGenerationLog generationLog = new DocxGenerationLog();
+        return convertToDocx(exportParams, new DocxGenerationLog());
+    }
+
+    /**
+     * Converts as {@link #convertToDocx(ExportParams)} does, timing each stage in the given log, which the caller reads afterwards: the
+     * performance tests take the time of pandoc from it.
+     */
+    public byte[] convertToDocx(@NotNull ExportParams exportParams, @NotNull DocxGenerationLog generationLog) {
         generationLog.log("Starting DOCX generation");
 
         try {
