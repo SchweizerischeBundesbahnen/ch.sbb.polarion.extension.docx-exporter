@@ -95,14 +95,13 @@ class Documents {
 
 
     /**
-     * A document of some 340 pages and 100 MB, as a large specification is: sections of text, a table, a large picture each
-     * and a diagram every second one. Its pictures are 60 photographs, each embedded where it is used, and its diagrams 20
-     * SVG drawings with labels. It weighs what an export does once the document is large, where what every export costs,
-     * as its fonts, is a small part, and a cost which grows with the document shows.
+     * A large document, as a large specification is: sections of text, a table, a photograph of some 270 KB each and an SVG
+     * diagram with labels every second one, each embedded where it is used. It weighs what an export does once the document
+     * is large, where what every export costs is a small part, and a cost which grows with the document shows.
      */
     static @NotNull String largeDocument(int sections) {
-        List<String> photographs = IntStream.range(0, 60).mapToObj(Documents::jpeg).toList();
-        List<String> diagrams = IntStream.range(0, 20).mapToObj(Documents::svg).toList();
+        List<String> photographs = IntStream.range(0, sections).mapToObj(Documents::jpeg).toList();
+        List<String> diagrams = IntStream.range(0, (sections + 1) / 2).mapToObj(Documents::svg).toList();
         StringBuilder html = new StringBuilder("<h1>A large document</h1>");
         for (int section = 0; section < sections; section++) {
             html.append("<h2>Section ").append(section).append("</h2>");
