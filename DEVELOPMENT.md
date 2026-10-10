@@ -168,8 +168,9 @@ Each part is judged against its expected time:
 | Exporter | 1.2 times | 1.5 times |
 | Pandoc | 1.35 times | 2 times |
 
-A part over its limit fails its test and the build. A warning only marks the part in the report and writes a
-`::warning` line, which GitHub Actions shows as an annotation of the run.
+Leaving one run out at a time, no part came more than 29 % above its expected time over five runs of CI, nor 22 %
+over six runs on a Mac. A part over its limit fails its test and the build. A warning only marks the part in the
+report and writes a `::warning` line, which GitHub Actions shows as an annotation of the run.
 
 After the last test, the log shows the report: the reference times, what each is scaled by, and each part with its
 expected time, its time, its warning level, its limit and its result. The report is also written to
