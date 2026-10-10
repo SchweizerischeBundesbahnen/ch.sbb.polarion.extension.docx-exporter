@@ -15,8 +15,8 @@ import java.util.TreeSet;
 /**
  * Averages the times of runs of the performance tests on one architecture into its reference times, which it prints.
  * Each argument is the {@code performance-reference-times.properties} a run writes, and CI uploads. Runs on machines of
- * different speed average as {@link PerformanceRun} reads them: the small document by its time against the fixed piece of
- * work, every other export by its time against the small document of the same run.
+ * different speed average as {@link PerformanceRun} reads them: the small document and every exporter part by its time
+ * against the fixed piece of work, every other pandoc part by its time against the small document of the same run.
  * <p>
  * It needs no build: {@code java src/test/java/ch/sbb/polarion/extension/docx_exporter/pandoc/performance/AverageReferenceTimes.java runs/*.properties}
  * </p>
@@ -25,7 +25,8 @@ public final class AverageReferenceTimes {
 
     private static final String CALIBRATION = "machine.calibration";
     private static final String SMALL_DOCUMENT = "smallDocument.";
-    private static final String[] PARTS = {"exporter", "pandoc"};
+    private static final String EXPORTER = "exporter";
+    private static final String PANDOC = "pandoc";
 
     private AverageReferenceTimes() {
     }
@@ -51,20 +52,21 @@ public final class AverageReferenceTimes {
     static String average(List<Properties> runs) {
         double calibration = runs.stream().mapToDouble(run -> value(run, CALIBRATION)).average().orElseThrow();
         Map<String, Long> references = new TreeMap<>();
-        for (String part : PARTS) {
-            String smallKey = SMALL_DOCUMENT + part;
-            double small = calibration * runs.stream().mapToDouble(run -> value(run, smallKey) / value(run, CALIBRATION)).average().orElseThrow();
-            references.put(smallKey, Math.round(small));
-            for (String key : keysOf(runs, part)) {
-                if (!key.equals(smallKey)) {
-                    references.put(key, Math.round(small * runs.stream().mapToDouble(run -> value(run, key) / value(run, smallKey)).average().orElseThrow()));
-                }
+        for (String key : keysOf(runs, EXPORTER)) {
+            references.put(key, Math.round(calibration * runs.stream().mapToDouble(run -> value(run, key) / value(run, CALIBRATION)).average().orElseThrow()));
+        }
+        String smallKey = SMALL_DOCUMENT + PANDOC;
+        double small = calibration * runs.stream().mapToDouble(run -> value(run, smallKey) / value(run, CALIBRATION)).average().orElseThrow();
+        references.put(smallKey, Math.round(small));
+        for (String key : keysOf(runs, PANDOC)) {
+            if (!key.equals(smallKey)) {
+                references.put(key, Math.round(small * runs.stream().mapToDouble(run -> value(run, key) / value(run, smallKey)).average().orElseThrow()));
             }
         }
         StringBuilder text = new StringBuilder()
                 .append("# The reference times of the performance tests on one architecture, in ms: the average of ").append(runs.size()).append(" runs, made by AverageReferenceTimes.\n")
-                .append("# Each test reads <export>.exporter and <export>.pandoc. The small document is scaled by the fixed piece of work of machine.calibration,\n")
-                .append("# every other export by the small document of its run.\n")
+                .append("# Each test reads <export>.exporter and <export>.pandoc. The small document and every exporter part are scaled by the fixed piece of work\n")
+                .append("# of machine.calibration, every other pandoc part by the small document of its run.\n")
                 .append(CALIBRATION).append('=').append(Math.round(calibration)).append('\n');
         references.forEach((key, value) -> text.append(key).append('=').append(value).append('\n'));
         return text.toString();

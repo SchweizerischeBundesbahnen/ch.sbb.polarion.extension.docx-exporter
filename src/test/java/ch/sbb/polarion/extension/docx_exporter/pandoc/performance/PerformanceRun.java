@@ -28,11 +28,11 @@ import java.util.regex.Pattern;
  * <p>
  * The reference times are the average of runs of the tests on a machine of the architecture of this one: the arm64 of a
  * Mac, or the amd64 of a runner of CI, each in {@code performance/reference-times-<architecture>.properties}, as pandoc
- * runs in a container of the same architecture and converts documents at a different pace on each. Each part of an export is expected to
- * take its reference time scaled by how the small document went in this run: the small document is exported first, and
- * whatever makes this machine or this moment faster or slower makes it so too. A change which slows every export would
- * slow the small document as well and go unseen that way, so the small document itself is scaled by a fixed piece of JDK
- * work instead, which runs no code of the exporter.
+ * runs in a container of the same architecture and converts documents at a different pace on each. The pandoc part of an
+ * export is expected to take its reference time scaled by how the small document went in pandoc in this run: the small
+ * document is exported first, and whatever makes the service faster or slower makes it so too. The exporter part, and the
+ * small document itself, are scaled by a fixed piece of JDK work, which runs no code of the exporter: the exporter is Java
+ * as that work is, and the exporter part of the small document takes too few milliseconds to scale anything by.
  * </p>
  * <p>
  * JUnit keeps the run in the store of the root context, which it closes once every test has run.
@@ -44,7 +44,7 @@ public final class PerformanceRun implements AutoCloseable {
     static final String PANDOC = "pandoc";
 
 
-    /** The export which the others are scaled by, and which is scaled by the fixed piece of work itself. */
+    /** The export which the pandoc part of the others is scaled by, and which is scaled by the fixed piece of work itself. */
     static final String SMALL_DOCUMENT = "smallDocument";
 
     /** How the exporter may deviate from its expected time: it is our code, and varies by a few percent in CI. */
@@ -130,12 +130,12 @@ public final class PerformanceRun implements AutoCloseable {
         return current;
     }
 
-    /** Records how the small document went in this run, which every other export is scaled by. */
+    /** Records how the small document went in this run, which the pandoc part of every other export is scaled by. */
     synchronized void baseline(long exporterMs, long pandocMs) {
         baselineMs.put(EXPORTER, exporterMs);
         baselineMs.put(PANDOC, pandocMs);
-        log("Performance tests: the small document took %d ms in the exporter and %d ms in pandoc, so the other exports are expected to take %.2f and %.2f times their reference times"
-                .formatted(exporterMs, pandocMs, scale("", EXPORTER), scale("", PANDOC)));
+        log("Performance tests: the small document took %d ms in the exporter and %d ms in pandoc, so the pandoc part of the other exports is expected to take %.2f times its reference time"
+                .formatted(exporterMs, pandocMs, scale("", PANDOC)));
     }
 
 
@@ -145,11 +145,11 @@ public final class PerformanceRun implements AutoCloseable {
     }
 
     /**
-     * What the reference time of a part is multiplied by in this run: for the small document the factor of the fixed
-     * work, for any other export how much longer or shorter than its own reference the small document took here.
+     * What the reference time of a part is multiplied by in this run: for the small document and for the exporter the
+     * factor of the fixed work, for pandoc how much longer or shorter than its own reference the small document took here.
      */
     double scale(@NotNull String export, @NotNull String part) {
-        if (SMALL_DOCUMENT.equals(export)) {
+        if (SMALL_DOCUMENT.equals(export) || EXPORTER.equals(part)) {
             return machineFactor;
         }
         Long baseline = baselineMs.get(part);
@@ -192,11 +192,10 @@ public final class PerformanceRun implements AutoCloseable {
     private @NotNull String report() {
         StringBuilder report = new StringBuilder()
                 .append("### Performance tests%n%n#### Reference times%n%n".formatted())
-                .append(("The reference times are those of %s, the average of runs on that architecture. The small document is expected at its reference time times %.2f: "
-                        + "the fixed work took %d ms here and %d ms there. The other exports are expected at their reference times scaled by the small document of this run: "
-                        + "%d ms in the exporter and %d ms in pandoc, against its reference times of %d ms and %d ms.%n%n")
-                        .formatted(architecture, machineFactor, calibrationMs, referenceCalibrationMs, baselineMs.getOrDefault(EXPORTER, 0L), baselineMs.getOrDefault(PANDOC, 0L),
-                                reference(SMALL_DOCUMENT, EXPORTER), reference(SMALL_DOCUMENT, PANDOC)))
+                .append(("The reference times are those of %s, the average of runs on that architecture. The small document and the exporter part of every export are expected "
+                        + "at their reference times times %.2f: the fixed work took %d ms here and %d ms there. The pandoc part of the other exports is expected at its reference time "
+                        + "scaled by the small document of this run: %d ms in pandoc, against its reference time of %d ms.%n%n")
+                        .formatted(architecture, machineFactor, calibrationMs, referenceCalibrationMs, baselineMs.getOrDefault(PANDOC, 0L), reference(SMALL_DOCUMENT, PANDOC)))
                 .append("| Export | Part | Reference, ms | Scaled by | Expected here, ms |%n|---|---|---:|---:|---:|%n".formatted());
         for (Row row : rows) {
             report.append("| %s | %s | %d | %.2f | %d |%n".formatted(row.export(), row.part(), row.referenceMs(), row.scale(), row.expectedMs()));
@@ -218,7 +217,7 @@ public final class PerformanceRun implements AutoCloseable {
     /** The times of this run in the form of the reference times, which {@link AverageReferenceTimes} averages over runs. */
     private @NotNull String times() {
         Map<String, Long> sorted = new TreeMap<>();
-        // The small document of the run is written whether its own test ran or not, as every other time is averaged against it
+        // The small document of the run is written whether its own test ran or not, as every other pandoc time is averaged against it
         baselineMs.forEach((part, timeMs) -> sorted.put(key(SMALL_DOCUMENT, part), timeMs));
         rows.forEach(row -> sorted.put(key(row.export(), row.part()), row.timeMs()));
         StringBuilder times = new StringBuilder("# The times of a run of the performance tests on %s, in the form of %s%n".formatted(architecture, referenceTimesFile.substring(1)))

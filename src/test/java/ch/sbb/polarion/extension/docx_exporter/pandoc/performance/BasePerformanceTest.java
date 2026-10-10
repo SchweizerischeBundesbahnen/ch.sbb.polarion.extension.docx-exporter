@@ -42,10 +42,10 @@ import static org.mockito.Mockito.when;
  * The exporter and pandoc are timed apart, read from the timings of the generation log, so a failure says which side
  * became slow. Each document is exported {@link #RUNS} times, and the time of each part is the average. Each part has a
  * reference time in {@code performance/reference-times-<architecture>.properties}, its average over runs on a machine of
- * that architecture. {@link PerformanceRun} expects each part to take its reference time scaled by how the small document
- * went in this run, which absorbs how fast this machine and this moment are; the small document itself it scales by a
- * fixed piece of JDK work, so that a change which slows every export still shows. It writes a report of every export
- * after the last test.
+ * that architecture. {@link PerformanceRun} expects the pandoc part to take its reference time scaled by how the small
+ * document went in pandoc in this run, which absorbs how fast the service is at this moment. The exporter part and the
+ * small document itself it scales by a fixed piece of JDK work, so that a change which slows every export still shows.
+ * It writes a report of every export after the last test.
  * </p>
  * <p>
  * Every export goes through the reference template, as an export in Polarion goes through a template.
@@ -92,8 +92,8 @@ public abstract class BasePerformanceTest extends BaseDocxConverterTest {
      * <p>
      * Before the first export of a run of the tests, {@link #RUNS} exports which are not timed warm the JVM and the service
      * up, and the small document is timed as the baseline of the run, which {@link PerformanceRun} scales the other
-     * reference times by. Its own test takes that same timing rather than one of its own: the reference times hold each
-     * export against the small document of its run, so the run must scale by the very sample it reports.
+     * pandoc reference times by. Its own test takes that same timing rather than one of its own: the reference times hold
+     * each pandoc part against the small document of its run, so the run must scale by the very sample it reports.
      * </p>
      */
     protected @NotNull Timing export(@NotNull String name, @NotNull String title, @NotNull String content, @NotNull ExportParams params) {

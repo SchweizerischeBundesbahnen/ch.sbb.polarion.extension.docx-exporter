@@ -156,10 +156,11 @@ Each file holds the average time of each part over runs on that architecture, an
 piece of JDK work which runs no code of the exporter. A run expects each part to take its reference time scaled to the
 run:
 
-- The small document is exported first. Every other export is scaled by how much longer or shorter than its reference
-  the small document took in this run, the exporter and pandoc apart. A slower machine or a busy neighbor cancels out.
-- The small document itself is scaled by the fixed JDK work, timed before the first test, so a slowdown of every export
-  shows there.
+- The pandoc part is scaled by how much longer or shorter than its reference the small document took in pandoc in this
+  run. The small document is exported first. A slower service or a busy neighbor cancels out.
+- The exporter part, and the small document itself, are scaled by the fixed JDK work, timed before the first test. The
+  exporter is Java, as that work is. The exporter part of the small document takes some 30 ms, too short to scale by.
+  A slowdown of every export shows in the small document.
 
 Each part is judged against its expected time:
 
@@ -168,8 +169,8 @@ Each part is judged against its expected time:
 | Exporter | 1.2 times | 1.5 times |
 | Pandoc | 1.35 times | 2 times |
 
-Leaving one run out at a time, no part came more than 29 % above its expected time over five runs of CI, nor 22 %
-over six runs on a Mac. A part over its limit fails its test and the build. A warning only marks the part in the
+Leaving one run out at a time, no part came more than 35 % above its expected time over five runs of CI, nor 24 %
+over seven runs on a Mac. A part over its limit fails its test and the build. A warning only marks the part in the
 report and writes a `::warning` line, which GitHub Actions shows as an annotation of the run.
 
 After the last test, the log shows the report: the reference times, what each is scaled by, and each part with its
