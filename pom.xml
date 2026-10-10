@@ -109,21 +109,52 @@
                         <configuration>
                             <!-- hide unwanted exceptions logging -->
                             <redirectTestOutputToFile>true</redirectTestOutputToFile>
-                            <!-- JUnit runs the test classes in parallel, in this one JVM, so they share the container. The
-                                 methods of a class still run one after another. -->
-                            <properties>
-                                <configurationParameters>
-                                    junit.jupiter.execution.parallel.enabled = true
-                                    junit.jupiter.execution.parallel.mode.default = same_thread
-                                    junit.jupiter.execution.parallel.mode.classes.default = concurrent
-                                    junit.jupiter.execution.parallel.config.strategy = fixed
-                                    junit.jupiter.execution.parallel.config.fixed.parallelism = ${tests.parallelism}
-                                </configurationParameters>
-                            </properties>
                             <systemPropertyVariables>
                                 <docxExporterImpl>docker</docxExporterImpl>
                             </systemPropertyVariables>
                         </configuration>
+                        <executions>
+                            <!-- The unit tests run one after another, as they always did: several of them change state of the whole
+                                 JVM, as its proxy settings, which a test running beside them would pick up. -->
+                            <execution>
+                                <id>default-test</id>
+                                <configuration>
+                                    <excludes>
+                                        <exclude>**/pandoc/**</exclude>
+                                    </excludes>
+                                </configuration>
+                            </execution>
+                            <!-- The tests of the service take most of the time, and JUnit runs their classes in parallel, in one JVM, so
+                                 they share the container. The methods of a class still run one after another. -->
+                            <execution>
+                                <id>service-tests</id>
+                                <phase>test</phase>
+                                <goals>
+                                    <goal>test</goal>
+                                </goals>
+                                <configuration>
+                                    <includes>
+                                        <include>**/pandoc/Test*.java</include>
+                                        <include>**/pandoc/**/Test*.java</include>
+                                        <include>**/pandoc/*Test.java</include>
+                                        <include>**/pandoc/**/*Test.java</include>
+                                        <include>**/pandoc/*Tests.java</include>
+                                        <include>**/pandoc/**/*Tests.java</include>
+                                        <include>**/pandoc/*TestCase.java</include>
+                                        <include>**/pandoc/**/*TestCase.java</include>
+                                    </includes>
+                                    <properties>
+                                        <configurationParameters>
+                                            junit.jupiter.execution.parallel.enabled = true
+                                            junit.jupiter.execution.parallel.mode.default = same_thread
+                                            junit.jupiter.execution.parallel.mode.classes.default = concurrent
+                                            junit.jupiter.execution.parallel.config.strategy = fixed
+                                            junit.jupiter.execution.parallel.config.fixed.parallelism = ${tests.parallelism}
+                                        </configurationParameters>
+                                    </properties>
+                                </configuration>
+                            </execution>
+                        </executions>
                     </plugin>
                 </plugins>
             </build>
