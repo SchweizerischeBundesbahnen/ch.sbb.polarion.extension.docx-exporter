@@ -92,6 +92,8 @@
         <frontend-maven-plugin.version>2.0.2</frontend-maven-plugin.version>
 
         <apache-poi.version>5.5.1</apache-poi.version>
+        <!-- How many test classes run at once with pandoc -->
+        <tests.parallelism>4</tests.parallelism>
     </properties>
 
     <profiles>
@@ -111,6 +113,39 @@
                                 <docxExporterImpl>docker</docxExporterImpl>
                             </systemPropertyVariables>
                         </configuration>
+                        <executions>
+                            <!-- The unit tests run one after another, as they always did: several of them change state of the whole
+                                 JVM, as its proxy settings, which a test running beside them would pick up. -->
+                            <execution>
+                                <id>default-test</id>
+                                <configuration>
+                                    <excludedGroups>service</excludedGroups>
+                                </configuration>
+                            </execution>
+                            <!-- The tests of the service, tagged "service" by their base class, take most of the time. JUnit runs their
+                                 classes in parallel, in one JVM, so they share the container; the methods of a class still run
+                                 one after another. A group, unlike a path, still applies where -Dtest names a test. -->
+                            <execution>
+                                <id>service-tests</id>
+                                <phase>test</phase>
+                                <goals>
+                                    <goal>test</goal>
+                                </goals>
+                                <configuration>
+                                    <groups>service</groups>
+                                    <excludedGroups/>
+                                    <properties>
+                                        <configurationParameters>
+                                            junit.jupiter.execution.parallel.enabled = true
+                                            junit.jupiter.execution.parallel.mode.default = same_thread
+                                            junit.jupiter.execution.parallel.mode.classes.default = concurrent
+                                            junit.jupiter.execution.parallel.config.strategy = fixed
+                                            junit.jupiter.execution.parallel.config.fixed.parallelism = ${tests.parallelism}
+                                        </configurationParameters>
+                                    </properties>
+                                </configuration>
+                            </execution>
+                        </executions>
                     </plugin>
                 </plugins>
             </build>

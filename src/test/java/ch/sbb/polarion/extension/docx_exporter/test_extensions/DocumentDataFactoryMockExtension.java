@@ -16,7 +16,8 @@ import static org.mockito.Mockito.*;
 public class DocumentDataFactoryMockExtension implements BeforeEachCallback, AfterEachCallback {
 
     private MockedStatic<DocumentDataFactory> documentDataFactoryMockedStatic;
-    private static final Map<ExportParams, DocumentData<?>> documentDataMocks = new HashMap<>();
+    // The mocks of the test of this thread: test classes run in parallel, a class's tests in one thread
+    private static final ThreadLocal<Map<ExportParams, DocumentData<?>>> DOCUMENT_DATA_MOCKS = ThreadLocal.withInitial(HashMap::new);
 
     @Override
     public void beforeEach(ExtensionContext context) throws Exception {
@@ -24,7 +25,7 @@ public class DocumentDataFactoryMockExtension implements BeforeEachCallback, Aft
 
         documentDataFactoryMockedStatic.when(() -> DocumentDataFactory.getDocumentData(any(ExportParams.class), anyBoolean())).thenAnswer(invocation -> {
             ExportParams params = invocation.getArgument(0);
-            DocumentData<?> value = documentDataMocks.get(params);
+            DocumentData<?> value = DOCUMENT_DATA_MOCKS.get().get(params);
             if (value != null) {
                 return value;
             } else {
@@ -34,10 +35,10 @@ public class DocumentDataFactoryMockExtension implements BeforeEachCallback, Aft
     }
 
     public void register(ExportParams exportParams, DocumentData<?> mock) {
-        if (documentDataMocks.containsKey(exportParams)) {
+        if (DOCUMENT_DATA_MOCKS.get().containsKey(exportParams)) {
             throw new IllegalStateException("Mock already registered for given ExportParams: " + exportParams);
         }
-        documentDataMocks.put(exportParams, mock);
+        DOCUMENT_DATA_MOCKS.get().put(exportParams, mock);
     }
 
     @Override
@@ -45,7 +46,7 @@ public class DocumentDataFactoryMockExtension implements BeforeEachCallback, Aft
         if (documentDataFactoryMockedStatic != null) {
             documentDataFactoryMockedStatic.close();
         }
-        documentDataMocks.clear();
+        DOCUMENT_DATA_MOCKS.remove();
     }
 
 }

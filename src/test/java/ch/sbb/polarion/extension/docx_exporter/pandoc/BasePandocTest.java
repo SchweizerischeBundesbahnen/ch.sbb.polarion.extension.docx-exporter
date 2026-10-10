@@ -10,6 +10,7 @@ import com.polarion.core.util.StringUtils;
 import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.jetbrains.annotations.NotNull;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -29,6 +30,8 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @SkipTestWhenParamNotSet
+// The tests of the service: they run with several classes at once, in an execution of surefire of their own
+@Tag("service")
 @ExtendWith({MockitoExtension.class, DocxExporterExtensionConfigurationExtension.class})
 public abstract class BasePandocTest {
 
