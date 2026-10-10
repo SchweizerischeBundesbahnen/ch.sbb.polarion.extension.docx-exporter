@@ -119,7 +119,6 @@
                             <execution>
                                 <id>default-test</id>
                                 <configuration>
-                                    <failIfNoSpecifiedTests>false</failIfNoSpecifiedTests>
                                     <excludedGroups>service</excludedGroups>
                                 </configuration>
                             </execution>
@@ -133,7 +132,6 @@
                                     <goal>test</goal>
                                 </goals>
                                 <configuration>
-                                    <failIfNoSpecifiedTests>false</failIfNoSpecifiedTests>
                                     <groups>service</groups>
                                     <excludedGroups/>
                                     <properties>
