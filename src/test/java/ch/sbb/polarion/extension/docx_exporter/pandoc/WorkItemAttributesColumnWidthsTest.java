@@ -9,6 +9,8 @@ import com.polarion.alm.tracker.model.IModule;
 import lombok.SneakyThrows;
 import org.junit.jupiter.api.Test;
 
+import java.io.File;
+import java.nio.file.Files;
 import java.util.List;
 
 import static ch.sbb.polarion.extension.docx_exporter.pandoc.DocxStructureInspector.columnWidths;
@@ -20,8 +22,10 @@ import static org.mockito.ArgumentMatchers.eq;
 /**
  * Every Work Item attributes table splits its width 20% / 80% between labels and values, whatever their text.
  * Without fixed widths Word sizes each table by its content, and consecutive tables get different columns.
+ * The PDF pandoc-service renders from the DOCX shows the same split.
  */
 @SkipTestWhenParamNotSet
+@SuppressWarnings("ResultOfMethodCallIgnored")
 class WorkItemAttributesColumnWidthsTest extends BaseDocxConverterTest {
 
     private static final String LIVE_DOC_HTML = """
@@ -97,6 +101,14 @@ class WorkItemAttributesColumnWidthsTest extends BaseDocxConverterTest {
             // the same grid in every table, and every cell pinned to its column
             assertEquals(grid, table.grid());
             table.cells().forEach(row -> assertEquals(grid, row));
+        }
+
+        File docxFile = getTestFile();
+        try {
+            Files.write(docxFile.toPath(), docx);
+            compareContentUsingReferenceImages("workItemAttributesColumnWidths", exportToPDF(docxFile));
+        } finally {
+            docxFile.delete();
         }
     }
 }
