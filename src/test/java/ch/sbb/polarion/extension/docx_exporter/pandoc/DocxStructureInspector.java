@@ -123,6 +123,10 @@ final class DocxStructureInspector {
     record Table(String widthType, long width, String jc, List<List<Cell>> rows) {
     }
 
+    /** A table's {@code <w:gridCol>} widths and, per row, each cell's {@code <w:tcW>} width, all in dxa. */
+    record ColumnWidths(List<Long> grid, List<List<Long>> cells) {
+    }
+
     /** A picture's {@code <w:position>} in half-points and the left and right of its {@code <wp:effectExtent>} in EMU. */
     record PictureLayout(int position, long left, long right) {
     }
@@ -157,6 +161,34 @@ final class DocxStructureInspector {
         NodeList tbls = body.getElementsByTagNameNS(W_NS, "tbl");
         for (int i = 0; i < tbls.getLength(); i++) {
             result.add(toTable((Element) tbls.item(i)));
+        }
+        return result;
+    }
+
+    /** The column widths of every table of the body, in document order. A cell width not fixed in dxa reads as 0. */
+    static List<ColumnWidths> columnWidths(byte[] docx) throws IOException {
+        Element body = body(docx);
+        List<ColumnWidths> result = new ArrayList<>();
+        NodeList tbls = body.getElementsByTagNameNS(W_NS, "tbl");
+        for (int i = 0; i < tbls.getLength(); i++) {
+            Element tbl = (Element) tbls.item(i);
+            List<Long> grid = new ArrayList<>();
+            Element tblGrid = child(tbl, "tblGrid");
+            if (tblGrid != null) {
+                for (Element gridCol : children(tblGrid, "gridCol")) {
+                    grid.add(parseLongOrDefault(wAttr(gridCol, "w"), 0L));
+                }
+            }
+            List<List<Long>> cells = new ArrayList<>();
+            for (Element tr : children(tbl, "tr")) {
+                List<Long> row = new ArrayList<>();
+                for (Element tc : children(tr, "tc")) {
+                    Element tcW = child(child(tc, "tcPr"), "tcW");
+                    row.add("dxa".equals(wAttr(tcW, "type")) ? parseLongOrDefault(wAttr(tcW, "w"), 0L) : 0L);
+                }
+                cells.add(row);
+            }
+            result.add(new ColumnWidths(grid, cells));
         }
         return result;
     }
