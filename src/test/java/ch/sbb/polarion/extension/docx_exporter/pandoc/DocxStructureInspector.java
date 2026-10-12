@@ -165,7 +165,7 @@ final class DocxStructureInspector {
         return result;
     }
 
-    /** The column widths of every table of the body, in document order. A missing {@code <w:tcW>} reads as 0. */
+    /** The column widths of every table of the body, in document order. A cell width not fixed in dxa reads as 0. */
     static List<ColumnWidths> columnWidths(byte[] docx) throws IOException {
         Element body = body(docx);
         List<ColumnWidths> result = new ArrayList<>();
@@ -183,7 +183,8 @@ final class DocxStructureInspector {
             for (Element tr : children(tbl, "tr")) {
                 List<Long> row = new ArrayList<>();
                 for (Element tc : children(tr, "tc")) {
-                    row.add(parseLongOrDefault(wAttr(child(child(tc, "tcPr"), "tcW"), "w"), 0L));
+                    Element tcW = child(child(tc, "tcPr"), "tcW");
+                    row.add("dxa".equals(wAttr(tcW, "type")) ? parseLongOrDefault(wAttr(tcW, "w"), 0L) : 0L);
                 }
                 cells.add(row);
             }
