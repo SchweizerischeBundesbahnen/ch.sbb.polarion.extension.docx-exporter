@@ -165,7 +165,7 @@ class BasicTest extends BasePandocTest {
         byte[] docBytes = exportToDOCX(html, readTemplate("reference_template"), PandocParams.builder().orientation("landscape").build());
         writeReportDocx("testStartingLandscapeOrientation_generated", docBytes);
 
-        // First page should start in landscape
+        // Page without explicitly specified orientation should preserve original orientation
         assertTrue(hasOrientationOnPage(docBytes, 3, "landscape"));
     }
 
