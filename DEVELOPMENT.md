@@ -142,9 +142,10 @@ compatibility check out of the build. Pass `-Dpandoc.service.url=http://localhos
 instead of a container.
 
 `ExportPerformanceTest` exports one shape each: a small document, a large table, cells running across pages, many
-images, many work items, sections which page breaks turn landscape, cramped tables, and a large document of some 10 MB
-with photographs and SVG diagrams. The small document takes the exporter little but what every export costs, so a cost
-added to every export shows there. The large document shows a cost which grows with the document.
+images, many small images, many work items, sections which page breaks turn landscape, cramped tables, and a large
+document of some 10 MB with photographs and SVG diagrams. The small document takes the exporter little but what every
+export costs, so a cost added to every export shows there. The large document shows a cost which grows with the document.
+The many small images, 2000 `data:` URIs in some 10 MB, show what pandoc-service makes of embedded images.
 
 The exporter and pandoc are timed apart, read from the generation log, so a failure names the slow side. Each document
 is exported three times, and the time of each part is the average.
