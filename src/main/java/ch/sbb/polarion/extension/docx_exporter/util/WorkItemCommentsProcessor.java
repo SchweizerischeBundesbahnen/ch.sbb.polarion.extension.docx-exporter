@@ -34,7 +34,7 @@ public class WorkItemCommentsProcessor {
                     for (WorkItemComment comment : commentMap.values()) {
                         rendered.append(renderComment(comment, 0));
                     }
-                    el.after(org.jsoup.parser.Parser.unescapeEntities(rendered.toString(), true) + el.html());
+                    el.after(rendered + el.html());
                 }
             }
         }
@@ -120,7 +120,7 @@ public class WorkItemCommentsProcessor {
     private WorkItemCommentsProcessor.CommentData getCommentData(WorkItemComment workItemComment) {
         String date = DATE_FORMAT.format(workItemComment.getCreated());
         String user = workItemComment.getAuthor();
-        String commentText = workItemComment.getText();
+        String commentText = CommentTextRenderer.toInlineHtml(workItemComment.getText());
         boolean resolved = workItemComment.getResolved();
         return WorkItemCommentsProcessor.CommentData.builder()
                 .date(date)

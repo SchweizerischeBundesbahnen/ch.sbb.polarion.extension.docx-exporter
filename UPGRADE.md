@@ -28,6 +28,10 @@ reports the service version and whether the configured API key and transport are
 exports. See [Pandoc configuration](CONFIGURATION.md#pandoc-configuration) for the service URL and
 [Pandoc API key](CONFIGURATION.md#pandoc-api-key) for the credential.
 
+Use pandoc-service 2.8.0 or newer. Older versions write no fixed column widths into a table, so Word sizes
+each table by its content: the Work Item attributes tables of one document then get different label and
+value columns instead of the same 20% / 80% split.
+
 ## Upgrade from version 5.x.x to 5.6.0
 
 The **User Guide** administration entry is replaced by a single **Documentation** entry. It opens a
