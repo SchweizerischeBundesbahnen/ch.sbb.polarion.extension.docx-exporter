@@ -69,6 +69,11 @@ class CommentTextRendererTest {
     }
 
     @Test
+    void emptyLastListItemTest() {
+        assertEquals("1. one<br/>after", CommentTextRenderer.toInlineHtml("<ol><li>one</li><li></li></ol><p>after</p>"));
+    }
+
+    @Test
     void orderedListWithOtherElementsTest() {
         assertEquals("x<br/>1. a<br/>2. b", CommentTextRenderer.toInlineHtml("<ol><p>x</p><li>a</li><li>b</li></ol>"));
     }

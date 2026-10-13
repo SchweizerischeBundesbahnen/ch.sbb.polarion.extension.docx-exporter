@@ -60,6 +60,9 @@ public class CommentTextRenderer {
             }
             collectLines(element, lines);
             lines.flush();
+            if ("li".equals(tagName)) {
+                lines.listItemPrefix = "";
+            }
         } else {
             // Table cells stay on one line, separated by a space.
             if ("td".equals(tagName) || "th".equals(tagName)) {
