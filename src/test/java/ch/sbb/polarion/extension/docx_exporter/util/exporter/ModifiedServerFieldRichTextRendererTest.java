@@ -77,6 +77,11 @@ class ModifiedServerFieldRichTextRendererTest {
 
         assertEquals(RichTextRenderTarget.PREVIEW, targetWhileRendering[0], "The icons are rendered as for a preview");
         assertEquals(RichTextRenderTarget.PDF_EXPORT, context.getRenderTarget(), "The render target is restored after");
+
+        try (MockedStatic<FieldUtils> mockFieldUtils = mockStatic(FieldUtils.class)) {
+            mockFieldUtils.when(() -> FieldUtils.writeField(eq(context), eq("renderTarget"), any(), anyBoolean())).thenThrow(new IllegalAccessException("Test"));
+            assertThrows(IllegalAccessException.class, () -> renderer.renderReferredCommentMarkers(mock(HtmlContentBuilder.class), documentReference, mock(WorkItemReference.class)));
+        }
     }
 
 }
