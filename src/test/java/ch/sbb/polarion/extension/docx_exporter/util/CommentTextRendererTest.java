@@ -58,6 +58,17 @@ class CommentTextRendererTest {
     }
 
     @Test
+    void listItemInParagraphTest() {
+        String richText = "<ul><li><p>one</p></li><li><div>two</div><p>more</p></li></ul><ol><li><p><br/>first</p></li></ol>";
+        assertEquals("\u2022 one<br/>\u2022 two<br/>more<br/>1. first", CommentTextRenderer.toInlineHtml(richText));
+    }
+
+    @Test
+    void emptyListItemTest() {
+        assertEquals("\u2022 two", CommentTextRenderer.toInlineHtml("<ul><li></li><li>two</li></ul>"));
+    }
+
+    @Test
     void tableTest() {
         String richText = "<table><tr><td>a</td><td>b</td></tr><tr><td>c</td><td>d</td></tr></table>";
         assertEquals("a b<br/>c d", CommentTextRenderer.toInlineHtml(richText));

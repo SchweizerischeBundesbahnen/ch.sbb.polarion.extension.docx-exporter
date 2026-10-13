@@ -33,34 +33,33 @@ public class CommentTextRenderer {
         if (richText == null || richText.isBlank()) {
             return "";
         }
-        List<String> lines = new ArrayList<>();
-        StringBuilder line = new StringBuilder();
-        collectLines(Jsoup.parseBodyFragment(richText).body(), lines, line);
-        flushLine(lines, line);
-        return lines.stream().map(Entities::escape).collect(Collectors.joining(LINE_BREAK));
+        Lines lines = new Lines();
+        collectLines(Jsoup.parseBodyFragment(richText).body(), lines);
+        lines.flush();
+        return lines.lines.stream().map(Entities::escape).collect(Collectors.joining(LINE_BREAK));
     }
 
-    private static void collectLines(@NotNull Element parent, @NotNull List<String> lines, @NotNull StringBuilder line) {
+    private static void collectLines(@NotNull Element parent, @NotNull Lines lines) {
         for (Node node : parent.childNodes()) {
             if (node instanceof TextNode textNode) {
-                line.append(textNode.getWholeText());
+                lines.line.append(textNode.getWholeText());
             } else if (node instanceof Element element) {
                 String tagName = element.normalName();
                 if ("br".equals(tagName)) {
-                    flushLine(lines, line);
+                    lines.flush();
                 } else if (BLOCK_TAGS.contains(tagName)) {
-                    flushLine(lines, line);
+                    lines.flush();
                     if ("li".equals(tagName)) {
-                        line.append(listItemPrefix(element));
+                        lines.listItemPrefix = listItemPrefix(element);
                     }
-                    collectLines(element, lines, line);
-                    flushLine(lines, line);
+                    collectLines(element, lines);
+                    lines.flush();
                 } else {
                     // Table cells stay on one line, separated by a space.
                     if ("td".equals(tagName) || "th".equals(tagName)) {
-                        line.append(' ');
+                        lines.line.append(' ');
                     }
-                    collectLines(element, lines, line);
+                    collectLines(element, lines);
                 }
             }
         }
@@ -84,12 +83,20 @@ public class CommentTextRenderer {
         return BULLET;
     }
 
-    private static void flushLine(@NotNull List<String> lines, @NotNull StringBuilder line) {
-        // Polarion's editor leaves zero-width spaces and non-breaking spaces in otherwise empty lines.
-        String text = line.toString().replace("\u200B", "").replaceAll("[\\s\\u00A0]+", " ").trim();
-        if (!text.isEmpty()) {
-            lines.add(text);
+    private static final class Lines {
+        private final List<String> lines = new ArrayList<>();
+        private final StringBuilder line = new StringBuilder();
+        // Kept until the first line with text, since the text of a list item may sit in a paragraph of its own.
+        private String listItemPrefix = "";
+
+        private void flush() {
+            // Polarion's editor leaves zero-width spaces and non-breaking spaces in otherwise empty lines.
+            String text = line.toString().replace("\u200B", "").replaceAll("[\\s\\u00A0]+", " ").trim();
+            if (!text.isEmpty()) {
+                lines.add(listItemPrefix + text);
+                listItemPrefix = "";
+            }
+            line.setLength(0);
         }
-        line.setLength(0);
     }
 }

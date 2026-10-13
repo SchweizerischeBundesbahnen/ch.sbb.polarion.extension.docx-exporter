@@ -34,7 +34,7 @@ public class WorkItemCommentsProcessor {
                     for (WorkItemComment comment : commentMap.values()) {
                         rendered.append(renderComment(comment, 0));
                     }
-                    el.after(org.jsoup.parser.Parser.unescapeEntities(rendered.toString(), true) + el.html());
+                    el.after(rendered + el.html());
                 }
             }
         }
