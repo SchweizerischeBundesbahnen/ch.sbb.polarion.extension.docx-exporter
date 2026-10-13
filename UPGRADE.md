@@ -28,9 +28,12 @@ reports the service version and whether the configured API key and transport are
 exports. See [Pandoc configuration](CONFIGURATION.md#pandoc-configuration) for the service URL and
 [Pandoc API key](CONFIGURATION.md#pandoc-api-key) for the credential.
 
-Use pandoc-service 2.8.0 or newer. Older versions write no fixed column widths into a table, so Word sizes
-each table by its content: the Work Item attributes tables of one document then get different label and
-value columns instead of the same 20% / 80% split.
+Use pandoc-service 2.9.1 or newer. Versions before 2.8.0 write no fixed column widths into a table, so Word
+sizes each table by its content: the Work Item attributes tables of one document then get different label
+and value columns instead of the same 20% / 80% split. 2.8.0 splits a table into equal columns as soon as a
+cell holds a line break, and needs gigabytes of memory for a document with thousands of embedded images.
+2.9.0 narrows an image in a table cell below its width, turns a nested table into text with preserved table
+styles, and fails to render a nested table to PDF.
 
 ## Upgrade from version 5.x.x to 5.6.0
 
