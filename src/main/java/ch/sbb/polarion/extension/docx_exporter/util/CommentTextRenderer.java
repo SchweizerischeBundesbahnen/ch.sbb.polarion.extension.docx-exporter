@@ -23,7 +23,7 @@ import java.util.stream.Collectors;
 public class CommentTextRenderer {
 
     private static final String LINE_BREAK = "<br/>";
-    private static final String BULLET = "• ";
+    private static final String BULLET = "\u2022 ";
     private static final Set<String> BLOCK_TAGS = Set.of(
             "p", "div", "li", "ul", "ol", "h1", "h2", "h3", "h4", "h5", "h6",
             "blockquote", "pre", "table", "tr", "dl", "dt", "dd");
@@ -86,7 +86,7 @@ public class CommentTextRenderer {
 
     private static void flushLine(@NotNull List<String> lines, @NotNull StringBuilder line) {
         // Polarion's editor leaves zero-width spaces and non-breaking spaces in otherwise empty lines.
-        String text = line.toString().replace("​", "").replaceAll("[\\s\\u00A0]+", " ").trim();
+        String text = line.toString().replace("\u200B", "").replaceAll("[\\s\\u00A0]+", " ").trim();
         if (!text.isEmpty()) {
             lines.add(text);
         }
