@@ -86,7 +86,7 @@ class TableColumnWidthsTest extends BaseDocxConverterTest {
         assertTrue(shares.get(11).get(1) > 50, "an image in a cell: " + shares.get(11));
         assertTrue(shares.get(12).size() == 10 && shares.get(12).stream().allMatch(share -> share >= 8 && share <= 14), "ten narrow columns: " + shares.get(12));
         // 300 px are 4500 twips, and 60 % of the table of the full width
-        assertEquals(4500, totalWidth(tables.get(13)), 15, "a table of 300 px: " + tables.get(13).grid());
+        assertEquals(4500.0, (double) totalWidth(tables.get(13)), 15.0, "a table of 300 px: " + tables.get(13).grid());
         assertEquals(0.6, (double) totalWidth(tables.get(14)) / totalWidth(tables.get(0)), 0.01, "a table of 60 %");
         assertTrue(shares.get(15).get(1) < 15, "an empty column: " + shares.get(15));
         assertEquals(40L, shares.get(16).get(0));
