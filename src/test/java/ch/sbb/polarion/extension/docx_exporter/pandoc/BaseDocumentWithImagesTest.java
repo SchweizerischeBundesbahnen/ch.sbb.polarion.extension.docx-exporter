@@ -38,7 +38,7 @@ abstract class BaseDocumentWithImagesTest extends BasePandocTest {
     private static final int IMAGE_HEIGHT = 300;
     private static final int IMAGES_PER_SECTION = 3;
 
-    /** How large the HTML of the document is, and so its DOCX at least, in MB. */
+    /** How large the HTML of the document is, in MB. */
     protected abstract int targetSizeMb();
 
     private int targetSizeBytes() {

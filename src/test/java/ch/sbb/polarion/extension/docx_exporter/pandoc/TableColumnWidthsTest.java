@@ -15,6 +15,7 @@ import java.nio.file.Files;
 import java.util.List;
 
 import static ch.sbb.polarion.extension.docx_exporter.pandoc.DocxStructureInspector.columnWidths;
+import static ch.sbb.polarion.extension.docx_exporter.pandoc.DocxStructureInspector.pictureWidths;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -30,17 +31,20 @@ import static org.mockito.ArgumentMatchers.eq;
 @SuppressWarnings("ResultOfMethodCallIgnored")
 class TableColumnWidthsTest extends BaseDocxConverterTest {
 
+    private static final long EMU_PER_PIXEL = 9525;
+
     @ParameterizedTest
     @CsvSource({
-            "false, tableColumnWidths",
-            "true, tableColumnWidthsPreserved",
+            "false, PORTRAIT, tableColumnWidths",
+            "true, PORTRAIT, tableColumnWidthsPreserved",
+            "false, LANDSCAPE, tableColumnWidthsLandscape",
     })
     @SneakyThrows
-    void tableColumnWidths(boolean preserveTableStyles, String testName) {
+    void tableColumnWidths(boolean preserveTableStyles, String orientation, String testName) {
         ExportParams params = ExportParams.builder()
                 .projectId("test")
                 .locationPath("testLocation")
-                .orientation("PORTRAIT")
+                .orientation(orientation)
                 .paperSize("A4")
                 .preserveTableStyles(preserveTableStyles)
                 .build();
@@ -59,8 +63,9 @@ class TableColumnWidthsTest extends BaseDocxConverterTest {
         assertNotNull(docx);
         writeReportDocx(testName + "_generated", docx);
 
-        List<List<Long>> shares = columnWidths(docx).stream().map(TableColumnWidthsTest::sharesInPercent).toList();
-        assertEquals(10, shares.size());
+        List<ColumnWidths> tables = columnWidths(docx);
+        List<List<Long>> shares = tables.stream().map(TableColumnWidthsTest::sharesInPercent).toList();
+        assertEquals(19, shares.size()); // 18 tables and the one nested in table 18
         // Columns without a stated width take what their content needs, a line break or not
         assertTrue(shares.get(0).get(0) < 15, "automatic widths: " + shares.get(0));
         assertTrue(shares.get(1).get(0) < 15, "automatic widths, a line break in a cell: " + shares.get(1));
@@ -75,8 +80,21 @@ class TableColumnWidthsTest extends BaseDocxConverterTest {
         assertTrue(shares.get(7).get(0) < 30, "a table of half the width: " + shares.get(7));
         assertEquals(List.of(25L, 25L, 25L, 25L), shares.get(8));
         assertTrue(shares.get(9).get(0) < 15, "a long word that does not break: " + shares.get(9));
-        // Every cell is pinned to its columns, in dxa
-        columnWidths(docx).forEach(table -> table.cells().forEach(row -> assertTrue(row.stream().allMatch(width -> width > 0), table.toString())));
+        assertTrue(shares.get(10).get(2) > 50, "cells merged across rows: " + shares.get(10));
+        // The image keeps its 160 px, as a browser keeps it, and the description takes the rest
+        assertEquals(List.of(160L * EMU_PER_PIXEL), pictureWidths(docx));
+        assertTrue(shares.get(11).get(1) > 50, "an image in a cell: " + shares.get(11));
+        assertTrue(shares.get(12).size() == 10 && shares.get(12).stream().allMatch(share -> share >= 8 && share <= 14), "ten narrow columns: " + shares.get(12));
+        // 300 px are 4500 twips, and 60 % of the table of the full width
+        assertEquals(4500, totalWidth(tables.get(13)), 15, "a table of 300 px: " + tables.get(13).grid());
+        assertEquals(0.6, (double) totalWidth(tables.get(14)) / totalWidth(tables.get(0)), 0.01, "a table of 60 %");
+        assertTrue(shares.get(15).get(1) < 15, "an empty column: " + shares.get(15));
+        assertEquals(40L, shares.get(16).get(0));
+        // The cell holding a nested table takes the room, and the nested table fits it
+        assertTrue(shares.get(17).get(1) > 50, "a table nested in a cell: " + shares.get(17));
+        assertTrue(totalWidth(tables.get(18)) <= tables.get(17).grid().get(1), "the nested table fits its cell: " + tables.get(18).grid());
+        // Every cell is pinned in dxa to the columns it spans, a spanning header cell to the sum of them
+        tables.forEach(table -> assertEquals(table.spannedGridWidths(), table.cells(), table.toString()));
 
         File docxFile = getTestFile();
         try {
@@ -85,6 +103,10 @@ class TableColumnWidthsTest extends BaseDocxConverterTest {
         } finally {
             docxFile.delete();
         }
+    }
+
+    private static long totalWidth(ColumnWidths table) {
+        return table.grid().stream().mapToLong(Long::longValue).sum();
     }
 
     /** The share of each column in the width of its table, in whole percent. */

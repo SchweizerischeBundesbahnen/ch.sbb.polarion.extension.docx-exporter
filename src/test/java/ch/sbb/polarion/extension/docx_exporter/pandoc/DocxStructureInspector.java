@@ -123,8 +123,26 @@ final class DocxStructureInspector {
     record Table(String widthType, long width, String jc, List<List<Cell>> rows) {
     }
 
-    /** A table's {@code <w:gridCol>} widths and, per row, each cell's {@code <w:tcW>} width, all in dxa. */
-    record ColumnWidths(List<Long> grid, List<List<Long>> cells) {
+    /**
+     * A table's {@code <w:gridCol>} widths and, per row, each cell's {@code <w:tcW>} width, all in dxa, and the grid
+     * columns each cell spans.
+     */
+    record ColumnWidths(List<Long> grid, List<List<Long>> cells, List<List<Integer>> spans) {
+
+        /** Per row, the width of the grid columns each cell spans, which is the width it should state. */
+        List<List<Long>> spannedGridWidths() {
+            List<List<Long>> result = new ArrayList<>();
+            for (List<Integer> row : spans) {
+                List<Long> widths = new ArrayList<>();
+                int column = 0;
+                for (int span : row) {
+                    widths.add(grid.subList(Math.min(column, grid.size()), Math.min(column + span, grid.size())).stream().mapToLong(Long::longValue).sum());
+                    column += span;
+                }
+                result.add(widths);
+            }
+            return result;
+        }
     }
 
     /** A picture's {@code <w:position>} in half-points and the left and right of its {@code <wp:effectExtent>} in EMU. */
@@ -180,15 +198,29 @@ final class DocxStructureInspector {
                 }
             }
             List<List<Long>> cells = new ArrayList<>();
+            List<List<Integer>> spans = new ArrayList<>();
             for (Element tr : children(tbl, "tr")) {
                 List<Long> row = new ArrayList<>();
+                List<Integer> rowSpans = new ArrayList<>();
                 for (Element tc : children(tr, "tc")) {
+                    rowSpans.add(parseIntOrDefault(wAttr(child(child(tc, "tcPr"), "gridSpan"), "val"), 1));
                     Element tcW = child(child(tc, "tcPr"), "tcW");
                     row.add("dxa".equals(wAttr(tcW, "type")) ? parseLongOrDefault(wAttr(tcW, "w"), 0L) : 0L);
                 }
                 cells.add(row);
+                spans.add(rowSpans);
             }
-            result.add(new ColumnWidths(grid, cells));
+            result.add(new ColumnWidths(grid, cells, spans));
+        }
+        return result;
+    }
+
+    /** The width of every picture of the body, tables included, in EMU, in document order. */
+    static List<Long> pictureWidths(byte[] docx) throws IOException {
+        NodeList extents = body(docx).getElementsByTagNameNS(WP_NS, "extent");
+        List<Long> result = new ArrayList<>();
+        for (int i = 0; i < extents.getLength(); i++) {
+            result.add(parseLongOrDefault(((Element) extents.item(i)).getAttribute("cx"), 0L));
         }
         return result;
     }
