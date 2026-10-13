@@ -120,7 +120,7 @@ public class WorkItemCommentsProcessor {
     private WorkItemCommentsProcessor.CommentData getCommentData(WorkItemComment workItemComment) {
         String date = DATE_FORMAT.format(workItemComment.getCreated());
         String user = workItemComment.getAuthor();
-        String commentText = workItemComment.getText();
+        String commentText = CommentTextRenderer.toInlineHtml(workItemComment.getText());
         boolean resolved = workItemComment.getResolved();
         return WorkItemCommentsProcessor.CommentData.builder()
                 .date(date)
