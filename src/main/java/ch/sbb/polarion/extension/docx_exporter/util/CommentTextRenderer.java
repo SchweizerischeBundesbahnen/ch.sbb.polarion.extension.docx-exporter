@@ -73,15 +73,7 @@ public class CommentTextRenderer {
     private static String listItemPrefix(@NotNull Element listItem) {
         Element list = listItem.parent();
         if (list != null && "ol".equals(list.normalName())) {
-            int position = 1;
-            for (Element sibling : list.children()) {
-                if (sibling == listItem) {
-                    break;
-                }
-                if ("li".equals(sibling.normalName())) {
-                    position++;
-                }
-            }
+            long position = 1 + listItem.previousElementSiblings().stream().filter(sibling -> "li".equals(sibling.normalName())).count();
             return position + ". ";
         }
         return BULLET;

@@ -69,8 +69,18 @@ class CommentTextRendererTest {
     }
 
     @Test
+    void orderedListWithOtherElementsTest() {
+        assertEquals("x<br/>1. a<br/>2. b", CommentTextRenderer.toInlineHtml("<ol><p>x</p><li>a</li><li>b</li></ol>"));
+    }
+
+    @Test
+    void htmlCommentIsIgnoredTest() {
+        assertEquals("before after", CommentTextRenderer.toInlineHtml("<p>before <!-- hidden --> after</p>"));
+    }
+
+    @Test
     void tableTest() {
-        String richText = "<table><tr><td>a</td><td>b</td></tr><tr><td>c</td><td>d</td></tr></table>";
-        assertEquals("a b<br/>c d", CommentTextRenderer.toInlineHtml(richText));
+        String richText = "<table><tr><th>h1</th><th>h2</th></tr><tr><td>a</td><td>b</td></tr><tr><td>c</td><td>d</td></tr></table>";
+        assertEquals("h1 h2<br/>a b<br/>c d", CommentTextRenderer.toInlineHtml(richText));
     }
 }
