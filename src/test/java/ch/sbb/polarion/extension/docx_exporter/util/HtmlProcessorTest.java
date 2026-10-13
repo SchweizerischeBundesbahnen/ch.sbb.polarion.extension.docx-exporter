@@ -1746,7 +1746,8 @@ class HtmlProcessorTest {
         assertEquals("p", paragraphs.get(0).normalName());
         Element commentStart = paragraphs.get(0).selectFirst("span.comment-start");
         assertNotNull(commentStart);
-        assertEquals("First<br>1. 111<br>2. 222<br>\u2022 aaaa", commentStart.html().replaceAll("\\s*<br>\\s*", "<br>"));
+        assertEquals(List.of("First", "1. 111", "2. 222", "\u2022 aaaa"), commentStart.textNodes().stream().map(textNode -> textNode.text().strip()).toList());
+        assertEquals(3, commentStart.select("br").size());
         assertEquals("2026-10-13 09:27", commentStart.attr("date"));
         assertEquals("Advanced:", paragraphs.get(0).ownText());
         assertEquals("Next", paragraphs.get(1).text());

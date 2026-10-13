@@ -138,8 +138,10 @@ class WorkItemCommentsProcessorTest {
         when(mockText.getContent()).thenReturn("<p>Write &lt;p&gt; here</p><ul><li>item</li></ul>");
         when(mockComment.getId()).thenReturn("c1");
         when(mockComment.getText()).thenReturn(mockText);
-        when(mockComment.getProject()).thenReturn(mock(IProject.class));
-        when(mockComment.getAuthor()).thenReturn(mock(IUser.class));
+        IProject mockProject = mock(IProject.class);
+        IUser mockUser = mock(IUser.class);
+        when(mockComment.getProject()).thenReturn(mockProject);
+        when(mockComment.getAuthor()).thenReturn(mockUser);
         when(mockComment.getCreated()).thenReturn(new Date(0));
         when(mockComment.getChildComments()).thenReturn(IPObjectList.EMPTY_POBJECTLIST);
         when(mockWorkItem.getRootComments(false)).thenReturn(new PObjectListStub<>(List.of(mockComment)));

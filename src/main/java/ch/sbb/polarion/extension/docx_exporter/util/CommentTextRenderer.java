@@ -33,35 +33,39 @@ public class CommentTextRenderer {
         if (richText == null || richText.isBlank()) {
             return "";
         }
-        Lines lines = new Lines();
+        LineCollector lines = new LineCollector();
         collectLines(Jsoup.parseBodyFragment(richText).body(), lines);
         lines.flush();
         return lines.lines.stream().map(Entities::escape).collect(Collectors.joining(LINE_BREAK));
     }
 
-    private static void collectLines(@NotNull Element parent, @NotNull Lines lines) {
+    private static void collectLines(@NotNull Element parent, @NotNull LineCollector lines) {
         for (Node node : parent.childNodes()) {
             if (node instanceof TextNode textNode) {
                 lines.line.append(textNode.getWholeText());
             } else if (node instanceof Element element) {
-                String tagName = element.normalName();
-                if ("br".equals(tagName)) {
-                    lines.flush();
-                } else if (BLOCK_TAGS.contains(tagName)) {
-                    lines.flush();
-                    if ("li".equals(tagName)) {
-                        lines.listItemPrefix = listItemPrefix(element);
-                    }
-                    collectLines(element, lines);
-                    lines.flush();
-                } else {
-                    // Table cells stay on one line, separated by a space.
-                    if ("td".equals(tagName) || "th".equals(tagName)) {
-                        lines.line.append(' ');
-                    }
-                    collectLines(element, lines);
-                }
+                collectElement(element, lines);
             }
+        }
+    }
+
+    private static void collectElement(@NotNull Element element, @NotNull LineCollector lines) {
+        String tagName = element.normalName();
+        if ("br".equals(tagName)) {
+            lines.flush();
+        } else if (BLOCK_TAGS.contains(tagName)) {
+            lines.flush();
+            if ("li".equals(tagName)) {
+                lines.listItemPrefix = listItemPrefix(element);
+            }
+            collectLines(element, lines);
+            lines.flush();
+        } else {
+            // Table cells stay on one line, separated by a space.
+            if ("td".equals(tagName) || "th".equals(tagName)) {
+                lines.line.append(' ');
+            }
+            collectLines(element, lines);
         }
     }
 
@@ -83,7 +87,7 @@ public class CommentTextRenderer {
         return BULLET;
     }
 
-    private static final class Lines {
+    private static final class LineCollector {
         private final List<String> lines = new ArrayList<>();
         private final StringBuilder line = new StringBuilder();
         // Kept until the first line with text, since the text of a list item may sit in a paragraph of its own.
