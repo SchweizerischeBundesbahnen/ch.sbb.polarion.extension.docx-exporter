@@ -1303,7 +1303,8 @@ public class HtmlProcessor {
 
         Element textElement = extractChildSpanByClassName(commentElement, TEXT);
         if (textElement != null) {
-            commentStart.text(textElement.text());
+            // Keeps the <br/> between the lines CommentTextRenderer made; pandoc writes each as a line break of the comment.
+            commentStart.appendChildren(textElement.childNodesCopy());
         }
 
         Element metaElement = extractChildSpanByClassName(commentElement, META);

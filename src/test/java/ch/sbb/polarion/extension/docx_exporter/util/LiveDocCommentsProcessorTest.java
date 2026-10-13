@@ -155,6 +155,36 @@ class LiveDocCommentsProcessorTest {
 
     @Test
     @SuppressWarnings("unchecked")
+    void placesTheCommentWithSeveralParagraphsAtItsIcon() {
+        ProxyDocument document = mock(ProxyDocument.class, RETURNS_DEEP_STUBS);
+
+        UpdatableDocumentFields fields = mock(UpdatableDocumentFields.class);
+        CommentBasesTreeField<CommentBase> comments = mock(CommentBasesTreeField.class);
+        doCallRealMethod().when(comments).forEach(any(Consumer.class));
+        when(fields.comments()).thenReturn(comments);
+        when(document.fields()).thenReturn(fields);
+
+        // Polarion escapes the plain text of the comment into the title, which turns a line break into a raw <br/>
+        String html = """
+                <p>Optional values<img id="polarion-comment:5" title="Major: first paragraph?<br/><br/>Second &quot;paragraph&quot;" \
+                contenteditable="false" src="/polarion/ria/images/control/comment_resolved.png" class="polarion-dle-comment-resolved-icon"/></p>
+                """;
+        List<CommentBase> commentBases = List.of(mockComment("5", "text5", "author5", false));
+        when(comments.iterator()).thenReturn(commentBases.iterator());
+
+        Set<String> renderedCommentIds = new HashSet<>();
+        LiveDocCommentsProcessor processor = new LiveDocCommentsProcessor();
+        Map<String, LiveDocComment> liveDocComments = processor.getLiveDocComments(document, CommentsRenderType.ALL);
+        String result = processor.addLiveDocComments(html, liveDocComments, renderedCommentIds);
+
+        assertEquals("""
+                <p>Optional values[span class=comment level-0][span class=meta][span class=date]2025-03-13 16:25[/span][span class=author]author5[/span][/span][span class=text]text5[/span][/span]</p>
+                """, result);
+        assertEquals(Set.of("5"), renderedCommentIds);
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
     void addUnreferencedCommentsAppendsWhenUnreferencedExist() {
         ProxyDocument document = mock(ProxyDocument.class, RETURNS_DEEP_STUBS);
 
