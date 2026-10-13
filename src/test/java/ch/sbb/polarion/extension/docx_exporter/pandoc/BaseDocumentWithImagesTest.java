@@ -20,13 +20,15 @@ import java.nio.file.Path;
 import java.util.Base64;
 import java.util.List;
 import java.util.Random;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Converts a document with many embedded base64-encoded PNG images, of a size each subclass gives: a small one in the
- * regular build, a large one in the performance tests. The DOCX holds the images, so it is at least as large as the
- * HTML.
+ * regular build, a large one in the performance tests. Every image of the HTML is a media part of the DOCX of its own,
+ * as no two are the same.
  */
 @SkipTestWhenParamNotSet
 @SuppressWarnings("ResultOfMethodCallIgnored")
@@ -43,6 +45,21 @@ abstract class BaseDocumentWithImagesTest extends BasePandocTest {
         return targetSizeMb() * 1024 * 1024;
     }
 
+    /** Every {@code <img>} of the HTML is embedded in the DOCX, each a media part of its own. */
+    @SneakyThrows
+    private static void assertEveryImageEmbedded(String html, byte[] docx) {
+        int images = html.split("<img ", -1).length - 1;
+        int mediaParts = 0;
+        try (ZipInputStream zip = new ZipInputStream(new ByteArrayInputStream(docx))) {
+            for (ZipEntry entry = zip.getNextEntry(); entry != null; entry = zip.getNextEntry()) {
+                if (entry.getName().startsWith("word/media/")) {
+                    mediaParts++;
+                }
+            }
+        }
+        assertEquals(images, mediaParts, "Every image of the HTML is embedded in the DOCX");
+    }
+
     private static double bytesToMB(long bytes) {
         return bytes / (1024.0 * 1024.0);
     }
@@ -56,8 +73,7 @@ abstract class BaseDocumentWithImagesTest extends BasePandocTest {
         byte[] docBytes = exportToDOCX(html, readTemplate("reference_template"), PandocParams.builder().build());
 
         assertNotNull(docBytes, "Generated DOCX should not be null");
-        assertTrue(docBytes.length >= targetSizeBytes(),
-                String.format("Generated DOCX should be at least %d MB, but was %.2f MB", targetSizeMb(), bytesToMB(docBytes.length)));
+        assertEveryImageEmbedded(html, docBytes);
 
         writeReportDocx("testLargeDocumentWithImages_generated", docBytes);
 
@@ -82,8 +98,7 @@ abstract class BaseDocumentWithImagesTest extends BasePandocTest {
 
         byte[] docBytes = exportToDOCX(html, readTemplate("reference_template"), PandocParams.builder().build());
         assertNotNull(docBytes, "Generated DOCX should not be null");
-        assertTrue(docBytes.length >= targetSizeBytes(),
-                String.format("Generated DOCX should be at least %d MB, but was %.2f MB", targetSizeMb(), bytesToMB(docBytes.length)));
+        assertEveryImageEmbedded(html, docBytes);
         writeReportDocx("testLargeDocumentWithImages_for_pdf_generated", docBytes);
 
         File tempFile = createTempDocxFile(docBytes);
@@ -111,8 +126,7 @@ abstract class BaseDocumentWithImagesTest extends BasePandocTest {
                 PandocParams.builder().orientation("landscape").build());
 
         assertNotNull(docBytes, "Generated DOCX should not be null");
-        assertTrue(docBytes.length >= targetSizeBytes(),
-                String.format("Generated DOCX should be at least %d MB, but was %.2f MB", targetSizeMb(), bytesToMB(docBytes.length)));
+        assertEveryImageEmbedded(html, docBytes);
         writeReportDocx("testLargeDocumentWithImages_landscape_generated", docBytes);
 
         WordprocessingMLPackage wordMLPackage = WordprocessingMLPackage.load(new ByteArrayInputStream(docBytes));
@@ -134,8 +148,7 @@ abstract class BaseDocumentWithImagesTest extends BasePandocTest {
                 PandocParams.builder().paperSize("A3").build());
 
         assertNotNull(docBytes, "Generated DOCX with A3 paper should not be null");
-        assertTrue(docBytes.length >= targetSizeBytes(),
-                String.format("Generated DOCX should be at least %d MB, but was %.2f MB", targetSizeMb(), bytesToMB(docBytes.length)));
+        assertEveryImageEmbedded(html, docBytes);
         writeReportDocx("testLargeDocumentWithImages_a3_paper_generated", docBytes);
 
         WordprocessingMLPackage wordMLPackage = WordprocessingMLPackage.load(new ByteArrayInputStream(docBytes));
