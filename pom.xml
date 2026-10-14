@@ -66,7 +66,7 @@
              containing a forbidden package prefix, and "javax.annotation.processing" contains
              "javax.annotation" - so the extension jar counts as one incompatible file and Polarion
              refuses to start. See renovate.json. -->
-        <tika.version>3.3.2</tika.version>
+        <tika.version>3.3.3</tika.version>
         <ph-css.version>8.2.2</ph-css.version>
 
         <maven-jar-plugin.Extension-Context>docx-exporter</maven-jar-plugin.Extension-Context>
