@@ -1,5 +1,12 @@
 # Changelog
 
+## [5.6.1](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/compare/v5.6.0...v5.6.1) (2026-10-17)
+
+
+### Bug Fixes
+
+* **deps:** update dependency playwright to v1.64.1 ([ced4e90](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/commit/ced4e90aaa6687ac7f5386c2de25a8aaebda6ad4))
+
 ## [5.6.0](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/compare/v5.5.0...v5.6.0) (2026-10-16)
 
 
