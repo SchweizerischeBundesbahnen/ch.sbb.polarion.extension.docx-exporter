@@ -233,12 +233,15 @@ final class DocxStructureInspector {
         return result;
     }
 
-    /** The descriptions of every inline picture of the body, in document order. */
+    /** The descriptions of every inline picture of the body, in document order. A chart or a shape is no picture. */
     static List<PictureDescription> pictureDescriptions(byte[] docx) throws IOException {
         NodeList inlines = body(docx).getElementsByTagNameNS(WP_NS, "inline");
         List<PictureDescription> result = new ArrayList<>();
         for (int i = 0; i < inlines.getLength(); i++) {
             Element inline = (Element) inlines.item(i);
+            if (inline.getElementsByTagNameNS(PIC_NS, "pic").getLength() == 0) {
+                continue;
+            }
             result.add(new PictureDescription(descr(inline, WP_NS, "docPr"), descr(inline, PIC_NS, "cNvPr")));
         }
         return result;
