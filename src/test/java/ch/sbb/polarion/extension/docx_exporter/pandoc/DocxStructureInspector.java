@@ -28,6 +28,7 @@ final class DocxStructureInspector {
 
     private static final String W_NS = "http://schemas.openxmlformats.org/wordprocessingml/2006/main";
     private static final String WP_NS = "http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing";
+    private static final String PIC_NS = "http://schemas.openxmlformats.org/drawingml/2006/picture";
 
     private DocxStructureInspector() {
     }
@@ -149,6 +150,13 @@ final class DocxStructureInspector {
     record PictureLayout(int position, long left, long right) {
     }
 
+    /**
+     * A picture's two descriptions: {@code descr} of its {@code <wp:docPr>}, the alt text Word shows, and {@code descr} of
+     * its {@code <pic:cNvPr>}. An absent attribute reads as an empty string.
+     */
+    record PictureDescription(String docPr, String cNvPr) {
+    }
+
     /** Starts a fluent formatting spec for building an expected segment. */
     static Fmt fmt() {
         return new Fmt();
@@ -221,6 +229,17 @@ final class DocxStructureInspector {
         List<Long> result = new ArrayList<>();
         for (int i = 0; i < extents.getLength(); i++) {
             result.add(parseLongOrDefault(((Element) extents.item(i)).getAttribute("cx"), 0L));
+        }
+        return result;
+    }
+
+    /** The descriptions of every inline picture of the body, in document order. */
+    static List<PictureDescription> pictureDescriptions(byte[] docx) throws IOException {
+        NodeList inlines = body(docx).getElementsByTagNameNS(WP_NS, "inline");
+        List<PictureDescription> result = new ArrayList<>();
+        for (int i = 0; i < inlines.getLength(); i++) {
+            Element inline = (Element) inlines.item(i);
+            result.add(new PictureDescription(descr(inline, WP_NS, "docPr"), descr(inline, PIC_NS, "cNvPr")));
         }
         return result;
     }
@@ -394,11 +413,22 @@ final class DocxStructureInspector {
         return value.toUpperCase();
     }
 
-    private static Element body(byte[] docx) throws IOException {
+    private static String descr(Element inline, String namespace, String localName) {
+        NodeList elements = inline.getElementsByTagNameNS(namespace, localName);
+        return elements.getLength() > 0 ? ((Element) elements.item(0)).getAttribute("descr") : "";
+    }
+
+    /** The {@code word/document.xml} of a DOCX, as its bytes. */
+    static byte[] documentXml(byte[] docx) throws IOException {
         byte[] documentXml = unzip(docx).get("word/document.xml");
         if (documentXml == null) {
             throw new IOException("word/document.xml not found in DOCX");
         }
+        return documentXml;
+    }
+
+    private static Element body(byte[] docx) throws IOException {
+        byte[] documentXml = documentXml(docx);
         Element body;
         try {
             DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
