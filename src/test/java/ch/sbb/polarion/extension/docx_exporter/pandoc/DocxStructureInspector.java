@@ -152,7 +152,7 @@ final class DocxStructureInspector {
 
     /**
      * A picture's two descriptions: {@code descr} of its {@code <wp:docPr>}, the alt text Word shows, and {@code descr} of
-     * its {@code <pic:cNvPr>}. An absent attribute reads as an empty string.
+     * its {@code <pic:cNvPr>}. An absent attribute reads as an empty string, an absent element as {@code null}.
      */
     record PictureDescription(String docPr, String cNvPr) {
     }
@@ -415,7 +415,7 @@ final class DocxStructureInspector {
 
     private static String descr(Element inline, String namespace, String localName) {
         NodeList elements = inline.getElementsByTagNameNS(namespace, localName);
-        return elements.getLength() > 0 ? ((Element) elements.item(0)).getAttribute("descr") : "";
+        return elements.getLength() > 0 ? ((Element) elements.item(0)).getAttribute("descr") : null;
     }
 
     /** The {@code word/document.xml} of a DOCX, as its bytes. */
