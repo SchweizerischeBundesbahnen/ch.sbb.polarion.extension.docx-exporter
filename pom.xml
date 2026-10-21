@@ -56,7 +56,7 @@
 
         <slf4j.version>2.0.20</slf4j.version>
         <testcontainers.version>2.0.5</testcontainers.version>
-        <jackson.version>2.22.3</jackson.version>
+        <jackson.version>2.22.4</jackson.version>
 
         <awaitility.version>4.3.0</awaitility.version>
         <!-- Hold at 3.x: tika-core 4.0.0 ships the compile-time processor
