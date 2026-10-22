@@ -94,7 +94,7 @@
              frontend-maven-plugin nowhere. There is one JavaScript project and it is ui/. -->
         <frontend-maven-plugin.version>2.0.2</frontend-maven-plugin.version>
 
-        <apache-poi.version>5.5.1</apache-poi.version>
+        <apache-poi.version>6.0.0</apache-poi.version>
         <!-- How many test classes run at once with pandoc -->
         <tests.parallelism>4</tests.parallelism>
     </properties>
