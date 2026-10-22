@@ -382,6 +382,22 @@
             <artifactId>docx4j-JAXB-ReferenceImpl</artifactId>
             <version>${docx4j.version}</version>
         </dependency>
+        <!-- The generic parent declares jaxb-runtime and istack-commons-runtime with test scope, which overrides
+             the compile scope docx4j-JAXB-ReferenceImpl brings them in with. Without them in the bundle, docx4j
+             picks up Polarion's JAXB runtime, which does not see the @XmlRegistry of our jakarta.xml.bind-api:
+             every docx4j ObjectFactory then clashes as "objectFactory" and WordprocessingMLPackage.load fails. -->
+        <dependency>
+            <groupId>org.glassfish.jaxb</groupId>
+            <artifactId>jaxb-runtime</artifactId>
+            <version>${jaxb.impl.version}</version>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.sun.istack</groupId>
+            <artifactId>istack-commons-runtime</artifactId>
+            <version>${istack.version}</version>
+            <scope>compile</scope>
+        </dependency>
         <dependency>
             <groupId>jakarta.xml.bind</groupId>
             <artifactId>jakarta.xml.bind-api</artifactId>
