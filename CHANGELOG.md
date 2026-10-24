@@ -1,5 +1,23 @@
 # Changelog
 
+## [5.6.1](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/compare/v5.6.0...v5.6.1) (2026-10-24)
+
+
+### Bug Fixes
+
+* bundle the JAXB runtime docx4j needs ([#451](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/issues/451)) ([f032e9f](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/commit/f032e9f5fca87248127253bf67b0958eb2e87479)), closes [#450](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/issues/450)
+* **deps:** update dependency com.fasterxml.jackson.core:jackson-databind to v2.22.4 ([ccc1b7d](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/commit/ccc1b7d3a15bb0ec81b8c4de1273b88e93534414))
+* **deps:** update dependency eslint to v10.13.0 ([4223370](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/commit/4223370ad21ae295011ca1630ccefb7d253f3fa5))
+* **deps:** update dependency jsdom to v30.1.3 ([aa31bfd](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/commit/aa31bfd34ef3c97a662dd4547d10488442677835))
+* **deps:** update dependency node-html-parser to v9.0.5 ([d76ac72](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/commit/d76ac72ab91e80eee6ed37fc8132546c76ec49a4))
+* **deps:** update dependency org.apache.poi:poi-ooxml to v6 ([#452](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/issues/452)) ([b68244b](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/commit/b68244b04f0a812749cff6d4a23cf241bb045ee0))
+* **deps:** update dependency playwright to v1.64.1 ([ced4e90](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/commit/ced4e90aaa6687ac7f5386c2de25a8aaebda6ad4))
+* **deps:** update dependency typescript-eslint to v8.72.0 ([9abf680](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/commit/9abf680b0840e5d64382f12c194cbd6613e77190))
+* **deps:** update dependency vite to v8.3.5 ([0a021d1](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/commit/0a021d128fcee83bfa3c6766766741596ce09861))
+* **deps:** update docx4j.version to v17.3.3 ([1b5c13c](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/commit/1b5c13c9b96faa853fab5b82bbd3ba0a9284666e))
+* **deps:** update npm to v12.2.1 ([9bdaf86](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/commit/9bdaf8692417888c77ecb36dcd7948e230e411f2))
+* **deps:** update vitest monorepo to v5.0.5 ([62ac51f](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/commit/62ac51f39d6891f1b2069ea09b4a6de101b4fc16))
+
 ## [5.6.0](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/compare/v5.5.0...v5.6.0) (2026-10-16)
 
 
