@@ -274,10 +274,9 @@ npm run lint:fix        # ESLint: auto-fix what it can
 npm run typecheck       # tsc --noEmit over src/ and test/
 ```
 
-`eslint.config.js` is RSP's shared `polarionEslintConfig`, which includes `eslint-plugin-jsx-a11y` for `src/`.
-That plugin declares peers only up to ESLint 9, so `package.json` overrides its `eslint` peer with
-`"$eslint"`. Keep the override until [jsx-eslint/eslint-plugin-jsx-a11y#1075](https://github.com/jsx-eslint/eslint-plugin-jsx-a11y/issues/1075)
-is fixed. Do not use `--legacy-peer-deps` instead: it drops auto-installed peers from the lock file.
+`eslint.config.js` is RSP's shared `polarionEslintConfig`, which includes
+[`eslint-plugin-jsx-a11y-x`](https://github.com/eslint-community/eslint-plugin-jsx-a11y-x) for `src/`. Its
+rules are named `jsx-a11y-x/...`. The plugin supports ESLint 10 and needs no override.
 
 `typecheck` runs first in `npm run build`, so the Maven build fails on a type error rather than only the
 IDE showing one. `tsconfig.json` covers `src` **and** `test`: a test is code, and while it was left out
