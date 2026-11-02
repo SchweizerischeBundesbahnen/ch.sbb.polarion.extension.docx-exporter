@@ -123,4 +123,33 @@ class WorkItemCommentsProcessorTest {
                 .contains("Title 2 visible")
                 .doesNotContain("Title 3 visible");
     }
+
+    @Test
+    void addWorkItemComments_keepsLiteralTagsAsTextTest() {
+        ProxyDocument mockDocument = mock(ProxyDocument.class);
+        IModule mockOldApi = mock(IModule.class);
+        when(mockDocument.getOldApi()).thenReturn(mockOldApi);
+        IWorkItem mockWorkItem = mock(IWorkItem.class);
+        when(mockWorkItem.getId()).thenReturn("EL-219");
+        when(mockOldApi.getAllWorkItems()).thenReturn(List.of(mockWorkItem));
+
+        IComment mockComment = mock(IComment.class);
+        Text mockText = mock(Text.class);
+        when(mockText.getContent()).thenReturn("<p>Write &lt;p&gt; here</p><ul><li>item</li></ul>");
+        when(mockComment.getId()).thenReturn("c1");
+        when(mockComment.getText()).thenReturn(mockText);
+        IProject mockProject = mock(IProject.class);
+        IUser mockUser = mock(IUser.class);
+        when(mockComment.getProject()).thenReturn(mockProject);
+        when(mockComment.getAuthor()).thenReturn(mockUser);
+        when(mockComment.getCreated()).thenReturn(new Date(0));
+        when(mockComment.getChildComments()).thenReturn(IPObjectList.EMPTY_POBJECTLIST);
+        when(mockWorkItem.getRootComments(false)).thenReturn(new PObjectListStub<>(List.of(mockComment)));
+
+        String resultHtml = new WorkItemCommentsProcessor().addWorkItemComments(mockDocument, "<div id=\"params=id=EL-219\">original content</div>", true);
+
+        Document resultDoc = Jsoup.parse(resultHtml);
+        assertThat(resultDoc.select("p, ul, li")).isEmpty();
+        assertThat(resultDoc.body().text()).contains("Write <p> here").contains("\u2022 item");
+    }
 }

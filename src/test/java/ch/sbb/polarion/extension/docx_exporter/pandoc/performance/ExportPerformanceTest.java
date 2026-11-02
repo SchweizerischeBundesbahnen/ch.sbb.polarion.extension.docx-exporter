@@ -48,6 +48,18 @@ class ExportPerformanceTest extends BasePerformanceTest {
         assertWithinReference(timing);
     }
 
+    /**
+     * Two thousand small pictures, embedded as {@code data:} URIs, in some 10 MB: pandoc took gigabytes of memory for
+     * such a document (SchweizerischeBundesbahnen/pandoc-service#271).
+     */
+    @Test
+    void exportsManySmallImages() {
+        Timing timing = export("manySmallImages", "Many small images", Documents.manySmallImages(500), portraitA4().build());
+
+        assertThat(count(timing.docx(), "drawing")).isEqualTo(2000);
+        assertWithinReference(timing);
+    }
+
     @Test
     void exportsManyWorkItems() {
         Timing timing = export("manyWorkItems", "Many work items", Documents.manyWorkItems(300), portraitA4().build());

@@ -5,11 +5,11 @@
     <parent>
         <groupId>ch.sbb.polarion.extensions</groupId>
         <artifactId>ch.sbb.polarion.extension.generic</artifactId>
-        <version>16.2.0</version>
+        <version>16.4.0</version>
     </parent>
 
     <artifactId>ch.sbb.polarion.extension.docx-exporter</artifactId>
-    <version>5.5.1-SNAPSHOT</version>
+    <version>5.6.1-SNAPSHOT</version>
     <packaging>jar</packaging>
 
     <name>Polarion ALM extension to convert Documents to DOCX files</name>
@@ -45,7 +45,7 @@
 
     <properties>
         <pdfbox.version>3.0.8</pdfbox.version>
-        <docx4j.version>17.3.2</docx4j.version>
+        <docx4j.version>17.3.4</docx4j.version>
         <jakarta.xml.bind.version>4.0.5</jakarta.xml.bind.version>
         <jakarta.activation.version>2.1.4</jakarta.activation.version>
         <okapi.xliff.version>1.48.0</okapi.xliff.version>
@@ -56,7 +56,7 @@
 
         <slf4j.version>2.0.20</slf4j.version>
         <testcontainers.version>2.0.5</testcontainers.version>
-        <jackson.version>2.22.3</jackson.version>
+        <jackson.version>2.22.4</jackson.version>
 
         <awaitility.version>4.3.0</awaitility.version>
         <!-- Hold at 3.x: tika-core 4.0.0 ships the compile-time processor
@@ -66,8 +66,8 @@
              containing a forbidden package prefix, and "javax.annotation.processing" contains
              "javax.annotation" - so the extension jar counts as one incompatible file and Polarion
              refuses to start. See renovate.json. -->
-        <tika.version>3.3.2</tika.version>
-        <ph-css.version>8.2.2</ph-css.version>
+        <tika.version>3.3.3</tika.version>
+        <ph-css.version>8.2.3</ph-css.version>
 
         <maven-jar-plugin.Extension-Context>docx-exporter</maven-jar-plugin.Extension-Context>
         <maven-jar-plugin.Automatic-Module-Name>ch.sbb.polarion.extension.docx_exporter</maven-jar-plugin.Automatic-Module-Name>
@@ -94,7 +94,7 @@
              frontend-maven-plugin nowhere. There is one JavaScript project and it is ui/. -->
         <frontend-maven-plugin.version>2.0.2</frontend-maven-plugin.version>
 
-        <apache-poi.version>5.5.1</apache-poi.version>
+        <apache-poi.version>6.0.0</apache-poi.version>
         <!-- How many test classes run at once with pandoc -->
         <tests.parallelism>4</tests.parallelism>
     </properties>
@@ -382,6 +382,22 @@
             <artifactId>docx4j-JAXB-ReferenceImpl</artifactId>
             <version>${docx4j.version}</version>
         </dependency>
+        <!-- The generic parent declares jaxb-runtime and istack-commons-runtime with test scope, which overrides
+             the compile scope docx4j-JAXB-ReferenceImpl brings them in with. Without them in the bundle, docx4j
+             picks up Polarion's JAXB runtime, which does not see the @XmlRegistry of our jakarta.xml.bind-api:
+             every docx4j ObjectFactory then clashes as "objectFactory" and WordprocessingMLPackage.load fails. -->
+        <dependency>
+            <groupId>org.glassfish.jaxb</groupId>
+            <artifactId>jaxb-runtime</artifactId>
+            <version>${jaxb.impl.version}</version>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.sun.istack</groupId>
+            <artifactId>istack-commons-runtime</artifactId>
+            <version>${istack.version}</version>
+            <scope>compile</scope>
+        </dependency>
         <dependency>
             <groupId>jakarta.xml.bind</groupId>
             <artifactId>jakarta.xml.bind-api</artifactId>
@@ -497,7 +513,7 @@
                          article into in-app navigation, and any other one (docs/openapi.json) into a GitHub link.
                          combine.self=override is required: an empty element alone does not override the
                          parent's ${project.scm.url}, Maven keeps the inherited value on an empty merge. -->
-                    <relativeLinkPrefix combine.self="override"></relativeLinkPrefix>
+                    <relativeLinkPrefix combine.self="override"/>
                     <!-- The articles are fetched as single files, so their images travel inside them. -->
                     <imageProcessingType>EMBED</imageProcessingType>
                 </configuration>

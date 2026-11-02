@@ -29,6 +29,7 @@ final class DocxStructureInspector {
 
     private static final String W_NS = "http://schemas.openxmlformats.org/wordprocessingml/2006/main";
     private static final String WP_NS = "http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing";
+    private static final String PIC_NS = "http://schemas.openxmlformats.org/drawingml/2006/picture";
 
     private DocxStructureInspector() {
     }
@@ -124,8 +125,37 @@ final class DocxStructureInspector {
     record Table(String widthType, long width, String jc, List<List<Cell>> rows) {
     }
 
+    /**
+     * A table's {@code <w:gridCol>} widths and, per row, each cell's {@code <w:tcW>} width, all in dxa, and the grid
+     * columns each cell spans.
+     */
+    record ColumnWidths(List<Long> grid, List<List<Long>> cells, List<List<Integer>> spans) {
+
+        /** Per row, the width of the grid columns each cell spans, which is the width it should state. */
+        List<List<Long>> spannedGridWidths() {
+            List<List<Long>> result = new ArrayList<>();
+            for (List<Integer> row : spans) {
+                List<Long> widths = new ArrayList<>();
+                int column = 0;
+                for (int span : row) {
+                    widths.add(grid.subList(Math.min(column, grid.size()), Math.min(column + span, grid.size())).stream().mapToLong(Long::longValue).sum());
+                    column += span;
+                }
+                result.add(widths);
+            }
+            return result;
+        }
+    }
+
     /** A picture's {@code <w:position>} in half-points and the left and right of its {@code <wp:effectExtent>} in EMU. */
     record PictureLayout(int position, long left, long right) {
+    }
+
+    /**
+     * A picture's two descriptions: {@code descr} of its {@code <wp:docPr>}, the alt text Word shows, and {@code descr} of
+     * its {@code <pic:cNvPr>}. An absent attribute reads as an empty string, an absent element as {@code null}.
+     */
+    record PictureDescription(String docPr, String cNvPr) {
     }
 
     /** Starts a fluent formatting spec for building an expected segment. */
@@ -158,6 +188,62 @@ final class DocxStructureInspector {
         NodeList tbls = body.getElementsByTagNameNS(W_NS, "tbl");
         for (int i = 0; i < tbls.getLength(); i++) {
             result.add(toTable((Element) tbls.item(i)));
+        }
+        return result;
+    }
+
+    /** The column widths of every table of the body, in document order. A cell width not fixed in dxa reads as 0. */
+    static List<ColumnWidths> columnWidths(byte[] docx) throws IOException {
+        Element body = body(docx);
+        List<ColumnWidths> result = new ArrayList<>();
+        NodeList tbls = body.getElementsByTagNameNS(W_NS, "tbl");
+        for (int i = 0; i < tbls.getLength(); i++) {
+            Element tbl = (Element) tbls.item(i);
+            List<Long> grid = new ArrayList<>();
+            Element tblGrid = child(tbl, "tblGrid");
+            if (tblGrid != null) {
+                for (Element gridCol : children(tblGrid, "gridCol")) {
+                    grid.add(parseLongOrDefault(wAttr(gridCol, "w"), 0L));
+                }
+            }
+            List<List<Long>> cells = new ArrayList<>();
+            List<List<Integer>> spans = new ArrayList<>();
+            for (Element tr : children(tbl, "tr")) {
+                List<Long> row = new ArrayList<>();
+                List<Integer> rowSpans = new ArrayList<>();
+                for (Element tc : children(tr, "tc")) {
+                    rowSpans.add(parseIntOrDefault(wAttr(child(child(tc, "tcPr"), "gridSpan"), "val"), 1));
+                    Element tcW = child(child(tc, "tcPr"), "tcW");
+                    row.add("dxa".equals(wAttr(tcW, "type")) ? parseLongOrDefault(wAttr(tcW, "w"), 0L) : 0L);
+                }
+                cells.add(row);
+                spans.add(rowSpans);
+            }
+            result.add(new ColumnWidths(grid, cells, spans));
+        }
+        return result;
+    }
+
+    /** The width of every picture of the body, tables included, in EMU, in document order. */
+    static List<Long> pictureWidths(byte[] docx) throws IOException {
+        NodeList extents = body(docx).getElementsByTagNameNS(WP_NS, "extent");
+        List<Long> result = new ArrayList<>();
+        for (int i = 0; i < extents.getLength(); i++) {
+            result.add(parseLongOrDefault(((Element) extents.item(i)).getAttribute("cx"), 0L));
+        }
+        return result;
+    }
+
+    /** The descriptions of every inline picture of the body, in document order. A chart or a shape is no picture. */
+    static List<PictureDescription> pictureDescriptions(byte[] docx) throws IOException {
+        NodeList inlines = body(docx).getElementsByTagNameNS(WP_NS, "inline");
+        List<PictureDescription> result = new ArrayList<>();
+        for (int i = 0; i < inlines.getLength(); i++) {
+            Element inline = (Element) inlines.item(i);
+            if (inline.getElementsByTagNameNS(PIC_NS, "pic").getLength() == 0) {
+                continue;
+            }
+            result.add(new PictureDescription(descr(inline, WP_NS, "docPr"), descr(inline, PIC_NS, "cNvPr")));
         }
         return result;
     }
@@ -331,11 +417,22 @@ final class DocxStructureInspector {
         return value.toUpperCase();
     }
 
-    private static Element body(byte[] docx) throws IOException {
+    private static String descr(Element inline, String namespace, String localName) {
+        NodeList elements = inline.getElementsByTagNameNS(namespace, localName);
+        return elements.getLength() > 0 ? ((Element) elements.item(0)).getAttribute("descr") : null;
+    }
+
+    /** The {@code word/document.xml} of a DOCX, as its bytes. */
+    static byte[] documentXml(byte[] docx) throws IOException {
         byte[] documentXml = unzip(docx).get("word/document.xml");
         if (documentXml == null) {
             throw new IOException("word/document.xml not found in DOCX");
         }
+        return documentXml;
+    }
+
+    private static Element body(byte[] docx) throws IOException {
+        byte[] documentXml = documentXml(docx);
         Element body;
         try {
             DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();

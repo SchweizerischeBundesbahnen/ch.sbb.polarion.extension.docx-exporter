@@ -18,7 +18,7 @@ jobs:
       contents: read
     services:
       pandoc:
-        image: ghcr.io/schweizerischebundesbahnen/pandoc-service:2.8.0@sha256:187763e095a9f2fda0b41298cd75597a868b8213539c167c34b4675f5caf969f
+        image: ghcr.io/schweizerischebundesbahnen/pandoc-service:2.9.2@sha256:8b7a0e44b0cd21b8dcc500a55bab29de7bbdf4b7e215ece018078fa5f75825f6
         ports: [9082:9082]
     outputs:
       project_version: ${{ steps.project_metadata.outputs.version }}
@@ -35,7 +35,7 @@ jobs:
           fetch-depth: 0  # Sonar needs full history
           persist-credentials: false
       - name: 🧱 Set up JDK and Maven
-        uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6  # v6.0.1
+        uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad  # v6.1.0
         with:
           distribution: ${{ env.JAVA_DISTRIBUTION }}
           java-version: ${{ env.JAVA_VERSION }}
@@ -122,7 +122,7 @@ jobs:
           fetch-depth: 1
           persist-credentials: false
       - name: 🧱 Set up JDK and Maven with cache
-        uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6  # v6.0.1
+        uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad  # v6.1.0
         with:
           distribution: ${{ env.JAVA_DISTRIBUTION }}
           java-version: ${{ env.JAVA_VERSION }}
@@ -168,7 +168,7 @@ jobs:
           name: maven-artifacts
           path: target/
       - name: 🧱 Set up JDK and Maven
-        uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6  # v6.0.1
+        uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad  # v6.1.0
         with:
           distribution: ${{ env.JAVA_DISTRIBUTION }}
           java-version: ${{ env.JAVA_VERSION }}

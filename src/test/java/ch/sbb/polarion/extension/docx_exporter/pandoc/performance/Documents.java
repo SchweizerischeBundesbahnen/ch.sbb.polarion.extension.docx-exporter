@@ -59,6 +59,24 @@ class Documents {
         return "<h1>Many images</h1>" + body;
     }
 
+    /**
+     * Sections of text, each with three small pictures and a table holding one more, all embedded as {@code data:} URIs.
+     * pandoc keeps such a URI as a string through every filter, so its memory and time grow with how many there are
+     * (SchweizerischeBundesbahnen/pandoc-service#271).
+     */
+    static @NotNull String manySmallImages(int sections) {
+        StringBuilder html = new StringBuilder("<h1>Many small images</h1>");
+        for (int section = 0; section < sections; section++) {
+            html.append("<h2>Section ").append(section).append("</h2><p>").append(SENTENCE).append("</p>");
+            for (int picture = 0; picture < 3; picture++) {
+                html.append("<p><img src=\"").append(drawing(section * 4 + picture)).append("\" style=\"width: 400px; height: 300px;\"/></p>");
+            }
+            html.append(TABLE).append("<tbody><tr>").append(TD).append("Section ").append(section).append("</td>").append(TD)
+                    .append("<img src=\"").append(drawing(section * 4 + 3)).append("\" style=\"width: 100px; height: 75px;\"/></td></tr></tbody></table>");
+        }
+        return html.toString();
+    }
+
     /** Work items with their fields, as a document renders them, each followed by a table of its attributes. */
     static @NotNull String manyWorkItems(int workItems) {
         String body = IntStream.range(0, workItems).mapToObj(index -> {
@@ -175,6 +193,27 @@ class Documents {
         }
         svg.append("</svg>");
         return "data:image/svg+xml;base64," + Base64.getEncoder().encodeToString(svg.toString().getBytes(StandardCharsets.UTF_8));
+    }
+
+    /** A drawing of 400 by 300 of colored rectangles, some 4 KB as PNG, each index another. */
+    @SneakyThrows
+    private static @NotNull String drawing(int index) {
+        Random random = new Random(index);
+        BufferedImage image = new BufferedImage(400, 300, BufferedImage.TYPE_INT_RGB);
+        Graphics2D graphics = image.createGraphics();
+        try {
+            graphics.setColor(new Color(200 + random.nextInt(56), 200 + random.nextInt(56), 200 + random.nextInt(56)));
+            graphics.fillRect(0, 0, 400, 300);
+            for (int shape = 10 + random.nextInt(20); shape > 0; shape--) {
+                graphics.setColor(new Color(random.nextInt(256), random.nextInt(256), random.nextInt(256)));
+                graphics.fillRect(random.nextInt(400), random.nextInt(300), 10 + random.nextInt(90), 10 + random.nextInt(90));
+            }
+        } finally {
+            graphics.dispose();
+        }
+        ByteArrayOutputStream bytes = new ByteArrayOutputStream();
+        ImageIO.write(image, "png", bytes);
+        return "data:image/png;base64," + Base64.getEncoder().encodeToString(bytes.toByteArray());
     }
 
     /** A small raster image of its own color, so that no two are the same. */
