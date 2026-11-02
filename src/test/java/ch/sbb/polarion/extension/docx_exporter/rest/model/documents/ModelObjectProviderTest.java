@@ -64,7 +64,7 @@ class ModelObjectProviderTest {
 
     @ParameterizedTest
     @MethodSource("paramsForModelObjectProviderGetDocument")
-    void testModelObjectProviderGetDocument(@NotNull ExportParams exportParams, ExtensionContext extensionContext) {
+    void testModelObjectProviderGetDocument(@NotNull ExportParams exportParams) {
         InternalDocuments internalDocumentsMock = mock(InternalDocuments.class);
         DocumentSelector documentSelectorMock = mock(DocumentSelector.class);
         Document documentMock = mock(Document.class);
