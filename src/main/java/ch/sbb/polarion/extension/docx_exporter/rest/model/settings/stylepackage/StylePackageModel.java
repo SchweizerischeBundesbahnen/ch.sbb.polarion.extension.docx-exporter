@@ -100,7 +100,7 @@ public class StylePackageModel extends SettingsModel {
     @Override
     protected void deserializeModelData(String serializedString) {
         matchingQuery = deserializeEntry(MATCHING_QUERY_ENTRY_NAME, serializedString);
-        weight = Optional.ofNullable(deserializeEntry(WEIGHT_ENTRY_NAME, serializedString)).map(Float::parseFloat)
+        weight = Optional.ofNullable(parseWeight(deserializeEntry(WEIGHT_ENTRY_NAME, serializedString)))
                 .orElse(NamedSettings.DEFAULT_NAME.equals(name) ? DEFAULT_INITIAL_WEIGHT : DEFAULT_WEIGHT);
         exposeSettings = Boolean.parseBoolean(deserializeEntry(EXPOSE_SETTINGS_ENTRY_NAME, serializedString));
         template = deserializeEntry(TEMPLATE_ENTRY_NAME, serializedString);
@@ -120,6 +120,21 @@ public class StylePackageModel extends SettingsModel {
         language = deserializeEntry(LANGUAGE_ENTRY_NAME, serializedString);
         linkedWorkitemRoles = deserializeListEntry(LINKED_WORKITEM_ROLES_ENTRY_NAME, serializedString, String.class);
         linkRoleDirection = deserializeEntry(LINK_ROLE_DIRECTION_ENTRY_NAME, serializedString);
+    }
+
+    /**
+     * A malformed weight in the stored file falls back to the default weight.
+     * Otherwise the whole style package fails to load.
+     */
+    private static Float parseWeight(String value) {
+        if (value == null) {
+            return null;
+        }
+        try {
+            return Float.parseFloat(value.trim());
+        } catch (NumberFormatException e) {
+            return null;
+        }
     }
 
     private CommentsRenderType parseRenderComments(String value) {
