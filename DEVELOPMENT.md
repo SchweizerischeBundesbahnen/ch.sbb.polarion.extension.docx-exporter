@@ -201,7 +201,7 @@ java src/test/java/ch/sbb/polarion/extension/docx_exporter/pandoc/performance/Av
   runs/arm64-*.properties > src/test/resources/performance/reference-times-arm64.properties
 ```
 
-A pull request, never the build itself, so that a regression merged into `main` cannot become its own reference.
+Update reference times in a pull request, never in the build itself, so that a regression merged into `main` cannot become its own reference.
 
 ## Debugging
 

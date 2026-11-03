@@ -15,7 +15,6 @@ import com.polarion.alm.shared.api.transaction.internal.InternalReadOnlyTransact
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -64,7 +63,7 @@ class ModelObjectProviderTest {
 
     @ParameterizedTest
     @MethodSource("paramsForModelObjectProviderGetDocument")
-    void testModelObjectProviderGetDocument(@NotNull ExportParams exportParams, ExtensionContext extensionContext) {
+    void testModelObjectProviderGetDocument(@NotNull ExportParams exportParams) {
         InternalDocuments internalDocumentsMock = mock(InternalDocuments.class);
         DocumentSelector documentSelectorMock = mock(DocumentSelector.class);
         Document documentMock = mock(Document.class);
