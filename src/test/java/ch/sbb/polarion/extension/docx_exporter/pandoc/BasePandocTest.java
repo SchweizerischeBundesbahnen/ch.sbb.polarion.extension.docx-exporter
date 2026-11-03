@@ -116,8 +116,7 @@ public abstract class BasePandocTest {
      * vector in a PDF and its edges differ from the PNG of Chromium. A renderer without references of its own
      * takes the default ones.
      */
-    protected InputStream readReferencePng(String resourceName) throws IOException {
-        String renderer = getSvgRenderer();
+    protected static InputStream readReferencePng(@Nullable String renderer, String resourceName) throws IOException {
         InputStream own = renderer == null ? null : BasePandocTest.class.getResourceAsStream(PANDOC_TEST_PNG_RESOURCES_FOLDER + renderer + "/" + resourceName + EXT_PNG);
         return own != null ? own : readPngResource(resourceName);
     }
@@ -188,8 +187,10 @@ public abstract class BasePandocTest {
         writeReportPdf(testName, "generated", pdf);
         List<BufferedImage> resultImages = getAllPagesAsImagesAndLogAsReports(testName, pdf);
         boolean hasDiff = false;
+        // The renderer is the same for every page: one request to /version
+        String renderer = getSvgRenderer();
         for (int i = 0; i < resultImages.size(); i++) {
-            try (InputStream inputStream = readReferencePng(testName + PAGE_SUFFIX + i)) {
+            try (InputStream inputStream = readReferencePng(renderer, testName + PAGE_SUFFIX + i)) {
                 BufferedImage expectedImage = ImageIO.read(inputStream);
                 BufferedImage resultImage = resultImages.get(i);
                 List<Point> diffPoints = MediaUtils.diffImages(expectedImage, resultImage);

@@ -2,14 +2,22 @@ package ch.sbb.polarion.extension.docx_exporter.pandoc;
 
 import ch.sbb.polarion.extension.docx_exporter.pandoc.service.model.PandocParams;
 import org.junit.jupiter.api.Test;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.NodeList;
+
+import javax.xml.parsers.DocumentBuilderFactory;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
@@ -29,6 +37,11 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  */
 @SkipTestWhenParamNotSet
 class SvgConversionTest extends BasePandocTest {
+
+    private static final String DRAWING_NS = "http://schemas.openxmlformats.org/drawingml/2006/main";
+    private static final String SVG_NS = "http://schemas.microsoft.com/office/drawing/2016/SVG/main";
+    private static final String RELATIONSHIPS_NS = "http://schemas.openxmlformats.org/officeDocument/2006/relationships";
+    private static final String PACKAGE_RELATIONSHIPS_NS = "http://schemas.openxmlformats.org/package/2006/relationships";
 
     @Test
     void inlineSvgImageIsRasterizedToPngInDocx() throws Exception {
@@ -80,29 +93,51 @@ class SvgConversionTest extends BasePandocTest {
                 + "</body></html>";
     }
 
-    private void assertSvgRasterizedToPng(byte[] docBytes) throws IOException {
+    private void assertSvgRasterizedToPng(byte[] docBytes) throws Exception {
         Map<String, byte[]> entries = unzip(docBytes);
+        Map<String, String> targets = relationshipTargets(entries.get("word/_rels/document.xml.rels"));
+        byte[] documentXml = entries.get("word/document.xml");
+        assertNotNull(documentXml, "word/document.xml should be present in the DOCX");
 
-        List<String> mediaFiles = entries.keySet().stream()
-                .filter(name -> name.startsWith("word/media/"))
-                .toList();
-        List<String> svgFiles = mediaFiles.stream().filter(name -> name.toLowerCase().endsWith(".svg")).toList();
-
-        assertTrue(mediaFiles.stream().anyMatch(name -> name.toLowerCase().endsWith(".png")), "Expected a rasterized PNG in word/media/, found: " + mediaFiles);
-
-        byte[] documentXmlBytes = entries.get("word/document.xml");
-        assertNotNull(documentXmlBytes, "word/document.xml should be present in the DOCX");
-        String documentXml = new String(documentXmlBytes, StandardCharsets.UTF_8);
-        assertTrue(documentXml.contains("<a:blip"), "document.xml should reference the embedded image via <a:blip>");
-
-        // An SVG comes only as the svgBlip of its PNG, and holds only what Word draws
-        assertEquals(!svgFiles.isEmpty(), documentXml.contains("svgBlip"), "An SVG in word/media/ goes with an svgBlip extension, found: " + mediaFiles);
-        for (String svgFile : svgFiles) {
-            String svg = new String(entries.get(svgFile), StandardCharsets.UTF_8);
-            assertFalse(svg.contains("foreignObject"), svgFile + " should not contain a foreignObject");
-            assertFalse(svg.contains("filter="), svgFile + " should not contain a filter");
-            assertFalse(svg.contains("<mask"), svgFile + " should not contain a mask");
+        NodeList blips = parse(documentXml).getElementsByTagNameNS(DRAWING_NS, "blip");
+        assertTrue(blips.getLength() > 0, "document.xml should reference the embedded image via <a:blip>");
+        Set<String> svgParts = new HashSet<>();
+        for (int i = 0; i < blips.getLength(); i++) {
+            Element blip = (Element) blips.item(i);
+            String png = "word/" + targets.get(blip.getAttributeNS(RELATIONSHIPS_NS, "embed"));
+            assertTrue(png.toLowerCase().endsWith(".png") && entries.containsKey(png), "A picture shows a rasterized PNG, found: " + png);
+            // weasysvg adds the SVG of the picture as its svgBlip, which holds only what Word draws
+            NodeList svgBlips = blip.getElementsByTagNameNS(SVG_NS, "svgBlip");
+            for (int j = 0; j < svgBlips.getLength(); j++) {
+                String svgPart = "word/" + targets.get(((Element) svgBlips.item(j)).getAttributeNS(RELATIONSHIPS_NS, "embed"));
+                assertTrue(svgPart.toLowerCase().endsWith(".svg") && entries.containsKey(svgPart), "An svgBlip names an SVG part, found: " + svgPart);
+                String svg = new String(entries.get(svgPart), StandardCharsets.UTF_8);
+                assertFalse(svg.contains("foreignObject"), svgPart + " should not contain a foreignObject");
+                assertFalse(svg.contains("filter="), svgPart + " should not contain a filter");
+                assertFalse(svg.contains("<mask"), svgPart + " should not contain a mask");
+                svgParts.add(svgPart);
+            }
         }
+        List<String> svgFiles = entries.keySet().stream().filter(name -> name.startsWith("word/media/") && name.toLowerCase().endsWith(".svg")).toList();
+        assertEquals(Set.copyOf(svgFiles), svgParts, "Every SVG in word/media/ is the svgBlip of a picture");
+    }
+
+    private static Map<String, String> relationshipTargets(byte[] rels) throws Exception {
+        assertNotNull(rels, "word/_rels/document.xml.rels should be present in the DOCX");
+        Map<String, String> targets = new HashMap<>();
+        NodeList relationships = parse(rels).getElementsByTagNameNS(PACKAGE_RELATIONSHIPS_NS, "Relationship");
+        for (int i = 0; i < relationships.getLength(); i++) {
+            Element relationship = (Element) relationships.item(i);
+            targets.put(relationship.getAttribute("Id"), relationship.getAttribute("Target"));
+        }
+        return targets;
+    }
+
+    private static Document parse(byte[] xml) throws Exception {
+        DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+        factory.setNamespaceAware(true);
+        factory.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true);
+        return factory.newDocumentBuilder().parse(new ByteArrayInputStream(xml));
     }
 
     private static Map<String, byte[]> unzip(byte[] docx) throws IOException {
