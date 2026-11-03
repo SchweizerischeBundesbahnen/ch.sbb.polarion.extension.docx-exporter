@@ -10,6 +10,7 @@ import com.polarion.core.util.StringUtils;
 import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -110,6 +111,21 @@ public abstract class BasePandocTest {
         }
     }
 
+    /**
+     * The reference image of a page, drawn by the SVG renderer of the service: an SVG rendered by weasysvg stays
+     * vector in a PDF and its edges differ from the PNG of Chromium. A renderer without references of its own
+     * takes the default ones.
+     */
+    protected InputStream readReferencePng(String resourceName) throws IOException {
+        String renderer = getSvgRenderer();
+        InputStream own = renderer == null ? null : BasePandocTest.class.getResourceAsStream(PANDOC_TEST_PNG_RESOURCES_FOLDER + renderer + "/" + resourceName + EXT_PNG);
+        return own != null ? own : readPngResource(resourceName);
+    }
+
+    protected @Nullable String getSvgRenderer() {
+        return getPandocServiceConnector().getPandocInfo().getSvgRenderer();
+    }
+
     public static InputStream readPngResource(String resourceName) throws IOException {
         InputStream inputStream = BasePandocTest.class.getResourceAsStream(PANDOC_TEST_PNG_RESOURCES_FOLDER + resourceName + EXT_PNG);
         if (inputStream == null) {
@@ -173,7 +189,7 @@ public abstract class BasePandocTest {
         List<BufferedImage> resultImages = getAllPagesAsImagesAndLogAsReports(testName, pdf);
         boolean hasDiff = false;
         for (int i = 0; i < resultImages.size(); i++) {
-            try (InputStream inputStream = readPngResource(testName + PAGE_SUFFIX + i)) {
+            try (InputStream inputStream = readReferencePng(testName + PAGE_SUFFIX + i)) {
                 BufferedImage expectedImage = ImageIO.read(inputStream);
                 BufferedImage resultImage = resultImages.get(i);
                 List<Point> diffPoints = MediaUtils.diffImages(expectedImage, resultImage);

@@ -13,17 +13,19 @@ import java.util.Map;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
- * Verifies that SVG images embedded in the HTML are rasterized to PNG by pandoc-service before pandoc runs.
+ * Verifies that pandoc-service turns the SVG images embedded in the HTML into pictures Word draws.
  * <p>
- * docx-exporter inlines every image as {@code <img src="data:image/svg+xml;base64,...">}; pandoc-service then
- * rasterizes those SVGs to PNG via headless Chromium (Word cannot render draw.io's {@code <foreignObject>} SVGs).
- * The expected shape in the resulting DOCX is a real PNG in {@code word/media/} referenced by {@code <a:blip>},
- * with no SVG file and no {@code svgBlip} extension.
+ * docx-exporter inlines every image as {@code <img src="data:image/svg+xml;base64,...">}; Word cannot draw draw.io's
+ * {@code <foreignObject>} SVGs. With either SVG renderer of pandoc-service the picture is a PNG in {@code word/media/}
+ * referenced by {@code <a:blip>}. Chromium leaves it at that. weasysvg adds the SVG flattened to paths, clips and
+ * gradients as the {@code svgBlip} extension of the picture, as Word saves an SVG: no {@code foreignObject}, filter
+ * or mask is left in it.
  */
 @SkipTestWhenParamNotSet
 class SvgConversionTest extends BasePandocTest {
@@ -48,7 +50,7 @@ class SvgConversionTest extends BasePandocTest {
     void drawioSvgWithForeignObjectIsRasterizedToPngInDocx() throws Exception {
         // draw.io / mxgraph SVG using <switch> + requiredFeatures="...#Extensibility" + <foreignObject>.
         // Word lands on the <text> fallback branch instead of rendering this, which is exactly the bug the
-        // pandoc-service rasterization fixes; headless Chromium renders the foreignObject correctly.
+        // pandoc-service rasterization fixes; Chromium and weasysvg both draw the foreignObject.
         String svg = """
                 <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="160" height="80" viewBox="-0.5 -0.5 160 80">
                   <g>
@@ -84,18 +86,23 @@ class SvgConversionTest extends BasePandocTest {
         List<String> mediaFiles = entries.keySet().stream()
                 .filter(name -> name.startsWith("word/media/"))
                 .toList();
+        List<String> svgFiles = mediaFiles.stream().filter(name -> name.toLowerCase().endsWith(".svg")).toList();
 
-        boolean hasPng = mediaFiles.stream().anyMatch(name -> name.toLowerCase().endsWith(".png"));
-        boolean hasSvg = mediaFiles.stream().anyMatch(name -> name.toLowerCase().endsWith(".svg"));
-
-        assertTrue(hasPng, "Expected a rasterized PNG in word/media/, found: " + mediaFiles);
-        assertFalse(hasSvg, "Expected no SVG in word/media/ (the SVG should be rasterized to PNG), found: " + mediaFiles);
+        assertTrue(mediaFiles.stream().anyMatch(name -> name.toLowerCase().endsWith(".png")), "Expected a rasterized PNG in word/media/, found: " + mediaFiles);
 
         byte[] documentXmlBytes = entries.get("word/document.xml");
         assertNotNull(documentXmlBytes, "word/document.xml should be present in the DOCX");
         String documentXml = new String(documentXmlBytes, StandardCharsets.UTF_8);
         assertTrue(documentXml.contains("<a:blip"), "document.xml should reference the embedded image via <a:blip>");
-        assertFalse(documentXml.contains("svgBlip"), "document.xml should not contain an svgBlip extension (the SVG should have been rasterized)");
+
+        // An SVG comes only as the svgBlip of its PNG, and holds only what Word draws
+        assertEquals(!svgFiles.isEmpty(), documentXml.contains("svgBlip"), "An SVG in word/media/ goes with an svgBlip extension, found: " + mediaFiles);
+        for (String svgFile : svgFiles) {
+            String svg = new String(entries.get(svgFile), StandardCharsets.UTF_8);
+            assertFalse(svg.contains("foreignObject"), svgFile + " should not contain a foreignObject");
+            assertFalse(svg.contains("filter="), svgFile + " should not contain a filter");
+            assertFalse(svg.contains("<mask"), svgFile + " should not contain a mask");
+        }
     }
 
     private static Map<String, byte[]> unzip(byte[] docx) throws IOException {

@@ -19,4 +19,6 @@ public class PandocInfo {
     private @Nullable String pandoc;
     private @Nullable String pandocService;
     private @Nullable String chromium;
+    private @Nullable String svgRenderer;
+    private @Nullable String weasysvg;
 }
