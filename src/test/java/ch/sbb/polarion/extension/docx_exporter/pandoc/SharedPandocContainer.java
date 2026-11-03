@@ -17,6 +17,7 @@ public final class SharedPandocContainer {
     private static final Logger logger = LoggerFactory.getLogger(SharedPandocContainer.class);
     private static final String DOCKER_IMAGE_NAME = "ghcr.io/schweizerischebundesbahnen/pandoc-service:latest";
     private static final int PANDOC_PORT = 9082;
+    private static final String SVG_RENDERER_PROPERTY = "pandoc.svg.renderer";
 
     private SharedPandocContainer() {
         // Private constructor to prevent instantiation
@@ -35,6 +36,8 @@ public final class SharedPandocContainer {
 
                 GenericContainer<?> container = new GenericContainer<>(DOCKER_IMAGE_NAME)
                         .withExposedPorts(PANDOC_PORT)
+                        // -Dpandoc.svg.renderer=weasysvg runs the tests against the weasysvg renderer of the service
+                        .withEnv("SVG_RENDERER", System.getProperty(SVG_RENDERER_PROPERTY, ""))
                         .waitingFor(
                                 Wait.forHttp("/version").forPort(PANDOC_PORT)
                                         .forStatusCode(200)

@@ -2,31 +2,46 @@ package ch.sbb.polarion.extension.docx_exporter.pandoc;
 
 import ch.sbb.polarion.extension.docx_exporter.pandoc.service.model.PandocParams;
 import org.junit.jupiter.api.Test;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.NodeList;
+
+import javax.xml.parsers.DocumentBuilderFactory;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
- * Verifies that SVG images embedded in the HTML are rasterized to PNG by pandoc-service before pandoc runs.
+ * Verifies that pandoc-service turns the SVG images embedded in the HTML into pictures Word draws.
  * <p>
- * docx-exporter inlines every image as {@code <img src="data:image/svg+xml;base64,...">}; pandoc-service then
- * rasterizes those SVGs to PNG via headless Chromium (Word cannot render draw.io's {@code <foreignObject>} SVGs).
- * The expected shape in the resulting DOCX is a real PNG in {@code word/media/} referenced by {@code <a:blip>},
- * with no SVG file and no {@code svgBlip} extension.
+ * docx-exporter inlines every image as {@code <img src="data:image/svg+xml;base64,...">}; Word cannot draw draw.io's
+ * {@code <foreignObject>} SVGs. With either SVG renderer of pandoc-service the picture is a PNG in {@code word/media/}
+ * referenced by {@code <a:blip>}. Chromium leaves it at that. weasysvg adds the SVG flattened to paths, clips and
+ * gradients as the {@code svgBlip} extension of the picture, as Word saves an SVG: no {@code foreignObject}, filter
+ * or mask is left in it.
  */
 @SkipTestWhenParamNotSet
 class SvgConversionTest extends BasePandocTest {
+
+    private static final String DRAWING_NS = "http://schemas.openxmlformats.org/drawingml/2006/main";
+    private static final String SVG_NS = "http://schemas.microsoft.com/office/drawing/2016/SVG/main";
+    private static final String RELATIONSHIPS_NS = "http://schemas.openxmlformats.org/officeDocument/2006/relationships";
+    private static final String PACKAGE_RELATIONSHIPS_NS = "http://schemas.openxmlformats.org/package/2006/relationships";
 
     @Test
     void inlineSvgImageIsRasterizedToPngInDocx() throws Exception {
@@ -48,7 +63,7 @@ class SvgConversionTest extends BasePandocTest {
     void drawioSvgWithForeignObjectIsRasterizedToPngInDocx() throws Exception {
         // draw.io / mxgraph SVG using <switch> + requiredFeatures="...#Extensibility" + <foreignObject>.
         // Word lands on the <text> fallback branch instead of rendering this, which is exactly the bug the
-        // pandoc-service rasterization fixes; headless Chromium renders the foreignObject correctly.
+        // pandoc-service rasterization fixes; Chromium and weasysvg both draw the foreignObject.
         String svg = """
                 <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="160" height="80" viewBox="-0.5 -0.5 160 80">
                   <g>
@@ -78,24 +93,51 @@ class SvgConversionTest extends BasePandocTest {
                 + "</body></html>";
     }
 
-    private void assertSvgRasterizedToPng(byte[] docBytes) throws IOException {
+    private void assertSvgRasterizedToPng(byte[] docBytes) throws Exception {
         Map<String, byte[]> entries = unzip(docBytes);
+        Map<String, String> targets = relationshipTargets(entries.get("word/_rels/document.xml.rels"));
+        byte[] documentXml = entries.get("word/document.xml");
+        assertNotNull(documentXml, "word/document.xml should be present in the DOCX");
 
-        List<String> mediaFiles = entries.keySet().stream()
-                .filter(name -> name.startsWith("word/media/"))
-                .toList();
+        NodeList blips = parse(documentXml).getElementsByTagNameNS(DRAWING_NS, "blip");
+        assertTrue(blips.getLength() > 0, "document.xml should reference the embedded image via <a:blip>");
+        Set<String> svgParts = new HashSet<>();
+        for (int i = 0; i < blips.getLength(); i++) {
+            Element blip = (Element) blips.item(i);
+            String png = "word/" + targets.get(blip.getAttributeNS(RELATIONSHIPS_NS, "embed"));
+            assertTrue(png.toLowerCase().endsWith(".png") && entries.containsKey(png), "A picture shows a rasterized PNG, found: " + png);
+            // weasysvg adds the SVG of the picture as its svgBlip, which holds only what Word draws
+            NodeList svgBlips = blip.getElementsByTagNameNS(SVG_NS, "svgBlip");
+            for (int j = 0; j < svgBlips.getLength(); j++) {
+                String svgPart = "word/" + targets.get(((Element) svgBlips.item(j)).getAttributeNS(RELATIONSHIPS_NS, "embed"));
+                assertTrue(svgPart.toLowerCase().endsWith(".svg") && entries.containsKey(svgPart), "An svgBlip names an SVG part, found: " + svgPart);
+                String svg = new String(entries.get(svgPart), StandardCharsets.UTF_8);
+                assertFalse(svg.contains("foreignObject"), svgPart + " should not contain a foreignObject");
+                assertFalse(svg.contains("filter="), svgPart + " should not contain a filter");
+                assertFalse(svg.contains("<mask"), svgPart + " should not contain a mask");
+                svgParts.add(svgPart);
+            }
+        }
+        List<String> svgFiles = entries.keySet().stream().filter(name -> name.startsWith("word/media/") && name.toLowerCase().endsWith(".svg")).toList();
+        assertEquals(Set.copyOf(svgFiles), svgParts, "Every SVG in word/media/ is the svgBlip of a picture");
+    }
 
-        boolean hasPng = mediaFiles.stream().anyMatch(name -> name.toLowerCase().endsWith(".png"));
-        boolean hasSvg = mediaFiles.stream().anyMatch(name -> name.toLowerCase().endsWith(".svg"));
+    private static Map<String, String> relationshipTargets(byte[] rels) throws Exception {
+        assertNotNull(rels, "word/_rels/document.xml.rels should be present in the DOCX");
+        Map<String, String> targets = new HashMap<>();
+        NodeList relationships = parse(rels).getElementsByTagNameNS(PACKAGE_RELATIONSHIPS_NS, "Relationship");
+        for (int i = 0; i < relationships.getLength(); i++) {
+            Element relationship = (Element) relationships.item(i);
+            targets.put(relationship.getAttribute("Id"), relationship.getAttribute("Target"));
+        }
+        return targets;
+    }
 
-        assertTrue(hasPng, "Expected a rasterized PNG in word/media/, found: " + mediaFiles);
-        assertFalse(hasSvg, "Expected no SVG in word/media/ (the SVG should be rasterized to PNG), found: " + mediaFiles);
-
-        byte[] documentXmlBytes = entries.get("word/document.xml");
-        assertNotNull(documentXmlBytes, "word/document.xml should be present in the DOCX");
-        String documentXml = new String(documentXmlBytes, StandardCharsets.UTF_8);
-        assertTrue(documentXml.contains("<a:blip"), "document.xml should reference the embedded image via <a:blip>");
-        assertFalse(documentXml.contains("svgBlip"), "document.xml should not contain an svgBlip extension (the SVG should have been rasterized)");
+    private static Document parse(byte[] xml) throws Exception {
+        DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+        factory.setNamespaceAware(true);
+        factory.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true);
+        return factory.newDocumentBuilder().parse(new ByteArrayInputStream(xml));
     }
 
     private static Map<String, byte[]> unzip(byte[] docx) throws IOException {
