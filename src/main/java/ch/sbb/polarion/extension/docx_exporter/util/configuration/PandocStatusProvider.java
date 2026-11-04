@@ -50,6 +50,7 @@ public class PandocStatusProvider extends ConfigurationStatusProvider {
         VERSION,
         PYTHON,
         PANDOC,
+        CHROMIUM,
         WEASYPRINT,
         SVG_RENDERER
     }
@@ -60,6 +61,7 @@ public class PandocStatusProvider extends ConfigurationStatusProvider {
             PandocServiceInfo.VERSION, "Pandoc Service",
             PandocServiceInfo.PYTHON, "Pandoc Service: Python",
             PandocServiceInfo.PANDOC, "Pandoc Service: Pandoc",
+            PandocServiceInfo.CHROMIUM, "Pandoc Service: Chromium",
             PandocServiceInfo.WEASYPRINT, "Pandoc Service: WeasyPrint",
             PandocServiceInfo.SVG_RENDERER, "Pandoc Service: SVG renderer"
     );
@@ -86,9 +88,15 @@ public class PandocStatusProvider extends ConfigurationStatusProvider {
                     createPandocStatus(PANDOC_SERVICE_INFO.get(PandocServiceInfo.PYTHON), pandocInfo.getPython()),
                     createPandocStatus(PANDOC_SERVICE_INFO.get(PandocServiceInfo.PANDOC), pandocInfo.getPandoc())));
             String svgRenderer = pandocInfo.getSvgRenderer();
-            // a service which names its SVG renderer draws SVG with weasysvg, on WeasyPrint
-            if (svgRenderer != null) {
+            if (WEASYSVG.equals(svgRenderer)) {
+                // weasysvg draws on WeasyPrint, and no browser runs
                 statuses.add(createWeasyPrintStatus(pandocInfo.getWeasyprint()));
+            } else {
+                // a service before 2.12.0 draws with Chromium by default
+                statuses.add(createPandocStatus(PANDOC_SERVICE_INFO.get(PandocServiceInfo.CHROMIUM), pandocInfo.getChromium()));
+            }
+            // services before 2.10.0 do not name their SVG renderer
+            if (svgRenderer != null) {
                 statuses.add(createSvgRendererStatus(svgRenderer, pandocInfo.getWeasysvg()));
             }
             return statuses;
