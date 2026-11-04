@@ -520,6 +520,23 @@ class HtmlProcessorTest {
     }
 
     @Test
+    void keepEnumValuesOnOneLineTest() {
+        Document document = JSoupUtils.parseHtml("""
+                <div class="polarion-dle-workitem-fields-end"><span class="polarion-JSEnumOption" title="Draft"><img src="draft.gif" alt="">Draft</span></div>
+                <div class="polarion-dle-workitem-fields-end"><span class="polarion-JSEnumOption" style="color: red">In Progress</span></div>
+                <table class="polarion-dle-workitem-fields-end-table"><tr><td><span class="polarion-JSEnumOption">Must Have</span></td></tr></table>
+                <span class="polarion-JSEnumOption">Open</span>""");
+
+        processor.keepEnumValuesOnOneLine(document);
+
+        Elements enumValues = document.select("span.polarion-JSEnumOption");
+        assertEquals("white-space:nowrap;", enumValues.get(0).attr("style").replace("\n", ""));
+        assertEquals("color:red;white-space:nowrap;", enumValues.get(1).attr("style").replace("\n", ""));
+        assertFalse(enumValues.get(2).hasAttr("style"));
+        assertFalse(enumValues.get(3).hasAttr("style"));
+    }
+
+    @Test
     void convertFontAwesomeIconsTest() {
         String chartColumn = "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 512 512\"><path d=\"M0 0\"/></svg>";
         String bell = "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 448 512\"><path d=\"M0 0\"/></svg>";
@@ -1604,6 +1621,7 @@ class HtmlProcessorTest {
             doNothing().when(spyHtmlProcessor).applyBoldStyles(any());
             doNothing().when(spyHtmlProcessor).adjustStyles(any());
             doNothing().when(spyHtmlProcessor).alignIcons(any());
+            doNothing().when(spyHtmlProcessor).keepEnumValuesOnOneLine(any());
             exportParams.setCutEmptyChapters(false);
             exportParams.setCutEmptyWIAttributes(false); // this test asserts the input is left unchanged, so disable WI-attribute cutting (defaults to true)
 
