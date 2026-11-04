@@ -96,11 +96,11 @@ class FormulaCoverageTest extends BasePandocTest {
                     "A = \\pmatrix{a_{11} & a_{12} & \\ldots & a_{1n} \\cr a_{21} & a_{22} & \\ldots & a_{2n} \\cr \\vdots & \\vdots & \\ddots & \\vdots \\cr a_{m1} & a_{m2} & \\ldots & a_{mn} \\cr}",
                     LEAK, OK),
 
-            // --- Infix fraction-like operators: \over, \atop and the delimited *withdelims variants are shimmed (LEAK -> OK); \choose is native ---
-            new FormulaCase("over", "infix-operator", "{a \\over b}", LEAK, OK),
-            new FormulaCase("atop", "infix-operator", "{n \\atop k}", LEAK, OK),
+            // --- Infix fraction-like operators: \over, \atop and \choose are native since pandoc 3.13; the delimited *withdelims variants are shimmed (LEAK -> OK) ---
+            new FormulaCase("over", "infix-operator", "{a \\over b}", OK, OK),
+            new FormulaCase("atop", "infix-operator", "{n \\atop k}", OK, OK),
             // The canonical real-world \atop: a two-line condition under a sum (\substack after the shim).
-            new FormulaCase("atop-sum-subscript", "infix-operator", "\\sum_{0 \\le i \\le m \\atop 0 < j < n} P(i,j)", LEAK, OK),
+            new FormulaCase("atop-sum-subscript", "infix-operator", "\\sum_{0 \\le i \\le m \\atop 0 < j < n} P(i,j)", OK, OK),
             new FormulaCase("choose", "infix-operator", "{n \\choose k}", OK, OK),
             // \overwithdelims / \atopwithdelims: ruled / ruleless fraction wrapped in delimiters -> \left D1 ... \right D2.
             new FormulaCase("overwithdelims", "infix-operator", "{a \\overwithdelims [ ] b}", LEAK, OK),
