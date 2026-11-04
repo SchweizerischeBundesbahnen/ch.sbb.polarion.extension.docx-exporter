@@ -12,6 +12,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.VisibleForTesting;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.function.Supplier;
@@ -49,14 +50,18 @@ public class PandocStatusProvider extends ConfigurationStatusProvider {
         VERSION,
         PYTHON,
         PANDOC,
-        CHROMIUM,
+        WEASYPRINT,
+        SVG_RENDERER
     }
+
+    private static final String WEASYSVG = "weasysvg";
 
     private static final Map<PandocServiceInfo, String> PANDOC_SERVICE_INFO = Map.of(
             PandocServiceInfo.VERSION, "Pandoc Service",
             PandocServiceInfo.PYTHON, "Pandoc Service: Python",
             PandocServiceInfo.PANDOC, "Pandoc Service: Pandoc",
-            PandocServiceInfo.CHROMIUM, "Pandoc Service: Chromium"
+            PandocServiceInfo.WEASYPRINT, "Pandoc Service: WeasyPrint",
+            PandocServiceInfo.SVG_RENDERER, "Pandoc Service: SVG renderer"
     );
 
     @Override
@@ -71,7 +76,7 @@ public class PandocStatusProvider extends ConfigurationStatusProvider {
             PandocInfo pandocInfo = pandocServiceConnector.getPandocInfo();
             String expectedApiVersionStr = VersionUtils.getValueFromProperties(VERSION_FILE, "pandoc-service.api-version");
             Integer expectedApiVersion = parseExpectedApiVersion(expectedApiVersionStr);
-            return List.of(
+            List<ConfigurationStatus> statuses = new ArrayList<>(List.of(
                     createPandocVersionStatus(
                             PANDOC_SERVICE_INFO.get(PandocServiceInfo.VERSION),
                             pandocInfo.getPandocService(),
@@ -79,9 +84,14 @@ public class PandocStatusProvider extends ConfigurationStatusProvider {
                             pandocInfo.getApiVersion(),
                             expectedApiVersion),
                     createPandocStatus(PANDOC_SERVICE_INFO.get(PandocServiceInfo.PYTHON), pandocInfo.getPython()),
-                    createPandocStatus(PANDOC_SERVICE_INFO.get(PandocServiceInfo.PANDOC), pandocInfo.getPandoc()),
-                    createPandocStatus(PANDOC_SERVICE_INFO.get(PandocServiceInfo.CHROMIUM), pandocInfo.getChromium())
-            );
+                    createPandocStatus(PANDOC_SERVICE_INFO.get(PandocServiceInfo.PANDOC), pandocInfo.getPandoc())));
+            String svgRenderer = pandocInfo.getSvgRenderer();
+            // a service which names its SVG renderer draws SVG with weasysvg, on WeasyPrint
+            if (svgRenderer != null) {
+                statuses.add(createWeasyPrintStatus(pandocInfo.getWeasyprint()));
+                statuses.add(createSvgRendererStatus(svgRenderer, pandocInfo.getWeasysvg()));
+            }
+            return statuses;
         } catch (Exception e) {
             return List.of(new ConfigurationStatus(PANDOC_SERVICE_INFO.get(PandocServiceInfo.VERSION), Status.ERROR, e.getMessage()));
         }
@@ -115,6 +125,23 @@ public class PandocStatusProvider extends ConfigurationStatusProvider {
                     nfe
             );
         }
+    }
+
+    private static @NotNull ConfigurationStatus createWeasyPrintStatus(@Nullable String weasyprint) {
+        String name = PANDOC_SERVICE_INFO.get(PandocServiceInfo.WEASYPRINT);
+        if (weasyprint == null || weasyprint.isBlank()) {
+            return new ConfigurationStatus(name, Status.WARNING,
+                    "<span style='color: orange;'>unknown: pandoc-service reports it from 2.13.0 on</span>");
+        }
+        return new ConfigurationStatus(name, Status.OK, weasyprint);
+    }
+
+    private static @NotNull ConfigurationStatus createSvgRendererStatus(@NotNull String svgRenderer, @Nullable String weasysvg) {
+        String name = PANDOC_SERVICE_INFO.get(PandocServiceInfo.SVG_RENDERER);
+        if (WEASYSVG.equals(svgRenderer) && weasysvg != null && !weasysvg.isBlank()) {
+            return new ConfigurationStatus(name, Status.OK, WEASYSVG + " " + weasysvg);
+        }
+        return new ConfigurationStatus(name, Status.OK, svgRenderer);
     }
 
     private static @NotNull ConfigurationStatus createPandocStatus(@NotNull String name, @Nullable String version) {

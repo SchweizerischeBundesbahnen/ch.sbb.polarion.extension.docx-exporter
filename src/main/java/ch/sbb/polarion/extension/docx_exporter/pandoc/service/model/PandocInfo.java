@@ -18,7 +18,9 @@ public class PandocInfo {
     private @Nullable String timestamp;
     private @Nullable String pandoc;
     private @Nullable String pandocService;
-    private @Nullable String chromium;
+    /** Who draws SVG: weasysvg. Older services leave it out. */
     private @Nullable String svgRenderer;
     private @Nullable String weasysvg;
+    /** The WeasyPrint version weasysvg draws with. Services before 2.13.0 leave it out. */
+    private @Nullable String weasyprint;
 }
