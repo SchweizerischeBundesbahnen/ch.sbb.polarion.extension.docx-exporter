@@ -61,6 +61,76 @@ class PandocStatusProviderTest {
     }
 
     @Test
+    void showsWeasyPrintAndWeasysvgAndNoChromium() {
+        PandocInfo pandocInfo = PandocInfo.builder()
+                .apiVersion(1)
+                .python("3.15.2")
+                .pandoc("3.13")
+                .pandocService("2.13.0")
+                .svgRenderer("weasysvg")
+                .weasysvg("0.5.0")
+                .weasyprint("68.1")
+                .build();
+
+        assertThat(statusesOf(pandocInfo)).containsExactly(
+                new ConfigurationStatus("Pandoc Service", Status.OK, "2.13.0"),
+                new ConfigurationStatus("Pandoc Service: Python", Status.OK, "3.15.2"),
+                new ConfigurationStatus("Pandoc Service: Pandoc", Status.OK, "3.13"),
+                new ConfigurationStatus("Pandoc Service: WeasyPrint", Status.OK, "68.1"),
+                new ConfigurationStatus("Pandoc Service: SVG renderer", Status.OK, "weasysvg 0.5.0")
+        );
+    }
+
+    @Test
+    void warnsWhereTheServiceDoesNotReportWeasyPrint() {
+        PandocInfo pandocInfo = PandocInfo.builder()
+                .apiVersion(1)
+                .python("3.15.2")
+                .pandoc("3.13")
+                .pandocService("2.12.0")
+                .svgRenderer("weasysvg")
+                .build();
+
+        assertThat(statusesOf(pandocInfo)).containsExactly(
+                new ConfigurationStatus("Pandoc Service", Status.OK, "2.12.0"),
+                new ConfigurationStatus("Pandoc Service: Python", Status.OK, "3.15.2"),
+                new ConfigurationStatus("Pandoc Service: Pandoc", Status.OK, "3.13"),
+                new ConfigurationStatus("Pandoc Service: WeasyPrint", Status.WARNING,
+                        "<span style='color: orange;'>unknown: pandoc-service reports it from 2.13.0 on</span>"),
+                new ConfigurationStatus("Pandoc Service: SVG renderer", Status.OK, "weasysvg")
+        );
+    }
+
+    private static List<ConfigurationStatus> statusesOf(PandocInfo pandocInfo) {
+        PandocServiceConnector pandocServiceConnector = mock(PandocServiceConnector.class);
+        when(pandocServiceConnector.getPandocInfo()).thenReturn(pandocInfo);
+        try (MockedStatic<VersionUtils> versionsUtilsMockedStatic = mockStatic(VersionUtils.class)) {
+            versionsUtilsMockedStatic.when(() -> VersionUtils.getValueFromProperties(VERSION_FILE, API_VERSION_PROPERTY)).thenReturn("1");
+            return new PandocStatusProvider(pandocServiceConnector).getStatuses(ConfigurationStatusProvider.Context.builder().build());
+        }
+    }
+
+    @Test
+    void showsChromiumWhereTheServiceDrawsWithIt() {
+        PandocInfo pandocInfo = PandocInfo.builder()
+                .apiVersion(1)
+                .python("3.15.2")
+                .pandoc("3.13")
+                .pandocService("2.11.0")
+                .chromium("148.0.7778.96")
+                .svgRenderer("chromium")
+                .build();
+
+        assertThat(statusesOf(pandocInfo)).containsExactly(
+                new ConfigurationStatus("Pandoc Service", Status.OK, "2.11.0"),
+                new ConfigurationStatus("Pandoc Service: Python", Status.OK, "3.15.2"),
+                new ConfigurationStatus("Pandoc Service: Pandoc", Status.OK, "3.13"),
+                new ConfigurationStatus("Pandoc Service: Chromium", Status.OK, "148.0.7778.96"),
+                new ConfigurationStatus("Pandoc Service: SVG renderer", Status.OK, "chromium")
+        );
+    }
+
+    @Test
     void testConnectionRefused() {
         PandocServiceConnector pandocServiceConnector = mock(PandocServiceConnector.class);
         when(pandocServiceConnector.getPandocInfo()).thenThrow(new ProcessingException("java.net.ConnectException: Connection refused"));
