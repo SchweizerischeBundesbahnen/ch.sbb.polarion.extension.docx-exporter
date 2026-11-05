@@ -35,6 +35,7 @@ public class StylePackageModel extends SettingsModel {
     private static final String PAPER_SIZE_ENTRY_NAME = "PAPER SIZE";
     private static final String IMAGE_DENSITY_ENTRY_NAME = "IMAGE DENSITY";
     private static final String PRESERVE_TABLE_STYLES_ENTRY_NAME = "PRESERVE TABLE STYLES";
+    private static final String EMBED_SVG_ENTRY_NAME = "EMBED SVG";
     private static final String WEBHOOKS_ENTRY_NAME = "WEBHOOKS";
     private static final String REMOVAL_SELECTOR_ENTRY_NAME = "REMOVAL SELECTOR";
     private static final String RENDER_COMMENTS_ENTRY_NAME = "RENDER COMMENTS";
@@ -59,6 +60,7 @@ public class StylePackageModel extends SettingsModel {
     private String paperSize;
     private String imageDensity;
     private boolean preserveTableStyles;
+    private boolean embedSvg;
     private String webhooks;
     // Add a new style package settings - text input `Removal selector`. It expects expression like CSS (e.g. `.polarion-Hyperlink .polarion-Icons`) - html elements queried using this expression will be removed from source html.
     private String removalSelector;
@@ -83,6 +85,7 @@ public class StylePackageModel extends SettingsModel {
                 serializeEntry(PAPER_SIZE_ENTRY_NAME, paperSize) +
                 serializeEntry(IMAGE_DENSITY_ENTRY_NAME, imageDensity) +
                 serializeEntry(PRESERVE_TABLE_STYLES_ENTRY_NAME, preserveTableStyles) +
+                serializeEntry(EMBED_SVG_ENTRY_NAME, embedSvg) +
                 serializeEntry(WEBHOOKS_ENTRY_NAME, webhooks) +
                 serializeEntry(REMOVAL_SELECTOR_ENTRY_NAME, removalSelector) +
                 serializeEntry(RENDER_COMMENTS_ENTRY_NAME, renderComments == null ? null : renderComments.name()) +
@@ -109,6 +112,7 @@ public class StylePackageModel extends SettingsModel {
         paperSize = deserializeEntry(PAPER_SIZE_ENTRY_NAME, serializedString);
         imageDensity = deserializeEntry(IMAGE_DENSITY_ENTRY_NAME, serializedString);
         preserveTableStyles = Boolean.parseBoolean(deserializeEntry(PRESERVE_TABLE_STYLES_ENTRY_NAME, serializedString));
+        embedSvg = Boolean.parseBoolean(deserializeEntry(EMBED_SVG_ENTRY_NAME, serializedString));
         webhooks = deserializeEntry(WEBHOOKS_ENTRY_NAME, serializedString);
         removalSelector = deserializeEntry(REMOVAL_SELECTOR_ENTRY_NAME, serializedString);
         renderComments = parseRenderComments(deserializeEntry(RENDER_COMMENTS_ENTRY_NAME, serializedString));

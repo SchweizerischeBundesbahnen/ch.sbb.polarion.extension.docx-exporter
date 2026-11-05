@@ -124,6 +124,7 @@ public class DocxExportFunction implements IFunction<IModule> {
                 .linkedWorkitemRoles(stylePackage.getLinkedWorkitemRoles())
                 .linkRoleDirection(safeParseLinkRoleDirection(stylePackage.getLinkRoleDirection()))
                 .preserveTableStyles(stylePackage.isPreserveTableStyles())
+                .embedSvg(stylePackage.isEmbedSvg())
                 .build();
     }
 

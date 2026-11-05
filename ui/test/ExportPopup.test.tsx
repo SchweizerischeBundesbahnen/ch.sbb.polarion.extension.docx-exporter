@@ -283,6 +283,7 @@ describe('exporting', () => {
       'popup-paper-size',
       'popup-image-density',
       'popup-preserve-table-styles',
+      'popup-embed-svg',
       'popup-render-comments',
       'popup-cut-empty-chapters',
       'popup-cut-empty-wi-attributes',
@@ -326,6 +327,7 @@ describe('exporting', () => {
     expect(sent.paperSize).toBe('A3');
     expect(sent.imageDensity).toBe('DPI_300');
     expect(sent.preserveTableStyles).toBe(true);
+    expect(sent.embedSvg).toBe(true);
     expect(sent.renderComments).toBe('ALL');
     expect(sent.includeUnreferencedComments).toBe(true);
     expect(sent.cutEmptyChapters).toBe(true);

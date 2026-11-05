@@ -12,6 +12,7 @@
     * [Custom paper size](#custom-paper-size)
     * [Custom image density](#custom-image-density)
     * [Preserve table styles](#preserve-table-styles)
+    * [Embed SVG pictures](#embed-svg-pictures)
     * [Comments rendering](#comments-rendering)
     * [Cut empty chapters](#cut-empty-chapters)
     * [Cut empty Workitem attributes](#cut-empty-workitem-attributes)
@@ -85,15 +86,18 @@ This option allows selecting the density (DPI) for PNG images converted from SVG
 
 | Density (DPI) | Scale Factor | Description                                |
 |---------------|--------------|--------------------------------------------|
-| 96            | 1.0          | Standard screen density (default)          |
-| 192           | 2.0          | High density, suitable for retina displays |
+| 96            | 1.0          | Standard screen density                    |
+| 192           | 2.0          | High density, for retina displays (default)|
 | 300           | 3.125        | Print quality, good for most printers      |
 | 600           | 6.25         | High print quality, for professional output|
 
-When this option is not enabled, the default density of 96 DPI is used.
+When this option is not enabled, the default density of 192 DPI is used.
 
 ### Preserve table styles
 When this option is enabled, CSS table cell styles such as background colors and borders from the source HTML are preserved in the generated DOCX document. When disabled, table styles are inherited from the selected template (reference document) instead.
+
+### Embed SVG pictures
+By default, an SVG picture reaches the DOCX as a PNG only. When this option is enabled, the DOCX also holds the SVG, and Word draws the SVG instead of the PNG. The SVG stays sharp at any zoom. But the export takes longer, the DOCX is larger, and Word cannot draw every SVG effect: a blurred shadow, for example, becomes a stack of rings.
 
 ### Comments rendering
 This option which is on by default tells DOCX Exporter to include Polarion document's comments into generated DOCX document (REMARK: please take into account that this relates only to LiveDoc comments, WorkItem comments regardless the fact

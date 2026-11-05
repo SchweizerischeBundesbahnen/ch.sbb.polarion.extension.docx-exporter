@@ -33,6 +33,7 @@ export interface ExportForm {
   imageDensityEnabled: boolean;
   imageDensity: string;
   preserveTableStyles: boolean;
+  embedSvg: boolean;
   renderCommentsEnabled: boolean;
   renderComments: string;
   includeUnreferencedComments: boolean;
@@ -92,6 +93,7 @@ export function toExportForm(content: StylePackageSettings, context: ExportFormC
     imageDensityEnabled: !!content.imageDensity,
     imageDensity: content.imageDensity ?? DEFAULT_IMAGE_DENSITY,
     preserveTableStyles: !!content.preserveTableStyles,
+    embedSvg: !!content.embedSvg,
     renderCommentsEnabled: !!content.renderComments,
     renderComments: content.renderComments ?? DEFAULT_RENDER_COMMENTS,
     includeUnreferencedComments: !!content.includeUnreferencedComments,

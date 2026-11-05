@@ -2,6 +2,8 @@ package ch.sbb.polarion.extension.docx_exporter.pandoc;
 
 import ch.sbb.polarion.extension.docx_exporter.pandoc.service.model.PandocParams;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
@@ -9,8 +11,11 @@ import org.w3c.dom.NodeList;
 import javax.xml.parsers.DocumentBuilderFactory;
 
 import java.io.ByteArrayInputStream;
+import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.util.Base64;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -43,24 +48,26 @@ class SvgConversionTest extends BasePandocTest {
     private static final String RELATIONSHIPS_NS = "http://schemas.openxmlformats.org/officeDocument/2006/relationships";
     private static final String PACKAGE_RELATIONSHIPS_NS = "http://schemas.openxmlformats.org/package/2006/relationships";
 
-    @Test
-    void inlineSvgImageIsRasterizedToPngInDocx() throws Exception {
-        String svg = """
-                <svg xmlns="http://www.w3.org/2000/svg" width="120" height="60" viewBox="0 0 120 60">
-                  <rect x="0" y="0" width="120" height="60" fill="#e0f0ff" stroke="#0066cc" stroke-width="2"/>
-                  <text x="60" y="35" font-family="sans-serif" font-size="14" text-anchor="middle" fill="#003366">Hello SVG</text>
-                </svg>
-                """;
+    private static final String SIMPLE_SVG = """
+            <svg xmlns="http://www.w3.org/2000/svg" width="120" height="60" viewBox="0 0 120 60">
+              <rect x="0" y="0" width="120" height="60" fill="#e0f0ff" stroke="#0066cc" stroke-width="2"/>
+              <text x="60" y="35" font-family="sans-serif" font-size="14" text-anchor="middle" fill="#003366">Hello SVG</text>
+            </svg>
+            """;
 
-        byte[] docBytes = exportToDOCX(htmlWithSvgImage(svg), readTemplate("reference_template"), PandocParams.builder().build());
+    @ParameterizedTest(name = "embedSvg={0}")
+    @ValueSource(booleans = {false, true})
+    void inlineSvgImageIsRasterizedToPngInDocx(boolean embedSvg) throws Exception {
+        byte[] docBytes = exportToDOCX(htmlWithSvgImage(SIMPLE_SVG), readTemplate("reference_template"), PandocParams.builder().embedSvg(embedSvg).build());
         assertNotNull(docBytes);
-        writeReportDocx("inlineSvgImageIsRasterizedToPngInDocx_generated", docBytes);
+        writeReportDocx("inlineSvgImageIsRasterizedToPngInDocx_" + embedSvg + "_generated", docBytes);
 
-        assertSvgRasterizedToPng(docBytes);
+        assertSvgRasterizedToPng(docBytes, embedSvg);
     }
 
-    @Test
-    void drawioSvgWithForeignObjectIsRasterizedToPngInDocx() throws Exception {
+    @ParameterizedTest(name = "embedSvg={0}")
+    @ValueSource(booleans = {false, true})
+    void drawioSvgWithForeignObjectIsRasterizedToPngInDocx(boolean embedSvg) throws Exception {
         // draw.io / mxgraph SVG using <switch> + requiredFeatures="...#Extensibility" + <foreignObject>.
         // Word lands on the <text> fallback branch instead of rendering this, which is exactly the bug the
         // pandoc-service rasterization fixes; weasysvg draws the foreignObject.
@@ -77,11 +84,70 @@ class SvgConversionTest extends BasePandocTest {
                 </svg>
                 """;
 
-        byte[] docBytes = exportToDOCX(htmlWithSvgImage(svg), readTemplate("reference_template"), PandocParams.builder().build());
+        byte[] docBytes = exportToDOCX(htmlWithSvgImage(svg), readTemplate("reference_template"), PandocParams.builder().embedSvg(embedSvg).build());
         assertNotNull(docBytes);
-        writeReportDocx("drawioSvgWithForeignObjectIsRasterizedToPngInDocx_generated", docBytes);
+        writeReportDocx("drawioSvgWithForeignObjectIsRasterizedToPngInDocx_" + embedSvg + "_generated", docBytes);
 
-        assertSvgRasterizedToPng(docBytes);
+        assertSvgRasterizedToPng(docBytes, embedSvg);
+    }
+
+    @Test
+    void picturesArePngOnlyByDefault() throws Exception {
+        byte[] docBytes = exportToDOCX(htmlWithPictures(), readTemplate("reference_template"), PandocParams.builder().build());
+        writeReportDocx("svgPicturesPngOnly_generated", docBytes);
+
+        Map<String, byte[]> entries = unzip(docBytes);
+        assertEquals(2, pngFiles(entries).size(), "Each picture is a PNG");
+        assertEquals(List.of(), svgFiles(entries), "Without embedSvg no picture carries its SVG");
+        // The PNG keeps the blurred shadows of the pictures
+        compareContentUsingReferenceImages("svgPicturesPngOnly", exportToPDF(docBytes));
+    }
+
+    @Test
+    void embedSvgAddsTheSvgOfEachPicture() throws Exception {
+        byte[] docBytes = exportToDOCX(htmlWithPictures(), readTemplate("reference_template"), PandocParams.builder().embedSvg(true).build());
+        writeReportDocx("svgPicturesWithSvg_generated", docBytes);
+
+        assertPicturesShowPng(docBytes, false);
+        Map<String, byte[]> entries = unzip(docBytes);
+        assertEquals(2, pngFiles(entries).size(), "Each picture keeps its PNG");
+        assertEquals(2, svgFiles(entries).size(), "Each picture carries its SVG");
+        // The flattened SVG has no blur: the shadows turn into rings
+        compareContentUsingReferenceImages("svgPicturesWithSvg", exportToPDF(docBytes));
+    }
+
+    /** Tux and the OpenStreetMap logo, as docx-exporter inlines them. Both blur their shadows. */
+    private static String htmlWithPictures() throws IOException {
+        return "<html><head><title>SVG Pictures</title></head><body>"
+                + "<p>Tux and the OpenStreetMap logo:</p>"
+                + "<p>" + picture("tux", 216, 256) + " " + picture("openstreetmap", 256, 256) + "</p>"
+                + "</body></html>";
+    }
+
+    private static String picture(String name, int width, int height) throws IOException {
+        try (InputStream svg = SvgConversionTest.class.getResourceAsStream("/pandoc/svg/pictures/" + name + ".svg")) {
+            assertNotNull(svg, name + ".svg should be a test resource");
+            String dataUrl = "data:image/svg+xml;base64," + Base64.getEncoder().encodeToString(svg.readAllBytes());
+            return "<img src=\"" + dataUrl + "\" style=\"width: " + width + "px; height: " + height + "px;\" />";
+        }
+    }
+
+    private byte[] exportToPDF(byte[] docx) throws IOException {
+        File file = getTestFile();
+        try {
+            Files.write(file.toPath(), docx);
+            return exportToPDF(file);
+        } finally {
+            Files.delete(file.toPath());
+        }
+    }
+
+    private static List<String> pngFiles(Map<String, byte[]> entries) {
+        return entries.keySet().stream().filter(name -> name.startsWith("word/media/") && name.toLowerCase().endsWith(".png")).toList();
+    }
+
+    private static List<String> svgFiles(Map<String, byte[]> entries) {
+        return entries.keySet().stream().filter(name -> name.startsWith("word/media/") && name.toLowerCase().endsWith(".svg")).toList();
     }
 
     private static String htmlWithSvgImage(String svg) {
@@ -93,7 +159,17 @@ class SvgConversionTest extends BasePandocTest {
                 + "</body></html>";
     }
 
-    private void assertSvgRasterizedToPng(byte[] docBytes) throws Exception {
+    /** The picture shows a PNG, and with {@code embedSvg} carries its flat SVG, which the checks then read. */
+    private void assertSvgRasterizedToPng(byte[] docBytes, boolean embedSvg) throws Exception {
+        assertPicturesShowPng(docBytes, true);
+        assertEquals(embedSvg ? 1 : 0, svgFiles(unzip(docBytes)).size(), "The picture carries its SVG only with embedSvg");
+    }
+
+    /**
+     * Each picture shows a PNG, and each SVG in {@code word/media/} is the svgBlip of a picture. A flat SVG holds only
+     * what Word draws: no foreignObject, filter or mask.
+     */
+    private void assertPicturesShowPng(byte[] docBytes, boolean flat) throws Exception {
         Map<String, byte[]> entries = unzip(docBytes);
         Map<String, String> targets = relationshipTargets(entries.get("word/_rels/document.xml.rels"));
         byte[] documentXml = entries.get("word/document.xml");
@@ -113,13 +189,14 @@ class SvgConversionTest extends BasePandocTest {
                 assertTrue(svgPart.toLowerCase().endsWith(".svg") && entries.containsKey(svgPart), "An svgBlip names an SVG part, found: " + svgPart);
                 String svg = new String(entries.get(svgPart), StandardCharsets.UTF_8);
                 assertFalse(svg.contains("foreignObject"), svgPart + " should not contain a foreignObject");
-                assertFalse(svg.contains("filter="), svgPart + " should not contain a filter");
-                assertFalse(svg.contains("<mask"), svgPart + " should not contain a mask");
+                if (flat) {
+                    assertFalse(svg.contains("filter="), svgPart + " should not contain a filter");
+                    assertFalse(svg.contains("<mask"), svgPart + " should not contain a mask");
+                }
                 svgParts.add(svgPart);
             }
         }
-        List<String> svgFiles = entries.keySet().stream().filter(name -> name.startsWith("word/media/") && name.toLowerCase().endsWith(".svg")).toList();
-        assertEquals(Set.copyOf(svgFiles), svgParts, "Every SVG in word/media/ is the svgBlip of a picture");
+        assertEquals(Set.copyOf(svgFiles(entries)), svgParts, "Every SVG in word/media/ is the svgBlip of a picture");
     }
 
     private static Map<String, String> relationshipTargets(byte[] rels) throws Exception {

@@ -30,7 +30,7 @@ class PandocParamsTest {
 
         String result = params.toUrlParams();
 
-        assertEquals("?scale_factor=2.0", result);
+        assertEquals("?scale_factor=2.0&svg_in_docx=false", result);
     }
 
     @Test
@@ -50,14 +50,28 @@ class PandocParamsTest {
     }
 
     @Test
-    void testToUrlParams_withoutImageDensityOmitsScaleFactor() {
+    void testToUrlParams_withoutImageDensityUsesDefaultDensity() {
         PandocParams params = PandocParams.builder()
                 .orientation("portrait")
                 .build();
 
         String result = params.toUrlParams();
 
-        assertFalse(result.contains("scale_factor"));
+        assertTrue(result.contains("scale_factor=2.0"));
+    }
+
+    @Test
+    void testToUrlParams_svgLeftOutByDefault() {
+        String result = PandocParams.builder().build().toUrlParams();
+
+        assertTrue(result.contains("svg_in_docx=false"));
+    }
+
+    @Test
+    void testToUrlParams_withEmbedSvg() {
+        String result = PandocParams.builder().embedSvg(true).build().toUrlParams();
+
+        assertTrue(result.contains("svg_in_docx=true"));
     }
 
     @Test
@@ -68,7 +82,7 @@ class PandocParamsTest {
 
         String result = params.toUrlParams();
 
-        assertEquals("?orientation=portrait", result);
+        assertEquals("?orientation=portrait&scale_factor=2.0&svg_in_docx=false", result);
     }
 
     @Test
@@ -79,7 +93,7 @@ class PandocParamsTest {
 
         String result = params.toUrlParams();
 
-        assertEquals("?paper_size=Letter", result);
+        assertEquals("?paper_size=Letter&scale_factor=2.0&svg_in_docx=false", result);
     }
 
     @Test
@@ -91,7 +105,7 @@ class PandocParamsTest {
 
         String result = params.toUrlParams();
 
-        assertEquals("", result);
+        assertEquals("?scale_factor=2.0&svg_in_docx=false", result);
     }
 
     @Test
@@ -101,7 +115,7 @@ class PandocParamsTest {
 
         String result = params.toUrlParams();
 
-        assertEquals("", result);
+        assertEquals("?scale_factor=2.0&svg_in_docx=false", result);
     }
 
     @Test
@@ -113,7 +127,7 @@ class PandocParamsTest {
 
         String result = params.toUrlParams();
 
-        assertEquals("?paper_size=A3", result);
+        assertEquals("?paper_size=A3&scale_factor=2.0&svg_in_docx=false", result);
     }
 
     @Test
@@ -140,7 +154,7 @@ class PandocParamsTest {
 
         String result = params.toUrlParams();
 
-        assertEquals("?preserve_table_styles=true", result);
+        assertEquals("?scale_factor=2.0&svg_in_docx=false&preserve_table_styles=true", result);
     }
 
     @Test
@@ -174,6 +188,13 @@ class PandocParamsTest {
         assertEquals("landscape", params.getOrientation());
         assertEquals("A4", params.getPaperSize());
         assertTrue(params.isPreserveTableStyles());
+    }
+
+    @Test
+    void testFromJson_withEmbedSvg() {
+        PandocParams params = PandocParams.fromJson("{\"embedSvg\":true}");
+
+        assertTrue(params.isEmbedSvg());
     }
 
     @Test

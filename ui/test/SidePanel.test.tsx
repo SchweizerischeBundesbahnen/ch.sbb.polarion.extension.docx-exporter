@@ -198,6 +198,7 @@ describe('what the style package puts on screen', () => {
       'paper-size',
       'image-density',
       'preserve-table-styles',
+      'embed-svg',
       'cut-empty-chapters',
       'cut-empty-wi-attributes',
       'cut-urls',
@@ -216,8 +217,9 @@ describe('what the style package puts on screen', () => {
     // Switched on with the defaults still showing
     expect(sent.orientation).toBe('PORTRAIT');
     expect(sent.paperSize).toBe('A4');
-    expect(sent.imageDensity).toBe('DPI_96');
+    expect(sent.imageDensity).toBe('DPI_192');
     expect(sent.preserveTableStyles).toBe(true);
+    expect(sent.embedSvg).toBe(true);
     expect(sent.cutEmptyChapters).toBe(true);
     // The package had this one on, so a click turns it off
     expect(sent.cutEmptyWIAttributes).toBe(false);

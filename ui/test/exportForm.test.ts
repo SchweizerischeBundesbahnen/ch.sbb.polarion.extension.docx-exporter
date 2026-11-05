@@ -23,7 +23,8 @@ describe('reading a style package into the form', () => {
     expect(form.paperSizeEnabled).toBe(false);
     expect(form.paperSize).toBe('A4');
     expect(form.imageDensityEnabled).toBe(false);
-    expect(form.imageDensity).toBe('DPI_96');
+    expect(form.imageDensity).toBe('DPI_192');
+    expect(form.embedSvg).toBe(false);
     expect(form.renderCommentsEnabled).toBe(false);
     expect(form.renderComments).toBe('OPEN');
     expect(form.linkRoleDirection).toBe('BOTH');
@@ -37,6 +38,7 @@ describe('reading a style package into the form', () => {
     expect(form.paperSizeEnabled).toBe(true);
     expect(form.imageDensityEnabled).toBe(true);
     expect(form.preserveTableStyles).toBe(true);
+    expect(form.embedSvg).toBe(true);
     expect(form.renderCommentsEnabled).toBe(true);
     expect(form.specificChaptersEnabled).toBe(true);
     expect(form.specificChapters).toBe('1,2');
@@ -120,6 +122,7 @@ describe('building the export request', () => {
     expect(result.params.paperSize).toBe('A4');
     expect(result.params.imageDensity).toBe('DPI_96');
     expect(result.params.preserveTableStyles).toBe(true);
+    expect(result.params.embedSvg).toBe(true);
     expect(result.params.chapters).toEqual(['1', '2']);
     expect(result.params.removalSelector).toBe('img.decorative');
   });

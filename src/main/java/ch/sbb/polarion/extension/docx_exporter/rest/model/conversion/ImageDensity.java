@@ -15,6 +15,9 @@ public enum ImageDensity {
     DPI_300(3.125),
     DPI_600(6.25);
 
+    /** The density of a conversion that does not set one. */
+    public static final ImageDensity DEFAULT = DPI_192;
+
     private final double scale;
 
     ImageDensity(double scale) {

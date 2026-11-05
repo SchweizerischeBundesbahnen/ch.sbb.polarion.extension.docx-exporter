@@ -220,6 +220,12 @@ export default function StylePackageSettingsView({
             />
           </FieldCell>
         </SwitchRow>
+        <SwitchRow
+          id={id('embed-svg')}
+          label="Embed SVG pictures"
+          checked={form.embedSvg}
+          onChange={(checked) => onPatch({ embedSvg: checked })}
+        />
       </div>
 
       {/* How comments are rendered, and the option that goes with it - a section of its own, since that

@@ -110,12 +110,31 @@ public abstract class BasePandocTest {
         }
     }
 
+    /**
+     * Reads a reference PNG from {@code /pandoc/png/}. A reference of the architecture of the JVM, as
+     * {@code <name>.amd64.png}, goes before the common {@code <name>.png}: Java2D draws some edges with other
+     * pixels on amd64 than on aarch64.
+     */
     public static InputStream readPngResource(String resourceName) throws IOException {
-        InputStream inputStream = BasePandocTest.class.getResourceAsStream(PANDOC_TEST_PNG_RESOURCES_FOLDER + resourceName + EXT_PNG);
-        if (inputStream == null) {
-            throw new IOException("PNG resource not found: " + resourceName);
+        for (String fileName : referenceFileNames(resourceName, System.getProperty("os.arch"))) {
+            InputStream inputStream = BasePandocTest.class.getResourceAsStream(PANDOC_TEST_PNG_RESOURCES_FOLDER + fileName);
+            if (inputStream != null) {
+                return inputStream;
+            }
         }
-        return inputStream;
+        throw new IOException("PNG resource not found: " + resourceName);
+    }
+
+    static @NotNull List<String> referenceFileNames(@NotNull String resourceName, @NotNull String osArch) {
+        return List.of(resourceName + "." + architecture(osArch) + EXT_PNG, resourceName + EXT_PNG);
+    }
+
+    static @NotNull String architecture(@NotNull String osArch) {
+        return switch (osArch) {
+            case "x86_64" -> "amd64";
+            case "arm64" -> "aarch64";
+            default -> osArch;
+        };
     }
 
     protected byte[] exportToDOCX(String html, byte[] template, @NotNull PandocParams params) {
