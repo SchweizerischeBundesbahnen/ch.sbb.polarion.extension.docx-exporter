@@ -2,6 +2,8 @@ package ch.sbb.polarion.extension.docx_exporter.pandoc;
 
 import ch.sbb.polarion.extension.docx_exporter.pandoc.service.model.PandocParams;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
@@ -53,17 +55,19 @@ class SvgConversionTest extends BasePandocTest {
             </svg>
             """;
 
-    @Test
-    void inlineSvgImageIsRasterizedToPngInDocx() throws Exception {
-        byte[] docBytes = exportToDOCX(htmlWithSvgImage(SIMPLE_SVG), readTemplate("reference_template"), PandocParams.builder().build());
+    @ParameterizedTest(name = "embedSvg={0}")
+    @ValueSource(booleans = {false, true})
+    void inlineSvgImageIsRasterizedToPngInDocx(boolean embedSvg) throws Exception {
+        byte[] docBytes = exportToDOCX(htmlWithSvgImage(SIMPLE_SVG), readTemplate("reference_template"), PandocParams.builder().embedSvg(embedSvg).build());
         assertNotNull(docBytes);
-        writeReportDocx("inlineSvgImageIsRasterizedToPngInDocx_generated", docBytes);
+        writeReportDocx("inlineSvgImageIsRasterizedToPngInDocx_" + embedSvg + "_generated", docBytes);
 
-        assertSvgRasterizedToPng(docBytes);
+        assertSvgRasterizedToPng(docBytes, embedSvg);
     }
 
-    @Test
-    void drawioSvgWithForeignObjectIsRasterizedToPngInDocx() throws Exception {
+    @ParameterizedTest(name = "embedSvg={0}")
+    @ValueSource(booleans = {false, true})
+    void drawioSvgWithForeignObjectIsRasterizedToPngInDocx(boolean embedSvg) throws Exception {
         // draw.io / mxgraph SVG using <switch> + requiredFeatures="...#Extensibility" + <foreignObject>.
         // Word lands on the <text> fallback branch instead of rendering this, which is exactly the bug the
         // pandoc-service rasterization fixes; weasysvg draws the foreignObject.
@@ -80,11 +84,11 @@ class SvgConversionTest extends BasePandocTest {
                 </svg>
                 """;
 
-        byte[] docBytes = exportToDOCX(htmlWithSvgImage(svg), readTemplate("reference_template"), PandocParams.builder().build());
+        byte[] docBytes = exportToDOCX(htmlWithSvgImage(svg), readTemplate("reference_template"), PandocParams.builder().embedSvg(embedSvg).build());
         assertNotNull(docBytes);
-        writeReportDocx("drawioSvgWithForeignObjectIsRasterizedToPngInDocx_generated", docBytes);
+        writeReportDocx("drawioSvgWithForeignObjectIsRasterizedToPngInDocx_" + embedSvg + "_generated", docBytes);
 
-        assertSvgRasterizedToPng(docBytes);
+        assertSvgRasterizedToPng(docBytes, embedSvg);
     }
 
     @Test
@@ -155,8 +159,10 @@ class SvgConversionTest extends BasePandocTest {
                 + "</body></html>";
     }
 
-    private void assertSvgRasterizedToPng(byte[] docBytes) throws Exception {
+    /** The picture shows a PNG, and with {@code embedSvg} carries its flat SVG, which the checks then read. */
+    private void assertSvgRasterizedToPng(byte[] docBytes, boolean embedSvg) throws Exception {
         assertPicturesShowPng(docBytes, true);
+        assertEquals(embedSvg ? 1 : 0, svgFiles(unzip(docBytes)).size(), "The picture carries its SVG only with embedSvg");
     }
 
     /**
