@@ -26,6 +26,8 @@ public class CssProp {
     public static final String TOP = "top";
     public static final String VERTICAL_ALIGN = "vertical-align";
     public static final String VERTICAL_ALIGN_MIDDLE_VALUE = "middle";
+    public static final String WHITE_SPACE = "white-space";
+    public static final String WHITE_SPACE_NOWRAP_VALUE = "nowrap";
     public static final String WIDTH = "width";
     public static final String WIDTH_AUTO_VALUE = "auto";
 }

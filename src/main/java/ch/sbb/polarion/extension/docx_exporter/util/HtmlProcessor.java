@@ -74,6 +74,7 @@ public class HtmlProcessor {
     private static final String ANCHORS_WITH_HREF_SELECTOR = "a[href]";
     private static final String OUTLINE_NUMBER_FIELD_ID = "polarion_editor_field=outlineNumber";
     private static final String WORK_ITEM_FIELDS_START_CLASS = "polarion-dle-workitem-fields-start";
+    private static final String WORK_ITEM_FIELDS_END_CLASS = "polarion-dle-workitem-fields-end";
     private static final String WORK_ITEM_FIELDS_END_TABLE_CLASS = "polarion-dle-workitem-fields-end-table";
     private static final String WORK_ITEM_FIELDS_END_TABLE_LABEL_CLASS = "polarion-dle-workitem-fields-end-table-label";
     private static final String WORK_ITEM_FIELDS_END_TABLE_VALUE_CLASS = "polarion-dle-workitem-fields-end-table-value";
@@ -216,6 +217,10 @@ public class HtmlProcessor {
 
         // Gives Polarion's icons the alignment and gap pdf-exporter's stylesheet gives them, which pandoc never sees.
         timedIfNotNull(generationLog, "Align icons", () -> alignIcons(document));
+
+        // Keeps an enum value in the fields after a work item on one line, as pdf-exporter's stylesheet does. pandoc-service
+        // turns white-space: nowrap into non-breaking spaces, so Word does not put the label on the line after its icon.
+        timedIfNotNull(generationLog, "Keep enum values on one line", () -> keepEnumValuesOnOneLine(document));
 
         // ----
         // This sequence is important! We need first filter out Linked WorkItems and only then cut empty attributes,
@@ -1149,6 +1154,19 @@ public class HtmlProcessor {
                 CssUtils.setPropertyValue(cssStyles, CssProp.MARGIN_RIGHT, ICON_GAP);
             }
             icon.attr(HtmlTagAttr.STYLE, cssStyles.getAsCSSString());
+        }
+    }
+
+    /**
+     * Mirrors the enum value rule of pdf-exporter's dle-pdf-export.css, as inline style: pandoc reads no stylesheet.
+     * Only the fields after a work item get it. In the table of those fields a label of several words still wraps.
+     */
+    @VisibleForTesting
+    void keepEnumValuesOnOneLine(@NotNull Document document) {
+        for (Element enumValue : document.select("." + WORK_ITEM_FIELDS_END_CLASS + " ." + ENUM_OPTION_CLASS)) {
+            CSSDeclarationList cssStyles = parseCss(enumValue.attr(HtmlTagAttr.STYLE));
+            CssUtils.setPropertyValue(cssStyles, CssProp.WHITE_SPACE, CssProp.WHITE_SPACE_NOWRAP_VALUE);
+            enumValue.attr(HtmlTagAttr.STYLE, cssStyles.getAsCSSString());
         }
     }
 
