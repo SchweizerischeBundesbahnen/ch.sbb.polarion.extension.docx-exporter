@@ -9,8 +9,11 @@ import org.w3c.dom.NodeList;
 import javax.xml.parsers.DocumentBuilderFactory;
 
 import java.io.ByteArrayInputStream;
+import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.util.Base64;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -85,21 +88,58 @@ class SvgConversionTest extends BasePandocTest {
     }
 
     @Test
-    void svgIsLeftOutOfDocxByDefault() throws Exception {
-        byte[] docBytes = exportToDOCX(htmlWithSvgImage(SIMPLE_SVG), readTemplate("reference_template"), PandocParams.builder().build());
-        writeReportDocx("svgIsLeftOutOfDocxByDefault_generated", docBytes);
+    void picturesArePngOnlyByDefault() throws Exception {
+        byte[] docBytes = exportToDOCX(htmlWithPictures(), readTemplate("reference_template"), PandocParams.builder().build());
+        writeReportDocx("svgPicturesPngOnly_generated", docBytes);
 
-        assertSvgRasterizedToPng(docBytes);
-        assertEquals(List.of(), svgFiles(unzip(docBytes)), "Without embedSvg a picture is a PNG only");
+        Map<String, byte[]> entries = unzip(docBytes);
+        assertEquals(2, pngFiles(entries).size(), "Each picture is a PNG");
+        assertEquals(List.of(), svgFiles(entries), "Without embedSvg no picture carries its SVG");
+        // The PNG keeps the blurred shadows of the pictures
+        compareContentUsingReferenceImages("svgPicturesPngOnly", exportToPDF(docBytes));
     }
 
     @Test
-    void embedSvgPutsSvgNextToPng() throws Exception {
-        byte[] docBytes = exportToDOCX(htmlWithSvgImage(SIMPLE_SVG), readTemplate("reference_template"), PandocParams.builder().embedSvg(true).build());
-        writeReportDocx("embedSvgPutsSvgNextToPng_generated", docBytes);
+    void embedSvgAddsTheSvgOfEachPicture() throws Exception {
+        byte[] docBytes = exportToDOCX(htmlWithPictures(), readTemplate("reference_template"), PandocParams.builder().embedSvg(true).build());
+        writeReportDocx("svgPicturesWithSvg_generated", docBytes);
 
-        assertSvgRasterizedToPng(docBytes);
-        assertEquals(1, svgFiles(unzip(docBytes)).size(), "With embedSvg the picture carries its SVG");
+        assertPicturesShowPng(docBytes, false);
+        Map<String, byte[]> entries = unzip(docBytes);
+        assertEquals(2, pngFiles(entries).size(), "Each picture keeps its PNG");
+        assertEquals(2, svgFiles(entries).size(), "Each picture carries its SVG");
+        // The flattened SVG has no blur: the shadows turn into rings
+        compareContentUsingReferenceImages("svgPicturesWithSvg", exportToPDF(docBytes));
+    }
+
+    /** Tux and the OpenStreetMap logo, as docx-exporter inlines them. Both blur their shadows. */
+    private static String htmlWithPictures() throws IOException {
+        return "<html><head><title>SVG Pictures</title></head><body>"
+                + "<p>Tux and the OpenStreetMap logo:</p>"
+                + "<p>" + picture("tux", 216, 256) + " " + picture("openstreetmap", 256, 256) + "</p>"
+                + "</body></html>";
+    }
+
+    private static String picture(String name, int width, int height) throws IOException {
+        try (InputStream svg = SvgConversionTest.class.getResourceAsStream("/pandoc/svg/pictures/" + name + ".svg")) {
+            assertNotNull(svg, name + ".svg should be a test resource");
+            String dataUrl = "data:image/svg+xml;base64," + Base64.getEncoder().encodeToString(svg.readAllBytes());
+            return "<img src=\"" + dataUrl + "\" style=\"width: " + width + "px; height: " + height + "px;\" />";
+        }
+    }
+
+    private byte[] exportToPDF(byte[] docx) throws IOException {
+        File file = getTestFile();
+        try {
+            Files.write(file.toPath(), docx);
+            return exportToPDF(file);
+        } finally {
+            Files.delete(file.toPath());
+        }
+    }
+
+    private static List<String> pngFiles(Map<String, byte[]> entries) {
+        return entries.keySet().stream().filter(name -> name.startsWith("word/media/") && name.toLowerCase().endsWith(".png")).toList();
     }
 
     private static List<String> svgFiles(Map<String, byte[]> entries) {
@@ -116,6 +156,14 @@ class SvgConversionTest extends BasePandocTest {
     }
 
     private void assertSvgRasterizedToPng(byte[] docBytes) throws Exception {
+        assertPicturesShowPng(docBytes, true);
+    }
+
+    /**
+     * Each picture shows a PNG, and each SVG in {@code word/media/} is the svgBlip of a picture. A flat SVG holds only
+     * what Word draws: no foreignObject, filter or mask.
+     */
+    private void assertPicturesShowPng(byte[] docBytes, boolean flat) throws Exception {
         Map<String, byte[]> entries = unzip(docBytes);
         Map<String, String> targets = relationshipTargets(entries.get("word/_rels/document.xml.rels"));
         byte[] documentXml = entries.get("word/document.xml");
@@ -135,8 +183,10 @@ class SvgConversionTest extends BasePandocTest {
                 assertTrue(svgPart.toLowerCase().endsWith(".svg") && entries.containsKey(svgPart), "An svgBlip names an SVG part, found: " + svgPart);
                 String svg = new String(entries.get(svgPart), StandardCharsets.UTF_8);
                 assertFalse(svg.contains("foreignObject"), svgPart + " should not contain a foreignObject");
-                assertFalse(svg.contains("filter="), svgPart + " should not contain a filter");
-                assertFalse(svg.contains("<mask"), svgPart + " should not contain a mask");
+                if (flat) {
+                    assertFalse(svg.contains("filter="), svgPart + " should not contain a filter");
+                    assertFalse(svg.contains("<mask"), svgPart + " should not contain a mask");
+                }
                 svgParts.add(svgPart);
             }
         }
