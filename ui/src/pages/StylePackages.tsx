@@ -221,6 +221,7 @@ export default function StylePackages() {
       paperSize: form.paperSizeEnabled ? form.paperSize : null,
       imageDensity: form.imageDensityEnabled ? form.imageDensity : null,
       preserveTableStyles: form.preserveTableStyles,
+      embedSvg: form.embedSvg,
       webhooks: form.webhooksEnabled ? childValue('webhooks', form.webhooks) : null,
       renderComments: form.renderCommentsEnabled ? form.renderComments : null,
       includeUnreferencedComments: form.renderCommentsEnabled && form.includeUnreferencedComments,

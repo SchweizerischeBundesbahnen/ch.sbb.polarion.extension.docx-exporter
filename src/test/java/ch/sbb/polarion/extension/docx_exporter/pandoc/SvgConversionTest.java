@@ -43,16 +43,16 @@ class SvgConversionTest extends BasePandocTest {
     private static final String RELATIONSHIPS_NS = "http://schemas.openxmlformats.org/officeDocument/2006/relationships";
     private static final String PACKAGE_RELATIONSHIPS_NS = "http://schemas.openxmlformats.org/package/2006/relationships";
 
+    private static final String SIMPLE_SVG = """
+            <svg xmlns="http://www.w3.org/2000/svg" width="120" height="60" viewBox="0 0 120 60">
+              <rect x="0" y="0" width="120" height="60" fill="#e0f0ff" stroke="#0066cc" stroke-width="2"/>
+              <text x="60" y="35" font-family="sans-serif" font-size="14" text-anchor="middle" fill="#003366">Hello SVG</text>
+            </svg>
+            """;
+
     @Test
     void inlineSvgImageIsRasterizedToPngInDocx() throws Exception {
-        String svg = """
-                <svg xmlns="http://www.w3.org/2000/svg" width="120" height="60" viewBox="0 0 120 60">
-                  <rect x="0" y="0" width="120" height="60" fill="#e0f0ff" stroke="#0066cc" stroke-width="2"/>
-                  <text x="60" y="35" font-family="sans-serif" font-size="14" text-anchor="middle" fill="#003366">Hello SVG</text>
-                </svg>
-                """;
-
-        byte[] docBytes = exportToDOCX(htmlWithSvgImage(svg), readTemplate("reference_template"), PandocParams.builder().build());
+        byte[] docBytes = exportToDOCX(htmlWithSvgImage(SIMPLE_SVG), readTemplate("reference_template"), PandocParams.builder().build());
         assertNotNull(docBytes);
         writeReportDocx("inlineSvgImageIsRasterizedToPngInDocx_generated", docBytes);
 
@@ -82,6 +82,28 @@ class SvgConversionTest extends BasePandocTest {
         writeReportDocx("drawioSvgWithForeignObjectIsRasterizedToPngInDocx_generated", docBytes);
 
         assertSvgRasterizedToPng(docBytes);
+    }
+
+    @Test
+    void svgIsLeftOutOfDocxByDefault() throws Exception {
+        byte[] docBytes = exportToDOCX(htmlWithSvgImage(SIMPLE_SVG), readTemplate("reference_template"), PandocParams.builder().build());
+        writeReportDocx("svgIsLeftOutOfDocxByDefault_generated", docBytes);
+
+        assertSvgRasterizedToPng(docBytes);
+        assertEquals(List.of(), svgFiles(unzip(docBytes)), "Without embedSvg a picture is a PNG only");
+    }
+
+    @Test
+    void embedSvgPutsSvgNextToPng() throws Exception {
+        byte[] docBytes = exportToDOCX(htmlWithSvgImage(SIMPLE_SVG), readTemplate("reference_template"), PandocParams.builder().embedSvg(true).build());
+        writeReportDocx("embedSvgPutsSvgNextToPng_generated", docBytes);
+
+        assertSvgRasterizedToPng(docBytes);
+        assertEquals(1, svgFiles(unzip(docBytes)).size(), "With embedSvg the picture carries its SVG");
+    }
+
+    private static List<String> svgFiles(Map<String, byte[]> entries) {
+        return entries.keySet().stream().filter(name -> name.startsWith("word/media/") && name.toLowerCase().endsWith(".svg")).toList();
     }
 
     private static String htmlWithSvgImage(String svg) {
@@ -118,8 +140,7 @@ class SvgConversionTest extends BasePandocTest {
                 svgParts.add(svgPart);
             }
         }
-        List<String> svgFiles = entries.keySet().stream().filter(name -> name.startsWith("word/media/") && name.toLowerCase().endsWith(".svg")).toList();
-        assertEquals(Set.copyOf(svgFiles), svgParts, "Every SVG in word/media/ is the svgBlip of a picture");
+        assertEquals(Set.copyOf(svgFiles(entries)), svgParts, "Every SVG in word/media/ is the svgBlip of a picture");
     }
 
     private static Map<String, String> relationshipTargets(byte[] rels) throws Exception {

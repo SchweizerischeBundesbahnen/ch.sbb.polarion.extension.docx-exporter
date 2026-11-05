@@ -24,6 +24,7 @@ export interface ExportParamsJson {
   paperSize?: string | null;
   imageDensity?: string | null;
   preserveTableStyles?: boolean;
+  embedSvg?: boolean;
   renderComments?: string | null;
   includeUnreferencedComments?: boolean;
   cutEmptyChapters?: boolean;
@@ -90,6 +91,7 @@ export function buildExportParams(form: ExportForm, context: DocumentContext, fi
       paperSize: form.paperSizeEnabled ? form.paperSize : null,
       imageDensity: form.imageDensityEnabled ? form.imageDensity : null,
       preserveTableStyles: form.preserveTableStyles,
+      embedSvg: form.embedSvg,
       renderComments: form.renderCommentsEnabled ? form.renderComments : null,
       includeUnreferencedComments: form.renderCommentsEnabled && form.includeUnreferencedComments,
       cutEmptyChapters: form.cutEmptyChapters,

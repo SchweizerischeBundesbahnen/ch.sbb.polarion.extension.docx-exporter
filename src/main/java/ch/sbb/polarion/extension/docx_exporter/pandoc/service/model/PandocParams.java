@@ -10,6 +10,7 @@ import lombok.NoArgsConstructor;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 @Data
@@ -24,13 +25,16 @@ public class PandocParams {
     private String paperSize;
     private ImageDensity imageDensity;
     private boolean preserveTableStyles;
+    private boolean embedSvg;
 
     public String toUrlParams() {
         Map<String, String> values = new LinkedHashMap<>();
         values.put("orientation", StringUtils.getEmptyIfNull(orientation));
         values.put("paper_size", StringUtils.getEmptyIfNull(paperSize));
         // pandoc-service expects the device scale factor (same contract as weasyprint-service)
-        values.put("scale_factor", imageDensity == null ? "" : String.valueOf(imageDensity.getScale()));
+        values.put("scale_factor", String.valueOf(Objects.requireNonNullElse(imageDensity, ImageDensity.DEFAULT).getScale()));
+        // pandoc-service embeds an SVG next to its PNG unless told otherwise; Word cannot draw every SVG well
+        values.put("svg_in_docx", String.valueOf(embedSvg));
         String params = values.entrySet().stream()
                 .filter(entry -> !StringUtils.isEmpty(entry.getValue()))
                 .map(entry -> entry.getKey() + "=" + entry.getValue())

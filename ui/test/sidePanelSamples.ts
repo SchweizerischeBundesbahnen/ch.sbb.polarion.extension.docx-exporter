@@ -70,6 +70,7 @@ export const SAMPLE_STYLE_PACKAGE_FULL: StylePackageSettings = {
   paperSize: 'A4',
   imageDensity: 'DPI_96',
   preserveTableStyles: true,
+  embedSvg: true,
   renderComments: 'OPEN',
   includeUnreferencedComments: true,
   cutEmptyChapters: true,

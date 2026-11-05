@@ -39,11 +39,14 @@ public class ExportParams {
     @Schema(description = "Paper size")
     private String paperSize;
 
-    @Schema(description = "Quality of PNG images converted from SVG, by default 96 dpi")
+    @Schema(description = "Quality of PNG images converted from SVG, by default 192 dpi")
     private String imageDensity;
 
     @Schema(description = "Preserve CSS table cell styles (background-color, borders) in DOCX output")
     private boolean preserveTableStyles;
+
+    @Schema(description = "Embed each SVG picture in the DOCX next to its PNG, so that Word draws the SVG")
+    private boolean embedSvg;
 
     @Schema(description = "Webhooks settings name")
     private String webhooks;
