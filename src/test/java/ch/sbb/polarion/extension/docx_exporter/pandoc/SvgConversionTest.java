@@ -30,10 +30,10 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * Verifies that pandoc-service turns the SVG images embedded in the HTML into pictures Word draws.
  * <p>
  * docx-exporter inlines every image as {@code <img src="data:image/svg+xml;base64,...">}; Word cannot draw draw.io's
- * {@code <foreignObject>} SVGs. With either SVG renderer of pandoc-service the picture is a PNG in {@code word/media/}
- * referenced by {@code <a:blip>}. Chromium leaves it at that. weasysvg adds the SVG flattened to paths, clips and
- * gradients as the {@code svgBlip} extension of the picture, as Word saves an SVG: no {@code foreignObject}, filter
- * or mask is left in it.
+ * {@code <foreignObject>} SVGs. pandoc-service draws the picture with weasysvg as a PNG in {@code word/media/}
+ * referenced by {@code <a:blip>}. On request it adds the SVG flattened to paths, clips and gradients as the
+ * {@code svgBlip} extension of the picture, as Word saves an SVG: no {@code foreignObject}, filter or mask is left
+ * in it.
  */
 @SkipTestWhenParamNotSet
 class SvgConversionTest extends BasePandocTest {
@@ -63,7 +63,7 @@ class SvgConversionTest extends BasePandocTest {
     void drawioSvgWithForeignObjectIsRasterizedToPngInDocx() throws Exception {
         // draw.io / mxgraph SVG using <switch> + requiredFeatures="...#Extensibility" + <foreignObject>.
         // Word lands on the <text> fallback branch instead of rendering this, which is exactly the bug the
-        // pandoc-service rasterization fixes; Chromium and weasysvg both draw the foreignObject.
+        // pandoc-service rasterization fixes; weasysvg draws the foreignObject.
         String svg = """
                 <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="160" height="80" viewBox="-0.5 -0.5 160 80">
                   <g>
