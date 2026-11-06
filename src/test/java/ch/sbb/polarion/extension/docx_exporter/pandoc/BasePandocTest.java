@@ -110,13 +110,17 @@ public abstract class BasePandocTest {
         }
     }
 
+    public static InputStream readPngResource(String resourceName) throws IOException {
+        return readPngResource(resourceName, System.getProperty("os.arch"));
+    }
+
     /**
-     * Reads a reference PNG from {@code /pandoc/png/}. A reference of the architecture of the JVM, as
+     * Reads a reference PNG from {@code /pandoc/png/}. A reference of the architecture that renders the pages, as
      * {@code <name>.amd64.png}, goes before the common {@code <name>.png}: Java2D draws some edges with other
      * pixels on amd64 than on aarch64.
      */
-    public static InputStream readPngResource(String resourceName) throws IOException {
-        for (String fileName : referenceFileNames(resourceName, System.getProperty("os.arch"))) {
+    public static InputStream readPngResource(String resourceName, String osArch) throws IOException {
+        for (String fileName : referenceFileNames(resourceName, osArch)) {
             InputStream inputStream = BasePandocTest.class.getResourceAsStream(PANDOC_TEST_PNG_RESOURCES_FOLDER + fileName);
             if (inputStream != null) {
                 return inputStream;
@@ -152,13 +156,24 @@ public abstract class BasePandocTest {
     protected List<BufferedImage> getAllPagesAsImagesAndLogAsReports(@NotNull String fileName, byte[] pdfBytes) throws IOException {
         List<BufferedImage> result = new ArrayList<>();
         try (PDDocument doc = Loader.loadPDF(pdfBytes)) {
+            List<BufferedImage> images = PageRendererContainer.isAvailable()
+                    ? PageRendererContainer.renderPages(pdfBytes, doc.getNumberOfPages(), MediaUtils.PDF_TO_PNG_DPI)
+                    : null;
             for (int i = 0; i < doc.getNumberOfPages(); i++) {
-                BufferedImage image = MediaUtils.pdfPageToImage(doc, i);
+                BufferedImage image = images != null ? images.get(i) : MediaUtils.pdfPageToImage(doc, i);
                 writeReportImage(String.format("%s%s%d", fileName, PAGE_SUFFIX, i), image); //write each page image to reports folder
                 result.add(image);
             }
             return result;
         }
+    }
+
+    /**
+     * The architecture of the JVM that renders the pages: the one of {@link PageRendererContainer}, or of the host without it.
+     */
+    static @NotNull String renderingArchitecture() {
+        String containerArchitecture = PageRendererContainer.getArchitecture();
+        return containerArchitecture != null ? containerArchitecture : System.getProperty("os.arch");
     }
 
     protected void writeReportImage(String resourceName, BufferedImage image) throws IOException {
@@ -192,7 +207,7 @@ public abstract class BasePandocTest {
         List<BufferedImage> resultImages = getAllPagesAsImagesAndLogAsReports(testName, pdf);
         boolean hasDiff = false;
         for (int i = 0; i < resultImages.size(); i++) {
-            try (InputStream inputStream = readPngResource(testName + PAGE_SUFFIX + i)) {
+            try (InputStream inputStream = readPngResource(testName + PAGE_SUFFIX + i, renderingArchitecture())) {
                 BufferedImage expectedImage = ImageIO.read(inputStream);
                 BufferedImage resultImage = resultImages.get(i);
                 List<Point> diffPoints = MediaUtils.diffImages(expectedImage, resultImage);
