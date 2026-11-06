@@ -135,13 +135,26 @@ Java2D draws some edges with other pixels on amd64 than on aarch64.
 A test then takes `<name>.amd64.png` before the common `<name>.png`.
 The common references come from an arm64 Mac, the `.amd64.png` ones from the amd64 runners of CI.
 
+The OS and the JDK move pixels too, so a run on the host can fail on Windows.
+The profile `tests-with-pandoc-in-container` renders the pages in the image `pandoc-tests.image` of `pom.xml`, as CI does:
+
+```bash
+mvn verify -P tests-with-pandoc-in-container
+```
+
+1. Start pandoc-service with its port published on 9082, or pass `-Dpandoc-tests.service.url=<url>` as the container sees it.
+2. Name one test with `-Dtest=<class>#<method>`. The host runs the unit tests, the container the tests of the service.
+
+On an arm64 Mac the container runs as `linux/arm64`.
+Make a new common reference in that container, not on the host.
+
 To check the amd64 references on a Mac:
 
 1. Build and run the tests once on the Mac: `mvn test -P tests-with-pandoc-docker -Dpandoc.service.url=<url>`.
 2. Run the conversion tests again in an amd64 container:
 
    ```bash
-   docker run --rm --platform linux/amd64 -v "$PWD":/w -v ~/.m2:/root/.m2 -w /w maven:3.9-eclipse-temurin-21 \
+   docker run --rm --platform linux/amd64 -v "$PWD":/w -v ~/.m2:/root/.m2 -w /w <pandoc-tests.image of pom.xml> \
      mvn -o -B -Daether.enhancedLocalRepository.trackingFilename=none -P tests-with-pandoc-docker \
      surefire:test@service-tests -Dpandoc.service.url=http://host.docker.internal:<port>
    ```

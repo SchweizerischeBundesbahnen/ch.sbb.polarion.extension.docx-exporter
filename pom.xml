@@ -97,6 +97,11 @@
         <apache-poi.version>6.0.0</apache-poi.version>
         <!-- How many test classes run at once with pandoc -->
         <tests.parallelism>4</tests.parallelism>
+
+        <exec-maven-plugin.version>3.6.2</exec-maven-plugin.version>
+        <!-- The JVM that renders the PDF pages of the pandoc tests into PNGs: Java2D draws some edges with other pixels
+             on another OS or JDK, so the reference images hold only for this image. Pinned by digest, updated by Renovate. -->
+        <pandoc-tests.image>maven:3.10.0-eclipse-temurin-21@sha256:9673eef9ed503146591667ffb92eaaa22f1b8899ed60d9df0df4da3f3a1214a6</pandoc-tests.image>
     </properties>
 
     <profiles>
@@ -146,6 +151,75 @@
                                             junit.jupiter.execution.parallel.config.fixed.parallelism = ${tests.parallelism}
                                         </configurationParameters>
                                     </properties>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+        <profile>
+            <!-- The tests of tests-with-pandoc-docker, with the tests of the service in a container of ${pandoc-tests.image}:
+                 mvn verify -P tests-with-pandoc-in-container. The unit tests run on the host. The container runs Maven offline
+                 on the classes and the local repository of the host, so the host build resolves all it needs first. -->
+            <id>tests-with-pandoc-in-container</id>
+
+            <properties>
+                <excludedGroups>performance,service</excludedGroups>
+                <!-- -Dtest names a test of the service, which the unit tests on the host do not hold -->
+                <surefire.failIfNoSpecifiedTests>false</surefire.failIfNoSpecifiedTests>
+                <test/>
+                <!-- The published port of pandoc-service, as the container sees the host -->
+                <pandoc-tests.service.url>http://host.docker.internal:9082</pandoc-tests.service.url>
+                <!-- CI passes $(id -u):$(id -g): files the container writes into target/ as root, a later step cannot delete -->
+                <pandoc-tests.docker.user>0:0</pandoc-tests.docker.user>
+            </properties>
+
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.codehaus.mojo</groupId>
+                        <artifactId>exec-maven-plugin</artifactId>
+                        <version>${exec-maven-plugin.version}</version>
+                        <executions>
+                            <execution>
+                                <id>pandoc-tests-in-container</id>
+                                <phase>test</phase>
+                                <goals>
+                                    <goal>exec</goal>
+                                </goals>
+                                <configuration>
+                                    <skip>${skipTests}</skip>
+                                    <executable>docker</executable>
+                                    <arguments>
+                                        <argument>run</argument>
+                                        <argument>--rm</argument>
+                                        <!-- Docker Desktop knows host.docker.internal, a Linux host such as CI only with this -->
+                                        <argument>--add-host=host.docker.internal:host-gateway</argument>
+                                        <argument>--user=${pandoc-tests.docker.user}</argument>
+                                        <argument>--env=HOME=/tmp</argument>
+                                        <argument>--volume=${project.basedir}:/work</argument>
+                                        <argument>--volume=${settings.localRepository}:/m2</argument>
+                                        <argument>--workdir=/work</argument>
+                                        <!-- The entrypoint of the image copies settings into /root/.m2, which a user other than root cannot write -->
+                                        <argument>--entrypoint=mvn</argument>
+                                        <argument>${pandoc-tests.image}</argument>
+                                        <argument>--offline</argument>
+                                        <argument>--batch-mode</argument>
+                                        <argument>-Dmaven.repo.local=/m2</argument>
+                                        <!-- Without -s .mvn/settings.xml the container knows no jfrog_io: an artifact that
+                                             _remote.repositories ties to it would count as missing -->
+                                        <argument>-Daether.enhancedLocalRepository.trackingFilename=none</argument>
+                                        <argument>-P</argument>
+                                        <argument>tests-with-pandoc-docker</argument>
+                                        <argument>-Dpandoc.service.url=${pandoc-tests.service.url}</argument>
+                                        <argument>-Dtests.parallelism=${tests.parallelism}</argument>
+                                        <argument>-Dtest=${test}</argument>
+                                        <argument>-Dsurefire.failIfNoSpecifiedTests=false</argument>
+                                        <!-- prepare-agent appends the coverage of these tests to target/jacoco.exec, which the host reports -->
+                                        <argument>jacoco:prepare-agent</argument>
+                                        <argument>surefire:test@service-tests</argument>
+                                    </arguments>
                                 </configuration>
                             </execution>
                         </executions>

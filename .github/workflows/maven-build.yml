@@ -27,7 +27,7 @@ jobs:
       IO_JFROG_SBB_POLARION_TOKEN: ${{ secrets.IO_JFROG_SBB_POLARION_TOKEN }}
       SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
       GITHUB_TOKEN: ${{ github.token }}  # Providing this prevents reaching the GitHub request limits
-      PANDOC_SERVICE_URL: http://localhost:9082
+      PANDOC_SERVICE_URL: http://host.docker.internal:9082  # the published port, as the container of the pandoc tests sees the runner
     steps:
       - name: 📄 Checkout the repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7
@@ -74,7 +74,7 @@ jobs:
               SONAR_ARGS+=("-Dsonar.branch.name=${BRANCH_NAME}")
             fi
           fi
-          mvn --batch-mode -s "${SETTINGS_XML}" clean verify -P tests-with-pandoc-docker -Dpandoc.service.url="${PANDOC_SERVICE_URL}" "${SONAR_ARGS[@]}"
+          mvn --batch-mode -s "${SETTINGS_XML}" clean verify -P tests-with-pandoc-in-container -Dpandoc-tests.service.url="${PANDOC_SERVICE_URL}" -Dpandoc-tests.docker.user="$(id -u):$(id -g)" "${SONAR_ARGS[@]}"
       - name: 📦 Build with Maven for PRs
         if: github.event_name == 'pull_request'
         env:
@@ -88,7 +88,7 @@ jobs:
           if [ "${IS_PUBLIC}" = "true" ] && [ "${IS_TEMPLATE}" != "true" ]; then
             SONAR_ARGS+=(sonar:sonar "-Dsonar.pullrequest.base=${GITHUB_BASE_REF}" "-Dsonar.pullrequest.branch=${GITHUB_HEAD_REF}" "-Dsonar.pullrequest.key=${GITHUB_PR_NUMBER_REF}" "-Dsonar.exclusions=.github/**")
           fi
-          mvn --batch-mode -s "${SETTINGS_XML}" clean verify -P tests-with-pandoc-docker -Dpandoc.service.url="${PANDOC_SERVICE_URL}" "${SONAR_ARGS[@]}"
+          mvn --batch-mode -s "${SETTINGS_XML}" clean verify -P tests-with-pandoc-in-container -Dpandoc-tests.service.url="${PANDOC_SERVICE_URL}" -Dpandoc-tests.docker.user="$(id -u):$(id -g)" "${SONAR_ARGS[@]}"
       - name: 📤 Upload test reports
         # the pages and diffs of a failed reference image comparison
         if: failure()
