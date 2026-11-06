@@ -39,18 +39,19 @@ public final class PageRendererContainer {
     private PageRendererContainer() {
     }
 
-    private static class ContainerHolder {
-        private static final @Nullable GenericContainer<?> INSTANCE = startContainer();
-        private static final @Nullable String ARCHITECTURE = INSTANCE != null ? readArchitecture(INSTANCE) : null;
+    private record Renderer(@NotNull GenericContainer<?> container, @NotNull String architecture) {
+    }
 
-        @SuppressWarnings("resource") // stopped by Testcontainers when the JVM exits
-        private static @Nullable GenericContainer<?> startContainer() {
+    private static class ContainerHolder {
+        private static final @Nullable Renderer INSTANCE = startRenderer();
+
+        private static @Nullable Renderer startRenderer() {
             if (!DockerClientFactory.instance().isDockerAvailable()) {
                 logger.warn("Docker is not available: the PDF pages are rendered on the host, and the reference images can differ in pixels");
                 return null;
             }
+            GenericContainer<?> container = new GenericContainer<>(DOCKER_IMAGE_NAME).withCommand("sleep", "infinity");
             try {
-                GenericContainer<?> container = new GenericContainer<>(DOCKER_IMAGE_NAME).withCommand("sleep", "infinity");
                 for (String pdfboxClass : PDFBOX_JAR_CLASSES) {
                     Path jar = codeSource(Class.forName(pdfboxClass));
                     container.withCopyFileToContainer(MountableFile.forHostPath(jar), LIB_FOLDER + jar.getFileName());
@@ -58,22 +59,21 @@ public final class PageRendererContainer {
                 String rendererClassFile = PdfPageRenderer.class.getName().replace('.', '/') + ".class";
                 container.withCopyFileToContainer(MountableFile.forHostPath(codeSource(PdfPageRenderer.class).resolve(rendererClassFile)), CLASSES_FOLDER + rendererClassFile);
                 container.start();
-                logger.info("Page renderer container started from {}", DOCKER_IMAGE_NAME);
-                return container;
+                // Read here: a failure in a static initializer would fail every later test instead of falling back to the host
+                Container.ExecResult uname = container.execInContainer("uname", "-m");
+                String architecture = uname.getStdout().trim();
+                if (uname.getExitCode() != 0 || architecture.isEmpty()) {
+                    throw new IOException("uname -m failed: " + uname.getStderr());
+                }
+                logger.info("Page renderer container started from {} on {}", DOCKER_IMAGE_NAME, architecture);
+                return new Renderer(container, architecture);
             } catch (Exception e) {
+                if (e instanceof InterruptedException) {
+                    Thread.currentThread().interrupt();
+                }
                 logger.warn("The page renderer container did not start: the PDF pages are rendered on the host, and the reference images can differ in pixels", e);
+                container.stop();
                 return null;
-            }
-        }
-
-        private static @Nullable String readArchitecture(@NotNull GenericContainer<?> container) {
-            try {
-                return container.execInContainer("uname", "-m").getStdout().trim();
-            } catch (IOException e) {
-                throw new IllegalStateException(e);
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-                throw new IllegalStateException(e);
             }
         }
 
@@ -90,17 +90,19 @@ public final class PageRendererContainer {
      * The architecture the container runs on, as {@code uname -m} reports it, or {@code null} without the container.
      */
     public static @Nullable String getArchitecture() {
-        return ContainerHolder.ARCHITECTURE;
+        Renderer renderer = ContainerHolder.INSTANCE;
+        return renderer != null ? renderer.architecture() : null;
     }
 
     public static @NotNull List<BufferedImage> renderPages(byte @NotNull [] pdf, int pageCount, float dpi) throws IOException {
-        GenericContainer<?> container = ContainerHolder.INSTANCE;
-        if (container == null) {
+        Renderer renderer = ContainerHolder.INSTANCE;
+        if (renderer == null) {
             throw new IllegalStateException("The page renderer container is not available");
         }
+        GenericContainer<?> container = renderer.container();
         String name = WORK_FOLDER + UUID.randomUUID();
-        container.copyFileToContainer(Transferable.of(pdf), name + ".pdf");
         try {
+            container.copyFileToContainer(Transferable.of(pdf), name + ".pdf");
             Container.ExecResult result = container.execInContainer("java", "-Djava.awt.headless=true", "-cp", LIB_FOLDER + "*:" + CLASSES_FOLDER,
                     PdfPageRenderer.class.getName(), name + ".pdf", name + "_", String.valueOf(dpi));
             if (result.getExitCode() != 0) {
@@ -110,11 +112,23 @@ public final class PageRendererContainer {
             for (int page = 0; page < pageCount; page++) {
                 images.add(container.copyFileFromContainer(name + "_" + page + ".png", ImageIO::read));
             }
-            container.execInContainer("sh", "-c", "rm -f " + name + "*");
             return images;
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             throw new IOException(e);
+        } finally {
+            removeFiles(container, name);
+        }
+    }
+
+    /** Leaves the error of the render, if there is one, to the caller. */
+    private static void removeFiles(@NotNull GenericContainer<?> container, @NotNull String name) {
+        try {
+            container.execInContainer("sh", "-c", "rm -f " + name + "*");
+        } catch (IOException e) {
+            logger.warn("Could not remove {}* from the page renderer container", name, e);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
         }
     }
 }
