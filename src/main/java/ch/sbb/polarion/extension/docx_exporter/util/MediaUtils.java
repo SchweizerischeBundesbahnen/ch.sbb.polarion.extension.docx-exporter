@@ -124,7 +124,7 @@ public class MediaUtils {
     public static final String BLOCKED_RESOURCE_PLACEHOLDER =
             "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAC0lEQVR42mNgAAIAAAUAAen63NgAAAAASUVORK5CYII=";
     private static final Logger logger = Logger.getLogger(MediaUtils.class);
-    private static final int PDF_TO_PNG_DPI = 300;
+    public static final int PDF_TO_PNG_DPI = 300;
     private static final String IMG_FORMAT_PNG = "png";
 
     private static final Map<String, String> CUSTOM_MIME_TYPES_MAP = Map.of(

@@ -128,6 +128,32 @@ Docker-less run of the behavior tests:
 mvn clean install -DjsTestsNoDocker -DinstallPlaywrightNoDeps -DskipVisualJsTests
 ```
 
+### Reference Images
+
+The conversion tests compare each PDF page with a PNG in `src/test/resources/pandoc/png/`.
+Java2D draws some edges with other pixels on amd64 than on aarch64.
+A test then takes `<name>.amd64.png` before the common `<name>.png`.
+The common references come from an arm64 Mac, the `.amd64.png` ones from the amd64 runners of CI.
+
+The OS and the JDK move pixels too.
+So the tests render the pages in a container of `PageRendererContainer.DOCKER_IMAGE_NAME`, started by Testcontainers.
+Without Docker they render on the host, log a warning, and can fail on pixels alone.
+On an arm64 Mac the container runs as `linux/arm64`: make a new common reference there, not on the host.
+
+To check the amd64 references on a Mac:
+
+1. Build and run the tests once on the Mac: `mvn test -P tests-with-pandoc-docker -Dpandoc.service.url=<url>`.
+2. Run the conversion tests again in an amd64 container:
+
+   ```bash
+   docker run --rm --platform linux/amd64 -v "$PWD":/w -v ~/.m2:/root/.m2 -w /w maven:3.9-eclipse-temurin-21 \
+     mvn -o -B -Daether.enhancedLocalRepository.trackingFilename=none -P tests-with-pandoc-docker \
+     surefire:test@service-tests -Dpandoc.service.url=http://host.docker.internal:<port>
+   ```
+
+   The container has no Docker, so the pages render in its own amd64 JVM.
+3. Take a new page from `target/surefire-reports/`. A failed build of CI uploads it as the artifact `test-reports`.
+
 ### Performance Tests
 
 The performance tests export documents of a known shape and fail when an export takes far longer than it does today.

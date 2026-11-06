@@ -18,6 +18,7 @@ export interface StylePackageSettings {
   paperSize?: string | null;
   imageDensity?: string | null;
   preserveTableStyles?: boolean;
+  embedSvg?: boolean;
   webhooks?: string | null;
   removalSelector?: string | null;
   renderComments?: string | null;
@@ -88,7 +89,7 @@ export const LANGUAGES: SelectOption[] = [
 /** What a control falls back to when the stored document leaves it off. */
 export const DEFAULT_ORIENTATION = 'PORTRAIT';
 export const DEFAULT_PAPER_SIZE = 'A4';
-export const DEFAULT_IMAGE_DENSITY = 'DPI_96';
+export const DEFAULT_IMAGE_DENSITY = 'DPI_192';
 export const DEFAULT_RENDER_COMMENTS = 'OPEN';
 export const DEFAULT_LINK_ROLE_DIRECTION = 'BOTH';
 export const DEFAULT_LANGUAGE = 'de';

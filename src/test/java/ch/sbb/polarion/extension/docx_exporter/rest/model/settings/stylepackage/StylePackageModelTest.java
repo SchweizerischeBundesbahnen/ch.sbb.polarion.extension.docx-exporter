@@ -1,5 +1,6 @@
 package ch.sbb.polarion.extension.docx_exporter.rest.model.settings.stylepackage;
 
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -8,6 +9,8 @@ import java.util.stream.Stream;
 
 import static ch.sbb.polarion.extension.generic.settings.NamedSettings.DEFAULT_NAME;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class StylePackageModelTest {
 
@@ -39,6 +42,26 @@ class StylePackageModelTest {
 
         assertEquals(packageName, model.getName());
         assertEquals(expectedWeight, model.getWeight());
+    }
+
+    @Test
+    void keepsEmbedSvg() {
+        StylePackageModel model = new StylePackageModel();
+        model.setEmbedSvg(true);
+        StylePackageModel restored = new StylePackageModel();
+
+        restored.deserialize(model.serialize());
+
+        assertTrue(restored.isEmbedSvg());
+    }
+
+    @Test
+    void leavesSvgOutOfAPackageSavedBeforeTheOption() {
+        StylePackageModel model = new StylePackageModel();
+
+        model.deserialize(entry("NAME", CUSTOM_NAME));
+
+        assertFalse(model.isEmbedSvg());
     }
 
     private static String entry(String entryName, String value) {

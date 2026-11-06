@@ -31,6 +31,7 @@ const STORED = {
   paperSize: 'A3',
   imageDensity: 'DPI_300',
   preserveTableStyles: true,
+  embedSvg: true,
   webhooks: 'Rewriter',
   removalSelector: 'img.decoration',
   renderComments: 'ALL',
@@ -144,6 +145,7 @@ describe('Style Packages page', () => {
     expect(input('image-density').checked).toBe(true);
     expect(select('image-density-selector')!.value).toBe('DPI_300');
     expect(input('preserve-table-styles').checked).toBe(true);
+    expect(input('embed-svg').checked).toBe(true);
     expect(input('webhooks-checkbox').checked).toBe(true);
     expect(input('render-comments').checked).toBe(true);
     expect(select('render-comments-selector')!.value).toBe('ALL');
@@ -241,6 +243,7 @@ describe('Style Packages page', () => {
       'orientation',
       'image-density',
       'preserve-table-styles',
+      'embed-svg',
       'render-comments',
       'selected-roles',
       'specific-chapters',

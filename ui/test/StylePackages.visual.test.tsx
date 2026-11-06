@@ -24,6 +24,7 @@ const STORED = {
   paperSize: 'A3',
   imageDensity: 'DPI_300',
   preserveTableStyles: true,
+  embedSvg: true,
   webhooks: 'Rewriter',
   removalSelector: 'img.decoration',
   renderComments: 'ALL',
