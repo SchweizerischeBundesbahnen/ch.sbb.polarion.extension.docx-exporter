@@ -19,7 +19,6 @@ import static ch.sbb.polarion.extension.docx_exporter.pandoc.DocxStructureInspec
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.junit.jupiter.api.Assumptions.assumeFalse;
 import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.eq;
 
@@ -97,8 +96,6 @@ class TableColumnWidthsTest extends BaseDocxConverterTest {
         // Every cell is pinned in dxa to the columns it spans, a spanning header cell to the sum of them
         tables.forEach(table -> assertEquals(table.spannedGridWidths(), table.cells(), table.toString()));
 
-        // pandoc-service 2.15.0 fails on the nested table with the lines of its style: SchweizerischeBundesbahnen/pandoc-service#370
-        assumeFalse(preserveTableStyles, "pandoc-service 2.15.0 cannot convert a nested table with grid lines to PDF");
         File docxFile = getTestFile();
         try {
             Files.write(docxFile.toPath(), docx);
