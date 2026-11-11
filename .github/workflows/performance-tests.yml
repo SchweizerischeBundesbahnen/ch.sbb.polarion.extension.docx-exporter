@@ -19,7 +19,7 @@ jobs:
       contents: read
     services:
       pandoc:
-        image: ghcr.io/schweizerischebundesbahnen/pandoc-service:2.14.1@sha256:cbfb53ffc41f5c6374d40a49e4aef1a3278b610c8e1204590e330e2c37a1643d
+        image: ghcr.io/schweizerischebundesbahnen/pandoc-service:2.15.0@sha256:97da3b99620e6bebc34e18311adc112b82afcecf34caa95f7b50a3b2bcc0076c
         ports: [9082:9082]
     env:
       IO_JFROG_SBB_POLARION_TOKEN: ${{ secrets.IO_JFROG_SBB_POLARION_TOKEN }}
