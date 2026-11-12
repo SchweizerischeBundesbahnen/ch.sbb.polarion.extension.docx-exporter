@@ -73,7 +73,7 @@ class DocxExporterFileResourceProviderTest {
         // Regression for #207, #219: if no detector recognizes the content, skip inlining instead of producing
         // a broken `data:null;base64,...` URL. Returning null leaves the original <img src="..."> in the HTML.
         DocxExporterFileResourceProvider providerSpy = mock(DocxExporterFileResourceProvider.class);
-        byte[] content = new byte[]{1, 2, 3};
+        byte[] content = {1, 2, 3};
         when(providerSpy.getResourceAsBytes("unknown.bin")).thenReturn(content);
         when(providerSpy.getResourceAsBase64String(any())).thenCallRealMethod();
 
@@ -265,7 +265,7 @@ class DocxExporterFileResourceProviderTest {
     @SneakyThrows
     void getResourceAsBytesImplWorkItemAttachmentMatchingTypes() {
         String resource = "/polarion/wi-attachment/project/WI-123/image.png";
-        byte[] pngContent = new byte[]{(byte) 0x89, 0x50, 0x4E, 0x47};
+        byte[] pngContent = {(byte) 0x89, 0x50, 0x4E, 0x47};
 
         try (MockedStatic<StreamUtils> streamUtilsMockedStatic = mockStatic(StreamUtils.class);
              MockedStatic<WorkItemAttachmentUrlResolver> workItemMockedStatic = mockStatic(WorkItemAttachmentUrlResolver.class);
@@ -299,7 +299,7 @@ class DocxExporterFileResourceProviderTest {
     @SneakyThrows
     void getResourceAsBytesImplNotWorkItemAttachment() {
         String resource = "/polarion/some/other/resource.png";
-        byte[] pngContent = new byte[]{(byte) 0x89, 0x50, 0x4E, 0x47};
+        byte[] pngContent = {(byte) 0x89, 0x50, 0x4E, 0x47};
 
         try (MockedStatic<StreamUtils> streamUtilsMockedStatic = mockStatic(StreamUtils.class);
              MockedStatic<WorkItemAttachmentUrlResolver> workItemMockedStatic = mockStatic(WorkItemAttachmentUrlResolver.class)) {
@@ -326,7 +326,7 @@ class DocxExporterFileResourceProviderTest {
     @SneakyThrows
     void getResourceAsBytesImplMultipleResolversFirstReturnsEmpty() {
         String resource = "test/resource.png";
-        byte[] expectedContent = new byte[]{(byte) 0x89, 0x50, 0x4E, 0x47};
+        byte[] expectedContent = {(byte) 0x89, 0x50, 0x4E, 0x47};
 
         IUrlResolver firstResolver = mock(IUrlResolver.class);
         IUrlResolver secondResolver = mock(IUrlResolver.class);
@@ -410,7 +410,7 @@ class DocxExporterFileResourceProviderTest {
     @Test
     void isUnexpectedlyResolvedAsHtmlWithNonXhtmlTypes() {
         String resource = "image.png";
-        byte[] content = new byte[]{0x00, 0x01, 0x02};
+        byte[] content = {0x00, 0x01, 0x02};
 
         try (MockedStatic<MediaUtils> mockedMediaUtils = mockStatic(MediaUtils.class)) {
             mockedMediaUtils.when(() -> MediaUtils.getMimeTypeUsingTikaByContent(resource, content))
@@ -426,7 +426,7 @@ class DocxExporterFileResourceProviderTest {
     @Test
     void isUnexpectedlyResolvedAsHtmlWithMatchingNonXhtmlTypes() {
         String resource = "image.png";
-        byte[] content = new byte[]{0x00, 0x01, 0x02};
+        byte[] content = {0x00, 0x01, 0x02};
 
         try (MockedStatic<MediaUtils> mockedMediaUtils = mockStatic(MediaUtils.class)) {
             mockedMediaUtils.when(() -> MediaUtils.getMimeTypeUsingTikaByContent(resource, content))

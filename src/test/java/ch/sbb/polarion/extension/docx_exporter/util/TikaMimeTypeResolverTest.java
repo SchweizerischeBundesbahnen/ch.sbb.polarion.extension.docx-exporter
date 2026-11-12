@@ -57,7 +57,7 @@ class TikaMimeTypeResolverTest {
 
     @Test
     void testRunWithByteArrayPngContent() {
-        byte[] pngContent = new byte[]{
+        byte[] pngContent = {
                 (byte) 0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A
         };
         Map<String, Object> input = Map.of(TikaMimeTypeResolver.PARAM_VALUE, pngContent);
@@ -71,7 +71,7 @@ class TikaMimeTypeResolverTest {
 
     @Test
     void testRunWithByteArrayJpegContent() {
-        byte[] jpegContent = new byte[]{
+        byte[] jpegContent = {
                 (byte) 0xFF, (byte) 0xD8, (byte) 0xFF
         };
         Map<String, Object> input = Map.of(TikaMimeTypeResolver.PARAM_VALUE, jpegContent);
@@ -85,7 +85,7 @@ class TikaMimeTypeResolverTest {
 
     @Test
     void testRunWithByteArrayZipContent() {
-        byte[] zipContent = new byte[]{
+        byte[] zipContent = {
                 0x50, 0x4B, 0x03, 0x04
         };
         Map<String, Object> input = Map.of(TikaMimeTypeResolver.PARAM_VALUE, zipContent);
@@ -120,7 +120,7 @@ class TikaMimeTypeResolverTest {
 
     @Test
     void testRunWithRandomByteArrayReportsUnknownBytes() {
-        byte[] randomContent = new byte[]{0x01, 0x02, 0x03, 0x04, 0x05};
+        byte[] randomContent = {0x01, 0x02, 0x03, 0x04, 0x05};
         Map<String, Object> input = Map.of(TikaMimeTypeResolver.PARAM_VALUE, randomContent);
         Map<String, Object> result = resolver.run(input);
 

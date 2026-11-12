@@ -261,8 +261,10 @@ class DocxExporterPolarionServiceTest {
 
     @Test
     void testGetTestRun() {
-        when(testManagementService.getTestRun("testProjectId", "testTestRunId", null)).thenReturn(mock(ITestRun.class));
-        when(testManagementService.getTestRun("testProjectId", "testTestRunId", "1234")).thenReturn(mock(ITestRun.class));
+        ITestRun headTestRun = mock(ITestRun.class);
+        ITestRun revisionTestRun = mock(ITestRun.class);
+        when(testManagementService.getTestRun("testProjectId", "testTestRunId", null)).thenReturn(headTestRun);
+        when(testManagementService.getTestRun("testProjectId", "testTestRunId", "1234")).thenReturn(revisionTestRun);
 
         ITestRun testRun = service.getTestRun("testProjectId", "testTestRunId", null);
         assertNotNull(testRun);
@@ -403,7 +405,8 @@ class DocxExporterPolarionServiceTest {
     void testGetTestRunAttachment() {
         ITestRun testRun = mock(ITestRun.class);
         when(testRun.isUnresolvable()).thenReturn(false);
-        when(testRun.getAttachment("testAttachmentId")).thenReturn(mock(ITestRunAttachment.class));
+        ITestRunAttachment attachment = mock(ITestRunAttachment.class);
+        when(testRun.getAttachment("testAttachmentId")).thenReturn(attachment);
         when(testManagementService.getTestRun("testProjectId", "testTestRunId", null)).thenReturn(testRun);
         when(testManagementService.getTestRun("testProjectId", "testTestRunId", "1234")).thenReturn(testRun);
 

@@ -11,7 +11,8 @@ class UniqueObjectConverterTest {
     @Test
     void testDocument() {
         Document document = mock(Document.class);
-        when(document.getOldApi()).thenReturn(mock(IModule.class));
+        IModule module = mock(IModule.class);
+        when(document.getOldApi()).thenReturn(module);
         new UniqueObjectConverter(document);
         verify(document, times(1)).getOldApi();
     }
