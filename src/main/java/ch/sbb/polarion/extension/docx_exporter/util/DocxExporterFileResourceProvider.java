@@ -219,6 +219,7 @@ public class DocxExporterFileResourceProvider implements FileResourceProvider {
      */
     @VisibleForTesting
     @SneakyThrows
+    @SuppressWarnings("java:S3011") // ParentUrlResolver exposes its child resolvers only through a private field
     IAttachmentUrlResolver getPolarionUrlResolverWithoutGenericUrlChildResolver() {
         IAttachmentUrlResolver attachmentUrlResolver = PolarionUrlResolver.getInstance();
 

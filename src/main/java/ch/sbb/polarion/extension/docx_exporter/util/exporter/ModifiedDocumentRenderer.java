@@ -32,7 +32,7 @@ public class ModifiedDocumentRenderer {
     @NotNull
     private final RichTextRenderingContext renderingContext;
     private ServerRichTextDocumentBase richTextDocument;
-    private boolean fixLevel;
+    private final boolean fixLevel;
 
     public ModifiedDocumentRenderer(@NotNull InternalReadOnlyTransaction transaction, @NotNull InternalDocument document, @NotNull RichTextRenderTarget renderTarget, @NotNull DocumentRendererParameters parameters) {
         this(transaction, document, renderTarget, parameters, (DleLazyLoadParams)null, (StrictMap)null, false);
