@@ -128,7 +128,8 @@ class DocxExportFunctionTest {
         ExportParams params = ExportParams.builder().projectId("projectId").build();
         IWorkItem newWorkItem = mock(IWorkItem.class);
         when(trackerProject.createWorkItem(anyString())).thenReturn(newWorkItem);
-        when(newWorkItem.createAttachment(anyString(), anyString(), any())).thenReturn(mock(IAttachment.class));
+        IAttachment newAttachment = mock(IAttachment.class);
+        when(newWorkItem.createAttachment(anyString(), anyString(), any())).thenReturn(newAttachment);
         when(module.getTitleWithSpace()).thenReturn("Some space / Document Title");
         doReturn("Status name").when(docxExportFunction).getStatusName(any(), anyString());
         doReturn("Attach Title.pdf").when(docxExportFunction).getDocumentFileName(params);
@@ -151,7 +152,8 @@ class DocxExportFunctionTest {
         // use existing work item
         args = new Arguments(Map.of("existing_wi_id", "ID-123"));
         IWorkItem foundWorkItem = mock(IWorkItem.class);
-        when(foundWorkItem.createAttachment(anyString(), anyString(), any())).thenReturn(mock(IAttachment.class));
+        IAttachment foundAttachment = mock(IAttachment.class);
+        when(foundWorkItem.createAttachment(anyString(), anyString(), any())).thenReturn(foundAttachment);
         when(docxExporterPolarionService.getWorkItem("projectId", "ID-123")).thenReturn(foundWorkItem);
         docxExportFunction.savePdfAsWorkItemAttachment(module, params, "TargetStatus", args, new byte[0]);
         verify(foundWorkItem, times(1)).createAttachment(any(), any(), any());
@@ -159,7 +161,7 @@ class DocxExportFunctionTest {
         // use existing work item from specific project
         args = new Arguments(Map.of("existing_wi_id", "ID-345", "project_id", "proj2"));
         foundWorkItem = mock(IWorkItem.class);
-        when(foundWorkItem.createAttachment(anyString(), anyString(), any())).thenReturn(mock(IAttachment.class));
+        when(foundWorkItem.createAttachment(anyString(), anyString(), any())).thenReturn(foundAttachment);
         when(docxExporterPolarionService.getWorkItem("proj2", "ID-345")).thenReturn(foundWorkItem);
         docxExportFunction.savePdfAsWorkItemAttachment(module, params, "TargetStatus", args, new byte[0]);
         verify(foundWorkItem, times(1)).createAttachment(any(), any(), any());

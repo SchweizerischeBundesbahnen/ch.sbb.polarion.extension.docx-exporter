@@ -27,6 +27,7 @@ import java.util.stream.Collectors;
 
 @Builder
 @ToString
+@SuppressWarnings("java:S2143") // Polarion gives the values of date and time fields as java.util.Date
 public class PlaceholderValues {
     public static final String DOC_LANGUAGE_FIELD = "docLanguage";
     public static final String DOC_TIME_ZONE_FIELD = "docTimeZone";

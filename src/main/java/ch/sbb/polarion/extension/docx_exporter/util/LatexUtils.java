@@ -421,24 +421,26 @@ public class LatexUtils {
         int i = 0;
         int n = cell.length();
         while (i < n) {
-            char c = cell.charAt(i);
-            if (c == '\\') {
-                int after = skipControlSequence(cell, i);
-                if (depth == 0) {
-                    String converted = tryConvertInfixOperatorAt(cell, i, after);
-                    if (converted != null) {
-                        return converted;
+            switch (cell.charAt(i)) {
+                case '\\' -> {
+                    int after = skipControlSequence(cell, i);
+                    if (depth == 0) {
+                        String converted = tryConvertInfixOperatorAt(cell, i, after);
+                        if (converted != null) {
+                            return converted;
+                        }
                     }
+                    i = after;
                 }
-                i = after;
-            } else if (c == '{') {
-                depth++;
-                i++;
-            } else if (c == '}') {
-                depth = Math.max(0, depth - 1); // clamp: a stray unmatched '}' must not go negative and misclassify a later operator
-                i++;
-            } else {
-                i++;
+                case '{' -> {
+                    depth++;
+                    i++;
+                }
+                case '}' -> {
+                    depth = Math.max(0, depth - 1); // clamp: a stray unmatched '}' must not go negative and misclassify a later operator
+                    i++;
+                }
+                default -> i++;
             }
         }
         return recurseIntoGroups(cell);
@@ -736,20 +738,22 @@ public class LatexUtils {
         int i = from;
         int n = s.length();
         while (i < n) {
-            char c = s.charAt(i);
-            if (c == '\\') {
-                if (depth == 0 && isControlWordAt(s, i, name)) {
-                    return i;
+            switch (s.charAt(i)) {
+                case '\\' -> {
+                    if (depth == 0 && isControlWordAt(s, i, name)) {
+                        return i;
+                    }
+                    i = skipControlSequence(s, i);
                 }
-                i = skipControlSequence(s, i);
-            } else if (c == '{') {
-                depth++;
-                i++;
-            } else if (c == '}') {
-                depth = Math.max(0, depth - 1); // clamp: a stray unmatched '}' must not go negative and hide a later top-level control word
-                i++;
-            } else {
-                i++;
+                case '{' -> {
+                    depth++;
+                    i++;
+                }
+                case '}' -> {
+                    depth = Math.max(0, depth - 1); // clamp: a stray unmatched '}' must not go negative and hide a later top-level control word
+                    i++;
+                }
+                default -> i++;
             }
         }
         return -1;
@@ -845,20 +849,20 @@ public class LatexUtils {
         int i = openBraceIndex;
         int n = latex.length();
         while (i < n) {
-            char c = latex.charAt(i);
-            if (c == '\\') {
-                i += 2; // skip the escaped character
-            } else if (c == '{') {
-                depth++;
-                i++;
-            } else if (c == '}') {
-                depth--;
-                if (depth == 0) {
-                    return i;
+            switch (latex.charAt(i)) {
+                case '\\' -> i += 2; // skip the escaped character
+                case '{' -> {
+                    depth++;
+                    i++;
                 }
-                i++;
-            } else {
-                i++;
+                case '}' -> {
+                    depth--;
+                    if (depth == 0) {
+                        return i;
+                    }
+                    i++;
+                }
+                default -> i++;
             }
         }
         return -1;
