@@ -7,6 +7,7 @@ import SidePanel from '../src/sidepanel/SidePanel';
 import type { SidePanelDependencies } from '../src/sidepanel/SidePanel';
 import { dropdownsSettled } from './a11yHelpers';
 import {
+  SAMPLE_DOCUMENT,
   SAMPLE_PANEL_DATA,
   SAMPLE_STYLE_PACKAGE,
   SAMPLE_STYLE_PACKAGE_FULL,
@@ -251,6 +252,24 @@ describe('what the style package puts on screen', () => {
     expect('orientation' in sent).toBe(false);
     expect('paperSize' in sent).toBe(false);
     expect('imageDensity' in sent).toBe(false);
+  });
+
+  it('names the collection the document was opened from, so the server exports it as the page shows it', async () => {
+    const requests: string[] = [];
+    open({
+      ...sampleDependencies({
+        convert: (request) => {
+          requests.push(request);
+          return Promise.resolve(docxResult());
+        },
+      }),
+      location: { ...SAMPLE_DOCUMENT, collection: 'drivepilot/3' },
+    });
+    await settled();
+
+    await userEvent.click(field<HTMLButtonElement>('#export-docx')!);
+
+    expect((JSON.parse(requests[0]) as Record<string, unknown>).collection).toBe('drivepilot/3');
   });
 
   it('drives the dropdowns into the export', async () => {

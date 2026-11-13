@@ -3,22 +3,27 @@ package ch.sbb.polarion.extension.docx_exporter.rest.model.documents;
 import ch.sbb.polarion.extension.generic.exception.ObjectNotFoundException;
 import ch.sbb.polarion.extension.docx_exporter.rest.model.conversion.ExportParams;
 import ch.sbb.polarion.extension.docx_exporter.service.DocxExporterPolarionService;
+import ch.sbb.polarion.extension.docx_exporter.service.PolarionCollectionExecutor;
 import ch.sbb.polarion.extension.generic.test_extensions.CustomExtensionMock;
 import ch.sbb.polarion.extension.generic.test_extensions.TransactionalExecutorExtension;
 import com.polarion.alm.projects.model.IProject;
 import com.polarion.alm.shared.api.model.ModelObject;
 import com.polarion.alm.shared.api.model.document.Document;
+import com.polarion.alm.shared.api.model.document.DocumentReference;
 import com.polarion.alm.shared.api.model.document.DocumentSelector;
 import com.polarion.alm.shared.api.model.document.internal.InternalDocuments;
 import com.polarion.alm.shared.api.transaction.TransactionalExecutor;
 import com.polarion.alm.shared.api.transaction.internal.InternalReadOnlyTransaction;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
+import org.mockito.MockedStatic;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.Map;
@@ -77,6 +82,52 @@ class ModelObjectProviderTest {
         ModelObject modelObject = TransactionalExecutor.executeSafelyInReadOnlyTransaction(modelObjectProvider::getModelObject);
 
         assertEquals(documentMock, modelObject);
+    }
+
+    @Test
+    void aDocumentOfACollectionIsReadAtTheRevisionTheCollectionHoldsItAt() {
+        Document documentOfCollection = mock(Document.class);
+        DocumentReference atCollectionRevision = mock(DocumentReference.class);
+        when(atCollectionRevision.getOriginal(internalReadOnlyTransactionMock)).thenReturn(documentOfCollection);
+        ExportParams exportParams = ExportParams.builder()
+                .projectId("testProjectId")
+                .locationPath("_default/testLocationPath")
+                .collection("42")
+                .build();
+
+        try (MockedStatic<PolarionCollectionExecutor> collectionExecutor = mockStatic(PolarionCollectionExecutor.class)) {
+            collectionExecutor.when(() -> PolarionCollectionExecutor.resolveDocument(eq("testProjectId"), eq("42"), any(), eq(internalReadOnlyTransactionMock)))
+                    .thenReturn(atCollectionRevision);
+
+            ModelObjectProvider modelObjectProvider = new ModelObjectProvider(exportParams, docxExporterPolarionService);
+            assertEquals(documentOfCollection, TransactionalExecutor.executeSafelyInReadOnlyTransaction(modelObjectProvider::getModelObject));
+        }
+    }
+
+    @Test
+    void aRevisionAskedForGoesBeforeTheOneOfTheCollection() {
+        InternalDocuments internalDocumentsMock = mock(InternalDocuments.class);
+        DocumentSelector documentSelectorMock = mock(DocumentSelector.class);
+        Document documentMock = mock(Document.class);
+        when(documentSelectorMock.reference(any())).thenReturn(documentMock);
+        when(internalDocumentsMock.getBy()).thenReturn(documentSelectorMock);
+        doReturn(internalDocumentsMock).when(internalReadOnlyTransactionMock).byEnum(any());
+        ExportParams exportParams = ExportParams.builder()
+                .projectId("testProjectId")
+                .locationPath("_default/testLocationPath")
+                .revision("12345")
+                .collection("42")
+                .build();
+
+        try (MockedStatic<PolarionCollectionExecutor> collectionExecutor = mockStatic(PolarionCollectionExecutor.class)) {
+            ModelObjectProvider modelObjectProvider = new ModelObjectProvider(exportParams, docxExporterPolarionService);
+            assertEquals(documentMock, TransactionalExecutor.executeSafelyInReadOnlyTransaction(modelObjectProvider::getModelObject));
+
+            collectionExecutor.verifyNoInteractions();
+            ArgumentCaptor<DocumentReference> read = ArgumentCaptor.forClass(DocumentReference.class);
+            verify(documentSelectorMock).reference(read.capture());
+            assertEquals("12345", read.getValue().requestedRevision());
+        }
     }
 
     public static Stream<Arguments> paramsForModelObjectProviderShouldFail() {

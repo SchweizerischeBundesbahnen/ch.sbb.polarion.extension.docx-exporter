@@ -124,6 +124,10 @@ export async function loadDocumentLanguage(
   if (document.revision) {
     parameters.set('revision', document.revision);
   }
+  if (document.collection) {
+    // A document opened from a collection is read at the revision the collection holds it at
+    parameters.set('collection', document.collection);
+  }
   const language = await readText(sendRequest, 'GET', `/document-language?${parameters.toString()}`);
   return language || null;
 }
@@ -199,6 +203,7 @@ export async function loadPanelData(sendRequest: SendRequest, document: Document
       projectId: document.projectId,
       locationPath: document.locationPath,
       revision: document.revision,
+      collection: document.collection,
     }).catch(() => ''),
     loadDocumentLanguage(sendRequest, document).catch(() => null),
     loadWebhooksEnabled(sendRequest).catch(() => false),
@@ -241,6 +246,7 @@ export async function loadPopupData(sendRequest: SendRequest, document: Document
       locationPath: document.locationPath,
       baselineRevision: document.baselineRevision,
       revision: document.revision,
+      collection: document.collection,
       urlQueryParameters: document.urlQueryParameters,
     }),
     loadWebhooksEnabled(sendRequest),
