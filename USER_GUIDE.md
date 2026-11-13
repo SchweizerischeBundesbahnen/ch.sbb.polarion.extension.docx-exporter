@@ -68,6 +68,9 @@ In this section you can choose specific webhook for custom HTML processing befor
 
 ![Webhooks](docs/user_guide/img/webhooks.png)
 
+A webhook can be configured to stop the export if it fails, for example when it validates the document and finds a problem.
+The export then shows the message of the webhook. See [Failing the export on a webhook error](CONFIGURATION.md#failing-the-export-on-a-webhook-error).
+
 Note that webhooks should be pre-configured by the admin otherwise this option is unavailable.
 
 ### Custom page orientation
