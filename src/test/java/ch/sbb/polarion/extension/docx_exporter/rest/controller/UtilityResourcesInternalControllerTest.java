@@ -24,6 +24,7 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockStatic;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -58,7 +59,8 @@ class UtilityResourcesInternalControllerTest {
         IModule atRevisionAskedFor = mock(IModule.class);
         lenient().when(atRevisionAskedFor.getCustomField("docLanguage")).thenReturn(french);
         lenient().when(docxExporterPolarionService.getModule(PROJECT, SPACE, DOCUMENT, "77")).thenReturn(atRevisionAskedFor);
-        lenient().when(docxExporterPolarionService.getModule(PROJECT, SPACE, DOCUMENT, null)).thenReturn(mock(IModule.class));
+        IModule atHead = mock(IModule.class);
+        lenient().when(docxExporterPolarionService.getModule(PROJECT, SPACE, DOCUMENT, null)).thenReturn(atHead);
     }
 
     @Test
@@ -90,7 +92,7 @@ class UtilityResourcesInternalControllerTest {
             assertNull(controller.getDocumentLanguage(PROJECT, SPACE, DOCUMENT, null, ""));
             collectionExecutor.verifyNoInteractions();
         }
-        verify(docxExporterPolarionService, org.mockito.Mockito.times(2)).getModule(PROJECT, SPACE, DOCUMENT, null);
+        verify(docxExporterPolarionService, times(2)).getModule(PROJECT, SPACE, DOCUMENT, null);
     }
 
     @Test

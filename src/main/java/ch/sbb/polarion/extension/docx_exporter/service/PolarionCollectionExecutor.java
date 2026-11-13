@@ -6,7 +6,6 @@ import com.polarion.alm.shared.api.model.document.DocumentReference;
 import com.polarion.alm.shared.api.transaction.ReadOnlyTransaction;
 import com.polarion.alm.shared.api.transaction.internal.InternalReadOnlyTransaction;
 import com.polarion.alm.tracker.model.ipi.CollectionThreadContext;
-import com.polarion.core.util.StringUtils;
 import com.polarion.portal.internal.shared.navigation.CollectionReferenceConverter;
 import com.polarion.portal.shared.navigation.CollectionContext;
 import com.polarion.subterra.base.data.identification.IObjectId;
@@ -43,7 +42,7 @@ import java.util.concurrent.Callable;
 public class PolarionCollectionExecutor {
 
     public <T> T executeInCollection(@Nullable String projectId, @Nullable String collection, @NotNull ReadOnlyTransaction transaction, @NotNull Callable<T> callable) {
-        if (StringUtils.isEmpty(collection)) {
+        if (collection == null || collection.isEmpty()) {
             return callCallable(callable);
         }
         BaselineCollectionReference reference = reference(projectId, collection);
@@ -58,7 +57,7 @@ public class PolarionCollectionExecutor {
      * or the collection takes the document at HEAD
      */
     public @NotNull DocumentReference resolveDocument(@Nullable String projectId, @Nullable String collection, @NotNull DocumentReference document, @NotNull ReadOnlyTransaction transaction) {
-        if (StringUtils.isEmpty(collection)) {
+        if (collection == null || collection.isEmpty()) {
             return document;
         }
         BaselineCollectionReference reference = reference(projectId, collection);

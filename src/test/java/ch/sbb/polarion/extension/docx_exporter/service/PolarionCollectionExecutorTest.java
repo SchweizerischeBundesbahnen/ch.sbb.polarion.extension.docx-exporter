@@ -147,7 +147,8 @@ class PolarionCollectionExecutorTest {
         when(otherCollection.getOldApi()).thenReturn(missing);
         when(other.get(transaction)).thenReturn(otherCollection);
         when(converter.relativeStringToReference(PROJECT, "999")).thenReturn(other);
-        when(converter.referenceToObjectId(other)).thenReturn(mock(IObjectId.class));
+        IObjectId otherObjectId = mock(IObjectId.class);
+        when(converter.referenceToObjectId(other)).thenReturn(otherObjectId);
         DocumentReference document = mock(DocumentReference.class);
 
         assertThrows(IllegalArgumentException.class, () -> PolarionCollectionExecutor.executeInCollection(PROJECT, COLLECTION, transaction,
