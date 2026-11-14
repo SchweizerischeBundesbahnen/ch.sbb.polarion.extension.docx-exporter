@@ -17,6 +17,7 @@ export interface ExportParamsJson {
   locationPath?: string | null;
   baselineRevision?: string | null;
   revision?: string | null;
+  collection?: string | null;
   template?: string;
   localization?: string;
   webhooks?: string | null;
@@ -45,6 +46,12 @@ export interface DocumentContext {
   locationPath?: string | null;
   baselineRevision?: string | null;
   revision?: string | null;
+  /**
+   * The collection the document was opened from. The server exports the document the way Polarion shows
+   * it there: at the revision the collection holds it at, and a linked work item at the revision the
+   * collection holds its document at.
+   */
+  collection?: string | null;
   urlQueryParameters?: Record<string, string>;
 }
 
@@ -82,6 +89,7 @@ export function buildExportParams(form: ExportForm, context: DocumentContext, fi
       locationPath: context.locationPath,
       baselineRevision: context.baselineRevision,
       revision: context.revision,
+      collection: context.collection,
       template: form.template,
       localization: form.localization,
       webhooks: form.webhooksEnabled ? form.webhooks : null,

@@ -42,6 +42,26 @@ describe('where the document is', () => {
 
     expect(document.projectId).toBe('elibrary');
     expect(document.locationPath).toBe('Specs/Doc');
+    // The hash names no revision; the collection does, so the export has to name the collection
+    expect(document.collection).toBe('42');
+    expect(document.revision).toBeUndefined();
+  });
+
+  it('names a collection of another project, and one opened at a revision, the way Polarion names them', () => {
+    // The hash doubles the slash between the project of the collection and its id. Polarion's own
+    // converter, which reads the name on the server, knows it with one: doubled, it finds no collection.
+    const ofAnotherProject = identity('#/project/elibrary/collection/drivepilot//3/wiki/Testing/Module%20A');
+    expect(ofAnotherProject.collection).toBe('drivepilot/3');
+    expect(ofAnotherProject.projectId).toBe('elibrary');
+    expect(ofAnotherProject.locationPath).toBe('Testing/Module A');
+
+    expect(identity('#/project/elibrary/collection/42~1234/wiki/Specs/Doc').collection).toBe('42~1234');
+  });
+
+  it('names no collection for a document opened on its own', () => {
+    expect(identity('#/project/elibrary/wiki/Specs/Doc').collection).toBeUndefined();
+    // The page of a collection itself addresses no document
+    expect(identity('#/project/elibrary/collection?id=42').collection).toBeUndefined();
   });
 
   it('reads the baseline revision out of a baseline URL', () => {

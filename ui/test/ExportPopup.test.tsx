@@ -262,6 +262,25 @@ describe('exporting', () => {
     expect(field('[data-sonner-toast][data-type="success"] [data-close-button]')).not.toBeNull();
   });
 
+  it('names the collection the document was opened from, so the server exports it as the page shows it', async () => {
+    const requests: string[] = [];
+    open({
+      document: { ...SAMPLE_DOCUMENT, collection: 'drivepilot/3' },
+      deps: popupDependencies({
+        convert: (request) => {
+          requests.push(request);
+          return Promise.resolve(docxResult());
+        },
+      }),
+    });
+    await settledWithSettings();
+
+    await userEvent.click(exportButton());
+
+    await vi.waitFor(() => expect(requests).toHaveLength(1));
+    expect((JSON.parse(requests[0]) as Record<string, unknown>).collection).toBe('drivepilot/3');
+  });
+
   it('carries every switch and every typed value into the export', async () => {
     // One pass over the whole form: each control is driven the way a user drives it, and what the export
     // then sends is what says the control is wired to the request rather than only to the screen.

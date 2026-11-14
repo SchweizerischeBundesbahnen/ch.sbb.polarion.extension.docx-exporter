@@ -115,6 +115,35 @@ class PlaceholderProcessorTest {
     }
 
     @Test
+    void revisionPlaceholderIsTheRevisionTheDocumentIsExportedAt() {
+        DocumentProject documentProject = mock(DocumentProject.class);
+        when(documentProject.getName()).thenReturn("testProject");
+        DocumentId documentId = mock(DocumentId.class);
+        when(documentId.getDocumentProject()).thenReturn(documentProject);
+        when(documentId.getDocumentId()).thenReturn("testDocId");
+        // Read from a collection which holds the document at revision 100, while its last revision is 123
+        DocumentData<IUniqueObject> documentData = DocumentData.creator(mock(IUniqueObject.class))
+                .id(documentId)
+                .title("testTitle")
+                .revision("100")
+                .lastRevision("123")
+                .revisionPlaceholder("123")
+                .build();
+
+        // The request names the collection and no revision: the collection decided it
+        ExportParams fromCollection = ExportParams.builder().collection("42").build();
+        assertEquals("100", placeholderProcessor.getPlaceholderValues(documentData, fromCollection, "{{ REVISION }}").getAllVariables().get("REVISION"));
+
+        // A revision asked for goes before the collection, as it does when the document is read
+        ExportParams withRevision = ExportParams.builder().collection("42").revision("77").build();
+        assertEquals("77", placeholderProcessor.getPlaceholderValues(documentData, withRevision, "{{ REVISION }}").getAllVariables().get("REVISION"));
+
+        // Without a collection nothing changed: the last revision of the document
+        ExportParams onItsOwn = ExportParams.builder().build();
+        assertEquals("123", placeholderProcessor.getPlaceholderValues(documentData, onItsOwn, "{{ REVISION }}").getAllVariables().get("REVISION"));
+    }
+
+    @Test
     void testGetPlaceholderValuesWithNullUrlQueryParameters() {
         DocumentProject documentProject = mock(DocumentProject.class);
         when(documentProject.getName()).thenReturn("testProject");

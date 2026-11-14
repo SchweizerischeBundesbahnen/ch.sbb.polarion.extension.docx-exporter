@@ -64,6 +64,7 @@ public class HtmlProcessor {
     private static final String DOLLAR_ENTITY = "&dollar;";
     private static final String EMPTY_FIELD_TITLE = "This field is empty";
     private static final String COMMA_SEPARATOR = ", ";
+    private static final Pattern LINKED_WORK_ITEM_REVISION = Pattern.compile("\\s*:\\s*\\d+\\s*");
     private static final String URL_PROJECT_ID_PREFIX = "/polarion/#/project/";
     private static final String URL_WORK_ITEM_ID_PREFIX = "workitem?id=";
     private static final String POLARION_URL_MARKER = "/polarion/#";
@@ -927,10 +928,28 @@ public class HtmlProcessor {
             return null; // Not expected elements structure
         }
 
+        // Only a link of a document rendered inside a collection carries the revision of its target
+        TextNode revisionNode = extractRevisionNode(linkedWorkItemElement.nextSibling());
+
         // There will be no br-tag after last linked WorkItem, so not obligatory
         Element brElement = extractBrElement(linkedWorkItemElement.nextElementSibling());
 
-        return new LinkedWorkitemNodes(role, roleElement, colonNode, suspectElement, linkedWorkItemElement, brElement);
+        return new LinkedWorkitemNodes(role, roleElement, colonNode, suspectElement, linkedWorkItemElement, revisionNode, brElement);
+    }
+
+    /**
+     * Detects the revision Polarion renders after a linked WorkItem of a document which is exported from a collection:
+     * the text " : 297608" right after the element of the item, naming the revision the collection holds the document of
+     * that item at. It belongs to its link, so it has to go when the link is filtered out and a separating comma has to
+     * follow it rather than split it from the item.
+     */
+    @VisibleForTesting
+    TextNode extractRevisionNode(@Nullable Node node) {
+        if (node instanceof TextNode textNode && LINKED_WORK_ITEM_REVISION.matcher(textNode.text()).matches()) {
+            return textNode;
+        } else {
+            return null;
+        }
     }
 
     private TextNode extractColonNode(@Nullable Node node) {
@@ -1526,7 +1545,7 @@ public class HtmlProcessor {
 
     private record LinkedWorkitemNodes(@NotNull String role, @NotNull Element roleElement, @NotNull TextNode colonNode,
                                        @Nullable Element suspectElement, @NotNull Element linkedWorkItemElement,
-                                       @Nullable Element brElement) {
+                                       @Nullable TextNode revisionNode, @Nullable Element brElement) {
         Element getNextSibling() {
             return brElement != null ? brElement.nextElementSibling() : linkedWorkItemElement.nextElementSibling();
         }
@@ -1538,6 +1557,9 @@ public class HtmlProcessor {
                 suspectElement.remove();
             }
             linkedWorkItemElement.remove();
+            if (revisionNode != null) {
+                revisionNode.remove();
+            }
             if (brElement != null) {
                 brElement.remove();
             }
@@ -1550,7 +1572,13 @@ public class HtmlProcessor {
         }
 
         void appendComma() {
-            linkedWorkItemElement.after(",");
+            if (revisionNode != null) {
+                // The revision is followed by the line break of the markup, which would end up before the comma
+                revisionNode.text(revisionNode.text().stripTrailing());
+                revisionNode.after(",");
+            } else {
+                linkedWorkItemElement.after(",");
+            }
         }
 
     }
