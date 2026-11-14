@@ -1,5 +1,21 @@
 # Changelog
 
+## [5.8.0](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/compare/v5.7.0...v5.8.0) (2026-11-14)
+
+
+### Features
+
+* add an option to fail the export when a webhook returns an error ([#492](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/issues/492)) ([535af23](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/commit/535af23830b1104fa724dae1f8a6ef1410773734)), closes [#491](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/issues/491)
+
+
+### Bug Fixes
+
+* **deps:** update dependency @vitejs/plugin-react to v6.3.0 ([b0a5b0d](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/commit/b0a5b0d41f757c8b303133e5f02a6135d73a2883))
+* **deps:** update dependency prettier to v3.10.0 ([938ac19](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/commit/938ac19872f2c4204b757e304c6fcf8332df94a3))
+* **deps:** update dependency typescript-eslint to v8.72.2 ([1192827](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/commit/1192827163f8a28a1404b07afbc2215c0e221649))
+* **deps:** update dependency vite to v8.3.7 ([b0347c0](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/commit/b0347c0d65d54eae9b404fee4a0ae517e104bcce))
+* **deps:** update dependency vite to v8.3.8 ([43b1b2b](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/commit/43b1b2b8accdca455477fd64b22a93a0e12b42e4))
+
 ## [5.7.0](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.docx-exporter/compare/v5.6.0...v5.7.0) (2026-11-12)
 
 
