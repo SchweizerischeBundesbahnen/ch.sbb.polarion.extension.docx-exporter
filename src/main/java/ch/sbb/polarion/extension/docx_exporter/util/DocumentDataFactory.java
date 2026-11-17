@@ -4,8 +4,8 @@ import ch.sbb.polarion.extension.docx_exporter.rest.model.conversion.ExportParam
 import ch.sbb.polarion.extension.docx_exporter.rest.model.documents.DocumentData;
 import ch.sbb.polarion.extension.docx_exporter.rest.model.documents.ModelObjectProvider;
 import ch.sbb.polarion.extension.docx_exporter.rest.model.documents.UniqueObjectConverter;
-import ch.sbb.polarion.extension.docx_exporter.service.PolarionBaselineExecutor;
-import ch.sbb.polarion.extension.docx_exporter.service.PolarionCollectionExecutor;
+import ch.sbb.polarion.extension.generic.service.PolarionBaselineExecutor;
+import ch.sbb.polarion.extension.generic.service.PolarionCollectionExecutor;
 import com.polarion.alm.projects.model.IUniqueObject;
 import com.polarion.alm.shared.api.model.ModelObject;
 import com.polarion.alm.shared.api.transaction.TransactionalExecutor;

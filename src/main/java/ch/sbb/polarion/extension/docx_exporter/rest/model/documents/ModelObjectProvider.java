@@ -2,7 +2,7 @@ package ch.sbb.polarion.extension.docx_exporter.rest.model.documents;
 
 import ch.sbb.polarion.extension.docx_exporter.rest.model.conversion.ExportParams;
 import ch.sbb.polarion.extension.docx_exporter.service.DocxExporterPolarionService;
-import ch.sbb.polarion.extension.docx_exporter.service.PolarionCollectionExecutor;
+import ch.sbb.polarion.extension.generic.service.PolarionCollectionExecutor;
 import com.polarion.alm.projects.model.IProject;
 import com.polarion.alm.shared.api.model.ModelObject;
 import com.polarion.alm.shared.api.model.document.Document;

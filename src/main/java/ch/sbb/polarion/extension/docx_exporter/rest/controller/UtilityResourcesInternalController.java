@@ -5,9 +5,9 @@ import ch.sbb.polarion.extension.docx_exporter.properties.DocxExporterExtensionC
 import ch.sbb.polarion.extension.docx_exporter.rest.model.conversion.ExportParams;
 import ch.sbb.polarion.extension.docx_exporter.rest.model.documents.ModelObjectProvider;
 import ch.sbb.polarion.extension.docx_exporter.service.DocxExporterPolarionService;
-import ch.sbb.polarion.extension.docx_exporter.service.PolarionCollectionExecutor;
 import ch.sbb.polarion.extension.docx_exporter.util.DocumentFileNameHelper;
 import ch.sbb.polarion.extension.docx_exporter.util.EnumValuesProvider;
+import ch.sbb.polarion.extension.generic.service.PolarionCollectionExecutor;
 import com.polarion.alm.shared.api.model.document.DocumentReference;
 import com.polarion.alm.shared.api.transaction.TransactionalExecutor;
 import com.polarion.alm.tracker.model.IModule;

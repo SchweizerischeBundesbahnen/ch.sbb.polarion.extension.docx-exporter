@@ -1,7 +1,7 @@
 package ch.sbb.polarion.extension.docx_exporter;
 
-import ch.sbb.polarion.extension.docx_exporter.service.PolarionBaselineExecutor;
 import ch.sbb.polarion.extension.docx_exporter.util.BundleCacheKey;
+import ch.sbb.polarion.extension.generic.service.PolarionBaselineExecutor;
 import ch.sbb.polarion.extension.generic.util.ScopeUtils;
 import com.polarion.alm.shared.api.SharedContext;
 import com.polarion.alm.shared.api.transaction.TransactionalExecutor;

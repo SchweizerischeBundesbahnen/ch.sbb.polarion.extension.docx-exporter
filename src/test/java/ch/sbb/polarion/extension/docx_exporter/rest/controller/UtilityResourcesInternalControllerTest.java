@@ -1,7 +1,7 @@
 package ch.sbb.polarion.extension.docx_exporter.rest.controller;
 
 import ch.sbb.polarion.extension.docx_exporter.service.DocxExporterPolarionService;
-import ch.sbb.polarion.extension.docx_exporter.service.PolarionCollectionExecutor;
+import ch.sbb.polarion.extension.generic.service.PolarionCollectionExecutor;
 import ch.sbb.polarion.extension.generic.test_extensions.CustomExtensionMock;
 import ch.sbb.polarion.extension.generic.test_extensions.TransactionalExecutorExtension;
 import com.polarion.alm.shared.api.model.document.DocumentReference;
