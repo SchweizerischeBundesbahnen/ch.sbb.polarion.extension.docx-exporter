@@ -140,6 +140,7 @@ public class DocxExporterExtensionConfiguration extends ExtensionConfiguration {
         List<String> supportedProperties = new ArrayList<>(super.getSupportedProperties());
         supportedProperties.add(PANDOC_SERVICE);
         supportedProperties.add(PANDOC_API_KEY_SECRET);
+        supportedProperties.add(WEBHOOKS_ENABLED);
         supportedProperties.add(TEMPLATE_MAX_SIZE_MB);
         supportedProperties.add(EXTERNAL_RESOURCES_POLICY);
         supportedProperties.add(EXTERNAL_RESOURCES_ALLOWED_ORIGINS);
