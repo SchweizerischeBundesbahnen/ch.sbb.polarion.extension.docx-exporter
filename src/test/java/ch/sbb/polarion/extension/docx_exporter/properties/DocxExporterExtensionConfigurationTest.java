@@ -107,6 +107,27 @@ class DocxExporterExtensionConfigurationTest {
         }
     }
 
+    @Test
+    void readsTheWebhooksSwitchOutOfPolarionProperties() {
+        SystemValueReader reader = mock(SystemValueReader.class);
+        when(reader.readBoolean(PREFIX + "webhooks.enabled", false)).thenReturn(true);
+
+        assertEquals(Boolean.TRUE, withReader(reader, DocxExporterExtensionConfiguration::getWebhooksEnabled));
+    }
+
+    @Test
+    void offersTheWebhooksSwitchOnTheConfigurationPage() {
+        try (MockedStatic<ContextUtils> contextUtils = mockStatic(ContextUtils.class)) {
+            contextUtils.when(ContextUtils::getConfigurationPropertiesPrefix).thenReturn(PREFIX);
+            DocxExporterExtensionConfiguration configuration = new DocxExporterExtensionConfiguration();
+
+            // A property the extension reads but does not name here is reported as an obsolete one
+            assertTrue(configuration.getSupportedProperties().contains(DocxExporterExtensionConfiguration.WEBHOOKS_ENABLED));
+            assertEquals("false", configuration.getWebhooksEnabledDefaultValue());
+            assertEquals(DocxExporterExtensionConfiguration.WEBHOOKS_ENABLED_DESCRIPTION, configuration.getWebhooksEnabledDescription());
+        }
+    }
+
     private static <T> T withReader(SystemValueReader reader, Function<DocxExporterExtensionConfiguration, T> read) {
         try (MockedStatic<ContextUtils> contextUtils = mockStatic(ContextUtils.class);
              MockedStatic<SystemValueReader> readers = mockStatic(SystemValueReader.class)) {
