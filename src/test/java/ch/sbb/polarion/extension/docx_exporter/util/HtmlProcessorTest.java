@@ -765,6 +765,38 @@ class HtmlProcessorTest {
     }
 
     @Test
+    void linkedWorkItemsOfADocumentInACollectionKeepTheirRevisions() {
+        // Rendered inside a collection, Polarion names after each linked WorkItem the revision the collection holds the
+        // document of that item at. The revision belongs to its link: it goes with a link which is filtered out, and
+        // the comma separating two links follows it.
+        String link = """
+                <div style="display:inline-block;white-space:nowrap;"><span class="polarion-no-style-cleanup">%s</span></div>
+                : <span class="polarion-no-style-cleanup"><a class="polarion-Hyperlink" href="#">%s</a></span> : %s
+                """;
+        Document document = Jsoup.parseBodyFragment("<span id=\"polarion_editor_field=linkedWorkItems\">"
+                + link.formatted("has parent", "EL-145", "297610") + "<br/>"
+                + link.formatted("is implemented by", "EL-105", "297608") + "<br/>"
+                + link.formatted("is parent of", "EL-148", "297610")
+                + "</span>");
+
+        processor.filterNonTabularLinkedWorkItems(document, List.of("has parent", "is parent of"));
+
+        assertEquals("has parent : EL-145 : 297610, is parent of : EL-148 : 297610", document.body().text());
+    }
+
+    @Test
+    void extractRevisionNodeTest() {
+        TextNode revision = new TextNode(" : 297608\n        ");
+
+        assertEquals(revision, processor.extractRevisionNode(revision));
+        // The colon between a role and its linked WorkItem is no revision, and neither is plain spacing
+        assertNull(processor.extractRevisionNode(new TextNode("\n        : ")));
+        assertNull(processor.extractRevisionNode(new TextNode("\n        ")));
+        assertNull(processor.extractRevisionNode(Jsoup.parseBodyFragment("<br/>").body().firstElementChild()));
+        assertNull(processor.extractRevisionNode(null));
+    }
+
+    @Test
     @SneakyThrows
     void suspectLinkedWorkItemTypesTest() {
         try (InputStream isInvalidHtml = this.getClass().getResourceAsStream("/linkedWorkItemsWithSuspectBeforeProcessing.html");
