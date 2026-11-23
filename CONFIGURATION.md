@@ -190,7 +190,17 @@ Export stopped by webhook 1 of configuration 'Default', which could not be calle
 ```
 
 Neither message contains the webhook URL, which may carry credentials, nor the text of the exception, which
-can be built from that URL. The Polarion log holds both.
+can be built from that URL. The Polarion log omits the full URL and that text too.
+
+The Polarion log names the webhook by its position and configuration, with the scheme, host and port of its URL.
+It also contains the HTTP status, or the exception type and stack trace if the call failed:
+
+```
+Could not get proper response from webhook 1 of configuration 'Default' [https://example.com]: response status 422
+Could not get response from webhook 1 of configuration 'Default' [https://example.com]
+```
+
+If the URL is not valid, the log shows a placeholder instead, for example `<malformed-url>`.
 
 A webhook which does not accept the connection within 10 seconds counts as a call which could not be made.
 How long it takes to answer afterwards is not limited: a webhook may wait on purpose, for example until a
