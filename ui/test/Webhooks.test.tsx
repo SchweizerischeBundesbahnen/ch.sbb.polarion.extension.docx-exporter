@@ -380,6 +380,31 @@ describe('Webhooks page', () => {
     expect(fetchMock.mock.calls.some(([, init]) => init?.method === 'PUT')).toBe(false);
   });
 
+  it('says so when the revision picked cannot be read', async () => {
+    open(
+      routesWith(
+        {
+          method: 'GET',
+          match: /\/settings\/webhooks\/names\/[^/]+\/revisions/,
+          json: [{ name: '4242', date: '2026-07-01 10:00' }],
+        },
+        {
+          method: 'GET',
+          match: /\/settings\/webhooks\/names\/[^/]+\/content.*revision=4242/,
+          json: { message: 'nope' },
+          status: 500,
+        },
+      ),
+    );
+    await loaded();
+
+    await clickButton('Revisions');
+    await vi.waitFor(() => expect(document.querySelector('.revision-number')).not.toBeNull());
+    await userEvent.click(document.querySelector<HTMLElement>('.revert-to-revision-button')!);
+
+    await vi.waitFor(() => expect(document.querySelector('.notifications .alert-error')).not.toBeNull());
+  });
+
   it('reports the message of a save the backend rejects', async () => {
     open(
       routesWith({
