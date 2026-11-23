@@ -107,8 +107,8 @@ public class DocxExporterFileResourceProvider implements FileResourceProvider {
             if (MIME_TYPE_SVG.equals(mimeType)) {
                 // Additional check to verify that the content is indeed an SVG
                 String refinedMimeType = MediaUtils.getMimeTypeUsingTikaByContent(resource, resourceBytes);
-                // the detector answers with the stream of bytes where it recognized nothing, and that
-                // names no type: an svg it could not read stays the svg its name and its source say
+                // If the detector returns application/octet-stream, the content was not recognized.
+                // In that case, keep the existing SVG MIME type inferred from the source/name.
                 if (refinedMimeType != null && !MediaUtils.OCTET_STREAM.equals(refinedMimeType)) {
                     mimeType = refinedMimeType;
                 }

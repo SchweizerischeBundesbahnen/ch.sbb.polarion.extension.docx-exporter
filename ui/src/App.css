@@ -377,7 +377,7 @@
 
 .webhooks-disabled {
   font-style: italic;
-  color: palevioletred;
+  color: #767676;
 }
 
 /* The button that opens the export dialog in its harness. A row rather than a block, so a second control

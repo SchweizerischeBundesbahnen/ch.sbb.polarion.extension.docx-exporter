@@ -494,6 +494,31 @@ describe('Style Packages page', () => {
     expect(fetchMock.mock.calls.some(([, init]) => init?.method === 'PUT')).toBe(false);
   });
 
+  it('says so when the revision picked cannot be read', async () => {
+    open(
+      routesWith(
+        {
+          method: 'GET',
+          match: /\/settings\/style-package\/names\/[^/]+\/revisions/,
+          json: [{ name: '1234', date: '2024-06-13', baseline: null }],
+        },
+        {
+          method: 'GET',
+          match: /\/settings\/style-package\/names\/[^/]+\/content.*revision=1234/,
+          json: { message: 'nope' },
+          status: 500,
+        },
+      ),
+    );
+    await loaded();
+
+    await clickButton('Revisions');
+    await vi.waitFor(() => expect(document.querySelector('.revisions-table tbody button')).not.toBeNull());
+    await userEvent.click(document.querySelector<HTMLElement>('.revisions-table tbody button')!);
+
+    await vi.waitFor(() => expect(document.querySelector('.notifications .alert-error')).not.toBeNull());
+  });
+
   it('reports a failure to load the package when the edit is cancelled', async () => {
     let failing = false;
     open(

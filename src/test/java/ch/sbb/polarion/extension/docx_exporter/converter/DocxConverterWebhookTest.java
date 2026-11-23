@@ -8,6 +8,7 @@ import ch.sbb.polarion.extension.docx_exporter.rest.model.settings.webhooks.Webh
 import ch.sbb.polarion.extension.docx_exporter.rest.model.settings.webhooks.WebhooksModel;
 import ch.sbb.polarion.extension.docx_exporter.settings.WebhooksSettings;
 import com.polarion.core.util.exceptions.UserFriendlyRuntimeException;
+import com.polarion.core.util.logging.Logger;
 import jakarta.ws.rs.ProcessingException;
 import jakarta.ws.rs.client.Client;
 import jakarta.ws.rs.client.ClientBuilder;
@@ -15,10 +16,16 @@ import jakarta.ws.rs.client.Entity;
 import jakarta.ws.rs.client.Invocation;
 import jakarta.ws.rs.client.WebTarget;
 import jakarta.ws.rs.core.Response;
+import org.glassfish.jersey.media.multipart.FormDataMultiPart;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.jupiter.params.provider.NullSource;
+import org.junit.jupiter.params.provider.ValueSource;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.MockedConstruction;
 import org.mockito.MockedStatic;
@@ -28,7 +35,10 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.ConnectException;
+import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -37,6 +47,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockConstruction;
@@ -95,7 +106,13 @@ class DocxConverterWebhookTest {
         when(first.readEntity(InputStream.class)).thenReturn(bodyOf("<html>first</html>"));
         Response second = mockResponse(200);
         when(second.readEntity(InputStream.class)).thenReturn(bodyOf("<html>second</html>"));
-        when(invocationBuilder.post(any(Entity.class))).thenReturn(first, second);
+        Iterator<Response> responses = List.of(first, second).iterator();
+        List<String> postedHtml = new ArrayList<>();
+        // Read while the call is made: the converter closes the multipart right after it.
+        when(invocationBuilder.post(any(Entity.class))).thenAnswer(invocation -> {
+            postedHtml.add(htmlPartOf(invocation.getArgument(0)));
+            return responses.next();
+        });
 
         WebhooksModel model = WebhooksModel.builder()
                 .webhookConfigs(List.of(new WebhookConfig(URL, null, null, false), new WebhookConfig(URL, null, null, false)))
@@ -106,6 +123,7 @@ class DocxConverterWebhookTest {
             String result = docxConverter.applyWebhooks(exportParams, HTML);
 
             // The HTML of each webhook is what the next one is given, so the last one decides the result.
+            assertThat(postedHtml).containsExactly(HTML, "<html>first</html>");
             assertThat(result).isEqualTo("<html>second</html>");
             assertThat(settings.constructed()).hasSize(1);
         }
@@ -254,10 +272,82 @@ class DocxConverterWebhookTest {
                 .message().doesNotContain("secret", "example.com");
     }
 
+    @Test
+    void failsExportWithTheFallbackWhenTheResponseBodyIsLongAndBlank() {
+        Response response = mockResponse(500);
+        when(response.readEntity(InputStream.class)).thenReturn(bodyOf(" ".repeat(600)));
+        when(invocationBuilder.post(any(Entity.class))).thenReturn(response);
+        WebhookConfig webhookConfig = new WebhookConfig(URL, null, null, true);
+
+        assertThatThrownBy(() -> docxConverter.applyWebhook(webhookConfig, 1, exportParams, HTML))
+                .isInstanceOf(UserFriendlyRuntimeException.class)
+                .hasMessage("Export stopped by webhook 1 of configuration 'Validation', which returned HTTP 500");
+    }
+
+    @Test
+    void logsAnErrorStatusWithoutTheCredentialsOfTheUrl() {
+        Response response = mockResponse(422);
+        when(invocationBuilder.post(any(Entity.class))).thenReturn(response);
+        Logger logger = mock(Logger.class);
+
+        converterLoggingTo(logger).applyWebhook(new WebhookConfig(URL, null, null, false), 2, exportParams, HTML);
+
+        verify(logger).error("Could not get proper response from webhook 2 of configuration 'Validation' [https://example.com]: response status 422");
+    }
+
+    @Test
+    void logsACallFailureWithItsStackTraceButWithoutItsMessage() {
+        URISyntaxException cause = new URISyntaxException(URL, "Illegal character in query");
+        when(invocationBuilder.post(any(Entity.class))).thenThrow(new IllegalArgumentException(cause.getMessage(), cause));
+        Logger logger = mock(Logger.class);
+
+        converterLoggingTo(logger).applyWebhook(new WebhookConfig(URL, null, null, false), 2, exportParams, HTML);
+
+        ArgumentCaptor<Throwable> logged = ArgumentCaptor.forClass(Throwable.class);
+        verify(logger).error(eq("Could not get response from webhook 2 of configuration 'Validation' [https://example.com]"), logged.capture());
+        assertThat(logged.getValue()).hasMessage("java.net.URISyntaxException").hasNoCause();
+        assertThat(logged.getValue().getStackTrace()).isEqualTo(cause.getStackTrace());
+    }
+
+    @ParameterizedTest
+    @CsvSource(delimiter = ' ', value = {
+            "https://example.com/webhook?token=secret https://example.com",
+            "https://example.com:8443/webhook?sig=secret#secret https://example.com:8443",
+            "https://user:secret@example.com/webhook https://example.com",
+            "https://example.com/services/secret https://example.com",
+            "http://my_service:8080/webhook http://my_service:8080",
+            "http://user:secret@my_service:8080/webhook http://my_service:8080",
+            "https://example.com/webhook?code=secret|x <malformed-url>",
+            "//example.com/secret <redacted-url>",
+            "mailto:secret <redacted-url>"
+    })
+    void redactsEverythingOfTheUrlButSchemeHostAndPort(String url, String expected) {
+        assertThat(DocxConverter.redactUrlForLogs(url)).isEqualTo(expected);
+    }
+
+    @ParameterizedTest
+    @NullSource
+    @ValueSource(strings = {"", " "})
+    void saysSoWhenThereIsNoUrlToRedact(String url) {
+        assertThat(DocxConverter.redactUrlForLogs(url)).isEqualTo("<empty>");
+    }
+
+    private static DocxConverter converterLoggingTo(Logger logger) {
+        try (MockedStatic<Logger> loggerMockedStatic = mockStatic(Logger.class)) {
+            loggerMockedStatic.when(() -> Logger.getLogger(DocxConverter.class)).thenReturn(logger);
+            return new DocxConverter(null, null, null, null);
+        }
+    }
+
     private static Response mockResponse(int status) {
         Response response = mock(Response.class);
         when(response.getStatus()).thenReturn(status);
         return response;
+    }
+
+    private static String htmlPartOf(Entity<FormDataMultiPart> entity) {
+        byte[] html = (byte[]) entity.getEntity().getField("html").getEntity();
+        return new String(html, StandardCharsets.UTF_8);
     }
 
     private static InputStream bodyOf(String body) {

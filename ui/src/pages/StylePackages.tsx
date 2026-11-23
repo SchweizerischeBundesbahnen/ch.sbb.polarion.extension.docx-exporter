@@ -247,20 +247,20 @@ export default function StylePackages() {
   const reload = async (revision?: string) => {
     if (!selectedConfig) return;
     const seq = ++latestLoad.current;
-    const content = await settings.loadContent(selectedConfig, scope, revision);
-    if (seq !== latestLoad.current) return;
-    setForm(toForm(content));
-    setLoadingError(false);
+    try {
+      const content = await settings.loadContent(selectedConfig, scope, revision);
+      if (seq !== latestLoad.current) return;
+      setForm(toForm(content));
+      setLoadingError(false);
+    } catch {
+      if (seq === latestLoad.current) setLoadingError(true);
+    }
   };
 
   const handleCancel = async () => {
     if (!(await confirm('Are you sure you want to cancel editing and revert all changes made?'))) return;
     toast.dismiss();
-    try {
-      await reload();
-    } catch {
-      setLoadingError(true);
-    }
+    await reload();
   };
 
   const handleRevertToDefault = async () => {
@@ -274,7 +274,7 @@ export default function StylePackages() {
       setLoadingError(false);
       toast.success('Default values loaded. Save the data to apply them.');
     } catch {
-      setLoadingError(true);
+      if (seq === latestLoad.current) setLoadingError(true);
     }
   };
 

@@ -315,6 +315,30 @@ describe('Templates page', () => {
     expect(fetchMock.mock.calls.some(([, init]) => init?.method === 'PUT')).toBe(false);
   });
 
+  it('says so when the revision picked cannot be read', async () => {
+    open(
+      routesWith(
+        {
+          method: 'GET',
+          match: /\/settings\/templates\/names\/[^/]+\/revisions/,
+          json: [{ name: '1234', date: '2024-06-13', baseline: null }],
+        },
+        {
+          method: 'GET',
+          match: /\/settings\/templates\/names\/[^/]+\/content.*revision=1234/,
+          json: { message: 'nope' },
+          status: 500,
+        },
+      ),
+    );
+    await loadedWithTemplate();
+
+    await clickButton('Revisions');
+    await userEvent.click(await revertButton());
+
+    await vi.waitFor(() => expect(document.querySelector('.notifications .alert-error')).not.toBeNull());
+  });
+
   it('reports a failure to download the built-in reference document', async () => {
     open(routesWith({ method: 'GET', match: /\/template$/, status: 500, json: {} }));
     await loadedWithTemplate();
