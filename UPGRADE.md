@@ -35,6 +35,22 @@ cell holds a line break, and needs gigabytes of memory for a document with thous
 2.9.0 narrows an image in a table cell below its width, turns a nested table into text with preserved table
 styles, and fails to render a nested table to PDF.
 
+## Upgrade from version 5.x.x to 6.0.0
+
+### The toolbar button is configured on the Appearance page, not in Configuration Properties
+
+Until now, the "Export to DOCX" toolbar button had to be switched on by pasting a
+`scriptInjection.dleEditorHead` line into the administrator's **Configuration Properties**. That is
+gone. The extension puts its button on the document editor toolbar by itself, through a Polarion
+extension point, and the new **Appearance** administration page says whether it is drawn.
+
+Delete the `<script>` tags that name `/polarion/docx-exporter/js/...` from the
+`scriptInjection.dleEditorHead` property in Configuration Properties, globally and in every project
+that has its own. Keep any `<script>` tag in it that belongs to another extension: the property holds
+exactly one value, so delete only our tags, not the whole line.
+
+Restart Polarion after the upgrade. The extension registry is read at startup.
+
 ## Upgrade from version 5.x.x to 5.6.0
 
 The **User Guide** administration entry is replaced by a single **Documentation** entry. It opens a

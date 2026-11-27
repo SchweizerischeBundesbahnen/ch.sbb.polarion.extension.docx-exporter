@@ -8,7 +8,7 @@ import { popupRoutes } from './exportPopupSamples';
 import { installFetchMock } from './mockFetch';
 import { SAMPLE_STYLE_PACKAGE_FULL } from './sidePanelSamples';
 
-// How the export dialog gets onto the document editor page: starter.js imports assets/export-popup.js and
+// How the export dialog gets onto the document editor page: toolbar-injector.js imports assets/export-popup.js and
 // calls openExportPopup. It appends a host of its own to the body and mounts into a shadow root of it, so
 // nothing may leak either way - the page it opens on is Polarion's, shared with every other extension.
 //

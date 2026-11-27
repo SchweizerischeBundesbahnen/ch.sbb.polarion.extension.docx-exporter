@@ -29,7 +29,7 @@
     Its CSS is the shared `ui/src/export/export-form.css` plus `ui/src/sidepanel/side-panel.css` for the
     pane's own chrome.
   - **"Export to DOCX" dialog** - `assets/export-popup.js` exporting `openExportPopup()`, imported on click
-    by `js/starter.js`. It appends its own host to the page body and mounts into a shadow root of it.
+    by `js/toolbar-injector.js`. It appends its own host to the page body and mounts into a shadow root of it.
     Its CSS is the shared `ui/src/export/export-form.css` plus `ui/src/popup/export-popup.css` for the
     dialog's own chrome. There is no `documentType`: this extension exports Live Documents only, and
     `ExportParams.java` has no such field.
@@ -67,8 +67,22 @@
   package read into a form, a form turned into a request, the REST reads each surface needs),
   `ui/src/services/exportContext.ts` (the location hash) and `ui/src/services/conversion.ts` (the
   convert-job protocol). Nothing is loaded across webapps at runtime any more. What is left in
-  `webapp/docx-exporter` is the two injector scripts, the empty `css/starter.css` trigger and the two HTML
+  `webapp/docx-exporter` is `js/toolbar-injector.js`, the empty `css/starter.css` trigger and the two HTML
   templates the Java side reads server-side (`sidePanelContent.html`, `docxTemplate.html`).
+
+- **The toolbar button comes from `plugin.xml`, not from `scriptInjection`.** The
+  `com.polarion.portal.tomcat.externalJsFile` extension point renders `external-js/docx-exporter-ui-loader.js`
+  into `authapp/index.jsp`, served from `/polarion/codemirror-modes/<basename>` with `Cache-Control: immutable`.
+  So the loader must never change: it only loads `webapp/docx-exporter/js/toolbar-injector.js`. The registry
+  is read at startup, so a `plugin.xml` change needs a Polarion restart. The injector re-reads
+  `/rest/internal/appearance?projectId=` on every project change, because Polarion is an SPA.
+- **Each extension keeps its own toolbar `order` number.** The shared engine sorts buttons by `order`; on a
+  tie it keeps injection order, which changes per page load. pdf-exporter is 10, docx-exporter 20, the next
+  extension 30. Do not set `order: 0`, and keep the numbers in step across the repositories.
+- **A scope-inherited setting is a missing file, not a flag.** `GenericNamedSettings.read` falls back to the
+  Default Repository when a project has no file. So the Appearance page returns a project to inheriting by
+  deleting its setting, and detects that state through `readNames`, whose `Default` entry names the scope
+  the file was found in.
 
 - **The UI build comes from the generic parent**, activated by the presence of `ui/package.json` (its
   `ui-build-react-app` profile): `npm ci` + `npm run build`, the bundle copied into `webapp/docx-exporter-app/`, and
@@ -84,8 +98,7 @@
 
 - **There is one JS toolchain, and it lives in `ui/`.** The root `package.json`, `package-lock.json`,
   `node/`, `node_modules/`, `src/test/js/` and this pom's own `frontend-maven-plugin` block are gone. The
-  mocha suite that tested the toolbar injectors is now `ui/test/starterInjector.node.test.ts` and
-  `ui/test/dleToolbar.node.test.ts`, run by the **`node`** project of `ui/vitest.config.ts` (jsdom) next to
+  mocha suite that tested the toolbar injectors is now `ui/test/toolbarInjector.node.test.ts`, run by the **`node`** project of `ui/vitest.config.ts` (jsdom) next to
   the **`browser`** project that tests the app. Injector tests must stay in the `node` project: those
   scripts drive the top frame, and Vitest browser mode runs each file in an iframe and keeps `top` for its
   own runner page. Name them `*.node.test.ts` - that suffix is what routes a file between the two projects.

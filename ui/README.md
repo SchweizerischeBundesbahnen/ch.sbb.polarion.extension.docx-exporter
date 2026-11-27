@@ -79,7 +79,7 @@ Vite would emit:
 | Entry                     | Emitted as               | Imported by                                       | Export it is called through |
 | ------------------------- | ------------------------ | ------------------------------------------------- | --------------------------- |
 | `src/sidepanel/mount.tsx` | `assets/side-panel.js`   | `webapp/docx-exporter/html/sidePanelContent.html` | `mountSidePanel(selector)`  |
-| `src/popup/mount.tsx`     | `assets/export-popup.js` | `webapp/docx-exporter/js/starter.js`              | `openExportPopup()`         |
+| `src/popup/mount.tsx`     | `assets/export-popup.js` | `webapp/docx-exporter/js/toolbar-injector.js`     | `openExportPopup()`         |
 
 Both need `rollupOptions.preserveEntrySignatures: 'strict'` to keep that export, which a Vite app build
 otherwise drops. Nothing in the Vitest suites sees the built files, so
@@ -175,8 +175,8 @@ the state being described.
 The chrome is RSP's shared `Modal` - a native `<dialog>`, so the top layer, the backdrop and Escape come
 for free. That replaced micromodal: `openExportPopup` appends a host to the page body, mounts into a
 **shadow root** of it with RSP's stylesheet, the shared `src/export/export-form.css` and the dialog's own
-`src/popup/export-popup.css` injected, and removes the host on close. Nothing is put on the page for it any more, which is why `starter.js` no longer injects
-micromodal and six generic control stylesheets.
+`src/popup/export-popup.css` injected, and removes the host on close. Nothing is put on the page for it any more, which is why `js/toolbar-injector.js` injects
+neither micromodal nor generic control stylesheets.
 
 Because `<dialog>` is in the browser top layer, RSP's `SearchableSelect` option-list portal (a sibling of
 the dialog inside the shadow root) painted underneath it. [`src/popup/dialogPortals.ts`](src/popup/dialogPortals.ts)

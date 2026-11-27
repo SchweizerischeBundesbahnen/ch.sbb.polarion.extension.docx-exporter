@@ -12,7 +12,7 @@ import popupStyle from './export-popup.css?inline';
  * Entry point for the "Export to DOCX" dialog, built by Vite into a fixed-name module
  * (`assets/export-popup.js`; the Vite input key `export-popup` sets the output name).
  *
- * `webapp/docx-exporter/js/starter.js` - the document editor toolbar button - imports this module and calls
+ * `webapp/docx-exporter/js/toolbar-injector.js` - the document editor toolbar button - imports this module and calls
  * {@link openExportPopup} on click. It is the only caller: every DOCX export is a Live Document, so there is
  * no report toolbar and no bulk export widget to open it too.
  *

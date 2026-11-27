@@ -10,8 +10,8 @@ overview and installation, the [quick start page](QUICK_START.md) for the most i
   - [Pandoc configuration](#pandoc-configuration)
   - [Pandoc API key](#pandoc-api-key)
   - [DOCX exporter extension to appear on a Document's properties pane](#docx-exporter-extension-to-appear-on-a-documents-properties-pane)
-  - [DOCX Exporter view to open via button in toolbar](#docx-exporter-view-to-open-via-button-in-toolbar)
-    - [Deprecated configuration](#deprecated-configuration)
+  - ["Export to DOCX" toolbar button](#export-to-docx-toolbar-button)
+    - [Removed in v6.0.0: the scriptInjection configuration](#removed-in-v600-the-scriptinjection-configuration)
   - [Configuring logs](#configuring-logs)
   - [Enabling CORS](#enabling-cors)
   - [Enabling webhooks](#enabling-webhooks)
@@ -93,38 +93,31 @@ Five failures are reported apart, since each one has a different fix:
    ```
 6. Save changes by clicking 💾 Save
 
-### DOCX Exporter view to open via button in toolbar
+### "Export to DOCX" toolbar button
 
-Alternatively you can configure DOCX Exporter such a way that a button to open the DOCX Exporter view appears in the document editor's toolbar.
+The extension adds its "Export to DOCX" button to the document editor's toolbar by itself. No `scriptInjection` property is needed. The plugin registers its script with Polarion directly. The extension registry is read at startup, so the button appears after the first Polarion restart which follows the installation.
 
-1. Open "Default Repository".
-2. On the top of its navigation pane click ⚙ (Actions) ➙ 🔧 Administration. Global administration page will be opened.
-3. On the administration's navigation pane select Configuration Properties.
-4. In editor of opened page add following line:
-   ```properties
-   scriptInjection.dleEditorHead=<script src="/polarion/docx-exporter/js/dle-toolbar.js"></script>
-   ```
-   This adds the button into Polarion's native document toolbar. The button is re-injected automatically when Polarion re-renders the toolbar (for example when the document is saved), so it stays in place.
-5. Save changes by clicking 💾 Save
+Whether the button is displayed is configured on the **Appearance** administration page. It is displayed by default.
 
-> [!TIP]
-> **Adding more than one toolbar button.** `scriptInjection.dleEditorHead` is a single Polarion-wide property that holds exactly one value. To show several buttons in the document editor (for example the PDF, DOCX and StrictDoc exporters together, or this button alongside any other injected script), do **not** add separate `scriptInjection.dleEditorHead=` lines — the last one overrides the rest. Concatenate all the `<script>` tags into that single value instead:
-> ```properties
-> scriptInjection.dleEditorHead=<script src="/polarion/pdf-exporter/js/dle-toolbar.js"></script><script src="/polarion/docx-exporter/js/dle-toolbar.js"></script><script src="/polarion/strictdoc-exporter/js/dle-toolbar.js"></script>
-> ```
+1. Open "Default Repository", or a project to configure that project alone.
+2. On the top of its navigation pane click ⚙ (Actions) ➙ 🔧 Administration.
+3. On the administration's navigation pane select DOCX Export ➙ Appearance.
+4. Tick or untick the button and click 💾 Save.
 
-#### Deprecated configuration
+What you save in the Default Repository applies to every project which has no configuration of its own. A project administrator opens the same page inside the project to override it, and returns to the global configuration by ticking "Use the configuration from the Default Repository" and saving.
 
-The explicit `DocxExporterStarter.injectToolbar(...)` configuration still works but is **deprecated** in favor of the single-tag `dle-toolbar.js` form above (removal is planned for a future major version):
+A button which is switched off is not drawn at all. The export itself stays available through the Document Properties side panel and the REST API. Who may export is a separate setting on the Authorization administration page.
 
-```properties
-# Button in Polarion's native document toolbar — equivalent to the recommended dle-toolbar.js form above.
-scriptInjection.dleEditorHead=<script src="/polarion/docx-exporter/js/starter.js"></script><script>DocxExporterStarter.injectToolbar({alternate: true});</script>
-```
-```properties
-# A separate toolbar with the button placed above the document editing area.
-scriptInjection.dleEditorHead=<script src="/polarion/docx-exporter/js/starter.js"></script><script>DocxExporterStarter.injectToolbar();</script>
-```
+The button keeps a fixed position next to the buttons of other extensions in the same toolbar, so it does not change places with them between page loads.
+
+#### Removed in v6.0.0: the scriptInjection configuration
+
+Until v6.0.0 the button was switched on by pasting a `<script>` tag into Configuration Properties, and the scripts it named were `js/dle-toolbar.js` and `js/starter.js`. Those scripts no longer exist, and neither does the `DocxExporterStarter.injectToolbar()` global.
+
+Delete the `scriptInjection.dleEditorHead` line that names them. A line left behind makes the browser request a file that is not there, which shows up as a 404 in the browser console and nowhere else: the button itself comes from the extension and is not affected.
+
+> [!NOTE]
+> `scriptInjection.dleEditorHead` is a single Polarion-wide property which holds exactly one value, so delete only the `<script>` tags of this extension from it. A tag that belongs to another extension stays.
 
 ### Configuring logs
 

@@ -7,7 +7,7 @@
 //     import('/polarion/docx-exporter-app/ui/app/assets/side-panel.js')
 //         .then(module => module.mountSidePanel('#docx-exporter-panel'))
 //
-//   webapp/docx-exporter/js/starter.js:
+//   webapp/docx-exporter/js/toolbar-injector.js:
 //     import('/polarion/docx-exporter-app/ui/app/assets/export-popup.js')
 //         .then(module => module.openExportPopup())
 //

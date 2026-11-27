@@ -4,7 +4,6 @@ import ch.sbb.polarion.extension.generic.configuration.ConfigurationStatus;
 import ch.sbb.polarion.extension.generic.configuration.ConfigurationStatusProvider;
 import ch.sbb.polarion.extension.docx_exporter.util.configuration.CORSStatusProvider;
 import ch.sbb.polarion.extension.docx_exporter.util.configuration.DefaultSettingsStatusProvider;
-import ch.sbb.polarion.extension.docx_exporter.util.configuration.DleToolbarStatusProvider;
 import ch.sbb.polarion.extension.docx_exporter.util.configuration.DocumentPropertiesPaneStatusProvider;
 import ch.sbb.polarion.extension.docx_exporter.util.configuration.PandocStatusProvider;
 import io.swagger.v3.oas.annotations.Hidden;
@@ -59,22 +58,6 @@ public class ConfigurationInternalController {
     )
     public @NotNull ConfigurationStatus checkDocumentPropertiesPaneConfig(@QueryParam("scope") @DefaultValue("") String scope) {
         return new DocumentPropertiesPaneStatusProvider().getStatus(ConfigurationStatusProvider.Context.builder().scope(scope).build());
-    }
-
-    @GET
-    @Produces(MediaType.APPLICATION_JSON)
-    @Path("/configuration/dle-toolbar-config")
-    @Operation(
-            summary = "Checks DLE Toolbar configuration",
-            responses = {
-                    @ApiResponse(responseCode = "200",
-                            description = "Successfully retrieved DLE Toolbar configuration",
-                            content = @Content(schema = @Schema(implementation = ConfigurationStatus.class))
-                    )
-            }
-    )
-    public @NotNull ConfigurationStatus checkDleToolbarConfig() {
-        return new DleToolbarStatusProvider().getStatus(ConfigurationStatusProvider.Context.builder().build());
     }
 
     @GET

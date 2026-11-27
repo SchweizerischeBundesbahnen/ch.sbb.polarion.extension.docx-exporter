@@ -61,6 +61,7 @@ describe('App router', () => {
       '?feature=webhooks',
       '?feature=style-package-weights',
       '?feature=authorization',
+      '?feature=appearance',
       // Last, and the only entries no administration page points at: the development harnesses for the
       // document editor's export panel and for the dialog its toolbar button opens
       '?feature=side-panel',

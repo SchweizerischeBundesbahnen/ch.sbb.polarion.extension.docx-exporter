@@ -36,6 +36,8 @@ On admin pane of appropriate project select menu "Documents & Pages ➙ Document
 </sections>
 ```
 
+The "Export to DOCX" button appears in the document editor toolbar by itself, once Polarion has been restarted after the installation. To switch it off, use the Appearance administration page. See [Configuration](CONFIGURATION.md).
+
 ## Ready to go
 
 DOCX Exporter is now installed and configured. You can now open a Live Document and on Documents Sidebar you will see DOCX Exporter section. Also open About page of DOCX Exporter on admin pane

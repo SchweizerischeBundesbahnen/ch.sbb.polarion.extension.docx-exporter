@@ -25,6 +25,7 @@ import ch.sbb.polarion.extension.docx_exporter.rest.exception.WrapperExceptionMa
 import ch.sbb.polarion.extension.docx_exporter.rest.exception.XLIFFExceptionMapper;
 import ch.sbb.polarion.extension.docx_exporter.rest.filter.ExportContextFilter;
 import ch.sbb.polarion.extension.docx_exporter.rest.filter.RolesRestrictedFilter;
+import ch.sbb.polarion.extension.docx_exporter.settings.AppearanceSettings;
 import ch.sbb.polarion.extension.docx_exporter.settings.AuthorizationSettings;
 import ch.sbb.polarion.extension.docx_exporter.settings.FileNameTemplateSettings;
 import ch.sbb.polarion.extension.docx_exporter.settings.LocalizationSettings;
@@ -50,7 +51,8 @@ public class DocxExporterRestApplication extends GenericRestApplication {
                             new LocalizationSettings(),
                             new WebhooksSettings(),
                             new FileNameTemplateSettings(),
-                            new AuthorizationSettings()
+                            new AuthorizationSettings(),
+                            new AppearanceSettings()
                     )
             );
         } catch (Exception e) {

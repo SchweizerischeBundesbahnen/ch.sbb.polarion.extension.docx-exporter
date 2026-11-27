@@ -26,7 +26,7 @@ The extension uses [Pandoc](https://pandoc.org/) as a converter engine and requi
 | Page | Contents |
 | --- | --- |
 | [Quick start](QUICK_START.md) | The most important steps and configurations, briefly summarized |
-| [Configuration](CONFIGURATION.md) | Full configuration reference: Pandoc service, toolbar injection, webhooks, external resources, logging, workflow function, style packages and more |
+| [Configuration](CONFIGURATION.md) | Full configuration reference: Pandoc service, the toolbar button and the Appearance page, webhooks, external resources, logging, workflow function, style packages and more |
 | [User guide](USER_GUIDE.md) | The export options in the DOCX Exporter dialog |
 | [Limitations and workarounds](LIMITATIONS.md) | By-design behaviour and how to work around it |
 | [Upgrade notes](UPGRADE.md) | Version-specific upgrade instructions |
