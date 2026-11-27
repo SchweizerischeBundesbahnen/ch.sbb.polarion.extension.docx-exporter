@@ -183,6 +183,48 @@ describe('the export permission', () => {
   });
 });
 
+describe('a document opened from a collection', () => {
+  // Polarion shows such a document at the revision the collection holds it at, and its location hash does
+  // not name it. The server looks it up, so every read which depends on the revision names the collection.
+  const IN_COLLECTION = { ...SAMPLE_DOCUMENT, collection: 'drivepilot/3' };
+
+  const bodyOf = (fetchMock: ReturnType<typeof installFetchMock>, path: string) =>
+    JSON.parse(String(fetchMock.mock.calls.find(([url]) => String(url).includes(path))?.[1]?.body)) as Record<
+      string,
+      unknown
+    >;
+
+  const urlOf = (fetchMock: ReturnType<typeof installFetchMock>, path: string) =>
+    String(fetchMock.mock.calls.find(([url]) => String(url).includes(path))?.[0]);
+
+  it('names the collection where the panel asks for the file name and the document language', async () => {
+    const fetchMock = installFetchMock(baseRoutes());
+
+    await loadPanelData(sendRequest, IN_COLLECTION);
+
+    expect(bodyOf(fetchMock, 'export-filename')).toMatchObject({ collection: 'drivepilot/3' });
+    expect(urlOf(fetchMock, 'document-language')).toContain('collection=drivepilot%2F3');
+  });
+
+  it('names the collection where the popup asks for them as well', async () => {
+    const fetchMock = installFetchMock(baseRoutes());
+
+    await loadPopupData(sendRequest, IN_COLLECTION);
+
+    expect(bodyOf(fetchMock, 'export-filename')).toMatchObject({ collection: 'drivepilot/3' });
+    expect(urlOf(fetchMock, 'document-language')).toContain('collection=drivepilot%2F3');
+  });
+
+  it('names none for a document opened on its own', async () => {
+    const fetchMock = installFetchMock(baseRoutes());
+
+    await loadPanelData(sendRequest, SAMPLE_DOCUMENT);
+
+    expect('collection' in bodyOf(fetchMock, 'export-filename')).toBe(false);
+    expect(urlOf(fetchMock, 'document-language')).not.toContain('collection=');
+  });
+});
+
 describe('the single reads', () => {
   it('escapes the style package name and the scope into the content URL', async () => {
     const fetchMock = installFetchMock([{ method: 'GET', match: /\/settings\/style-package\/names/, json: {} }]);
