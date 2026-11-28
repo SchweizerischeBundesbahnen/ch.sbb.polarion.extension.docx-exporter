@@ -5,6 +5,37 @@
     "version": "v1"
   },
   "paths": {
+    "/api/appearance": {
+      "get": {
+        "operationId": "getToolbarAppearance",
+        "parameters": [
+          {
+            "description": "Project to read the appearance of, empty for the global scope",
+            "in": "query",
+            "name": "projectId",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ToolbarAppearance"
+                }
+              }
+            },
+            "description": "Toolbar appearance"
+          }
+        },
+        "summary": "Gets whether to display the toolbar button in the given project, and whether the current user may export",
+        "tags": [
+          "Utility resources"
+        ]
+      }
+    },
     "/api/configuration-properties": {
       "get": {
         "operationId": "getConfigurationProperties",
@@ -105,24 +136,6 @@
           }
         },
         "summary": "Checks default settings configuration"
-      }
-    },
-    "/api/configuration/dle-toolbar-config": {
-      "get": {
-        "operationId": "checkDleToolbarConfig",
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ConfigurationStatus"
-                }
-              }
-            },
-            "description": "Successfully retrieved DLE Toolbar configuration"
-          }
-        },
-        "summary": "Checks DLE Toolbar configuration"
       }
     },
     "/api/configuration/document-properties-pane-config": {
@@ -1976,6 +1989,17 @@
           },
           "revision": {
             "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "ToolbarAppearance": {
+        "properties": {
+          "liveDocButton": {
+            "type": "boolean"
+          },
+          "permitted": {
+            "type": "boolean"
           }
         },
         "type": "object"

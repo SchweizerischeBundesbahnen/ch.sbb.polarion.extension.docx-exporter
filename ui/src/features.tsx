@@ -1,6 +1,7 @@
 import { DocPage, type Feature as RoutedFeature, findFeature as findIn } from '@sbb-polarion/react-sbb-polarion';
 import { DOC_ORDER } from './docs/manifest';
 import About from './pages/About';
+import Appearance from './pages/Appearance';
 import Authorization from './pages/Authorization';
 import Disclaimer from './pages/Disclaimer';
 import ExportPopupPreview from './pages/ExportPopupPreview';
@@ -101,6 +102,12 @@ export const FEATURES: Feature[] = [
     label: 'Authorization',
     description: 'Configure which global and project roles are allowed to export.',
     component: Authorization,
+  },
+  {
+    id: 'appearance',
+    label: 'Appearance',
+    description: 'Whether the "Export to DOCX" toolbar button is displayed.',
+    component: Appearance,
   },
   // Not administration pages: `hivemodule.xml` points at neither. They are reachable only by typing
   // `?feature=side-panel` or `?feature=export-popup`, which is what the ` (dev)` in the labels says, and
